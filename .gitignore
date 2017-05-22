@@ -1,5 +1,6 @@
 bin
 lib
+sdk
 builds
 cmake_local
 
