@@ -1,3 +1,8 @@
+bin
+lib
+builds
+cmake_local
+
 # Prerequisites
 *.d
 
