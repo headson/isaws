@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-namespace base {
+namespace yhbase {
 
   VShm::VShm() {
     printf("%s[%d].\n", __FUNCTION__, __LINE__);
@@ -57,12 +57,12 @@ namespace base {
       shm_ptr_ = NULL;
     }
 
-    if (shm_hdl_ != SHM_NULL) {
-      if (FALSE == ::CloseHandle(shm_hdl_)) {
-        printf("CloseHandle %s failed.\n", shm_key_);
-      }
-      shm_hdl_ = SHM_NULL;
-    }
+    //if (shm_hdl_ != SHM_NULL) {
+    //  if (FALSE == ::CloseHandle(shm_hdl_)) {
+    //    printf("CloseHandle %s failed.\n", shm_key_);
+    //  }
+    //  shm_hdl_ = SHM_NULL;
+    //}
   }
 
 #else  // WIN32
@@ -106,12 +106,12 @@ namespace base {
       shm_ptr_ = NULL;
     }
 
-    if (shm_hdl_ != SHM_NULL) {
-      if (0 != shm_unlink(shm_key_)) {
-        printf("shm_unlink %s failed %d.\n", shm_key_, shm_hdl_);
-      }
-      shm_hdl_ = SHM_NULL;
-    }
+    //if (shm_hdl_ != SHM_NULL) {
+    //  if (0 != shm_unlink(shm_key_)) {
+    //    printf("shm_unlink %s failed %d.\n", shm_key_, shm_hdl_);
+    //  }
+    //  shm_hdl_ = SHM_NULL;
+    //}
   }
 #endif  // WIN32
 

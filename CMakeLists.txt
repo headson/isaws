@@ -12,15 +12,20 @@ ELSEIF(UNIX)
     ENDIF()
 ENDIF()
 
-SET(CMAKE_CXX_STANDARD 98)
+INCLUDE_DIRECTORIES(${YHPROJECT_INCLUDE_DIR})
+LINK_DIRECTORIES(${YHPROJECT_LIBRARY_DIR})
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/lib)
-
-## step 1
+## add lib
 ADD_SUBDIRECTORY(cmake_local)
 
 ADD_SUBDIRECTORY(src/lib/base)
 ADD_SUBDIRECTORY(src/lib/server)
+ADD_SUBDIRECTORY(src/lib/vzlogging)
+#ADD_SUBDIRECTORY(src/lib/platform/imx6q)
 
+## add run
+ADD_SUBDIRECTORY(src/run/vzlogserver)
 
-ADD_SUBDIRECTORY(src/lib/platform/imx6q)
+## add test
+ADD_SUBDIRECTORY(src/test/test_vzlogging)
+

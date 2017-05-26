@@ -1,21 +1,38 @@
 cmake_minimum_required(VERSION 2.8)
 
 if(WIN32)
-    SET(LIB_SERVER_NAME "libserver")
+    SET(BUILD_PROJECT_NAME "libserver")
 elseif(UNIX)
-    SET(LIB_SERVER_NAME "server")
+    SET(BUILD_PROJECT_NAME "server")
 endif()
 
-INCLUDE_DIRECTORIES(
-	${ISAW_INCLUDE_PATH}
-	${PROJECT_SOURCE_DIR}/src/lib/
-)
+#########################################################################
+MESSAGE(STATUS "Step 1 : Print the include directores")
+get_property(inc_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(inc_dir ${inc_dirs})
+  message(STATUS "    include directory='${inc_dir}'")
+endforeach()
 
-SET(SERVER_SRC_LIST
-        csockdgram.h
-		csockdgram.cpp
-		csockstream.h
-		csockstream.cpp)
+#########################################################################
+MESSAGE(STATUS "Print the link directores")
+get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
+foreach(link_dir ${link_dirs})
+  message(STATUS "    link directory='${link_dir}'")
+endforeach()
 
-ADD_LIBRARY(${LIB_SERVER_NAME}
-        ${SERVER_SRC_LIST})
+#########################################################################
+MESSAGE(STATUS "Step 3 : Add project code")
+SET(PROJECT_SOURCE_LIST
+        ${CMAKE_CURRENT_SOURCE_DIR}/csockdgram.h
+		${CMAKE_CURRENT_SOURCE_DIR}/csockdgram.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/csockstream.h
+		${CMAKE_CURRENT_SOURCE_DIR}/csockstream.cpp)
+
+#########################################################################
+MESSAGE(STATUS "Step 4 : Add project define")
+
+#########################################################################
+MESSAGE(STATUS "Step 5 : Add executable or library target")
+ADD_LIBRARY(${BUILD_PROJECT_NAME} ${PROJECT_SOURCE_LIST})
+SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} 
+	PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})

@@ -23,7 +23,7 @@ typedef void*         ShmPtr;
 
 typedef char          ShmKey;
 
-namespace base {
+namespace yhbase {
 
   class VShm {
   public:
@@ -49,7 +49,7 @@ namespace base {
     }
 
   private:
-    ShmKey    shm_key_[32]; // 
+    char      shm_key_[32]; // 
 
   private:
     ShmHdl    shm_hdl_;     // 
