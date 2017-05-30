@@ -22,8 +22,8 @@ foreach(link_dir ${link_dirs})
 endforeach()
 
 #########################################################################
-#Step 3 : Add code source
-SET(SRC_LIST 
+MESSAGE(STATUS "Step 3 : Add code source")
+SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
@@ -40,7 +40,21 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/yhflags.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.c
-	)
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/vtls.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vtls.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vshm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vshm.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vlock.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vlock.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vthread.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vthread.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vevent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vevent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vdatetime.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vdatetime.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vblockbuffer.h
+)
 
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")

@@ -9,7 +9,8 @@
 #include <stdlib.h>
 
 #ifdef WIN32
-#include <Windows.h>
+#include <winsock2.h>
+#include <windows.h>
 #else
 #include <unistd.h>
 #include <sys/time.h>

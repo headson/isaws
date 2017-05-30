@@ -5,7 +5,7 @@
 #ifndef LIBYHBASE_VTLS_H
 #define LIBYHBASE_VTLS_H
 
-#include "vdefine.h"
+#include "inc/vtypes.h"
 
 #ifdef WIN32
 // TLS

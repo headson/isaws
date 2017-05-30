@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 if(WIN32)
-    SET(BUILD_PROJECT_NAME "libserver")
+    SET(BUILD_PROJECT_NAME "libjobclient")
 elseif(UNIX)
-    SET(BUILD_PROJECT_NAME "server")
+    SET(BUILD_PROJECT_NAME "jobclient")
 endif()
 
 #########################################################################
@@ -23,8 +23,9 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-        ${CMAKE_CURRENT_SOURCE_DIR}/csockserver.h
-		${CMAKE_CURRENT_SOURCE_DIR}/csockserver.cpp)
+    ${CMAKE_CURRENT_SOURCE_DIR}/cjobclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cjobclient.cpp
+)
 
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")

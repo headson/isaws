@@ -12,4 +12,12 @@
 
 #define VZ_PRINT  printf
 
+typedef enum YH_RESULT {
+  RET_SUCCESS             = 0,          // 成功
+  RET_UNKNOWN_ERROR       = -1,         // 未知错误
+  RET_SERVICE_UNABLE      = -2,         // 服务暂不可用
+  RET_UNKNOWN_METHOD      = -3,         // 未知的方法
+
+};
+
 #endif  // _VDEFINE_H
