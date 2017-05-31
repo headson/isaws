@@ -1,4 +1,5 @@
-bin
-sdk
-builds
-cmake_local
+/lib/*
+/bin/*
+/sdk/*
+/builds/*
+/cmake_local
