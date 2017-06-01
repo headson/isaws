@@ -76,7 +76,13 @@ void         VzDumpLogging(const char* s_msg, int n_msg);
 #endif
 
 // ¥ÌŒÛ¥Ú”°
+#define VZ_ERROR(VZ_FM, ...)   \
+  vzlogging::VzLogPrintFailed(__FILE__, __LINE__, VZ_FM, ##__VA_ARGS__)
+#ifdef DEBUG
 #define VZ_PRINT(VZ_FM, ...)   \
   vzlogging::VzLogPrintFailed(__FILE__, __LINE__, VZ_FM, ##__VA_ARGS__)
+#else
+#define VZ_PRINT(VZ_FM, ...)   
+#endif
 
 #endif  // SRC_LIB_VZLOGGING_BASE_VZLOGDEF_H_

@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "base/flags/yhflags.h"
+#include "vzlogging/server/vzflags.h"
 
 #include "vzlogging/base/vzlogdef.h"
 #include "vzlogging/base/vzshmarg.h"
@@ -93,6 +93,7 @@ int main(int argc, char* argv[]) {
   srand((unsigned int)time(NULL));
   srandom((unsigned int)time(NULL));
 #endif
+  VZ_PRINT("%s %s", __TIME__, __DATE__);
   memset(k_pro_heart, 0, sizeof(k_pro_heart));
 
   int ret = 0;
@@ -145,7 +146,7 @@ int main(int argc, char* argv[]) {
                       DEF_LOG_REC_FILE,
                       DEF_WDG_REC_FILE);
   if (ret < 0) {
-    VZ_PRINT("Open record failed. path %s, log file %s, watchdog file %s\n",
+    VZ_ERROR("Open record failed. path %s, log file %s, watchdog file %s\n",
              s_log_path, DEF_LOG_REC_FILE, DEF_WDG_REC_FILE);
     return ret;
   }
@@ -193,7 +194,7 @@ int InitLogRecord(const char* path,
   // 普通日志
   ret = k_log_file.Open(path, log_fname, DEF_LOG_FILE_SIZE);
   if (ret < 0) {
-    VZ_PRINT("log record open failed.%d.\n", ret);
+    VZ_ERROR("log record open failed.%d.\n", ret);
     return ret;
   }
   k_log_file.StartRecord("program log");
@@ -201,7 +202,7 @@ int InitLogRecord(const char* path,
   // 看门狗日志
   ret = k_wdg_file.Open(path, wdg_fname, DEF_WDG_FILE_SIZE);
   if (ret < 0) {
-    VZ_PRINT("wdg record open failed.%d.\n", ret);
+    VZ_ERROR("wdg record open failed.%d.\n", ret);
     return ret;
   }
   k_wdg_file.StartRecord("watchdog");
@@ -219,13 +220,13 @@ int InitSrvSocket(const char* ip, unsigned short port,
   // 打开网络监听
   ret = k_srv_sock.OpenListenAddr(ip, port);
   if (ret < 0) {
-    VZ_PRINT("open udp listen %d failed. %d.\n", port, ret);
+    VZ_ERROR("open udp listen %d failed. %d.\n", port, ret);
     return ret;
   }
 
   ret = k_srv_sock.OpenTransAddr(s_snd_addr);
   if (ret < 0) {
-    VZ_PRINT("open udp trans %s failed. %d.\n", s_snd_addr, ret);
+    VZ_ERROR("open udp trans %s failed. %d.\n", s_snd_addr, ret);
   }
   return 0;
 }
@@ -323,7 +324,7 @@ int WatchdogProcess(const char* s_msg, unsigned int n_msg) {
 
   //
   if (n_empty == -1) {
-    VZ_PRINT("not empty space to save heartbeat infomation.\n");
+    VZ_ERROR("not empty space to save heartbeat infomation.\n");
     return -2;
   }
 
@@ -378,7 +379,7 @@ int OnModuleLostHeartbeat(time_t n_now) {
   if (n_log < DEF_LOG_MAX_SIZE) {
     s_log[n_log++] = '\n';
   }
-  VZ_PRINT("%s", s_log);
+  VZ_ERROR("%s", s_log);
   k_wdg_file.Write(s_log, n_log);
   k_wdg_file.StartRecord("watchdog");
 
@@ -386,6 +387,9 @@ int OnModuleLostHeartbeat(time_t n_now) {
   k_log_file.OnModuleLostHeartbeat(s_log, n_log);
 
   // 重启设备
+#if 1
+  system("reboot");
+#endif
   return 0;
 }
 

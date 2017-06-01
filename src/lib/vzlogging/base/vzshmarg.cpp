@@ -55,14 +55,14 @@ int VShm::Open(ShmKey key, ShmSize size) {
                                    shm_key_);
   }
   if (shm_hdl_ == SHM_NULL) {
-    VZ_PRINT("OpenFileMapping %s failed.\n", shm_key_);
+    VZ_ERROR("OpenFileMapping %s failed.\n", shm_key_);
     return -2;
   }
 
   // mmap
   shm_ptr_ = ::MapViewOfFile(shm_hdl_, FILE_MAP_ALL_ACCESS, 0, 0, 0);
   if (shm_ptr_ == NULL) {
-    VZ_PRINT("MapViewOfFile %s failed.\n", shm_key_);
+    VZ_ERROR("MapViewOfFile %s failed.\n", shm_key_);
     return -4;
   }
   return 0;
@@ -71,7 +71,7 @@ int VShm::Open(ShmKey key, ShmSize size) {
 void VShm::Close() {
   if (shm_ptr_) {
     if (FALSE == ::UnmapViewOfFile(shm_ptr_)) {
-      VZ_PRINT("UnmapViewOfFile %s failed.\n", shm_key_);
+      VZ_ERROR("UnmapViewOfFile %s failed.\n", shm_key_);
     }
     shm_ptr_ = NULL;
   }
@@ -87,6 +87,7 @@ void VShm::Close() {
 
 #else  // WIN32
 
+#if 0
 int32_t VShm::Open(ShmKey key, ShmSize size) {
   if (!key || size == 0) {
     return -1;
@@ -97,14 +98,14 @@ int32_t VShm::Open(ShmKey key, ShmSize size) {
   // open
   shm_hdl_ = shm_open(shm_key_, O_RDWR | O_CREAT, 0777);
   if (shm_hdl_ == SHM_NULL) {
-    VZ_PRINT("shm_open %s failed.\n", shm_key_);
+    VZ_ERROR("shm_open %s failed.\n", shm_key_);
     return -2;
   }
 
   // 分配共享内存大小
   int ret = ftruncate(shm_hdl_, shm_size_);
   if (-1 == ret) {
-    VZ_PRINT("ftruncate %s failed.\n", shm_key_);
+    VZ_ERROR("ftruncate %s failed.\n", shm_key_);
     return -3;
   }
 
@@ -113,7 +114,7 @@ int32_t VShm::Open(ShmKey key, ShmSize size) {
                   PROT_READ | PROT_WRITE,
                   MAP_SHARED, shm_hdl_, SEEK_SET);
   if (shm_ptr_ == NULL) {
-    VZ_PRINT("mmap %s failed.\n", shm_key_);
+    VZ_ERROR("mmap %s failed.\n", shm_key_);
     return -4;
   }
   return 0;
@@ -122,7 +123,7 @@ int32_t VShm::Open(ShmKey key, ShmSize size) {
 void VShm::Close() {
   if (shm_ptr_) {
     if (0 != munmap(shm_ptr_, shm_size_)) {
-      VZ_PRINT("munmap %s failed.\n", shm_key_);
+      VZ_ERROR("munmap %s failed.\n", shm_key_);
     }
     shm_ptr_ = NULL;
   }
@@ -135,6 +136,50 @@ void VShm::Close() {
   //   shm_hdl_ = SHM_NULL;
   // }
 }
+#else
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+int32_t VShm::Open(ShmKey key, ShmSize size) {
+  if (!key || size == 0) {
+    return -1;
+  }
+  shm_size_ = size;
+  strncpy(shm_key_, key, 31);
+
+  key_t n_key = ftok(key, 0xAA55AA);
+  if (n_key != -1) {
+    VZ_ERROR("ftok new key failed.\n");
+    return -1;
+  }
+
+  shm_hdl_ = shmget(n_key, size, IPC_CREAT | 0660);
+  if(shm_hdl_ < 0) {
+    shm_hdl_ = shmget(n_key, 0, 0);
+  }
+  VZ_PRINT("shared memory id:%d\n", shm_hdl_);
+  if(shm_ptr_ < 0) {
+    VZ_ERROR("shared memory open failed\n");
+    return -1;
+  }
+
+  shm_ptr_ = shmat(shm_hdl_, 0, 0);
+  if (shm_ptr_ == NULL) {
+    VZ_ERROR("shmat %s failed.\n", shm_key_);
+    return -4;
+  }
+  return 0;
+}
+
+void VShm::Close() {
+  if (shm_ptr_) {
+    shmdt(shm_ptr_);
+    shm_ptr_ = NULL;
+  }
+}
+
+#endif
 #endif  // WIN32
 
 /**共享内存-参数*********************************************************/

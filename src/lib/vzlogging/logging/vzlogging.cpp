@@ -7,6 +7,7 @@
 /* Description :
 /************************************************************************/
 #include "vzlogging/include/vzlogging.h"
+#include "vzlogging/include/vzloggingcpp.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -243,7 +244,7 @@ extern "C" {
     k_tls_log.KeyAlloc();
 
     if (!k_tls_log.IsReady()) {
-      VZ_PRINT("You can't get tls key.\n");
+      VZ_ERROR("You can't get tls key.\n");
       return NULL;
     }
 
@@ -275,8 +276,8 @@ extern "C" {
 CVzLogStream::CVzLogStream(int          n_level,
                            const char*  p_file,
                            int          n_line,
-                           bool         b_print) {
-  b_print_ = b_print;
+                           unsigned int b_print) {
+  b_print_ = b_print == 1 ? true : false;
   n_level_ = n_level;
   p_tls_ = GetTlsLog();
 
@@ -469,6 +470,8 @@ vzlogging::CVzLogStream&
   return *this;
 }
 
+}  // namespace vzlogging
+
 /**日志对外接口**********************************************************/
 int InitVzLogging(int argc, char* argv[]) {
 #ifdef WIN32
@@ -479,12 +482,12 @@ int InitVzLogging(int argc, char* argv[]) {
   srand((unsigned int)time(NULL));
   srandom((unsigned int)time(NULL));
 #endif
-  memset(k_tls_void, 0, sizeof(k_tls_void));
-  memset(k_watchdog, 0, sizeof(k_watchdog));
+  memset(vzlogging::k_tls_void, 0, sizeof(vzlogging::k_tls_void));
+  memset(vzlogging::k_watchdog, 0, sizeof(vzlogging::k_watchdog));
 
   // 进程名
-  memcpy(k_app_name, GetFileName(argv[0]), 31);
-  VZ_PRINT("this applet name is: %s.\n", k_app_name);
+  memcpy(vzlogging::k_app_name, vzlogging::GetFileName(argv[0]), 31);
+  VZ_PRINT("this applet name is: %s.\n", vzlogging::k_app_name);
 
   // 传参数
   for (int i = 0; i < argc; i++) {
@@ -492,18 +495,19 @@ int InitVzLogging(int argc, char* argv[]) {
       switch (argv[i][1]) {
       case 'v':           // 打印输出使能
       case 'V':
-        k_en_stdout = true;
+        vzlogging::k_en_stdout = true;
         break;
       }
     }
   }
 
   // 打开共享内存
-  int ret = k_shm_arg.Open();
+  int ret = vzlogging::k_shm_arg.Open();
   if (ret != 0) {
-    VZ_PRINT("share memory failed. %d.\n", ret);
+    VZ_ERROR("share memory failed. %d.\n", ret);
   }
-  VZ_PRINT("share memory success. level %d.\n", k_shm_arg.GetSendLevel());
+  VZ_PRINT("share memory success. level %d.\n", 
+           vzlogging::k_shm_arg.GetSendLevel());
   return ret;
 }
 
@@ -513,9 +517,9 @@ void ExitVzLogging() {
   WSACleanup();
 #endif
 
-  k_shm_arg.Close();
-  k_tls_log.KeyFree();
-  VZ_PRINT("send message size %d.\n", k_total_log);
+  vzlogging::k_shm_arg.Close();
+  vzlogging::k_tls_log.KeyFree();
+  VZ_PRINT("send message size %d.\n", vzlogging::k_total_log);
 }
 
 /************************************************************************/
@@ -527,27 +531,28 @@ fmt   格式化字符串,
 ...   不定长参数
 /* Return      : 0 success,-1 failed
 /************************************************************************/
-int VzLog(unsigned int  level,
-          bool          b_print,
-          const char    *file,
-          int           line,
-          const char    *fmt,
+int VzLog(unsigned int  n_level,
+          int           b_local_print,
+          const char    *p_file,
+          int           n_line,
+          const char    *p_fmt,
           ...) {
-  CTlsLog* tls_log = GetTlsLog();
+  vzlogging::CTlsLog* tls_log = vzlogging::GetTlsLog();
   if (tls_log) {
     char* slog = tls_log->slog_;
     int&  nlog = tls_log->nlog_;
 
     // HEAD
-    nlog = VzLogPackHead(level, file, line, slog, tls_log->nlog_max_);
+    nlog = vzlogging::VzLogPackHead(n_level, p_file, n_line, 
+                                    slog, tls_log->nlog_max_);
     if (nlog < 0) {
       return nlog;
     }
 
     // BODY
     va_list args;
-    va_start(args, fmt);
-    nlog += vsnprintf(slog + nlog, tls_log->nlog_max_ - nlog, fmt, args);
+    va_start(args, p_fmt);
+    nlog += vsnprintf(slog + nlog, tls_log->nlog_max_ - nlog, p_fmt, args);
     va_end(args);
 
     if (nlog < tls_log->nlog_max_) {
@@ -555,16 +560,16 @@ int VzLog(unsigned int  level,
     }
 
     // 使能输出
-    if (b_print || k_en_stdout) {
+    if (b_local_print == 1 || vzlogging::k_en_stdout) {
       if (nlog < tls_log->nlog_max_) {
         slog[nlog] = '\0';
       }
-      VzDumpLogging(slog, nlog);
+      vzlogging::VzDumpLogging(slog, nlog);
     }
 
-    if ((b_print == false) &&
-        level >= k_shm_arg.GetSendLevel()) {
-      return tls_log->Write(k_shm_arg.GetSockAddr(), slog, nlog);
+    if ((b_local_print == 0) &&
+        n_level >= vzlogging::k_shm_arg.GetSendLevel()) {
+      return tls_log->Write(vzlogging::k_shm_arg.GetSockAddr(), slog, nlog);
     }
     return 0;
   }
@@ -572,23 +577,24 @@ int VzLog(unsigned int  level,
 }
 
 int VzLogBin(unsigned int level,
-           bool         b_print,
-           const char   *file,
-           int          line,
-           const char   *data,
-           int          size) {
+           int            b_print,
+           const char     *file,
+           int            line,
+           const char     *data,
+           int            size) {
   static const char HEX_INDEX[] = {
     '0', '1', '2', '3', '4', '5',
     '6', '7', '8', '9', 'A', 'B',
     'C', 'D', 'E', 'F'
   };
-  CTlsLog* tls_log = GetTlsLog();
+  vzlogging::CTlsLog* tls_log = vzlogging::GetTlsLog();
   if (tls_log) {
     char* slog = tls_log->slog_;
     int& nlog  = tls_log->nlog_;
 
     // HEAD
-    nlog = VzLogPackHead(level, file, line, slog, tls_log->nlog_max_);
+    nlog = vzlogging::VzLogPackHead(level, file, line, 
+                                    slog, tls_log->nlog_max_);
 
     // BODY
     int data_index = 0;
@@ -606,16 +612,16 @@ int VzLogBin(unsigned int level,
       slog[nlog++] = '\n';
     }
 
-    if (b_print || k_en_stdout) {
+    if (b_print == 1 || vzlogging::k_en_stdout) {
       if (nlog < tls_log->nlog_max_) {
         slog[nlog++] = '\0';
       }
-      VzDumpLogging(slog, nlog);
+      vzlogging::VzDumpLogging(slog, nlog);
     }
 
-    if ((b_print == false) &&
-        level >= k_shm_arg.GetSendLevel()) {
-      return tls_log->Write(k_shm_arg.GetSockAddr(), slog, nlog);
+    if ((b_print == 0) &&
+        level >= vzlogging::k_shm_arg.GetSendLevel()) {
+      return tls_log->Write(vzlogging::k_shm_arg.GetSockAddr(), slog, nlog);
     }
     return 0;
   }
@@ -635,16 +641,26 @@ void *RegisterWatchDogKey(const char   *s_descrebe,
                           unsigned int n_descrebe_size,
                           unsigned int n_max_timeout) {
   int n_empty = 0;
-  for ( ; n_empty < DEF_PER_PRO_WATCHDOG_MAX; n_empty++) {
-    if (k_watchdog[n_empty].n_mark == 0) {
-      k_watchdog[n_empty].n_mark = DEF_TAG_MARK;
-      k_watchdog[n_empty].n_max_timeout = n_max_timeout;
-      k_watchdog[n_empty].n_descrebe_size =
+
+  // 判断注册两次
+  for (n_empty = 0 ; n_empty < DEF_PER_PRO_WATCHDOG_MAX; n_empty++) {
+    if (vzlogging::k_watchdog[n_empty].n_mark == DEF_TAG_MARK && 
+        strncmp(vzlogging::k_watchdog[n_empty].s_descrebe, s_descrebe, 8) == 0) {
+      return &vzlogging::k_watchdog[n_empty];
+    }
+  }
+
+  // 加入新的
+  for (n_empty = 0 ; n_empty < DEF_PER_PRO_WATCHDOG_MAX; n_empty++) {
+    if (vzlogging::k_watchdog[n_empty].n_mark == 0) {
+      vzlogging::k_watchdog[n_empty].n_mark = DEF_TAG_MARK;
+      vzlogging::k_watchdog[n_empty].n_max_timeout = n_max_timeout;
+      vzlogging::k_watchdog[n_empty].n_descrebe_size =
         (n_descrebe_size > DEF_USER_DESCREBE_MAX) ? \
           DEF_USER_DESCREBE_MAX : n_descrebe_size;
-      memcpy(k_watchdog[n_empty].s_descrebe, s_descrebe,
-             k_watchdog[n_empty].n_descrebe_size);
-      return &k_watchdog[n_empty];
+      memcpy(vzlogging::k_watchdog[n_empty].s_descrebe, s_descrebe,
+             vzlogging::k_watchdog[n_empty].n_descrebe_size);
+      return &vzlogging::k_watchdog[n_empty];
     }
   }
   return NULL;
@@ -655,19 +671,17 @@ void *RegisterWatchDogKey(const char   *s_descrebe,
 /* Parameters  : key[IN] 注册看门狗时使用传入的key值
 /* Return      : true 喂狗成功,false 喂狗失败
 /************************************************************************/
-bool FeedDog(const void *p_arg) {
-  TAG_WATCHDOG* p_wdg = (TAG_WATCHDOG*)p_arg;
+int FeedDog(const void *p_arg) {
+  vzlogging::TAG_WATCHDOG* p_wdg = (vzlogging::TAG_WATCHDOG*)p_arg;
   if (p_wdg && p_wdg->n_mark == DEF_TAG_MARK) {
-    int n_ret = VzLog(L_HEARTBEAT, false, __FILE__, __LINE__,
+    int n_ret = ::VzLog(L_HEARTBEAT, 0, __FILE__, __LINE__,
                       "%s %d %s",
-                      k_app_name,
+                      vzlogging::k_app_name,
                       p_wdg->n_max_timeout,
                       p_wdg->s_descrebe);
     if (n_ret == 0) {
-      return true;
+      return 0;
     }
   }
-  return false;
+  return -1;
 }
-
-}  // namespace vzlogging

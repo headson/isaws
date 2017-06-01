@@ -54,7 +54,7 @@ int CVzSockDgram::OpenTransAddr(const char* s_srv_addr) {
     if (sock_send_ == INVALID_SOCKET) {
       sock_send_ = ::socket(AF_INET, SOCK_DGRAM, 0);
       if (sock_send_ == INVALID_SOCKET) {
-        VZ_PRINT("socket create failed.\n");
+        VZ_ERROR("socket create failed.\n");
         return -1;
       }
 
@@ -92,7 +92,7 @@ int CVzSockDgram::OpenListenAddr(const char* ip, unsigned short port) {
 
   sock_recv_ = ::socket(AF_INET, SOCK_DGRAM, 0);
   if (sock_recv_ == INVALID_SOCKET) {
-    VZ_PRINT("socket create failed.\n");
+    VZ_ERROR("socket create failed.\n");
     return -1;
   }
 
@@ -109,7 +109,7 @@ int CVzSockDgram::OpenListenAddr(const char* ip, unsigned short port) {
   int ret = ::bind(sock_recv_,
                    (struct sockaddr*)&local_addr, sizeof(struct sockaddr));
   if (ret < 0) {
-    VZ_PRINT("socket bind address failed.\n");
+    VZ_ERROR("socket bind address failed.\n");
 
     Close();
     return -2;
@@ -119,7 +119,7 @@ int CVzSockDgram::OpenListenAddr(const char* ip, unsigned short port) {
   int opt = 64 * 1024;
   ret = setsockopt(sock_recv_, SOL_SOCKET, SO_RCVBUF, (char*)&opt, sizeof(int));
   if (ret < 0) {
-    VZ_PRINT("setsockopt SO_RCVBUF failed.\n");
+    VZ_ERROR("setsockopt SO_RCVBUF failed.\n");
 
     Close();
     return -3;
@@ -411,29 +411,29 @@ int CVzLoggingFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, file);
       char* p_log = strrchr(s_log, '\n');
       fwrite(p_log + 1, 1, strlen(p_log) - 1, fd_err);
-
-      while (!feof(file)) {
+      do {
         n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, file);
         fwrite(s_log, 1, n_log, fd_err);
-      }
-
+      } while (!feof(file) && n_log > 0);
       fclose(file);
       file = NULL;
     }
 
     if (p_file_) {
-      fseek(p_file_, 0, SEEK_SET);
-      while (!feof(p_file_)) {
-        n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
-        fwrite(s_log, 1, n_log, fd_err);
+      fclose(p_file_); p_file_ = NULL;
+
+      p_file_ = fopen(s_filename_[n_filename_idx_], "rt");
+      if (p_file_) {
+        do {
+          n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
+          fwrite(s_log, 1, n_log, fd_err);
+        } while (!feof(p_file_) && n_log > 0);
       }
     }
-
     // д
     if (s_info != NULL && n_info > 0) {
       fwrite(s_info, 1, n_info, fd_err);
     }
-
     fclose(fd_err);
     fd_err = NULL;
     return 0;
@@ -488,10 +488,10 @@ int CVzWatchdogFile::CheckFileReopen(unsigned int n_msg) {
           char* p_log = strrchr(s_log, '\n');
           fwrite(p_log + 1, 1, strlen(p_log) - 1, file_temp);
 
-          while (!feof(p_file_)) {
+          do {
             n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
             fwrite(s_log, 1, n_log, file_temp);
-          }
+          } while (!feof(p_file_) && n_log > 0);
           fclose(file_temp);
           file_temp = NULL;
 

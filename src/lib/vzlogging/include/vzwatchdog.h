@@ -5,8 +5,6 @@
 #ifndef SRC_LIB_VZLOGGING_INCLUDE_VZWATCHDOG_H_
 #define SRC_LIB_VZLOGGING_INCLUDE_VZWATCHDOG_H_
 
-namespace vzlogging {
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,19 +22,17 @@ extern "C" {
 /************************************************************************/
 void *RegisterWatchDogKey(const char   *s_descrebe,
                           unsigned int n_descrebe_size,
-                          unsigned int n_max_timeout = DEF_MAX_TIMEOUT_SEC);
+                          unsigned int n_max_timeout);
 
 /************************************************************************/
 /* Description : 喂狗接口,定时调用,否则看门狗服务判断此key相关线程挂掉
 /* Parameters  : key[IN] 注册看门狗时使用传入的key值
-/* Return      : true 喂狗成功,false 喂狗失败
+/* Return      : 0 喂狗成功,-1 喂狗失败
 /************************************************************************/
-bool FeedDog(const void *p_arg);
+int FeedDog(const void *p_arg);
 
 #ifdef __cplusplus
 }
 #endif
-
-}  // namespace vzlogging
 
 #endif  // SRC_LIB_VZLOGGING_INCLUDE_VZWATCHDOG_H_
