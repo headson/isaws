@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 if(WIN32)
-    SET(BUILD_PROJECT_NAME "libjobserver")
+    SET(BUILD_PROJECT_NAME "libdispatcher")
 elseif(UNIX)
-    SET(BUILD_PROJECT_NAME "jobserver")
+    SET(BUILD_PROJECT_NAME "dispatcher")
 endif()
 
 #########################################################################
@@ -23,8 +23,27 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/cjobserver.h
-	${CMAKE_CURRENT_SOURCE_DIR}/cjobserver.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/client/cjobclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/client/cjobclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cjobserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cjobserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/worker/cjobworker.h
+	${CMAKE_CURRENT_SOURCE_DIR}/worker/cjobworker.cpp
+)
+
+SOURCE_GROUP(client FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/client/cjobclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/client/cjobclient.cpp
+)
+
+SOURCE_GROUP(server FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cjobserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cjobserver.cpp
+)
+
+SOURCE_GROUP(worker FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/worker/cjobworker.h
+	${CMAKE_CURRENT_SOURCE_DIR}/worker/cjobworker.cpp
 )
 
 #########################################################################

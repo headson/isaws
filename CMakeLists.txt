@@ -1,7 +1,8 @@
+# cmake ../.. -G "Visual Studio 10 2010"
 # cmake ../.. -G "Visual Studio 12 2013"
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3516 -DCMAKE_BUILD_TYPE=Release
 cmake_minimum_required(VERSION 3.6)
-project(srcproj)
+project(isaw_project)
 
 INCLUDE(cmake_local/global_environment_settings.cmake)
 IF(WIN32)
@@ -24,23 +25,20 @@ LINK_DIRECTORIES(${VZPROJECT_LIBRARY_DIR})
 ## add lib
 ADD_SUBDIRECTORY(cmake_local)
 
-#ADD_SUBDIRECTORY(src/lib/base)
-#ADD_SUBDIRECTORY(src/lib/network)
-#
-#ADD_SUBDIRECTORY(src/lib/dispatcher/client)
-#ADD_SUBDIRECTORY(src/lib/dispatcher/server)
-#ADD_SUBDIRECTORY(src/lib/dispatcher/worker)
-#
+ADD_SUBDIRECTORY(src/lib/base)
+ADD_SUBDIRECTORY(src/lib/network)
+ADD_SUBDIRECTORY(src/lib/dispatcher)
+
 #ADD_SUBDIRECTORY(src/lib/server)
-#ADD_SUBDIRECTORY(src/lib/vzlogging)
+ADD_SUBDIRECTORY(src/lib/vzlogging)
 #ADD_SUBDIRECTORY(src/lib/platform/imx6q)
-ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
+#ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
 
 
 ## add run
-#ADD_SUBDIRECTORY(src/run/vzlogserver)
-ADD_SUBDIRECTORY(src/run/platform)
+ADD_SUBDIRECTORY(src/run/vzlogserver)
+#ADD_SUBDIRECTORY(src/run/hard_hi3516a)
 
 ## add test
-#ADD_SUBDIRECTORY(src/test/test_vzlogging)
+ADD_SUBDIRECTORY(src/test/test_vzlogging)
 

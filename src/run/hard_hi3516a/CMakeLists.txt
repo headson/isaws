@@ -24,10 +24,10 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project source")
 SET(SRC_LIST 
-	${CMAKE_CURRENT_SOURCE_DIR}/platform_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/hi3516a_main.cpp
 )
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/platform_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/hi3516a_main.cpp
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
