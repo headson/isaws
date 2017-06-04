@@ -41,27 +41,63 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.c
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/vtls.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vtls.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vshm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vshm.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vlock.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vlock.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vthread.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vthread.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vevent.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vevent.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vdatetime.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vdatetime.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vblockbuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vshm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vshm.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.cpp
+#	${CMAKE_CURRENT_SOURCE_DIR}/core/vevent.h
+#	${CMAKE_CURRENT_SOURCE_DIR}/core/vevent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vblockbuffer.h
 )
 
+SOURCE_GROUP(base FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.h
+)
+SOURCE_GROUP(flags FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/flags/yhflags.h
+	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.h
+	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.c
+)
+SOURCE_GROUP(core FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vshm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vshm.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.cpp
+#	${CMAKE_CURRENT_SOURCE_DIR}/core/vevent.h
+#	${CMAKE_CURRENT_SOURCE_DIR}/core/vevent.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vblockbuffer.h
+)
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
 
 #########################################################################
 MESSAGE(STATUS "Step 5 : Add executable or library target")
 #ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
-ADD_LIBRARY(${BUILD_PROJECT_NAME}  STATIC ${SRC_LIST})
+ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
 SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} 
-	PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
+	PROPERTY FOLDER 
+	
+	${PROJECT_SET_NAME_LIB})

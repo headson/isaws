@@ -136,4 +136,13 @@ inline void Unused(const void*) {}
   static type& name = *new type arguments
 
 #endif  // __cplusplus
+
+#ifndef WIN32
+typedef int SOCKET;
+#else
+#ifndef snprintf
+#define snprintf    _snprintf
+#endif // snprintf
+#endif  // WIN32
+
 #endif  // YH_VTYPES_H_
