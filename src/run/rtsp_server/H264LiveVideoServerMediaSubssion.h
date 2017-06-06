@@ -24,7 +24,6 @@ protected: // redefined virtual functions
                           unsigned& estBitrate);
 public: 
    char fFileName[100];
-
 };
 
 

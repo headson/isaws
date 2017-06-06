@@ -17,7 +17,7 @@
 #include <pthread.h>
 #endif
 
-#include "vzlogging/include/vzlogging.h"
+#include "vzlogging/logging/vzlogging.h"
 
 #ifdef WIN32
 void gettimeofday(struct timeval *tp, struct timezone *tz) {
@@ -156,7 +156,7 @@ void VzDumpLogging(const char* s_msg, int n_msg) {
   }
 
   fprintf(stdout, "%s", s_msg);
-
+  fflush(stdout);
   if (s_msg[0] == L_C_WARNING || s_msg[0] == L_C_ERROR) {
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
   }
@@ -178,6 +178,7 @@ void VzDumpLogging(const char* s_msg, int n_msg) {
     break;
   }
   fprintf(stdout, "%s%s%s", color, s_msg, VZ_NONE);
+  fflush(stdout);
 #endif
 }
 

@@ -36,6 +36,11 @@ endforeach()
 #Step 3 : Add code source
 SET(SRC_LIST 
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vsem.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vshm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vshm.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vshmvideo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vshmvideo.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/H264FramedLiveSource.h
 	${CMAKE_CURRENT_SOURCE_DIR}/H264FramedLiveSource.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/H264LiveVideoServerMediaSubssion.h
@@ -65,8 +70,7 @@ set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_RUN
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libvzlogserver.lib
-		libH264Encoder.lib
+		libvzlogging.lib
 		BasicUsageEnvironment
 		groupsock
 		liveMedia
@@ -76,7 +80,7 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libvzlogserver.a
+		libvzlogging.a
 		BasicUsageEnvironment
 		groupsock
 		liveMedia

@@ -11,47 +11,39 @@ H264FramedLiveSource::H264FramedLiveSource( UsageEnvironment& env,
     unsigned preferredFrameSize,
     unsigned playTimePerFrame )
   : FramedSource(env) {
-  fp = fopen( fileName, "rb" );
+  //fp = fopen( fileName, "rb" );
+
+  v_shm_vdo_.Open((int8_t*)"video_0", sizeof(TAG_SHM_VIDEO));
 }
 
 H264FramedLiveSource* H264FramedLiveSource::createNew( UsageEnvironment& env,
     char const* fileName,
     unsigned preferredFrameSize /*= 0*/,
     unsigned playTimePerFrame /*= 0*/ ) {
-  H264FramedLiveSource* newSource = new H264FramedLiveSource(env, fileName, preferredFrameSize, playTimePerFrame);
+  setVideoRTPSinkBufferSize();
+  H264FramedLiveSource* newSource = 
+    new H264FramedLiveSource(env, fileName, preferredFrameSize, playTimePerFrame);
 
   return newSource;
 }
 
 H264FramedLiveSource::~H264FramedLiveSource() {
-  fclose(fp);
+  //fclose(fp);
 }
 
-long filesize(FILE *stream) {
-  long curpos, length;
-  curpos = ftell(stream);
-  fseek(stream, 0L, SEEK_END);
-  length = ftell(stream);
-  fseek(stream, curpos, SEEK_SET);
-  return length;
-}
+//unsigned H264FramedLiveSource::maxFrameSize() const {
+//  return 1024*1024;
+//}
 
 void H264FramedLiveSource::doGetNextFrame() {
 
-REREAD:
-  if(filesize(fp) > fMaxSize) {
-    fFrameSize = fread(fTo, 1, fMaxSize,fp);
-  } else {
-    fFrameSize = fread(fTo, 1, filesize(fp), fp);
-    fseek(fp, 0, SEEK_SET);
-  }
-  if (fFrameSize <= 0) {
-    fseek(fp, 0, SEEK_SET);
-    goto REREAD;
-  }
+  fFrameSize = v_shm_vdo_.Read((int8_t*)fTo, fMaxSize);
+  fNumTruncatedBytes = 0;  
 
-  //fFrameSize = fMaxSize;
-  nextTask() = envir().taskScheduler().scheduleDelayedTask( 0,
+  static int i = 0;
+  printf("read video %d \t %d.\n", i++, fFrameSize);
+
+  nextTask() = envir().taskScheduler().scheduleDelayedTask(20,
                (TaskFunc*)FramedSource::afterGetting, this);//表示延迟0秒后再执行 afterGetting 函数
   return;
 }

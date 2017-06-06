@@ -40,10 +40,10 @@ SET(SRC_LIST_BASE
 )
 
 SET(SRC_LIST_LOGGING
-	${CMAKE_CURRENT_SOURCE_DIR}/include/vzlogging.h
-	${CMAKE_CURRENT_SOURCE_DIR}/include/vzwatchdog.h
-	${CMAKE_CURRENT_SOURCE_DIR}/include/vzloggingcpp.h
-	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.cpp	
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.h
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzloggingcpp.h
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzwatchdog.h
 )
 
 SET(SRC_LIST_LOGSERVER
@@ -54,6 +54,27 @@ SET(SRC_LIST_LOGSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.cpp
 )
 
+SOURCE_GROUP(base FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzlogdef.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzlogdef.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzshmarg.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzshmarg.cpp
+	)
+
+SOURCE_GROUP(logging FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.h
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzloggingcpp.h
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzwatchdog.h
+	)
+
+SOURCE_GROUP(server FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/server/vzflags.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.c
+	${CMAKE_CURRENT_SOURCE_DIR}/server/vzflags.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.cpp
+	)
 ## build library vzlogging
 MESSAGE(STATUS "Build vzlogserver library")
 add_library(${BUILD_PROJECT_NAME_LOGSERVER} STATIC
@@ -75,9 +96,6 @@ if(WIN32)
 		ws2_32.lib
 	)
 else()
-	#add_library(${BUILD_PROJECT_NAME_LOGGING} SHARED
-	#		${SRC_LIST_BASE}
-	#		${SRC_LIST_LOGGING})
 	add_library(${BUILD_PROJECT_NAME_LOGGING} STATIC
 			${SRC_LIST_BASE}
 			${SRC_LIST_LOGGING})

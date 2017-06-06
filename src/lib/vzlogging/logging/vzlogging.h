@@ -14,7 +14,6 @@ extern "C" {
 #endif
 
 /************************************************************************/
-/* Author      : Sober.Peng 2017-5-19
 /* Description : 初始化日志库
 /* Param       : argc[IN] 应用启动参数个数
 /*               argv[IN] 应用启动参数字符串数组
@@ -23,12 +22,18 @@ extern "C" {
 int  InitVzLogging(int argc, char* argv[]);
 
 /************************************************************************/
-/* Author      : Sober.Peng 2017-5-19
 /* Description : 销毁日志库
 /* Param       :
 /* Return      :
 /************************************************************************/
 void ExitVzLogging();
+
+/************************************************************************/
+/* Description : 一直显示日志
+/* Parameters  : 
+/* Return      : 
+/************************************************************************/
+void ShowVzLoggingAlways();
 
 /************************************************************************/
 /* Author      : Sober.Peng 2017-5-19
@@ -48,11 +53,11 @@ int VzLog(unsigned int  n_level,
           const char    *p_fmt,
           ...);
 int VzLogBin(unsigned int n_level,
-           int            b_local_print,
-           const char     *p_file,
-           int            n_line,
-           const char     *p_data,
-           int            n_size);
+             int            b_local_print,
+             const char     *p_file,
+             int            n_line,
+             const char     *p_data,
+             int            n_size);
 
 #ifdef __cplusplus
 }
@@ -99,6 +104,5 @@ enum {
 #define DLOGB_INFO(data, size)    VZDLOGB(L_INFO,    data, size)
 #define DLOGB_WARING(data, size)  VZDLOGB(L_WARNING, data, size)
 #define DLOGB_ERROR(data, size)   VZDLOGB(L_ERROR,   data, size)
-
 #endif  // SRC_LIB_VZLOGGING_INCLUDE_VZLOGGING_H_
 

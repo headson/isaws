@@ -10,7 +10,7 @@
 #include <time.h>
 #include <string>
 
-#include "vzlogging/include/vzlogging.h"
+#include "vzlogging/logging/vzlogging.h"
 
 /************************************************************************/
 /* Description : C++流输出方式实现日志打包
@@ -30,25 +30,32 @@ class CVzLogStream {
                unsigned int b_local_print);
   virtual ~CVzLogStream();
 
-  CVzLogStream& operator<<(const int t);
-  CVzLogStream& operator<<(const unsigned int t);
-#ifndef WIN32  // win32中与time_t冲突
-  CVzLogStream& operator<<(const long long t);
-#endif  // WIN32
-  CVzLogStream& operator<<(const unsigned long long t);
-  CVzLogStream& operator<<(const double t);
-  CVzLogStream& operator<<(const char t);
-  CVzLogStream& operator<<(const char* t);
+  CVzLogStream& operator<< (char t);
+  CVzLogStream& operator<< (unsigned char t);
+  CVzLogStream& operator<< (bool val);
+  CVzLogStream& operator<< (short val);
+  CVzLogStream& operator<< (unsigned short val);
+  CVzLogStream& operator<< (int val);
+  CVzLogStream& operator<< (unsigned int val);
+  CVzLogStream& operator<< (long val);
+  CVzLogStream& operator<< (unsigned long val);
+  CVzLogStream& operator<< (long long val);
+  CVzLogStream& operator<< (unsigned long long val);
+  CVzLogStream& operator<< (float val);
+  CVzLogStream& operator<< (double val);
+  CVzLogStream& operator<< (long double val);
 
-  CVzLogStream& operator<<(const time_t tt);
-  CVzLogStream& operator<<(const std::string str);
+  // CVzLogStream& operator<< (char* t);
+  CVzLogStream& operator<< (const char* t);
+  CVzLogStream& operator<< (std::string str);
+
+  //CVzLogStream& operator<< (time_t tt);
 
   CVzLogStream& write(const char* s_msg, int n_msg);
-
  private:
   void*         p_tls_;
-  bool          b_print_;
   unsigned int  n_level_;
+  unsigned int  b_local_print_;
 };
 
 }  // namespace vzlogging
@@ -63,6 +70,5 @@ class CVzLogStream {
 
 #define LOG(V)              VZLOGSTR(V)
 #define DLOG(V)             VZDLOGSTR(V)
-
 #endif  // SRC_LIB_VZLOGGING_INCLUDE_VZLOGGINGCPP_H_
 

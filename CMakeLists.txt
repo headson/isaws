@@ -37,7 +37,8 @@ ADD_SUBDIRECTORY(src/lib/base)
 ## add run
 ADD_SUBDIRECTORY(src/run/vzlogserver)
 #ADD_SUBDIRECTORY(src/run/hard_hi3516a)
-ADD_SUBDIRECTORY(src/run/wisstreammer)
+#ADD_SUBDIRECTORY(src/run/rtsp_server)
+ADD_SUBDIRECTORY(src/run/wis_streamer)
 
 ## add test
 ADD_SUBDIRECTORY(src/test/test_vzlogging)

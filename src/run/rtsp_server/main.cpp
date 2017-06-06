@@ -25,6 +25,8 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 
+#include "vzlogging/logging/vzloggingcpp.h"
+
 UsageEnvironment* env;
 
 // To make the second and subsequent client for each stream reuse the same
@@ -43,6 +45,8 @@ static void announceStream(RTSPServer*          rtspServer,
                            char const*          inputFileName); // fwd
 
 int main(int argc, char** argv) {
+  InitVzLogging(argc, argv);
+
   // Begin by setting up our usage environment:
   TaskScheduler* scheduler = BasicTaskScheduler::createNew();
   env = BasicUsageEnvironment::createNew(*scheduler);
@@ -79,19 +83,12 @@ int main(int argc, char** argv) {
                        inputFileName,
                        reuseFirstSource));//修改为自己实现的servermedia  H264LiveVideoServerMediaSubssion
 
-    Boolean useADUs = False;
-    Interleaving* interleaving = NULL;
-#ifdef STREAM_USING_ADUS
-    useADUs = True;
-#ifdef INTERLEAVE_ADUS
-    unsigned char interleaveCycle[] = {0,2,1,3}; // or choose your own...
-    unsigned const interleaveCycleSize
-      = (sizeof interleaveCycle)/(sizeof (unsigned char));
-    interleaving = new Interleaving(interleaveCycleSize, interleaveCycle);
-#endif
-#endif
-    sms->addSubsession(MP3AudioFileServerMediaSubsession::createNew(*env, inputFileNameMp3, reuseFirstSource,
-      useADUs, interleaving));
+    //Boolean useADUs = False;
+    //Interleaving* interleaving = NULL;
+    //sms->addSubsession(MP3AudioFileServerMediaSubsession::createNew(*env, 
+    //  inputFileNameMp3, reuseFirstSource,
+    //  useADUs, 
+    //  interleaving));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, streamName, inputFileName);

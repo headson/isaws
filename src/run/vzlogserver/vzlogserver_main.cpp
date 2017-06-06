@@ -15,14 +15,15 @@
 
 #include "vzlogging/base/vzlogdef.h"
 #include "vzlogging/base/vzshmarg.h"
-#include "vzlogging/include/vzlogging.h"
+#include "vzlogging/logging/vzlogging.h"
 #include "vzlogging/server/cvzlogserver.h"
 
 static vzlogging::CVzShmArg       k_shm_arg;      // 共享参数
 static vzlogging::CVzLoggingFile  k_log_file;     // 普通日志
 static vzlogging::CVzWatchdogFile k_wdg_file;     // 看门狗日志
 static vzlogging::CVzSockDgram    k_srv_sock;     // 网络服务
-static bool                       k_en_stdout = false;   // 使能输出
+static bool                       k_en_stdout = false;    // 使能输出
+static bool                       k_en_watchdog = true;   // 看门狗使能
 
 /***进程心跳信息*********************************************************/
 typedef struct _TAG_WATCHDOG {
@@ -36,19 +37,22 @@ static TAG_HEARTBEAT k_pro_heart[DEF_PER_DEV_PROCESS_MAX];  // 进程心跳信息
 
 /***static function******************************************************/
 /*共享参数*/
-int InitShareParam(const char*    ip,
-                   unsigned short port,
-                   unsigned int   snd_level);
+int InitShareParam(const char*    s_ip,
+                   unsigned short n_port,
+                   unsigned int   n_snd_level);
 
 /*初始化日志记录*/
-int InitLogRecord(const char* path,
-                  const char* log_fname,
-                  const char* wdg_fname);
+int InitLogRecord(const char* s_path,
+                  const char* s_log_fname,
+                  const char* s_wdg_fname);
+
+/*初始化看门狗监控模块*/
+int InitMonitorModule(const char* s_path);
 
 /*初始化网络服务*/
-int InitSrvSocket(const char* ip,
-                  unsigned short port,
-                  const char* s_snd_addr);
+int InitSrvSocket(const char*     s_ip,
+                  unsigned short  n_port,
+                  const char*     s_snd_addr);
 
 /*超时回调*/
 int callback_timeout();
@@ -93,7 +97,7 @@ int main(int argc, char* argv[]) {
   srand((unsigned int)time(NULL));
   srandom((unsigned int)time(NULL));
 #endif
-  VZ_PRINT("%s %s", __TIME__, __DATE__);
+  VZ_PRINT("%s %s\n", __TIME__, __DATE__);
   memset(k_pro_heart, 0, sizeof(k_pro_heart));
 
   int ret = 0;
@@ -106,11 +110,16 @@ int main(int argc, char* argv[]) {
   strncpy(s_log_path, DEF_RECORD_PATH, 64);  // 默认路径
 
   int opt = 0;
-  while ((opt = getopt(argc, argv, "v:V:p:P:s:S:dDhH")) != -1) {
+  while ((opt = getopt(argc, argv, "v:V:p:P:s:S:dDhHfF")) != -1) {
     switch (opt) {
     case 'v':   // 配置网络输出级别
     case 'V':
       n_snd_level = atoi(optarg);
+      break;
+
+    case 'f':   // 看门狗关闭
+    case 'F':
+      k_en_watchdog = false;
       break;
 
     case 'p':   // 配置网络传输端口
@@ -136,6 +145,9 @@ int main(int argc, char* argv[]) {
       break;
     }
   }
+  if (k_en_watchdog == false) {
+    VZ_ERROR("close watchdog.\n");
+  }
 
   // 共享参数
   k_shm_arg.Open();
@@ -146,11 +158,18 @@ int main(int argc, char* argv[]) {
                       DEF_LOG_REC_FILE,
                       DEF_WDG_REC_FILE);
   if (ret < 0) {
-    VZ_ERROR("Open record failed. path %s, log file %s, watchdog file %s\n",
+    VZ_ERROR("Open record failed. path %s, log file %s, watchdog file %s.\n",
              s_log_path, DEF_LOG_REC_FILE, DEF_WDG_REC_FILE);
     return ret;
   }
   VZ_PRINT("send log level %d.\n", n_snd_level);
+
+  /*初始化看门狗监控模块*/
+  ret = InitMonitorModule(DEF_WDG_MODULE_FILE);
+  if (ret < 0) {
+    VZ_ERROR("Open monitor module config file failed.%d.\n", ret);
+    //return ret;
+  }
 
   // 打开网络监听
   ret = InitSrvSocket("0.0.0.0", n_recv_port, s_snd_addr);
@@ -208,6 +227,84 @@ int InitLogRecord(const char* path,
   k_wdg_file.StartRecord("watchdog");
 
   return 0;
+}
+
+/*初始化看门狗监控模块*/
+int InitMonitorModule(const char* s_path) {
+  FILE* file = fopen(s_path, "rt");
+  if (file) {
+    int  n_line = 0;
+    char s_line[128+1];
+    do {
+      memset(s_line, 0, 128);
+      fgets(s_line, 128, file);
+      if ((n_line = strlen(s_line)) <= 0) {
+        break;
+      }
+      if (s_line[0] == '#') {
+        continue;
+      }
+
+      for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
+        if (k_pro_heart[i].n_mark == 0
+            && k_pro_heart[i].s_app_name[0] == '\0') {
+          char s_app_name[32+1] = {0};
+          char s_descrebe[8+1]  = {0};
+          int  n_timeout        = 0;
+
+          const char *p_app = ::strchr(s_line, ';');
+          if (p_app == NULL) {
+            break;
+          }
+          const char *p_desc = ::strchr(p_app+1, ';');
+          if (p_desc == NULL) {
+            break;
+          }
+          strncpy(s_app_name, s_line,
+                  (((p_app - s_line) > DEF_PROCESS_NAME_MAX) ?
+                   DEF_PROCESS_NAME_MAX : (p_app - s_line)));
+          strncpy(s_descrebe, p_app + 1,
+                  (((p_desc - p_app - 1) > DEF_USER_DESCREBE_MAX) ?
+                   DEF_USER_DESCREBE_MAX : (p_desc - p_app - 1)));
+          n_timeout = atoi(p_desc + 1);
+          if (s_app_name[0] == '\0' ||
+              s_descrebe[0] =='\0' ||
+              n_timeout <= 0) {
+            break;
+          }
+
+          // 去重复
+          bool b_find = false;
+          for (int j = 0; j < DEF_PER_DEV_PROCESS_MAX; j++) {
+            if (k_pro_heart[j].n_mark == DEF_TAG_MARK &&
+                !strncmp(k_pro_heart[j].s_descrebe, s_descrebe, DEF_USER_DESCREBE_MAX)       // 描述符
+                && !strncmp(k_pro_heart[j].s_app_name, s_app_name, DEF_PROCESS_NAME_MAX)) {  // 进程名
+              b_find = true;
+              break;
+            }
+          }
+
+          // 加入新模块
+          if (b_find == false) {
+            k_pro_heart[i].n_mark = DEF_TAG_MARK;
+            k_pro_heart[i].n_timeout = n_timeout;
+            k_pro_heart[i].last_heartbeat = time(NULL);
+            strncpy(k_pro_heart[i].s_app_name, s_app_name, DEF_PROCESS_NAME_MAX);
+            strncpy(k_pro_heart[i].s_descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
+            VZ_ERROR("add module %s-%s-%d.\n",
+                     k_pro_heart[i].s_app_name,
+                     k_pro_heart[i].s_descrebe,
+                     k_pro_heart[i].n_timeout);
+          }
+          break;
+        }
+      }
+    } while (!feof(file) && n_line > 0);
+
+    fclose(file);
+    return 0;
+  }
+  return -1;
 }
 
 /*初始化网络服务*/
@@ -272,7 +369,9 @@ int callback_timeout() {
           && k_pro_heart[i].s_app_name[0] != '\0') {
         unsigned int n_diff_time = abs(n_now - k_pro_heart[i].last_heartbeat);
         if (n_diff_time > k_pro_heart[i].n_timeout) {
-          OnModuleLostHeartbeat(n_now);
+          if (k_en_watchdog) {
+            OnModuleLostHeartbeat(n_now);
+          }
 
           memset(&k_pro_heart[i], 0, sizeof(k_pro_heart[i]));
           break;
@@ -387,9 +486,7 @@ int OnModuleLostHeartbeat(time_t n_now) {
   k_log_file.OnModuleLostHeartbeat(s_log, n_log);
 
   // 重启设备
-#if 1
   system("reboot");
-#endif
   return 0;
 }
 

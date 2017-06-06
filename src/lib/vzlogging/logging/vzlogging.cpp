@@ -6,8 +6,8 @@
 /* Date        : 19:5:2017
 /* Description :
 /************************************************************************/
-#include "vzlogging/include/vzlogging.h"
-#include "vzlogging/include/vzloggingcpp.h"
+#include "vzlogging/logging/vzlogging.h"
+#include "vzlogging/logging/vzloggingcpp.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -17,7 +17,7 @@
 
 #include "vzlogging/base/vzlogdef.h"
 #include "vzlogging/base/vzshmarg.h"
-#include "vzlogging/include/vzwatchdog.h"
+#include "vzlogging/logging/vzwatchdog.h"
 
 #ifdef WIN32
 // TLS
@@ -277,10 +277,18 @@ CVzLogStream::CVzLogStream(int          n_level,
                            const char*  p_file,
                            int          n_line,
                            unsigned int b_print) {
-  b_print_ = b_print == 1 ? true : false;
-  n_level_ = n_level;
-  p_tls_ = GetTlsLog();
+  b_local_print_  = b_print;
+  n_level_        = n_level;
 
+  p_tls_          = GetTlsLog();
+  if (!k_en_stdout) {
+    if (b_local_print_ == 1) {
+#ifdef NDEBUG
+      p_tls_ = NULL;
+#endif
+    }
+  }
+  
   if (p_tls_) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     tls_log->nlog_ = VzLogPackHead(n_level, p_file, n_line,
@@ -301,15 +309,15 @@ vzlogging::CVzLogStream::~CVzLogStream() {
     if (tls_log->nlog_ < tls_log->nlog_max_) {
       tls_log->slog_[tls_log->nlog_++] = '\n';
     }
-    // 使能输出
-    if ((b_print_ == true) || k_en_stdout) {
+
+    if (k_en_stdout) {
       if (tls_log->nlog_ < tls_log->nlog_max_) {
         tls_log->slog_[tls_log->nlog_++] = '\0';
       }
-      printf(tls_log->slog_);
+      VzDumpLogging(tls_log->slog_, tls_log->nlog_);
     }
 
-    if ((b_print_ == false) &&
+    if ((b_local_print_ == 0) &&
         (n_level_ >= k_shm_arg.GetSendLevel())) {
       tls_log->Write(k_shm_arg.GetSockAddr(), tls_log->slog_, tls_log->nlog_);
     }
@@ -317,22 +325,8 @@ vzlogging::CVzLogStream::~CVzLogStream() {
 }
 
 vzlogging::CVzLogStream&
-vzlogging::CVzLogStream::operator<<(const char* t) {
-  if (p_tls_ && t) {
-    CTlsLog* tls_log = (CTlsLog*)p_tls_;
-    if (tls_log->nlog_ < 0) {
-      return *this;
-    }
-
-    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
-                               tls_log->nlog_max_ - tls_log->nlog_,
-                               "%s", t);
-  }
-  return *this;
-}
-
-vzlogging::CVzLogStream&
-vzlogging::CVzLogStream::operator<<(const char t) {
+vzlogging::CVzLogStream::operator<<(char val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
   if (p_tls_) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     if (tls_log->nlog_ < 0) {
@@ -341,13 +335,15 @@ vzlogging::CVzLogStream::operator<<(const char t) {
 
     tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
                                tls_log->nlog_max_ - tls_log->nlog_,
-                               "%c", t);
+                               "%c", val);
   }
   return *this;
 }
 
-vzlogging::CVzLogStream&
-vzlogging::CVzLogStream::operator<<(const double t) {
+
+vzlogging::CVzLogStream& 
+CVzLogStream::operator<<(unsigned char val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
   if (p_tls_) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     if (tls_log->nlog_ < 0) {
@@ -356,13 +352,14 @@ vzlogging::CVzLogStream::operator<<(const double t) {
 
     tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
                                tls_log->nlog_max_ - tls_log->nlog_,
-                               "%f", t);
+                               "%u", (int)val);
   }
   return *this;
 }
 
-vzlogging::CVzLogStream&
-vzlogging::CVzLogStream::operator<<(const unsigned long long t) {
+vzlogging::CVzLogStream& 
+CVzLogStream::operator<<(bool val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
   if (p_tls_) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     if (tls_log->nlog_ < 0) {
@@ -371,14 +368,14 @@ vzlogging::CVzLogStream::operator<<(const unsigned long long t) {
 
     tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
                                tls_log->nlog_max_ - tls_log->nlog_,
-                               "%llu", t);
+                               "%s", (val ? "true" : "false"));
   }
   return *this;
 }
 
-#ifndef WIN32
-vzlogging::CVzLogStream&
-vzlogging::CVzLogStream::operator<<(const long long t) {
+vzlogging::CVzLogStream& 
+CVzLogStream::operator<<(short val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
   if (p_tls_) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     if (tls_log->nlog_ < 0) {
@@ -387,14 +384,14 @@ vzlogging::CVzLogStream::operator<<(const long long t) {
 
     tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
                                tls_log->nlog_max_ - tls_log->nlog_,
-                               "%lld", t);
+                               "%d", (int)val);
   }
   return *this;
 }
-#endif  // WIN32
 
 vzlogging::CVzLogStream&
-vzlogging::CVzLogStream::operator<<(const unsigned int t) {
+CVzLogStream::operator<<(unsigned short val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
   if (p_tls_) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     if (tls_log->nlog_ < 0) {
@@ -403,13 +400,14 @@ vzlogging::CVzLogStream::operator<<(const unsigned int t) {
 
     tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
                                tls_log->nlog_max_ - tls_log->nlog_,
-                               "%u", t);
+                               "%u", (int)val);
   }
   return *this;
 }
 
 vzlogging::CVzLogStream&
-vzlogging::CVzLogStream::operator<<(const int t) {
+vzlogging::CVzLogStream::operator<<(int t) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
   if (p_tls_) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     if (tls_log->nlog_ < 0) {
@@ -424,7 +422,8 @@ vzlogging::CVzLogStream::operator<<(const int t) {
 }
 
 vzlogging::CVzLogStream&
-  vzlogging::CVzLogStream::operator<<(const time_t tt) {
+vzlogging::CVzLogStream::operator<<(unsigned int t) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
   if (p_tls_) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     if (tls_log->nlog_ < 0) {
@@ -433,14 +432,144 @@ vzlogging::CVzLogStream&
 
     tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
                                tls_log->nlog_max_ - tls_log->nlog_,
-                               "%d", tt);
+                               "%u", t);
+  }
+  return *this;
+}
+
+vzlogging::CVzLogStream& 
+CVzLogStream::operator<<(long val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  if (p_tls_) {
+    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+    if (tls_log->nlog_ < 0) {
+      return *this;
+    }
+
+    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+                               tls_log->nlog_max_ - tls_log->nlog_,
+                               "%ld", val);
   }
   return *this;
 }
 
 vzlogging::CVzLogStream&
-  vzlogging::CVzLogStream::operator<<(const std::string str) {
+CVzLogStream::operator<<(unsigned long val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
   if (p_tls_) {
+    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+    if (tls_log->nlog_ < 0) {
+      return *this;
+    }
+
+    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+                               tls_log->nlog_max_ - tls_log->nlog_,
+                               "%lu", val);
+  }
+  return *this;
+}
+
+vzlogging::CVzLogStream&
+CVzLogStream::operator<<(long long val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  if (p_tls_) {
+    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+    if (tls_log->nlog_ < 0) {
+      return *this;
+    }
+
+    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+                               tls_log->nlog_max_ - tls_log->nlog_,
+                               "%lld", val);
+  }
+  return *this;
+}
+
+vzlogging::CVzLogStream&
+CVzLogStream::operator<<(unsigned long long val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  if (p_tls_) {
+    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+    if (tls_log->nlog_ < 0) {
+      return *this;
+    }
+
+    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+                               tls_log->nlog_max_ - tls_log->nlog_,
+                               "%llu", val);
+  }
+  return *this;
+}
+
+vzlogging::CVzLogStream& 
+CVzLogStream::operator<<(float val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  if (p_tls_) {
+    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+    if (tls_log->nlog_ < 0) {
+      return *this;
+    }
+
+    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+                               tls_log->nlog_max_ - tls_log->nlog_,
+                               "%f", val);
+  }
+  return *this;
+}
+
+vzlogging::CVzLogStream&
+vzlogging::CVzLogStream::operator<<(double val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  if (p_tls_) {
+    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+    if (tls_log->nlog_ < 0) {
+      return *this;
+    }
+
+    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+                               tls_log->nlog_max_ - tls_log->nlog_,
+                               "%f", val);
+  }
+  return *this;
+}
+
+
+vzlogging::CVzLogStream& 
+CVzLogStream::operator<<(long double val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  if (p_tls_) {
+    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+    if (tls_log->nlog_ < 0) {
+      return *this;
+    }
+
+    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+                               tls_log->nlog_max_ - tls_log->nlog_,
+                               "%lf", val);
+  }
+  return *this;
+}
+
+vzlogging::CVzLogStream&
+vzlogging::CVzLogStream::operator<<(const char* val) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  if (p_tls_ && val) {
+    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+    if (tls_log->nlog_ < 0) {
+      return *this;
+    }
+
+    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+                               tls_log->nlog_max_ - tls_log->nlog_,
+                               "%s", val);
+  }
+  return *this;
+}
+
+vzlogging::CVzLogStream&
+vzlogging::CVzLogStream::operator<<(std::string str) {
+  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  if (p_tls_ && str.size()>0) {
     CTlsLog* tls_log = (CTlsLog*)p_tls_;
     if (tls_log->nlog_ < 0) {
       return *this;
@@ -452,6 +581,22 @@ vzlogging::CVzLogStream&
   }
   return *this;
 }
+
+//vzlogging::CVzLogStream&
+//vzlogging::CVzLogStream::operator<<(const time_t tt) {
+//  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+//  if (p_tls_) {
+//    CTlsLog* tls_log = (CTlsLog*)p_tls_;
+//    if (tls_log->nlog_ < 0) {
+//      return *this;
+//    }
+//
+//    tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
+//                               tls_log->nlog_max_ - tls_log->nlog_,
+//                               "%d", tt);
+//  }
+//  return *this;
+//}
 
 vzlogging::CVzLogStream& 
   vzlogging::CVzLogStream::write(const char* s_msg, int n_msg) {
@@ -522,6 +667,11 @@ void ExitVzLogging() {
   VZ_PRINT("send message size %d.\n", vzlogging::k_total_log);
 }
 
+/***一直显示日志*********************************************************/
+void ShowVzLoggingAlways() {
+  vzlogging::k_en_stdout = true;
+}
+
 /************************************************************************/
 /* Description : 打印日志
 /* Parameters  : level 日志等级,
@@ -537,14 +687,22 @@ int VzLog(unsigned int  n_level,
           int           n_line,
           const char    *p_fmt,
           ...) {
-  vzlogging::CTlsLog* tls_log = vzlogging::GetTlsLog();
-  if (tls_log) {
-    char* slog = tls_log->slog_;
-    int&  nlog = tls_log->nlog_;
+  vzlogging::CTlsLog* p_tls = vzlogging::GetTlsLog();
+  //printf("%s[%d] %d.\n", __FUNCTION__, __LINE__, vzlogging::k_en_stdout);
+  if (!vzlogging::k_en_stdout) {
+    if (b_local_print == 1) {  // DLOG时,如果是调试模式不打印
+#ifdef NDEBUG
+      p_tls = NULL;
+#endif
+    }
+  }
+  if (p_tls) {
+    char* slog = p_tls->slog_;
+    int&  nlog = p_tls->nlog_;
 
     // HEAD
     nlog = vzlogging::VzLogPackHead(n_level, p_file, n_line, 
-                                    slog, tls_log->nlog_max_);
+                                    slog, p_tls->nlog_max_);
     if (nlog < 0) {
       return nlog;
     }
@@ -552,76 +710,84 @@ int VzLog(unsigned int  n_level,
     // BODY
     va_list args;
     va_start(args, p_fmt);
-    nlog += vsnprintf(slog + nlog, tls_log->nlog_max_ - nlog, p_fmt, args);
+    nlog += vsnprintf(slog + nlog, p_tls->nlog_max_ - nlog, p_fmt, args);
     va_end(args);
 
-    if (nlog < tls_log->nlog_max_) {
+    if (nlog < p_tls->nlog_max_) {
       slog[nlog++] = '\n';
     }
 
-    // 使能输出
-    if (b_local_print == 1 || vzlogging::k_en_stdout) {
-      if (nlog < tls_log->nlog_max_) {
-        slog[nlog] = '\0';
+    if (b_local_print == 1 || 
+        vzlogging::k_en_stdout) {
+      if (nlog < p_tls->nlog_max_) {
+        slog[nlog++] = '\0';
       }
       vzlogging::VzDumpLogging(slog, nlog);
     }
 
     if ((b_local_print == 0) &&
         n_level >= vzlogging::k_shm_arg.GetSendLevel()) {
-      return tls_log->Write(vzlogging::k_shm_arg.GetSockAddr(), slog, nlog);
+      return p_tls->Write(vzlogging::k_shm_arg.GetSockAddr(), slog, nlog);
     }
     return 0;
   }
   return -1;
 }
 
-int VzLogBin(unsigned int level,
-           int            b_print,
-           const char     *file,
-           int            line,
-           const char     *data,
-           int            size) {
+int VzLogBin(unsigned int n_level,
+           int            b_local_print,
+           const char     *p_file,
+           int            n_line,
+           const char     *p_data,
+           int            n_size) {
   static const char HEX_INDEX[] = {
     '0', '1', '2', '3', '4', '5',
     '6', '7', '8', '9', 'A', 'B',
     'C', 'D', 'E', 'F'
   };
-  vzlogging::CTlsLog* tls_log = vzlogging::GetTlsLog();
-  if (tls_log) {
-    char* slog = tls_log->slog_;
-    int& nlog  = tls_log->nlog_;
+  vzlogging::CTlsLog* p_tls = vzlogging::GetTlsLog();
+  if (!vzlogging::k_en_stdout) {
+    if (b_local_print == 1) {  // DLOG时,如果是调试模式不打印
+#ifdef NDEBUG
+      p_tls = NULL;
+#endif
+    }
+  }
+  if (p_tls) {
+    char* slog = p_tls->slog_;
+    int& nlog  = p_tls->nlog_;
 
     // HEAD
-    nlog = vzlogging::VzLogPackHead(level, file, line, 
-                                    slog, tls_log->nlog_max_);
+    nlog = vzlogging::VzLogPackHead(n_level, p_file, n_line, 
+                                    slog, p_tls->nlog_max_);
 
     // BODY
     int data_index = 0;
     int buffer_index = 0;
     while (buffer_index < (DEF_LOG_MAX_SIZE - nlog)
-           && data_index < size) {
-      unsigned char c = data[data_index];
+           && data_index < n_size) {
+      unsigned char c = p_data[data_index];
       slog[nlog + buffer_index++] = HEX_INDEX[c & 0X0F];
       slog[nlog + buffer_index++] = HEX_INDEX[c >> 4];
       slog[nlog + buffer_index++] = ' ';
       data_index++;
     }
     nlog += data_index;
-    if (nlog < tls_log->nlog_max_) {
+    if (nlog < p_tls->nlog_max_) {
       slog[nlog++] = '\n';
     }
 
-    if (b_print == 1 || vzlogging::k_en_stdout) {
-      if (nlog < tls_log->nlog_max_) {
+    if (b_local_print == 1 || 
+        vzlogging::k_en_stdout) {
+      if (nlog < p_tls->nlog_max_) {
         slog[nlog++] = '\0';
       }
       vzlogging::VzDumpLogging(slog, nlog);
     }
 
-    if ((b_print == 0) &&
-        level >= vzlogging::k_shm_arg.GetSendLevel()) {
-      return tls_log->Write(vzlogging::k_shm_arg.GetSockAddr(), slog, nlog);
+    if ((b_local_print == 0) &&
+        n_level >= vzlogging::k_shm_arg.GetSendLevel()) {
+      return p_tls->Write(vzlogging::k_shm_arg.GetSockAddr(), slog, nlog);
     }
     return 0;
   }
