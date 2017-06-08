@@ -29,7 +29,7 @@ int32_t VShm::Create(const ShmKey* key, ShmSize size) {
                                  PAGE_READWRITE,
                                  0,
                                  size + 1,
-                                 (LPCWSTR)shm_key_);
+                                 shm_key_);
   if (shm_hdl_ == SHM_NULL) {
     printf("CreateFileMapping %s failed.%d.\n", shm_key_, GetLastError());
     return -2;
@@ -52,7 +52,7 @@ int32_t VShm::Open(const ShmKey* key, ShmSize size) {
   strncpy((char*)shm_key_, key, 31);
 
   // open
-  shm_hdl_ = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, (LPCWSTR)shm_key_);
+  shm_hdl_ = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, shm_key_);
   if (shm_hdl_ == SHM_NULL) {
     printf("OpenFileMapping %s failed.\n", shm_key_);
     return -2;

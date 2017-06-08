@@ -60,7 +60,8 @@ ENDIF()
 #########################################################################
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
-	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
+		libshm.lib
 		libvzlogging.lib
 		BasicUsageEnvironment
 		groupsock
@@ -70,7 +71,8 @@ if(WIN32)
 		winmm
 	)
 else()
-	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
+		libshm.a
 		libvzlogging.a
 		BasicUsageEnvironment
 		groupsock

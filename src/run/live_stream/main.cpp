@@ -1,10 +1,10 @@
 
-#include "ch264livevideo.h"
+#include "clivestream.h"
 
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 
-#include "vshmvideo.h"
+#include "shm/vshmvideo.h"
 
 UsageEnvironment* env;
 

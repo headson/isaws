@@ -1,8 +1,8 @@
-#include "ch264livevideo.h"
+#include "clivestream.h"
 
 #include "GroupsockHelper.hh"
 
-#include "vshmvideo.h"
+#include "shm/vshmvideo.h"
 
 // CamH264VideoStreamFramer *********************************************************
 CamH264VideoStreamFramer::CamH264VideoStreamFramer(UsageEnvironment& env,
