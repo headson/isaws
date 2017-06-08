@@ -23,6 +23,8 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
+    ${CMAKE_CURRENT_SOURCE_DIR}/vevent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vevent.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/vsocket.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/vsockstream.h
@@ -35,6 +37,20 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/vstreambuffer.cpp
 )
 
+SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/vevent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vevent.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/vsocket.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vsocket.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vsockstream.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vsockstream.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vsockdgram.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vsockdgram.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vsockaccept.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vsockaccept.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vstreambuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vstreambuffer.cpp
+)
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
 

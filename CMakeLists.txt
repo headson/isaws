@@ -25,8 +25,9 @@ LINK_DIRECTORIES(${VZPROJECT_LIBRARY_DIR})
 ## add lib
 ADD_SUBDIRECTORY(cmake_local)
 
-ADD_SUBDIRECTORY(src/lib/vzlogging)
 ADD_SUBDIRECTORY(src/lib/base)
+ADD_SUBDIRECTORY(src/lib/shm)
+ADD_SUBDIRECTORY(src/lib/vzlogging)
 #ADD_SUBDIRECTORY(src/lib/network)
 #ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/server)
@@ -36,9 +37,8 @@ ADD_SUBDIRECTORY(src/lib/base)
 
 ## add run
 ADD_SUBDIRECTORY(src/run/vzlogserver)
-#ADD_SUBDIRECTORY(src/run/hard_hi3516a)
-#ADD_SUBDIRECTORY(src/run/rtsp_server)
-ADD_SUBDIRECTORY(src/run/wis_streamer)
+#ADD_SUBDIRECTORY(src/run/hi3516a)
+ADD_SUBDIRECTORY(src/run/live_stream)
 
 ## add test
 ADD_SUBDIRECTORY(src/test/test_vzlogging)

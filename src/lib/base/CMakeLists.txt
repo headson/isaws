@@ -43,14 +43,10 @@ SET(SRC_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/core/vshm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/core/vshm.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.cpp
-#	${CMAKE_CURRENT_SOURCE_DIR}/core/vevent.h
-#	${CMAKE_CURRENT_SOURCE_DIR}/core/vevent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vblockbuffer.h
@@ -78,14 +74,10 @@ SOURCE_GROUP(flags FILES
 SOURCE_GROUP(core FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/core/vshm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/core/vshm.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.cpp
-#	${CMAKE_CURRENT_SOURCE_DIR}/core/vevent.h
-#	${CMAKE_CURRENT_SOURCE_DIR}/core/vevent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vblockbuffer.h

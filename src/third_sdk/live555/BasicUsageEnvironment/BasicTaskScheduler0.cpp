@@ -31,7 +31,11 @@ public:
 
 private: // redefined virtual functions
   virtual void handleTimeout() {
-    (*fProc)(fClientData);
+    try {
+      (*fProc)(fClientData);
+    } catch (...) {
+    }
+    
     DelayQueueEntry::handleTimeout();
   }
 
