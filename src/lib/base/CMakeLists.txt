@@ -24,8 +24,8 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add code source")
 SET(SRC_LIST
-	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
@@ -53,8 +53,8 @@ SET(SRC_LIST
 )
 
 SOURCE_GROUP(base FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
@@ -89,7 +89,5 @@ MESSAGE(STATUS "Step 4 : Add project define")
 MESSAGE(STATUS "Step 5 : Add executable or library target")
 #ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
 ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
-SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} 
-	PROPERTY FOLDER 
-	
-	${PROJECT_SET_NAME_LIB})
+SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB}
+)

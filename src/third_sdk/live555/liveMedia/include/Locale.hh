@@ -36,7 +36,7 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 #undef LOCALE_NOT_USED
 #undef XLOCALE_NOT_USED
 #else
-#if defined(__WIN32__) || defined(_WIN32)
+#if defined(__WIN32__) || defined(_WIN32) || defined(_LINUX)
 #define XLOCALE_NOT_USED 1
 #endif
 #endif

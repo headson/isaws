@@ -10,17 +10,32 @@
 #include "verror.h"
 #include "vmessage.h"
 
-#define VZ_PRINT(...)                             \
+#define LOG_INFO(...)                             \
   do {                                            \
     printf("[%s]-%d: ", __FUNCTION__, __LINE__);  \
     printf(__VA_ARGS__);                          \
   } while (0)
 
-typedef enum YH_RESULT {
-  RET_SUCCESS             = 0,          // 成功
-  RET_UNKNOWN_ERROR       = -1,         // 未知错误
-  RET_SERVICE_UNABLE      = -2,         // 服务暂不可用
-  RET_UNKNOWN_METHOD      = -3,         // 未知的方法
-};
+#define LOG_ERROR(...)                             \
+  do {                                            \
+    printf("[%s]-%d: ", __FUNCTION__, __LINE__);  \
+    printf(__VA_ARGS__);                          \
+  } while (0)
 
+
+/***共享内存*************************************************************/
+#ifdef WIN32
+#define DEF_SHM_VIDEO_0       "shm_video_0"
+#else   // WIN32
+#define DEF_SHM_VIDEO_0       0x51000001
+#endif  // WIN32
+
+/***信号量***************************************************************/
+#ifdef WIN32
+#define DEF_SEM_VIDEO_0_R     "sem_video_0_r"
+#define DEF_SEM_VIDEO_0_W     "sem_video_0_w"
+#else   // WIN32
+#define DEF_SEM_VIDEO_0_R     0x50000001
+#define DEF_SEM_VIDEO_0_W     0x50000002
+#endif  // WIN32
 #endif  // _VDEFINE_H

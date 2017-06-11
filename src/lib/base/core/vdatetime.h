@@ -1,23 +1,20 @@
-/*****************************************************************************
-* Copyright (c) 2011,ChengDu ThinkWatch Company
-* All rights reserved.
-*-----------------------------------------------------------------------------
-* Filename      : vdatetime.h
-* Author        : Sober.Peng
-* Date          : 29:12:2016
-* Description   :
-*-----------------------------------------------------------------------------
-* Modify        : 
-*-----------------------------------------------------------------------------
-******************************************************************************/
-#pragma once
-#include "inc/vtypes.h"
+/************************************************************************/
+/* Author      : SoberPeng 2017-06-09
+/* Description :
+/************************************************************************/
+#ifndef VDATETIME_H
+#define VDATETIME_H
 
-#include <string>
+#include "inc/vtypes.h"
 
 #ifdef WIN32
 #include <winsock2.h>
+#else
+#include <time.h>
+#include <sys/time.h>
 #endif
+
+#include <string>
 
 #define ONE_SECOND_IN_USECS 1000000
 class VDateTime
@@ -74,6 +71,8 @@ public:
     friend VDateTime operator -(const VDateTime& t1, const VDateTime& t2);
 
 private:
-    struct timeval  cTv_;
-    struct tm*      pTm_;
+    struct timeval  c_tv_;
+    struct tm*      p_tm_;
 };
+
+#endif  // VDATETIME_H

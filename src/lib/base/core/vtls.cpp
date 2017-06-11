@@ -10,14 +10,14 @@ namespace yhbase {
   VTls::VTls() 
     : tls_key_(TLS_NULL)
   {
-    VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+    LOG_INFO("%s[%d].\n", __FUNCTION__, __LINE__);
   }
 
 
   VTls::~VTls()
   {
     KeyFree();
-    VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+    LOG_INFO("%s[%d].\n", __FUNCTION__, __LINE__);
   }
 
   TlsKey VTls::KeyAlloc()

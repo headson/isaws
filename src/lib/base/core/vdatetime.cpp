@@ -13,6 +13,7 @@
 #include "vdatetime.h"
 
 #include <time.h>
+#include <stdio.h>
 
 #ifdef WIN32
 inline int32_t gettimeofday(struct timeval *tp, void *tzp)
@@ -100,14 +101,14 @@ void VDateTime::set(int64_t ms) {
 }
 
 void VDateTime::set(uint32_t s, uint32_t us) {
-  cTv_.tv_sec = static_cast<long>(s);
-  cTv_.tv_usec = static_cast<long>(us);
+  c_tv_.tv_sec = static_cast<long>(s);
+  c_tv_.tv_usec = static_cast<long>(us);
 
-  time_t tt = cTv_.tv_sec;
+  time_t tt = c_tv_.tv_sec;
 #if 1//选择无时区
-  pTm_ = localtime(&tt);
+  p_tm_ = localtime(&tt);
 #else
-  pTm_ = gmtime(&tt);
+  p_tm_ = gmtime(&tt);
 #endif
 
   //printf("date time %d %lld %d %d %d %d %d %d.\n",
@@ -122,78 +123,78 @@ void VDateTime::set(const struct timeval& tv) {
 }
 
 uint32_t VDateTime::tsec() const {
-  return cTv_.tv_sec;
+  return c_tv_.tv_sec;
 }
 
 uint32_t VDateTime::tusec() const {
-  return cTv_.tv_usec;
+  return c_tv_.tv_usec;
 }
 
 int64_t VDateTime::to_msec() const {
-  int64_t ms = int64_t(this->cTv_.tv_sec);
+  int64_t ms = int64_t(this->c_tv_.tv_sec);
   ms *= 1000;
-  ms += (this->cTv_.tv_usec / 1000);
+  ms += (this->c_tv_.tv_usec / 1000);
 
   return ms;
 }
 
 uint64_t VDateTime::to_usec() const {
-  uint64_t us = (uint64_t)(cTv_.tv_sec);
+  uint64_t us = (uint64_t)(c_tv_.tv_sec);
   us *= ONE_SECOND_IN_USECS;
-  us += cTv_.tv_usec;
+  us += c_tv_.tv_usec;
 
   return us;
 }
 
 int32_t VDateTime::year() const {
-  if (pTm_) {
-    return (pTm_->tm_year+1900);
+  if (p_tm_) {
+    return (p_tm_->tm_year+1900);
   }
   return 1900;
 }
 
 int32_t VDateTime::month() const {
-  if (pTm_) {
-    return (pTm_->tm_mon+1);
+  if (p_tm_) {
+    return (p_tm_->tm_mon+1);
   }
   return 1;
 }
 
 int32_t VDateTime::day() const {
-  if (pTm_) {
-    return (pTm_->tm_mday);
+  if (p_tm_) {
+    return (p_tm_->tm_mday);
   }
   return 1;
 }
 
 int32_t VDateTime::hour() const {
-  if (pTm_) {
-    return (pTm_->tm_hour);
+  if (p_tm_) {
+    return (p_tm_->tm_hour);
   }
   return 0;
 }
 
 int32_t VDateTime::minute() const {
-  if (pTm_) {
-    return (pTm_->tm_min);
+  if (p_tm_) {
+    return (p_tm_->tm_min);
   }
   return 0;
 }
 
 int32_t VDateTime::second() const {
-  if (pTm_) {
-    return (pTm_->tm_sec);
+  if (p_tm_) {
+    return (p_tm_->tm_sec);
   }
   return 0;
 }
 
 VDateTime& VDateTime::operator=(const VDateTime& dt) {
-  this->cTv_ = dt.cTv_;
+  this->c_tv_ = dt.c_tv_;
   return *this;
 }
 
 VDateTime& VDateTime::operator=(const struct timeval& tv) {
-  this->cTv_ = tv;
+  this->c_tv_ = tv;
   return *this;
 }
 
@@ -210,15 +211,15 @@ VDateTime& VDateTime::operator +=(const VDateTime &dt) {
 
 VDateTime& VDateTime::operator -=(const VDateTime& dt) {
   if(this->to_usec() < dt.to_usec()) {
-    cTv_.tv_sec = 0;
-    cTv_.tv_usec = 0;
+    c_tv_.tv_sec = 0;
+    c_tv_.tv_usec = 0;
   } else {
     uint64_t us = this->to_usec();
     uint64_t us2 = dt.to_usec();
     us = us - us2;
 
-    cTv_.tv_sec = static_cast<long>(us / ONE_SECOND_IN_USECS);
-    cTv_.tv_usec = static_cast<long>(us % ONE_SECOND_IN_USECS);
+    c_tv_.tv_sec = static_cast<long>(us / ONE_SECOND_IN_USECS);
+    c_tv_.tv_usec = static_cast<long>(us % ONE_SECOND_IN_USECS);
   }
   return *this;
 }
@@ -226,22 +227,22 @@ VDateTime& VDateTime::operator -=(const VDateTime& dt) {
 std::string VDateTime::to_string() const {
   char str[64] = {0};
 
-  if (pTm_) {
+  if (p_tm_) {
     snprintf(str, 63, "%4d-%02d-%02d %02d:%02d:%02d",
-             pTm_->tm_year+1900,
-             pTm_->tm_mon+1,
-             pTm_->tm_mday,
-             pTm_->tm_hour,
-             pTm_->tm_min,
-             pTm_->tm_sec);
+             p_tm_->tm_year+1900,
+             p_tm_->tm_mon+1,
+             p_tm_->tm_mday,
+             p_tm_->tm_hour,
+             p_tm_->tm_min,
+             p_tm_->tm_sec);
   }
 
   return str;
 }
 
 bool operator==(const VDateTime& dt1, const VDateTime& dt2) {
-  if(dt1.cTv_.tv_sec == dt2.cTv_.tv_sec
-      && dt1.cTv_.tv_usec == dt2.cTv_.tv_usec)
+  if(dt1.c_tv_.tv_sec == dt2.c_tv_.tv_sec
+      && dt1.c_tv_.tv_usec == dt2.c_tv_.tv_usec)
     return true;
   else
     return false;

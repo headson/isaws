@@ -16,13 +16,7 @@
 #ifdef WIN32
 #include <windows.h>
 #else   // LINUX
-#include <errno.h>
-//#include <unistd.h>
 #include <pthread.h>
-#include <signal.h>
-#include <sched.h>
-#include <semaphore.h>
-#include <sys/timeb.h>
 #endif
 
 typedef void* (*VFTHREAD)(void*);

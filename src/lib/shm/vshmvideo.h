@@ -7,6 +7,10 @@
 
 #include <stdint.h>
 
+#ifdef WIN32
+#include <winsock2.h>  // vs2010; struct timeval
+#endif 
+
 #include "vsem.h"
 #include "vshm.h"
 

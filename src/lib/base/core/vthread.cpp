@@ -11,6 +11,23 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #include "vthread.h"
+
+#ifdef WIN32
+
+#else   // LINUX
+
+//#define  _GNU_SOURCE       /* or _BSD_SOURCE or _SVID_SOURCE */
+#include <unistd.h>
+#include <sys/syscall.h>   /* For SYS_xxx definitions */
+
+#include <errno.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sched.h>
+#include <semaphore.h>
+#include <sys/timeb.h>
+#endif
+
 #include "inc/vdefine.h"
 
 ///THREAD//////////////////////////////////////////////////////////////////////

@@ -6,7 +6,6 @@ SET(BUILD_PROJECT_NAME "live_stream")
 
 #########################################################################
 INCLUDE_DIRECTORIES(
-	C:/tools/sdk/opencv-2.4.13/build/install/include
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${PROJECT_SOURCE_DIR}/src/third_sdk/
 	${PROJECT_SOURCE_DIR}/src/third_sdk/live555/groupsock/include
@@ -14,18 +13,16 @@ INCLUDE_DIRECTORIES(
 	${PROJECT_SOURCE_DIR}/src/third_sdk/live555/UsageEnvironment/include
 	${PROJECT_SOURCE_DIR}/src/third_sdk/live555/BasicUsageEnvironment/include
 )
-MESSAGE(STATUS "Print the include directores")
-LINK_DIRECTORIES(C:/tools/sdk/opencv-2.4.13/build/install/x86/vc10/lib)
 
+#########################################################################
+MESSAGE(STATUS "Print the include directores")
 get_property(inc_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 foreach(inc_dir ${inc_dirs})
   message(STATUS "    include directory='${inc_dir}'")
 endforeach()
 
 #########################################################################
-#Step 2 : Add library directories
 MESSAGE(STATUS "Step 2 : Add library directories")
-#LINK_DIRECTORIES(${LIBVZNET_LIBRARY_DIR})
 MESSAGE(STATUS "Print the link directores")
 get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
 foreach(link_dir ${link_dirs})
@@ -36,13 +33,25 @@ endforeach()
 #Step 3 : Add code source
 SET(SRC_LIST 
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/clivestream.h
-	${CMAKE_CURRENT_SOURCE_DIR}/clivestream.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264streamframer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264streamframer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264servermediasubsession.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264servermediasubsession.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/caacstreamframer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/caacstreamframer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/caacservermediasubsession.h
+	${CMAKE_CURRENT_SOURCE_DIR}/caacservermediasubsession.cpp
 )
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/clivestream.h
-	${CMAKE_CURRENT_SOURCE_DIR}/clivestream.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264streamframer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264streamframer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264servermediasubsession.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264servermediasubsession.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/caacstreamframer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/caacstreamframer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/caacservermediasubsession.h
+	${CMAKE_CURRENT_SOURCE_DIR}/caacservermediasubsession.cpp
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
@@ -72,12 +81,13 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		libshm.a
 		libvzlogging.a
-		BasicUsageEnvironment
-		groupsock
-		liveMedia
-		UsageEnvironment
+		libshm.a
+		#live555 四个库的顺序不能变
+		libliveMedia.a
+		libgroupsock.a
+		libBasicUsageEnvironment.a
+		libUsageEnvironment.a
 		pthread
 		rt
 	)

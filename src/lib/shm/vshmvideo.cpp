@@ -1,5 +1,12 @@
-
+/************************************************************************/
+/* Author      : SoberPeng 2017-06-09
+/* Description :
+/************************************************************************/
 #include "vshmvideo.h"
+
+#include <string.h>
+
+#include "inc/vdefine.h"
 
 VShmVideo::VShmVideo() {
 
@@ -7,8 +14,6 @@ VShmVideo::VShmVideo() {
 
 VShmVideo::~VShmVideo() {
   v_shm_.Close();
-  v_sem_w_.Close();
-  v_sem_r_.Close();
 }
 
 int32_t VShmVideo::Open(const int8_t *p_name, uint32_t n_shm_size) {
@@ -16,9 +21,9 @@ int32_t VShmVideo::Open(const int8_t *p_name, uint32_t n_shm_size) {
   int8_t  s_name[32];
 
   // 共享内存
-  n_ret = v_shm_.Open((ShmKey*)p_name, n_shm_size);
+  n_ret = v_shm_.Open(DEF_SHM_VIDEO_0, n_shm_size);
   if (n_ret != 0) {
-    n_ret = v_shm_.Create((ShmKey*)p_name, n_shm_size);
+    n_ret = v_shm_.Create(DEF_SHM_VIDEO_0, n_shm_size);
     if (n_ret == 0) {  // 创建,初始化值;打开不初始化
       TAG_SHM_VIDEO* p_shm = (TAG_SHM_VIDEO*)v_shm_.GetData();
       if (p_shm) {
@@ -32,17 +37,13 @@ int32_t VShmVideo::Open(const int8_t *p_name, uint32_t n_shm_size) {
     return n_ret;
   }
 
-  memset(s_name, 0, 32);
-  sprintf((char*)s_name, "%s_w", p_name);
-  n_ret = v_sem_w_.Open(1, 1, (int8_t*)s_name);
+  n_ret = v_sem_w_.Open(DEF_SEM_VIDEO_0_W);
   if (n_ret != 0) {
     printf("sem open failed.%d.\n", n_ret);
     return n_ret;
   }
 
-  memset(s_name, 0, 32);
-  sprintf((char*)s_name, "%s_r", p_name);
-  n_ret = v_sem_r_.Open(1, 1, (int8_t*)s_name);
+  n_ret = v_sem_r_.Open(DEF_SEM_VIDEO_0_R);
   if (n_ret != 0) {
     printf("sem open failed.%d.\n", n_ret);
     return n_ret;
@@ -66,7 +67,7 @@ int32_t VShmVideo::Read(int8_t* p_data, uint32_t n_data, struct timeval* p_tm) {
     p_shm->n_read_count++;
     if (p_shm->n_read_count == 1)
       v_sem_w_.Wait();
-    v_sem_r_.Release();
+    v_sem_r_.Signal();
 
     int n_size = 0;
     if (p_shm->c_tm_capture.tv_sec != p_tm->tv_sec
@@ -82,8 +83,8 @@ int32_t VShmVideo::Read(int8_t* p_data, uint32_t n_data, struct timeval* p_tm) {
     v_sem_r_.Wait();
     p_shm->n_read_count--;
     if (p_shm->n_read_count == 0)
-      v_sem_w_.Release();
-    v_sem_r_.Release();
+      v_sem_w_.Signal();
+    v_sem_r_.Signal();
 
     //v_sem_w_.Wait();
     //int n_size = 0;
@@ -123,7 +124,7 @@ int32_t VShmVideo::Write(const int8_t* p_data, uint32_t n_data, const struct tim
     printf("read video %d \t %d.\n", i++, n_data);
   }
 
-  v_sem_w_.Release();
+  v_sem_w_.Signal();
   return 0;
 }
 

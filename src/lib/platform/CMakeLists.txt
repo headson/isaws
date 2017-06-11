@@ -49,6 +49,27 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/calsaaudiodecode.cpp
 )
 
+SET(${BUILD_PROJECT_NAME} FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/asc8.h
+	${CMAKE_CURRENT_SOURCE_DIR}/yuv420.h
+	${CMAKE_CURRENT_SOURCE_DIR}/yuv420.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/v4l2.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vpu.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vpu.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cplatform.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cplatform.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cvideoencode.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cvideoencode.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cphotoencode.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cphotoencode.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cexterndevice.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cexterndevice.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/calsaaudioencode.h
+	${CMAKE_CURRENT_SOURCE_DIR}/calsaaudioencode.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/calsaaudiodecode.h
+	${CMAKE_CURRENT_SOURCE_DIR}/calsaaudiodecode.cpp
+)
+
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
 
