@@ -33,17 +33,17 @@ ADD_SUBDIRECTORY(src/lib/vzlogging)
 #ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/server)
 #ADD_SUBDIRECTORY(src/lib/platform/imx6q)
-#ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
+ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
 
 
 ## add run
 ADD_SUBDIRECTORY(src/run/watchdog)
-#ADD_SUBDIRECTORY(src/run/hi3516a)
+ADD_SUBDIRECTORY(src/run/hi3516a)
 ADD_SUBDIRECTORY(src/run/live_stream)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_vzlogging)
 
 ## add third sdk
-#ADD_SUBDIRECTORY(src/third_sdk/live555)
+ADD_SUBDIRECTORY(src/third_sdk/live555)
 #ADD_SUBDIRECTORY(src/third_sdk/nanomsg)

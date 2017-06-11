@@ -70,7 +70,7 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_ive.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_sys.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vda.c
-	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_venc.c
+	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_venc.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vi.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vo.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vpss.c
@@ -120,7 +120,7 @@ SOURCE_GROUP(common FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_ive.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_sys.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vda.c
-	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_venc.c
+	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_venc.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vi.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vo.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vpss.c

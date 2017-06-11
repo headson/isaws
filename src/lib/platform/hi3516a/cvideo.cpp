@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "inc/vdefine.h"
+#include "shm/vshmvideo.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -22,11 +23,9 @@ extern "C"
 const VIDEO_NORM_E gs_enNorm = VIDEO_ENCODING_MODE_PAL;
 
 CVideo::CVideo() {
-
 }
 
 CVideo::~CVideo() {
-
 }
 
 #if 1
@@ -131,9 +130,15 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   HI_S32 s32Ret = HI_SUCCESS;
   HI_U32 u32BlkSize;
   SIZE_S stSize;
-  char c;
+  VShmVideo v_shm_video_0;
 
   s32ChnNum = 2;
+  
+  int n_ret = v_shm_video_0.Open((int8_t*)DEF_SHM_VIDEO_0, sizeof(TAG_SHM_VIDEO));
+  if (n_ret != 0) {
+    LOG_ERROR("share video failed %d.\n", n_ret);
+    return n_ret;
+  }
   /******************************************
    step  1: init sys variable
   ******************************************/
@@ -157,7 +162,7 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   ******************************************/
   s32Ret = SAMPLE_COMM_SYS_Init(&stVbConf);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("system init failed with %d!\n", s32Ret);
+    LOG_ERROR("system init failed with %d!\n", s32Ret);
     goto END_VENC_1080P_CLASSIC_0;
   }
 
@@ -171,7 +176,7 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   stViConfig.enWDRMode  = WDR_MODE_NONE;
   s32Ret = SAMPLE_COMM_VI_StartVi(&stViConfig);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("start vi failed!\n");
+    LOG_ERROR("start vi failed!\n");
     goto END_VENC_1080P_CLASSIC_1;
   }
 
@@ -180,7 +185,7 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   ******************************************/
   s32Ret = SAMPLE_COMM_SYS_GetPicSize(gs_enNorm, enSize[0], &stSize);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("SAMPLE_COMM_SYS_GetPicSize failed!\n");
+    LOG_ERROR("SAMPLE_COMM_SYS_GetPicSize failed!\n");
     goto END_VENC_1080P_CLASSIC_1;
   }
 
@@ -196,13 +201,13 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
 
   s32Ret = SAMPLE_COMM_VPSS_StartGroup(VpssGrp, &stVpssGrpAttr);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Start Vpss failed!\n");
+    LOG_ERROR("Start Vpss failed!\n");
     goto END_VENC_1080P_CLASSIC_2;
   }
 
   s32Ret = SAMPLE_COMM_VI_BindVpss(stViConfig.enViMode);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Vi bind Vpss failed!\n");
+    LOG_ERROR("Vi bind Vpss failed!\n");
     goto END_VENC_1080P_CLASSIC_3;
   }
 
@@ -218,7 +223,7 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   stVpssChnAttr.s32DstFrameRate = -1;
   s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr, &stVpssChnMode, HI_NULL);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Enable vpss chn failed!\n");
+    LOG_ERROR("Enable vpss chn failed!\n");
     goto END_VENC_1080P_CLASSIC_4;
   }
 
@@ -233,7 +238,7 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   stVpssChnAttr.s32DstFrameRate = -1;
   s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr, &stVpssChnMode, HI_NULL);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Enable vpss chn failed!\n");
+    LOG_ERROR("Enable vpss chn failed!\n");
     goto END_VENC_1080P_CLASSIC_4;
   }
 
@@ -248,7 +253,7 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   stVpssChnAttr.s32DstFrameRate = 25;
   s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr, &stVpssChnMode, HI_NULL);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Enable vpss chn failed!\n");
+    LOG_ERROR("Enable vpss chn failed!\n");
     goto END_VENC_1080P_CLASSIC_4;
   }
 
@@ -271,13 +276,13 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   VencChn = 0;
   s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[0], gs_enNorm, enSize[0], enRcMode,u32Profile);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Start Venc failed!\n");
+    LOG_ERROR("Start Venc failed!\n");
     goto END_VENC_1080P_CLASSIC_5;
   }
 
   s32Ret = SAMPLE_COMM_VENC_BindVpss(VencChn, VpssGrp, VpssChn);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Start Venc failed!\n");
+    LOG_ERROR("Start Venc failed!\n");
     goto END_VENC_1080P_CLASSIC_5;
   }
 
@@ -286,22 +291,22 @@ int32_t CVideo::VideoCapture(int32_t n_chn) {
   VencChn = 1;
   s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[1], gs_enNorm, enSize[1], enRcMode,u32Profile);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Start Venc failed!\n");
+    LOG_ERROR("Start Venc failed!\n");
     goto END_VENC_1080P_CLASSIC_5;
   }
 
   s32Ret = SAMPLE_COMM_VENC_BindVpss(VencChn, VpssGrp, VpssChn);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Start Venc failed!\n");
+    LOG_ERROR("Start Venc failed!\n");
     goto END_VENC_1080P_CLASSIC_5;
   }
 
   /******************************************
-     step 6: stream venc process -- get stream, then save it to file.
-     ******************************************/
-  s32Ret = SAMPLE_COMM_VENC_StartGetStream(s32ChnNum);
+  step 6: stream venc process -- get stream, then save it to file.
+  ******************************************/
+  s32Ret = SAMPLE_COMM_VENC_StartGetStream(s32ChnNum, (void*)&v_shm_video_0);
   if (HI_SUCCESS != s32Ret) {
-    VZ_PRINT("Start Venc failed!\n");
+    LOG_ERROR("Start Venc failed!\n");
     goto END_VENC_1080P_CLASSIC_5;
   }
 

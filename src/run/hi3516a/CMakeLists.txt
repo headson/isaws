@@ -52,7 +52,7 @@ else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		${YHPROJECT_LINK_LIB}
 		libplatform.a
-		libplatform.a
+		libshm.a
 		libmpi.a 
 		libVoiceEngine.a 
 		libvqev2.a 

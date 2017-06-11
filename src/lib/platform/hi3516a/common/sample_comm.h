@@ -243,8 +243,9 @@ typedef struct sample_vi_frame_info_s
 
 typedef struct sample_venc_getstream_s
 {
-     HI_BOOL bThreadStart;
-     HI_S32  s32Cnt;
+     HI_BOOL  bThreadStart;
+     HI_S32   s32Cnt;
+     void*    p_shm_video;
 }SAMPLE_VENC_GETSTREAM_PARA_S;
 
 typedef struct sample_vi_config_s
@@ -341,7 +342,7 @@ HI_S32 SAMPLE_COMM_VENC_Stop(VENC_CHN VencChn);
 HI_S32 SAMPLE_COMM_VENC_SnapStart(VENC_CHN VencChn, SIZE_S *pstSize);
 HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_CHN VencChn);
 HI_S32 SAMPLE_COMM_VENC_SnapStop(VENC_CHN VencChn);
-HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt);
+HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt, void* p_shm_video);
 HI_S32 SAMPLE_COMM_VENC_StopGetStream();
 HI_S32 SAMPLE_COMM_VENC_BindVpss(VENC_CHN VencChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn);
 HI_S32 SAMPLE_COMM_VENC_UnBindVpss(VENC_CHN VencChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn);
