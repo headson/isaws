@@ -5,7 +5,7 @@
 #ifndef LIBPLATFORM_CALSAAUDIOENCODE_H
 #define LIBPLATFORM_CALSAAUDIOENCODE_H
 
-#include "vdefine.h"
+#include "inc/vtypes.h"
 
 #include <alsa/asoundlib.h>
 

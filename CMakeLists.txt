@@ -1,6 +1,7 @@
 # cmake ../.. -G "Visual Studio 10 2010"
 # cmake ../.. -G "Visual Studio 12 2013"
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3516 -DCMAKE_BUILD_TYPE=Release
+# cmake ../.. -DCMAKE_BUILD_PLATFORM=IMX6Q -DCMAKE_BUILD_TYPE=Release
 cmake_minimum_required(VERSION 3.6)
 project(isaw_project)
 
@@ -25,6 +26,10 @@ LINK_DIRECTORIES(${VZPROJECT_LIBRARY_DIR})
 ## add lib
 ADD_SUBDIRECTORY(cmake_local)
 
+## add third sdk
+ADD_SUBDIRECTORY(src/third_sdk/live555)
+#ADD_SUBDIRECTORY(src/third_sdk/nanomsg)
+
 ADD_SUBDIRECTORY(src/lib/inc)
 #ADD_SUBDIRECTORY(src/lib/base)
 ADD_SUBDIRECTORY(src/lib/shm)
@@ -32,18 +37,16 @@ ADD_SUBDIRECTORY(src/lib/vzlogging)
 #ADD_SUBDIRECTORY(src/lib/network)
 #ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/server)
-#ADD_SUBDIRECTORY(src/lib/platform/imx6q)
-ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
+ADD_SUBDIRECTORY(src/lib/platform/imx6q)
+#ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
 
 
 ## add run
 ADD_SUBDIRECTORY(src/run/watchdog)
-ADD_SUBDIRECTORY(src/run/hi3516a)
+#ADD_SUBDIRECTORY(src/run/hi3516a)
+ADD_SUBDIRECTORY(src/run/imx6q)
 ADD_SUBDIRECTORY(src/run/live_stream)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_vzlogging)
 
-## add third sdk
-ADD_SUBDIRECTORY(src/third_sdk/live555)
-#ADD_SUBDIRECTORY(src/third_sdk/nanomsg)

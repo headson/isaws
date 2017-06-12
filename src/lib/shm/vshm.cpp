@@ -19,33 +19,6 @@ VShm::~VShm() {
 }
 
 #ifdef WIN32
-int32_t VShm::Create(const ShmKey key, ShmSize size) {
-  if (!key || size == 0) {
-    return -1;
-  }
-
-  // open
-  shm_hdl_ = ::CreateFileMapping(INVALID_HANDLE_VALUE,
-                                 NULL,
-                                 PAGE_READWRITE,
-                                 0,
-                                 size + 1,
-                                 key);
-  if (shm_hdl_ == SHM_NULL) {
-    LOG_ERROR("CreateFileMapping %s failed.%d.\n", key, GetLastError());
-    return -2;
-  }
-
-  // mmap
-  shm_ptr_ = ::MapViewOfFile(shm_hdl_, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if (shm_ptr_ == NULL) {
-    LOG_ERROR("MapViewOfFile %s failed.\n", key);
-    return -4;
-  }
-  shm_size_ = size;
-  return 0;
-}
-
 int32_t VShm::Open(const ShmKey key, ShmSize size) {
   if (!key || size == 0) {
     return -1;
@@ -54,9 +27,19 @@ int32_t VShm::Open(const ShmKey key, ShmSize size) {
   // open
   shm_hdl_ = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, key);
   if (shm_hdl_ == SHM_NULL) {
-    LOG_ERROR("OpenFileMapping %s failed.\n", key);
+    // open
+    shm_hdl_ = ::CreateFileMapping(INVALID_HANDLE_VALUE,
+                                   NULL,
+                                   PAGE_READWRITE,
+                                   0,
+                                   size + 1,
+                                   key);
+  }
+  if (shm_hdl_ == SHM_NULL) {
+    LOG_ERROR("CreateFileMapping %s failed.%d.\n", key, GetLastError());
     return -2;
   }
+  LOG_INFO("shared memory id:0x%x\n", shm_hdl_);
 
   // mmap
   shm_ptr_ = ::MapViewOfFile(shm_hdl_, FILE_MAP_ALL_ACCESS, 0, 0, 0);
@@ -90,38 +73,26 @@ void VShm::Close() {
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-int32_t VShm::Create(const ShmKey key, ShmSize size) {
-  if (key == 0 || size == 0) {
-    return -1;
-  }
-
-  shm_hdl_ = shmget(key, size, IPC_CREAT | 0660);
-  LOG_INFO("shared memory id:%d\n", shm_hdl_);
-  if(shm_ptr_ < 0) {
-    LOG_ERROR("shared memory open failed\n");
-    return -1;
-  }
-
-  shm_ptr_ = shmat(shm_hdl_, 0, 0);
-  if (shm_ptr_ == NULL) {
-    LOG_ERROR("shmat %d failed.\n", key);
-    return -4;
-  }
-  shm_size_ = size;
-  return 0;
-}
-
 int32_t VShm::Open(const ShmKey key, ShmSize size) {
   if (key == 0 || size == 0) {
     return -1;
   }
 
-  shm_hdl_ = shmget(key, 0, 0);
-  LOG_INFO("shared memory id:%d\n", shm_hdl_);
-  if(shm_ptr_ < 0) {
-    LOG_ERROR("shared memory open failed\n");
+  key_t k = ftok(".", key);
+  if (k < 0) {
+    LOG_ERROR("ftok failed.\n");
     return -1;
   }
+
+  shm_hdl_ = shmget(k, 0, 0);
+  if(shm_hdl_ < 0) {
+    shm_hdl_ = shmget(k, size, IPC_CREAT | 0660);
+  }
+  if(shm_hdl_ < 0) {
+    LOG_ERROR("shared memory open failed %d-0x%x.\n", key, k);
+    return -1;
+  }
+  LOG_INFO("shared memory id:%d %d 0x%x\n", shm_hdl_, key, k);
 
   shm_ptr_ = shmat(shm_hdl_, 0, 0);
   if (shm_ptr_ == NULL) {

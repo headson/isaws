@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
     = "Session streamed by \"testOnDemandRTSPServer\"";
 
   VShmVideo v_chm_vdo;
-  v_chm_vdo.Open((int8_t*)("video_0"), sizeof(TAG_SHM_VIDEO));
+  v_chm_vdo.Open(sizeof(TAG_SHM_VIDEO));
 
   {
     char const* s_stream_name = "live";

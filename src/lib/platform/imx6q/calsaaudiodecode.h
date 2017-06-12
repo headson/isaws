@@ -5,7 +5,7 @@
 #ifndef LIBPLATFORM_CALSAAUDIODECODE_H
 #define LIBPLATFORM_CALSAAUDIODECODE_H
 
-#include "vdefine.h"
+#include "inc/vtypes.h"
 
 #include <alsa/asoundlib.h>
 #include <alsa/pcm.h>       // asoundlib.h pcm.h²»ÄÜÂÒË³Ðò

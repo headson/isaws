@@ -4,7 +4,7 @@
 /************************************************************************/
 #ifndef LIBPLATFORM_CEXTERNDEVICE_H
 #define LIBPLATFORM_CEXTERNDEVICE_H
-#include "vdefine.h"
+#include "inc/vtypes.h"
 
 #include "../../../driver/imx6q/ihs_gpio/ihs_gpio.h"
 

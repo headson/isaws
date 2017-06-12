@@ -11,14 +11,16 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #pragma once
-#ifdef IMX6Q
+
+#include "inc/vtypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "sdk/imx6q/inc/ipu.h"
-#include "sdk/imx6q/inc/vpu_lib.h"
-#include "sdk/imx6q/inc/vpu_io.h"
-#include "sdk/imx6q/inc/videodev2.h"
+#include "sdk/inc/ipu.h"
+#include "sdk/inc/vpu_lib.h"
+#include "sdk/inc/vpu_io.h"
+#include "sdk/inc/videodev2.h"
 #ifdef __cplusplus
 }
 #endif
@@ -80,8 +82,6 @@ public:
     vpu_mem_desc*   pFrmDesc;       // ¥Ê¥¢ π”√µÿ÷∑
 
 public:
-    uint32_t        nHeadData;          // 
-    uint8_t         sHeadData[2*SZ_1K]; // 
+    uint32_t        nHeadData;       // 
+    uint8_t         sHeadData[2*1024]; // 
 };
-
-#endif

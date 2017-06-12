@@ -62,11 +62,20 @@ VSem::~VSem() {
 }
 
 int32_t VSem::Open(const SemKey key) {
-  sem_ = semget(key, 1, IPC_CREAT|IPC_EXCL|0666);
-  if(sem_ < 0)
-    sem_ = semget(key, 0, 0666);
-  if(sem_ < 0)
+  key_t k = ftok(".", key);
+  if (k < 0) {
+    LOG_ERROR("ftok failed.\n");
     return -1;
+  }
+
+  sem_ = semget(k, 0, 0666);
+  if(sem_ < 0) {
+    sem_ = semget(k, 1, IPC_CREAT|IPC_EXCL|0666);
+  }
+  if(sem_ < 0) {
+    return -1;
+  }
+  LOG_INFO("sem id:%d %d %d\n", sem_, key, k);
   return 0;
 }
 

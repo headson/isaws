@@ -4,7 +4,7 @@
 /************************************************************************/
 #ifndef LIBPLATFORM_CPHOTOENCODE_H
 #define LIBPLATFORM_CPHOTOENCODE_H
-#include "vdefine.h"
+#include "inc/vtypes.h"
 
 #include "vpu.h"
 

@@ -38,7 +38,8 @@ void CamH264VideoStreamFramer::doGetNextFrame() {
 
   fPresentationTime.tv_sec = c_tm_capture_.tv_sec;
   fPresentationTime.tv_usec = c_tm_capture_.tv_usec;
-  
+  //usleep(2);
+
   // 赋值nextTask() 当应用退出时,可销毁此schedule,防止应用处理脏afterGetting
-  nextTask() = envir().taskScheduler().scheduleDelayedTask(4, (TaskFunc*)afterGetting, this);
+  nextTask() = envir().taskScheduler().scheduleDelayedTask(5*1000, (TaskFunc*)afterGetting, this);
 }

@@ -1020,19 +1020,22 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
           *******************************************************/
           static char* p_data = NULL;
           if (p_data == NULL) {
-            p_data = (char*)malloc(256*1024);
+            p_data = (char*)malloc(512*1024);
           }
 
-          int n_data = 0;
-          for (int j = 0; j < stStream.u32PackCount; i++) {
-            memcpy(p_data+n_data, stStream.pstPack[i].pu8Addr + stStream.pstPack[i].u32Offset,
-                   stStream.pstPack[i].u32Len - stStream.pstPack[i].u32Offset);
-            n_data = stStream.pstPack[i].u32Len - stStream.pstPack[i].u32Offset;
-          }
-          if (pstPara->p_shm_video) {
-            struct timeval tv;
-            gettimeofday(&tv, NULL);
-            ((VShmVideo*)pstPara->p_shm_video)->Write((int8_t*)p_data, n_data, &tv);
+          if (i == 1) {
+            int n_data = 0;
+            for (int j = 0; j < stStream.u32PackCount; j++) {
+              memcpy(p_data + n_data, stStream.pstPack[j].pu8Addr + stStream.pstPack[j].u32Offset,
+                     stStream.pstPack[j].u32Len - stStream.pstPack[j].u32Offset);
+              n_data = stStream.pstPack[j].u32Len - stStream.pstPack[j].u32Offset;
+            }
+            if (pstPara->p_shm_video) {
+              struct timeval tv;
+              gettimeofday(&tv, NULL);
+              printf("data length %d.\n", n_data);
+              ((VShmVideo*)pstPara->p_shm_video)->Write((int8_t*)p_data, n_data, &tv);
+            }
           }
           //s32Ret = SAMPLE_COMM_VENC_SaveStream(enPayLoadType[i], pFile[i], &stStream);
           /*if (HI_SUCCESS != s32Ret) {
