@@ -11,11 +11,10 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #include "vevent.h"
-
-#include "base/core/vthread.h"
+#include "base/stdafx.h"
 
 EVT_LOOP::EVT_LOOP()
-  : m_pEvent(NULL) {
+  : p_event_(NULL) {
 }
 
 EVT_LOOP::~EVT_LOOP() {
@@ -23,8 +22,14 @@ EVT_LOOP::~EVT_LOOP() {
 }
 
 int32_t EVT_LOOP::Start() {
-  m_pEvent = event_base_new();
-  if (!m_pEvent) {
+#ifdef WIN32
+  evthread_use_windows_threads();
+#else
+  evthread_use_pthreads();
+#endif
+
+  p_event_ = event_base_new();
+  if (!p_event_) {
     printf("can't new a loop.\n");
     return -1;
   }
@@ -32,187 +37,156 @@ int32_t EVT_LOOP::Start() {
 }
 
 void EVT_LOOP::Stop() {
-  if (m_pEvent) {
-    event_base_loopbreak(m_pEvent);
+  if (p_event_) {
+    event_base_loopbreak(p_event_);
 
-    event_base_free(m_pEvent);
-    m_pEvent = NULL;
+    event_base_free(p_event_);
+    p_event_ = NULL;
   }
 }
 
-void EVT_LOOP::Runing(bool* b_runing) {
-#ifdef WIN32
-  evthread_use_windows_threads();
-#else
-  evthread_use_pthreads();
-#endif
-
-  int32_t nRet = 0;
-  while (b_runing && *b_runing) {
-    VThread::msleep(200);
-    nRet = event_base_loop(m_pEvent, 0);
-    if (nRet < 0) {                 // 表示发生了错误
-      break;
-    }
-    //printf("%s no event %d.\n", get_name().c_str(), VThread::get_pid());
-    //(nRet == 1 || nRet == 0)      // 表示没有事件被注册
-  }
+int32_t EVT_LOOP::Runing() {
+  int32_t n_ret = 0;
+  n_ret = event_base_loop(p_event_, 0);
+  return n_ret;
 }
 
 ///TIMER///////////////////////////////////////////////////////////////////////
 EVT_TIMER::EVT_TIMER() {
-  m_pLoop      = NULL;
-  m_pCallback  = NULL;
-  m_pUserArgs  = NULL;
+  p_base_      = NULL;
+  p_callback_  = NULL;
+  p_usr_args_  = NULL;
 
-  m_sName      = "";
-  m_bStart     = false;
+  s_name_      = "";
+  b_start_     = false;
 
-  m_nAfter     = 0;
-  m_nRepeat    = 0;
-
-  m_cEvt.ev_flags = -1;
+  c_evt_.ev_evcallback.evcb_flags = -1;
 }
 
 void EVT_TIMER::set_name(const std::string& sName) {
-  m_sName = sName;
+  s_name_ = sName;
 }
 
 const std::string& EVT_TIMER::get_name() const {
-  return m_sName;
+  return s_name_;
 }
 
-void EVT_TIMER::Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg) {
-  m_pLoop     = const_cast<EVT_LOOP*>(loop);
+void EVT_TIMER::Init(const EVT_LOOP* loop, EVT_FUNC fn_cb, void* p_arg) {
+  p_base_     = const_cast<EVT_LOOP*>(loop);
 
-  m_pCallback = func;
-  m_pUserArgs = pArg;
+  p_callback_ = fn_cb;
+  p_usr_args_ = p_arg;
 }
 
-int32_t EVT_TIMER::Start(uint32_t after, uint32_t repeat) {
-  if (!m_pLoop) {
-    return -1;
+int32_t EVT_TIMER::Start(uint32_t after_ms, uint32_t repeat_ms) {
+  int32_t n_ret = RET_INVLIAD_HANDLE;
+  if (!p_base_ || !p_base_->get_event()) {
+    LOG(L_ERROR)<<"param error.";
+    return n_ret;
   }
 
-  m_nAfter  = after;
-  m_nRepeat = repeat;
-
-  int32_t nRet = 0;
-  if (m_cEvt.ev_flags <= 0) {
-    if (repeat != 0) {
-      event_set(&m_cEvt, -1, EV_TIMEOUT | EV_PERSIST, evt_callback, (void*)this);
+  if (b_start_ == false) {
+    if (repeat_ms != 0) {
+      event_set(&c_evt_, -1, EV_TIMEOUT | EV_PERSIST, evt_callback, (void*)this);
     } else {
-      event_set(&m_cEvt, -1, EV_TIMEOUT, evt_callback, (void*)this);
+      event_set(&c_evt_, -1, EV_TIMEOUT, evt_callback, (void*)this);
     }
-    event_base_set(m_pLoop->get_event(), &m_cEvt);
-  }
-
-  if (m_cEvt.ev_flags > 0) {
-    struct timeval tv;
-    tv.tv_sec  = m_nRepeat / 1000;
-    tv.tv_usec = (m_nRepeat % 1000)*1000;
-
-    nRet = event_add(&m_cEvt, &tv);
-    if (nRet == 0) {
-      m_bStart = true;
+    n_ret = event_base_set(p_base_->get_event(), &c_evt_);
+    if (n_ret != 0) {
+      LOG(L_ERROR)<<"event base set failed.";
+      return n_ret;
     }
   }
-  return nRet;
+
+  struct timeval tv;
+  tv.tv_sec  = repeat_ms / 1000;
+  tv.tv_usec = (repeat_ms % 1000)*1000;
+  n_ret = event_add(&c_evt_, &tv);
+  if (n_ret == 0) {
+    b_start_ = true;
+  }
+
+  return n_ret;
 }
 
 void EVT_TIMER::Stop() {
-  if (m_bStart)  {
-    event_del(&m_cEvt);
-    m_bStart = false;
+  if (b_start_)  {
+    event_del(&c_evt_);
+    b_start_ = false;
   }
 }
 
 void EVT_TIMER::evt_callback(int fd, short event, void *ctx) {
   if (ctx) {
     EVT_TIMER* pEvt = (EVT_TIMER*)ctx;
-    if (pEvt->m_pCallback) {
-      /*if (pEvt->_nRepeat) {
-      struct timeval tv;
-      tv.tv_sec  = pEvt->_nRepeat / 1000;
-      tv.tv_usec = (pEvt->_nRepeat % 1000)*1000;
-
-      if (pEvt->_cEvt.ev_flags > 0) {
-      event_add(&pEvt->_cEvt, &tv);
-      }
-      }*/
-
-      pEvt->m_pCallback(event, pEvt->m_pUserArgs);
+    if (pEvt->p_callback_) {
+      pEvt->p_callback_(event, pEvt->p_usr_args_);
     }
   }
 }
 
 ///IO//////////////////////////////////////////////////////////////////////////
 EVT_IO::EVT_IO() {
-  m_pLoop       = NULL;
-  m_pCallback   = NULL;
-  m_pUserArgs   = NULL;
+  p_base_       = NULL;
+  p_callback_   = NULL;
+  p_usr_args_   = NULL;
 
-  m_sName       = "";
-  m_bStart      = false;
-  m_nIdleCall   = 0;
-
-  m_cEvt.ev_flags = -1;
+  s_name_       = "";
+  b_start_      = false;
 }
 
-bool EVT_IO::is_start() {
-  return m_bStart;
-}
-
-void EVT_IO::set_name(const std::string& sName) {
-  m_sName = sName;
+void EVT_IO::set_name(const std::string& s_name) {
+  s_name_ = s_name;
 }
 
 const std::string& EVT_IO::get_name() const {
-  return m_sName;
+  return s_name_;
 }
 
 void EVT_IO::Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg) {
-  m_pLoop     = const_cast<EVT_LOOP*>(loop);
+  p_base_     = const_cast<EVT_LOOP*>(loop);
 
-  m_pCallback = func;
-  m_pUserArgs = pArg;
+  p_callback_ = func;
+  p_usr_args_ = pArg;
 }
 
 int32_t EVT_IO::Start(SOCKET vHdl, int32_t nEvt) {
-  if (!m_pLoop || !m_pLoop->get_event()) {
-    return -1;
+  int32_t n_ret = RET_INVLIAD_HANDLE;
+  if (!p_base_ || !p_base_->get_event()) {
+    LOG(L_ERROR)<<"param error.";
+    return n_ret;
   }
 
-  int32_t nRet = 0;
-  if (m_cEvt.ev_flags <= 0) {
-    event_set(&m_cEvt, vHdl, nEvt, evt_callback, this);
-    nRet = event_base_set(m_pLoop->get_event(), &m_cEvt);
-    if (nRet != 0) {
-      return -2;
+  if (b_start_ == false) {
+    event_set(&c_evt_, vHdl, nEvt, evt_callback, this);
+    n_ret = event_base_set(p_base_->get_event(), &c_evt_);
+    if (n_ret != 0) {
+      LOG(L_ERROR)<<"event base set failed.";
+      return n_ret;
     }
   }
 
-  if (m_cEvt.ev_flags > 0) {
-    nRet = event_add(&m_cEvt, NULL);
-    if (nRet == 0) {
-      m_bStart = true;
+  if (c_evt_.ev_evcallback.evcb_flags > 0) {
+    n_ret = event_add(&c_evt_, NULL);
+    if (n_ret == 0) {
+      b_start_ = true;
     }
   }
-  return nRet;
+  return n_ret;
 }
 
 void EVT_IO::Stop() {
-  if (m_bStart)  {
-    event_del(&m_cEvt);
-    m_bStart = false;
+  if (b_start_)  {
+    event_del(&c_evt_);
+    b_start_ = false;
   }
 }
 
 void EVT_IO::evt_callback(evutil_socket_t fd, short events, void *ctx) {
   if (ctx) {
-    EVT_IO* pEvt = (EVT_IO*)ctx;
-    if (pEvt->m_pCallback) {
-      pEvt->m_pCallback(events, pEvt->m_pUserArgs);
+    EVT_IO* p_evt = (EVT_IO*)ctx;
+    if (p_evt->p_callback_) {
+      p_evt->p_callback_(events, p_evt->p_usr_args_);
     }
   }
 }

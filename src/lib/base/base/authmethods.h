@@ -1,8 +1,9 @@
 #ifndef ALI_OPENSEARCH_BASE_HELP_METHODS_H_
 #define ALI_OPENSEARCH_BASE_HELP_METHODS_H_
 
+#include "base/vtypes.h"
+
 #include <string>
-#include "inc/vtypes.h"
 
 namespace yhbase {
 

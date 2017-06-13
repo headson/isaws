@@ -10,7 +10,7 @@
 #ifndef ALI_OPENSEARCH_BASE_SHA1_H_
 #define ALI_OPENSEARCH_BASE_SHA1_H_
 
-#include "inc/vtypes.h"
+#include "base/vtypes.h"
 
 struct SHA1_CTX {
   uint32 state[5];

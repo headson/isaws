@@ -11,7 +11,7 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #pragma once
-#include "inc/vtypes.h"
+#include "base/vtypes.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -32,20 +32,20 @@ public:
     ~VMutex();
 
 public:
-    void    lock();
-    void    unlock();
+    void    Lock();
+    void    Unlock();
 
-    bool    try_lock(long msec);
+    bool    TryLock(long msec);
 
-    bool    is_locked();
+    bool    IsLock();
 
 private:
-    volatile bool       isLock_;
+    volatile bool       b_lock_;
 
 #ifdef WIN32
-    CRITICAL_SECTION    cMutex_;
+    CRITICAL_SECTION    c_lock_;
 #else
-    pthread_mutex_t     cMutex_;
+    pthread_mutex_t     c_lock_;
 #endif
 };
 
@@ -56,27 +56,27 @@ public:
     ~VSignal();
 
     // 1=接收到POST，0=超时
-    int32_t waits(long msec=0);
-    void    notify();
+    int32_t Wait(long msec=0);
+    void    Signal();
 
 private:
-    bool    isInit_;
+    bool    b_init_;
 
 #ifdef WIN32
-    HANDLE  cHandle_;
+    HANDLE  c_handle_;
 #else
-    sem_t   cHandle_;
+    sem_t   c_handle_;
 #endif
 };
 
 class VLockGuard
 {
 public:
-    VLockGuard(VMutex& cMutex);
+    VLockGuard(VMutex& c_mutex);
     ~VLockGuard();
 
 private:
-    VMutex&     cMutex_;
+    VMutex&     c_mutex_;
 };
 
 

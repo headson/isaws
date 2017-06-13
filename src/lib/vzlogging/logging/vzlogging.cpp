@@ -727,7 +727,7 @@ int VzLog(unsigned int  n_level,
 
     if ((b_local_print == 0) &&
         n_level >= vzlogging::k_shm_arg.GetSendLevel()) {
-      return p_tls->Write(vzlogging::k_shm_arg.GetSockAddr(), slog, nlog);
+      p_tls->Write(vzlogging::k_shm_arg.GetSockAddr(), slog, nlog);
     }
     return 0;
   }

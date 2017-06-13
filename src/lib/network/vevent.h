@@ -7,11 +7,11 @@
 * Date          : 18:1:2017
 * Description   :
 *-----------------------------------------------------------------------------
-* Modify        : 
+* Modify        :
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #pragma once
-#include "inc/vtypes.h"
+#include "base/vtypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,88 +34,76 @@ extern "C" {
 
 #include <string>
 
-typedef int32_t (*EVT_FUNC)(int32_t nEvt, const void* ctx);
+typedef int32_t (*EVT_FUNC)(int32_t n_evt, const void* p_usr_arg);
 
 #define EVT_READ        EV_READ
 #define EVT_WRITE       EV_WRITE
 #define EVT_PERSIST     EV_PERSIST
 ///LOOP////////////////////////////////////////////////////////////////////////
-class EVT_LOOP
-{
-public:
-    EVT_LOOP();
-    virtual ~EVT_LOOP();
+class EVT_LOOP {
+ public:
+  EVT_LOOP();
+  virtual ~EVT_LOOP();
 
-    int32_t         Start();
-    void            Stop();
+ public:
+  int32_t         Start();
+  void            Stop();
 
-    void            Runing(bool* b_runing);
+  int32_t         Runing();
 
-    struct event_base* get_event() const {
-      return m_pEvent;
-    }
+  struct event_base* get_event() const {
+    return p_event_;
+  }
 
-protected:
-    struct event_base* m_pEvent;
+ protected:
+  struct event_base* p_event_;
 };
 
 ///TIMER///////////////////////////////////////////////////////////////////////
- class EVT_TIMER
-{
-public:
-    struct event    m_cEvt;      // 
-    EVT_LOOP*       m_pLoop;     // 
+class EVT_TIMER {
+ public:
+  struct event    c_evt_;       // 
+  EVT_LOOP*       p_base_;      //
 
-    EVT_FUNC        m_pCallback; // 消息回调
-    void*           m_pUserArgs; // 回调参数
+  EVT_FUNC        p_callback_;  // 消息回调
+  void*           p_usr_args_;  // 回调参数
 
-    std::string     m_sName;     // 名称
-    bool            m_bStart;
+  std::string     s_name_;      // 名称
+  bool            b_start_;     // 启动标记
 
-    uint32_t        m_nAfter;    // 
-    uint32_t        m_nRepeat;   // 
+ public:
+  EVT_TIMER();
+  void            set_name(const std::string& sName);
+  const std::string&   get_name() const;
 
-public:
-    EVT_TIMER();    
-    void            set_name(const std::string& sName);
-    const std::string&   get_name() const;
+  void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg);
+  int32_t         Start(uint32_t after, uint32_t repeat);
+  void            Stop();
 
-    void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg);
-    int32_t         Start(uint32_t after, uint32_t repeat);
-    void            Stop();
-
-    static void     evt_callback(int fd, short event, void *ctx);
+  static void     evt_callback(int fd, short event, void *ctx);
 };
 
 ///IO//////////////////////////////////////////////////////////////////////////
-class EVT_IO
-{
-public:
-    struct event    m_cEvt;       // 
-    EVT_LOOP*       m_pLoop;      // 
+class EVT_IO {
+ public:
+  struct event    c_evt_;       //
+  EVT_LOOP*       p_base_;      //
 
-    EVT_FUNC        m_pCallback;  // 消息回调
-    void*           m_pUserArgs;  // 回调参数
+  EVT_FUNC        p_callback_;  // 消息回调
+  void*           p_usr_args_;  // 回调参数
 
-    std::string     m_sName;      // 名称
-    bool            m_bStart;
-    int32_t         m_nIdleCall;  // 轮空
+  std::string     s_name_;      // 名称
+  bool            b_start_;
 
-public:
-    EVT_IO();
-    
-    bool            is_start();
+ public:
+  EVT_IO();
 
-    void            inc_idlecall() { m_nIdleCall++; }
-    int32_t         get_idlecall() { return m_nIdleCall; }
-    void            set_idlecall(int32_t n) { m_nIdleCall = n; }
+  void                set_name(const std::string& s_name);
+  const std::string&  get_name() const;
 
-    void            set_name(const std::string& sName);
-    const std::string&   get_name() const;
+  void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* p_arg);
+  int32_t         Start(SOCKET v_hdl, int32_t nEvt);
+  void            Stop();
 
-    void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg);
-    int32_t         Start(SOCKET vHdl, int32_t nEvt);
-    void            Stop();
-
-    static void     evt_callback(evutil_socket_t fd, short events, void *ctx);
+  static void     evt_callback(evutil_socket_t fd, short events, void *ctx);
 };

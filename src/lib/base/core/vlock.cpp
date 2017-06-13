@@ -11,20 +11,20 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #include "vlock.h"
-#include "inc/vdefine.h"
+#include "base/stdafx.h"
 
 ///MUTEX///////////////////////////////////////////////////////////////////////
 VMutex::VMutex() 
-    : isLock_(false)
+    : b_lock_(false)
 {
 #ifdef WIN32
-    InitializeCriticalSection(&cMutex_);
+    InitializeCriticalSection(&c_lock_);
 #else
     // 支持嵌入
     pthread_mutexattr_t m_cMutexAttr;
     pthread_mutexattr_init(&m_cMutexAttr);
     pthread_mutexattr_settype(&m_cMutexAttr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&cMutex_, &m_cMutexAttr);
+    pthread_mutex_init(&c_lock_, &m_cMutexAttr);
 
     //pthread_mutex_init(&m_cMutex, NULL);
 #endif
@@ -33,92 +33,92 @@ VMutex::VMutex()
 VMutex::~VMutex()
 {
 #ifdef WIN32
-    DeleteCriticalSection(&cMutex_);
+    DeleteCriticalSection(&c_lock_);
 #else
-    pthread_mutex_destroy(&cMutex_);
+    pthread_mutex_destroy(&c_lock_);
 #endif
 
-    isLock_ = false;
+    b_lock_ = false;
 }
 
-void VMutex::lock()
+void VMutex::Lock()
 {
 #ifdef WIN32
-    EnterCriticalSection(&cMutex_);
+    EnterCriticalSection(&c_lock_);
 #else
-    if (pthread_mutex_lock(&cMutex_) == 0) {
-        isLock_ = true;
+    if (pthread_mutex_lock(&c_lock_) == 0) {
+        b_lock_ = true;
     }
 #endif
 }
 
-void VMutex::unlock()
+void VMutex::Unlock()
 {
 #ifdef WIN32
-    LeaveCriticalSection(&cMutex_);
+    LeaveCriticalSection(&c_lock_);
 #else
-    if (pthread_mutex_unlock(&cMutex_) == 0) {
-        isLock_ = false;
+    if (pthread_mutex_unlock(&c_lock_) == 0) {
+        b_lock_ = false;
     }
 #endif
 }
 
-bool VMutex::try_lock(long msec)
+bool VMutex::TryLock(long msec)
 {
     bool bLock = false;
 
 #ifdef WIN32
-    bLock = (TryEnterCriticalSection(&cMutex_) ? true : false);
+    bLock = (TryEnterCriticalSection(&c_lock_) ? true : false);
 #else
-    bLock = (pthread_mutex_trylock(&cMutex_) == 0) ? true : false;
+    bLock = (pthread_mutex_trylock(&c_lock_) == 0) ? true : false;
 #endif
 
     return bLock;
 }
 
-bool VMutex::is_locked()
+bool VMutex::IsLock()
 {
-    return isLock_;
+    return b_lock_;
 }
 
 ///SIGNAL//////////////////////////////////////////////////////////////////////
 VSignal::VSignal() 
-    : isInit_(true)
+    : b_init_(true)
 {
 #ifdef WIN32
-    cHandle_ = CreateSemaphore(NULL, 0, MAXLONG, NULL);
-    if (cHandle_ == NULL) {
-        isInit_ = false;
+    c_handle_ = CreateSemaphore(NULL, 0, MAXLONG, NULL);
+    if (c_handle_ == NULL) {
+        b_init_ = false;
     }
 #else
-    if (sem_init(&cHandle_, 0, 0) < 0)  {
-        isInit_ = false;
+    if (sem_init(&c_handle_, 0, 0) < 0)  {
+        b_init_ = false;
     }
 #endif
 }
 
 VSignal::~VSignal()
 {
-    isInit_ = false;
+    b_init_ = false;
 #ifdef WIN32
-    CloseHandle(cHandle_);
+    CloseHandle(c_handle_);
 #else
-    sem_destroy(&cHandle_);
+    sem_destroy(&c_handle_);
 #endif
 }
 
-int32_t VSignal::waits(long msec)
+int32_t VSignal::Wait(long msec)
 {
     int32_t nRet = 0;
-    if (isInit_ == false) {
+    if (b_init_ == false) {
         return -1;
     }
 
 #ifdef WIN32
     if(msec > 0){
-        nRet = (WaitForSingleObject(cHandle_, msec) == WAIT_OBJECT_0);
+        nRet = (WaitForSingleObject(c_handle_, msec) == WAIT_OBJECT_0);
     } else {
-        nRet = (WaitForSingleObject(cHandle_, INFINITE) == WAIT_OBJECT_0);
+        nRet = (WaitForSingleObject(c_handle_, INFINITE) == WAIT_OBJECT_0);
     }
 #else
     if(msec > 0)
@@ -128,7 +128,7 @@ int32_t VSignal::waits(long msec)
         struct timespec ts;
         ts.tv_sec = tb.time+(tb.millitm+msec)/1000;
         ts.tv_nsec = ((tb.millitm+msec)%1000)*1000L*1000;
-        nRet = sem_timedwait(&cHandle_, &ts);  // 0=接收到POST，-1错误
+        nRet = sem_timedwait(&c_handle_, &ts);  // 0=接收到POST，-1错误
         if (nRet != 0) 
         {
             if (errno == ETIMEDOUT) 
@@ -143,7 +143,7 @@ int32_t VSignal::waits(long msec)
     }
     else
     {
-        nRet = sem_wait(&cHandle_);
+        nRet = sem_wait(&c_handle_);
         if (nRet != 0) 
         {
             nRet = 0;   // 超时
@@ -157,26 +157,26 @@ int32_t VSignal::waits(long msec)
     return nRet;
 }
 
-void VSignal::notify()
+void VSignal::Signal()
 {
-    if (isInit_ == false) {
+    if (b_init_ == false) {
         return;
     }
 #ifdef WIN32
-    ReleaseSemaphore(cHandle_, 1, NULL);
+    ReleaseSemaphore(c_handle_, 1, NULL);
 #else
-    sem_post(&cHandle_);
+    sem_post(&c_handle_);
 #endif
 }
 
 ///LOCK GUARD//////////////////////////////////////////////////////////////////
-VLockGuard::VLockGuard(VMutex& cMutex) 
-    : cMutex_(cMutex)
+VLockGuard::VLockGuard(VMutex& c_lock) 
+    : c_mutex_(c_lock)
 {
-    cMutex_.lock();
+    c_mutex_.Lock();
 }
 
 VLockGuard::~VLockGuard()
 {
-    cMutex_.unlock();
+    c_mutex_.Unlock();
 }

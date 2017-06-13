@@ -41,6 +41,13 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.c
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/vtypes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h
+	${CMAKE_CURRENT_SOURCE_DIR}/stdafx.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/verror.h
+	${CMAKE_CURRENT_SOURCE_DIR}/verror.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vmessage.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vlock.h
@@ -49,7 +56,6 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/core/vblockbuffer.h
 )
 
 SOURCE_GROUP(base FILES
@@ -71,6 +77,14 @@ SOURCE_GROUP(flags FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.c
 )
+SOURCE_GROUP(inc FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/vtypes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h
+	${CMAKE_CURRENT_SOURCE_DIR}/stdafx.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/verror.h
+	${CMAKE_CURRENT_SOURCE_DIR}/verror.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vmessage.h
+)
 SOURCE_GROUP(core FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.cpp
@@ -80,7 +94,6 @@ SOURCE_GROUP(core FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vthread.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.h
 	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/core/vblockbuffer.h
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")

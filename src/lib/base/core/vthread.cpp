@@ -28,7 +28,7 @@
 #include <sys/timeb.h>
 #endif
 
-#include "inc/vdefine.h"
+#include "base/stdafx.h"
 
 ///THREAD//////////////////////////////////////////////////////////////////////
 VThread::VThread()
