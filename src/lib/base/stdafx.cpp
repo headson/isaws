@@ -1,35 +1,29 @@
 /************************************************************************/
-/* 作者: SoberPeng 17-05-23
-/* 描述: 
+/* Author      : Sober.Peng 17-06-14
+/* Description :
 /************************************************************************/
-#ifndef _VDEFINE_H
-#define _VDEFINE_H
+#include "stdafx.h"
 
-#include <time.h>
-#include <stdio.h>
+void app_init()
+{
 #ifdef WIN32
-#include <windows.h>
-#include <winsock2.h>
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+  srand((unsigned int)time(NULL));
+#else
+  srand((unsigned int)time(NULL));
+  srandom((unsigned int)time(NULL));
 #endif
+}
 
-#include "verror.h"
-#include "vmessage.h"
-#include "vzlogging/logging/vzlogging.h"
-#include "vzlogging/logging/vzloggingcpp.h"
-
-/***共享内存*************************************************************/
+void app_destroy()
+{
 #ifdef WIN32
-#define DEF_SHM_VIDEO_0       "shm_video_0"
-#else   // WIN32
-#define DEF_SHM_VIDEO_0       0x00001000
-#endif  // WIN32
+  WSACleanup();
+#endif
+}
 
-/***信号量***************************************************************/
-#ifdef WIN32
-#define DEF_SEM_VIDEO_0_R     "sem_video_0_r"
-#define DEF_SEM_VIDEO_0_W     "sem_video_0_w"
-#else   // WIN32
-#define DEF_SEM_VIDEO_0_R     0x00001001
-#define DEF_SEM_VIDEO_0_W     0x00001002
-#endif  // WIN32
-#endif  // _VDEFINE_H
+//////////////////////////////////////////////////////////////////////////
+int InitLogging(int argc, char* argv[]) {
+  return ::InitVzLogging(argc, argv);
+}

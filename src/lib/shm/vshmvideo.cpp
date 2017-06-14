@@ -6,7 +6,7 @@
 
 #include <string.h>
 
-#include "inc/vdefine.h"
+#include "base/stdafx.h"
 
 VShmVideo::VShmVideo() {
 

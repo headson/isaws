@@ -62,20 +62,13 @@ public:
     SOCKET          GetSocket() const;
     virtual void    SetSocket(SOCKET handle);
 
-    virtual int32_t Open(const CInetAddr& cLocalAddr, bool nonblocking=false , bool resue=true, bool client=false) { return 0; };
     virtual void    Close();
-
-    //绑定地址
-    int32_t         Bind(const CInetAddr &cLocalAddr);
 
     bool            IsOpen() const;
 
     //属性设置
     int32_t         SetOption(int level, int option, void *optval, int optlen) const;
     int32_t         GetOption(int level, int option, void *optval, int *optlen) const;
-
-    //获取SOCKET绑定的地址
-    int32_t         GetLocalAddr(CInetAddr &cLocalAddr) const;
 
     /*****************************************************************************
     * Author        : Sober.Peng 28:12:2016

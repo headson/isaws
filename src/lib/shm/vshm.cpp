@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "inc/vdefine.h"
+#include "base/stdafx.h"
 
 VShm::VShm() {
   printf("%s[%d].\n", __FUNCTION__, __LINE__);

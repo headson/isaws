@@ -242,31 +242,6 @@ int32_t VSocket::GetOption(int level, int option, void *optval, int *optlen) con
 #endif
 }
 
-int32_t VSocket::GetLocalAddr(CInetAddr &cLocalAddr) const {
-#ifdef WIN32
-  int32_t len = sizeof(sockaddr_in);
-#else
-  uint32_t len = sizeof(sockaddr_in);
-#endif
-
-  sockaddr *addr = reinterpret_cast<sockaddr *> (cLocalAddr.GetAddr());
-  if(::getsockname(GetSocket(), addr, &len) == -1)
-    return -1;
-
-  return 0;
-}
-
-int32_t VSocket::Bind(const CInetAddr &cLocalAddr) {
-  int32_t ret = ::bind(handler_,
-                       (struct sockaddr *)cLocalAddr.GetAddr(), sizeof(sockaddr_in));
-  if(ret != 0) {
-    VSocket::Close();
-    return -1;
-  }
-
-  return 0;
-}
-
 /*****************************************************************************
 * Author        : Sober.Peng 28:12:2016
 * Description   : 网络数据接收

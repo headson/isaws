@@ -3,7 +3,7 @@
 /* Description :
 /************************************************************************/
 #include "vsem.h"
-#include "inc/vdefine.h"
+#include "base/stdafx.h"
 
 #ifdef WIN32
 VSem::VSem()

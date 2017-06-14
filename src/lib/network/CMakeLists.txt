@@ -29,6 +29,7 @@ SET(PROJECT_SOURCE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/vsocket.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cmulticast.h
     ${CMAKE_CURRENT_SOURCE_DIR}/cmulticast.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/csocketinterface.h
 #   ${CMAKE_CURRENT_SOURCE_DIR}/vsockstream.h
 #   ${CMAKE_CURRENT_SOURCE_DIR}/vsockstream.cpp
 #   ${CMAKE_CURRENT_SOURCE_DIR}/vsockdgram.h
@@ -46,6 +47,7 @@ SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/vsocket.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/cmulticast.h
     ${CMAKE_CURRENT_SOURCE_DIR}/cmulticast.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/csocketinterface.h
 #   ${CMAKE_CURRENT_SOURCE_DIR}/vsockstream.h
 #   ${CMAKE_CURRENT_SOURCE_DIR}/vsockstream.cpp
 #   ${CMAKE_CURRENT_SOURCE_DIR}/vsockdgram.h

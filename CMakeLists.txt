@@ -46,5 +46,7 @@ ADD_SUBDIRECTORY(src/run/watchdog)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_vzlogging)
-ADD_SUBDIRECTORY(src/test/test_event)
+#ADD_SUBDIRECTORY(src/test/test_event)
+ADD_SUBDIRECTORY(src/test/test_mcast_client)
+ADD_SUBDIRECTORY(src/test/test_mcast_server)
 

@@ -58,16 +58,16 @@ EVT_TIMER::EVT_TIMER() {
   p_usr_args_  = NULL;
 
   s_name_      = "";
-  b_start_     = false;
 
-  c_evt_.ev_evcallback.evcb_flags = -1;
+  b_init_      = false;
+  b_start_     = false;
 }
 
-void EVT_TIMER::set_name(const std::string& sName) {
+void EVT_TIMER::SetName(const std::string& sName) {
   s_name_ = sName;
 }
 
-const std::string& EVT_TIMER::get_name() const {
+const std::string& EVT_TIMER::GetName() const {
   return s_name_;
 }
 
@@ -85,7 +85,7 @@ int32_t EVT_TIMER::Start(uint32_t after_ms, uint32_t repeat_ms) {
     return n_ret;
   }
 
-  if (b_start_ == false) {
+  if (b_init_ == false) {
     if (repeat_ms != 0) {
       event_set(&c_evt_, -1, EV_TIMEOUT | EV_PERSIST, evt_callback, (void*)this);
     } else {
@@ -96,6 +96,7 @@ int32_t EVT_TIMER::Start(uint32_t after_ms, uint32_t repeat_ms) {
       LOG(L_ERROR)<<"event base set failed.";
       return n_ret;
     }
+    b_init_ = true;
   }
 
   struct timeval tv;
@@ -132,14 +133,16 @@ EVT_IO::EVT_IO() {
   p_usr_args_   = NULL;
 
   s_name_       = "";
+
+  b_init_       = false;
   b_start_      = false;
 }
 
-void EVT_IO::set_name(const std::string& s_name) {
+void EVT_IO::SetName(const std::string& s_name) {
   s_name_ = s_name;
 }
 
-const std::string& EVT_IO::get_name() const {
+const std::string& EVT_IO::GetName() const {
   return s_name_;
 }
 
@@ -157,20 +160,19 @@ int32_t EVT_IO::Start(SOCKET vHdl, int32_t nEvt) {
     return n_ret;
   }
 
-  if (b_start_ == false) {
+  if (b_init_ == false) {
     event_set(&c_evt_, vHdl, nEvt, evt_callback, this);
     n_ret = event_base_set(p_base_->get_event(), &c_evt_);
     if (n_ret != 0) {
-      LOG(L_ERROR)<<"event base set failed.";
+      LOG(L_ERROR) << "event base set failed.";
       return n_ret;
     }
+    b_init_ = true;
   }
 
-  if (c_evt_.ev_evcallback.evcb_flags > 0) {
-    n_ret = event_add(&c_evt_, NULL);
-    if (n_ret == 0) {
-      b_start_ = true;
-    }
+  n_ret = event_add(&c_evt_, NULL);
+  if (n_ret == 0) {
+    b_start_ = true;
   }
   return n_ret;
 }

@@ -119,27 +119,16 @@ inline int closesocket(SOCKET socket) {
 
 #endif  // WIN32
 
-inline void app_init() {
-#ifdef WIN32
-  WSADATA wsaData;
-  WSAStartup(MAKEWORD(2, 2), &wsaData);
-  srand((unsigned int)time(NULL));
-#else
-  srand((unsigned int)time(NULL));
-  srandom((unsigned int)time(NULL));
-#endif
-}
-
-inline void app_destroy() {
-#ifdef WIN32
-  WSACleanup();
-#endif
-}
-
 #include "verror.h"
 #include "vmessage.h"
 #include "vzlogging/logging/vzlogging.h"
 #include "vzlogging/logging/vzloggingcpp.h"
+
+void app_init();      // 
+void app_destroy();   // 
+
+// 日志初始化
+int InitLogging(int argc, char* argv[]);
 
 #endif  // _VDEFINE_H
 

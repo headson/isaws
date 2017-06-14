@@ -69,12 +69,12 @@ class EVT_TIMER {
   void*           p_usr_args_;  // 回调参数
 
   std::string     s_name_;      // 名称
-  bool            b_start_;     // 启动标记
+  bool            b_init_, b_start_;
 
  public:
   EVT_TIMER();
-  void            set_name(const std::string& sName);
-  const std::string&   get_name() const;
+  void                SetName(const std::string& sName);
+  const std::string&  GetName() const;
 
   void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg);
   int32_t         Start(uint32_t after, uint32_t repeat);
@@ -93,13 +93,13 @@ class EVT_IO {
   void*           p_usr_args_;  // 回调参数
 
   std::string     s_name_;      // 名称
-  bool            b_start_;
+  bool            b_init_, b_start_;
 
  public:
   EVT_IO();
 
-  void                set_name(const std::string& s_name);
-  const std::string&  get_name() const;
+  void                SetName(const std::string& s_name);
+  const std::string&  GetName() const;
 
   void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* p_arg);
   int32_t         Start(SOCKET v_hdl, int32_t nEvt);
