@@ -120,11 +120,26 @@ inline int closesocket(SOCKET socket) {
 
 #endif  // WIN32
 
+<<<<<<< HEAD:src/lib/stdafx.h
+=======
+#include "verror.h"
+#include "vmessage.h"
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/base/stdafx.h
 #include "vzlogging/logging/vzlogging.h"
 #include "vzlogging/logging/vzwatchdog.h"
 
+<<<<<<< HEAD:src/lib/stdafx.h
 #ifdef __cplusplus
 #include "vzlogging/logging/vzloggingcpp.h"
+=======
+void app_init();      // 
+void app_destroy();   // 
+
+// 日志初始化
+int InitLogging(int argc, char* argv[]);
+
+#endif  // _VDEFINE_H
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/base/stdafx.h
 
 extern "C" {
 #endif // __cplusplus

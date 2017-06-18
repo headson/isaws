@@ -58,8 +58,23 @@ EVT_TIMER::EVT_TIMER() {
   p_callback_  = NULL;
   p_usr_args_  = NULL;
 
+<<<<<<< HEAD:src/lib/vzconn/async/clibevent.cpp
   b_init_      = 0;
   b_start_     = 0;
+=======
+  s_name_      = "";
+
+  b_init_      = false;
+  b_start_     = false;
+}
+
+void EVT_TIMER::SetName(const std::string& sName) {
+  s_name_ = sName;
+}
+
+const std::string& EVT_TIMER::GetName() const {
+  return s_name_;
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.cpp
 }
 
 void EVT_TIMER::Init(const EVT_LOOP* loop, EVT_FUNC fn_cb, void* p_arg) {
@@ -76,7 +91,11 @@ int32 EVT_TIMER::Start(uint32 after_ms, uint32 repeat_ms) {
     return n_ret;
   }
 
+<<<<<<< HEAD:src/lib/vzconn/async/clibevent.cpp
   if (0 == b_init_) {
+=======
+  if (b_init_ == false) {
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.cpp
     if (repeat_ms != 0) {
       event_set(&c_evt_, -1, EV_TIMEOUT | EV_PERSIST, evt_callback, (void*)this);
     } else {
@@ -88,8 +107,12 @@ int32 EVT_TIMER::Start(uint32 after_ms, uint32 repeat_ms) {
       LOG(L_ERROR)<<"event base set failed.";
       return n_ret;
     }
+<<<<<<< HEAD:src/lib/vzconn/async/clibevent.cpp
     b_init_ = 1;
     LOG(L_INFO) << "Set event "<<after_ms<<"-"<<repeat_ms;
+=======
+    b_init_ = true;
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.cpp
   }
 
   struct timeval tv;
@@ -125,8 +148,23 @@ EVT_IO::EVT_IO() {
   p_callback_   = NULL;
   p_usr_args_   = NULL;
 
+<<<<<<< HEAD:src/lib/vzconn/async/clibevent.cpp
   b_init_       = 0;
   b_start_      = 0;
+=======
+  s_name_       = "";
+
+  b_init_       = false;
+  b_start_      = false;
+}
+
+void EVT_IO::SetName(const std::string& s_name) {
+  s_name_ = s_name;
+}
+
+const std::string& EVT_IO::GetName() const {
+  return s_name_;
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.cpp
 }
 
 void EVT_IO::Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg) {
@@ -143,13 +181,18 @@ int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 n_timeout) {
     return n_ret;
   }
 
+<<<<<<< HEAD:src/lib/vzconn/async/clibevent.cpp
   if (0 == b_init_ || c_evt_.ev_events != nEvt) {
+=======
+  if (b_init_ == false) {
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.cpp
     event_set(&c_evt_, vHdl, nEvt, evt_callback, this);
     n_ret = event_base_set(p_base_->get_event(), &c_evt_);
     if (n_ret != 0) {
       LOG(L_ERROR) << "event base set failed.";
       return n_ret;
     }
+<<<<<<< HEAD:src/lib/vzconn/async/clibevent.cpp
     b_init_ = 1;
     LOG(L_INFO) << "Set "<<vHdl<<" event "<<nEvt<<"-"<<c_evt_.ev_events;
   }
@@ -163,6 +206,14 @@ int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 n_timeout) {
   }
   if (n_ret == 0) {
     b_start_ = 1;
+=======
+    b_init_ = true;
+  }
+
+  n_ret = event_add(&c_evt_, NULL);
+  if (n_ret == 0) {
+    b_start_ = true;
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.cpp
   }
   return n_ret;
 }

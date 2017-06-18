@@ -52,7 +52,13 @@ ADD_SUBDIRECTORY(src/run/vzlogserver)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_vzlogging)
+<<<<<<< HEAD
 ADD_SUBDIRECTORY(src/test/test_block_buffer)
 ADD_SUBDIRECTORY(src/test/test_vzconn_client)
 ADD_SUBDIRECTORY(src/test/test_vzconn_server)
+=======
+#ADD_SUBDIRECTORY(src/test/test_event)
+ADD_SUBDIRECTORY(src/test/test_mcast_client)
+ADD_SUBDIRECTORY(src/test/test_mcast_server)
+>>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a
 
