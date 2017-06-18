@@ -3,7 +3,7 @@
 /* Description :
 /************************************************************************/
 #include "vsem.h"
-#include "inc/vdefine.h"
+#include "stdafx.h"
 
 #ifdef WIN32
 VSem::VSem()
@@ -13,9 +13,9 @@ VSem::VSem()
 VSem::~VSem() {
 }
 
-int32_t VSem::Open(const SemKey key) {
-  uint32_t lInitialCount = 1;
-  uint32_t lMaximumCount = 1;
+int32 VSem::Open(const SemKey key) {
+  uint32 lInitialCount = 1;
+  uint32 lMaximumCount = 1;
   sem_ = CreateSemaphore(NULL, lInitialCount, lMaximumCount, (LPCTSTR)key);
   if (sem_ == NULL) {
     printf("CreateSemaphore failed.\n");
@@ -31,7 +31,7 @@ bool VSem::IsValid() {
   return true;
 }
 
-int32_t VSem::Wait(uint32_t timeout /*= INFINITE*/) {
+int32 VSem::Wait(uint32 timeout /*= INFINITE*/) {
   if (sem_ == NULL) {
     return -1;
   }
@@ -43,8 +43,8 @@ bool VSem::Signal() {
   if (sem_ == NULL) {
     return false;
   }
-  uint32_t lReleaseCount = 1;
-  uint32_t *lpPreviousCount = NULL;
+  uint32 lReleaseCount = 1;
+  uint32 *lpPreviousCount = NULL;
   return (ReleaseSemaphore(sem_, lReleaseCount, (LPLONG)lpPreviousCount) == TRUE);
 }
 
@@ -54,56 +54,37 @@ bool VSem::Signal() {
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-VSem::VSem()
-  : sem_(-1) {
-}
-
-VSem::~VSem() {
-}
-
-int32_t VSem::Open(const SemKey key) {
-  key_t k = ftok(".", key);
-  if (k < 0) {
-    LOG_ERROR("ftok failed.\n");
+int32 VSem::Open(const SemKey key) {
+  sem_ = sem_open(key, O_CREAT, 0777, 1);
+  if(sem_ == NULL) {
+    sem_ = sem_open(key, O_CREAT, 0777, 1);
+  }
+  if(sem_ == NULL) {
     return -1;
   }
-
-  sem_ = semget(k, 0, 0666);
-  if(sem_ < 0) {
-    sem_ = semget(k, 1, IPC_CREAT|IPC_EXCL|0666);
-  }
-  if(sem_ < 0) {
-    return -1;
-  }
-  LOG_INFO("sem id:%d %d %d\n", sem_, key, k);
+  LOG_INFO("sem id:0x%0x %s %d\n", sem_, key, k);
   return 0;
 }
 
 bool VSem::IsValid() {
-  if (sem_ < 0) {
+  if (sem_ == NULL){
     return false;
   }
   return true;
 }
 
-int32_t VSem::Wait(uint32_t timeout) {
-  struct sembuf sb;
-  sb.sem_num   = 0;
-  sb.sem_op    = -1;
-  sb.sem_flg   = SEM_UNDO;
-  if( (semtimedop(sem_, &sb, 1, NULL)) == -1) {
-    return -1;
+int32 VSem::Wait(uint32 timeout) {
+  if (sem_ != NULL) {
+    sem_wait(sem_);
+    return 0;
   }
-  return 0;
+  return -1;
 }
 
 bool VSem::Signal() {
-  struct sembuf sb;
-  sb.sem_num   = 0;
-  sb.sem_op    = 1;
-  sb.sem_flg   = SEM_UNDO;
-  if( (semtimedop(sem_, &sb, 1, NULL)) == -1) {
-    return -1;
+  if (sem_ != NULL) {
+    sem_post(sem_);
+    return 0;
   }
   return 0;
 }

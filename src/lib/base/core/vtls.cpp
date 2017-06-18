@@ -3,7 +3,7 @@
 /* Description : 
 /************************************************************************/
 #include "vtls.h"
-#include "base/stdafx.h"
+#include "stdafx.h"
 
 namespace yhbase {
 

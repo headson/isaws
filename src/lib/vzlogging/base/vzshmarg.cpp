@@ -88,7 +88,7 @@ void VShm::Close() {
 #else  // WIN32
 
 #if 0
-int32_t VShm::Open(ShmKey key, ShmSize size) {
+int32 VShm::Open(ShmKey key, ShmSize size) {
   if (!key || size == 0) {
     return -1;
   }
@@ -141,7 +141,7 @@ void VShm::Close() {
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-int32_t VShm::Open(ShmKey key, ShmSize size) {
+int32 VShm::Open(ShmKey key, ShmSize size) {
   if (!key || size == 0) {
     return -1;
   }

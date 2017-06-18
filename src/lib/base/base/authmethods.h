@@ -1,7 +1,7 @@
 #ifndef ALI_OPENSEARCH_BASE_HELP_METHODS_H_
 #define ALI_OPENSEARCH_BASE_HELP_METHODS_H_
 
-#include "base/vtypes.h"
+#include "basictypes.h"
 
 #include <string>
 

@@ -28,8 +28,8 @@ void gettimeofday(struct timeval *tp, struct timezone *tz) {
   intervals = ((uint64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
   intervals -= 116444736000000000;
 
-  tp->tv_sec = (uint32_t)(intervals / 10000000);
-  tp->tv_usec = (uint32_t)((intervals % 10000000) / 10);
+  tp->tv_sec = (unsigned int)(intervals / 10000000);
+  tp->tv_usec = (unsigned int)((intervals % 10000000) / 10);
 }
 #endif
 
@@ -143,20 +143,23 @@ BOOL SetConsoleColor(WORD wAttributes) {
 #endif
 
 void VzDumpLogging(const char* s_msg, int n_msg) {
+  FILE* fd_out = stdout;
 #ifdef WIN32
   switch (s_msg[0]) {
   case L_C_WARNING:
     SetConsoleColor(FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
     break;
-  case L_C_ERROR:
+  case L_C_ERROR: {
+    fd_out = stderr;
     SetConsoleColor(FOREGROUND_INTENSITY | FOREGROUND_RED);
+  }
     break;
   default:
     break;
   }
 
-  fprintf(stdout, "%s", s_msg);
-  fflush(stdout);
+  fprintf(fd_out, "%s", s_msg);
+  fflush(fd_out);
   if (s_msg[0] == L_C_WARNING || s_msg[0] == L_C_ERROR) {
     SetConsoleColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
   }
@@ -171,14 +174,17 @@ void VzDumpLogging(const char* s_msg, int n_msg) {
   case L_C_WARNING:
     color = VZ_YELLOW;
     break;
-  case L_C_ERROR:
+  case L_C_ERROR: {
+    fd_out = stderr;
     color = VZ_RED;
+  }
     break;
   default:
     break;
   }
-  fprintf(stdout, "%s%s%s", color, s_msg, VZ_NONE);
-  fflush(stdout);
+  fprintf(fd_out, "%s%s", color, s_msg);
+  fprintf(fd_out, VZ_NONE);
+  fflush(fd_out);
 #endif
 }
 

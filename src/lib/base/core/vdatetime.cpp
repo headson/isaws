@@ -11,13 +11,13 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #include "vdatetime.h"
-#include "base/stdafx.h"
+#include "stdafx.h"
 
 #include <time.h>
 #include <stdio.h>
 
 //#ifdef WIN32
-//inline int32_t gettimeofday(struct timeval *tp, void *tzp)
+//inline int32 gettimeofday(struct timeval *tp, void *tzp)
 //{
 //  time_t clock;
 //  struct tm tm;
@@ -42,7 +42,7 @@ VDateTime::VDateTime() {
   this->set(0, 0);
 }
 
-VDateTime::VDateTime(uint32_t s, uint32_t us) {
+VDateTime::VDateTime(uint32 s, uint32 us) {
   this->set(s, us);
 }
 
@@ -60,7 +60,7 @@ VDateTime VDateTime::get() {
 }
 
 VDateTime VDateTime::get(time_t s) {
-  VDateTime dt((uint32_t)s);
+  VDateTime dt((uint32)s);
 
   return dt;
 }
@@ -74,7 +74,7 @@ VDateTime VDateTime::get(const std::string& sdt) {
     tt.tm_year  -= 1900;
     tt.tm_mon   --;
     tt.tm_isdst = -1;
-    dt.set((uint32_t)mktime(&tt), 0);
+    dt.set((uint32)mktime(&tt), 0);
   }
   return dt;
 }
@@ -92,16 +92,16 @@ int64_t VDateTime::get_sys_tick() {
   return 0;
 }
 
-bool VDateTime::is_loop_yaer(int32_t ny) {
+bool VDateTime::is_loop_yaer(int32 ny) {
   return (((0 == (ny % 4)) && (0 != (ny % 100))) || (0 == (ny % 400)));
 }
 
 void VDateTime::set(int64_t ms) {
   int64_t secs = ms / 1000;
-  set((uint32_t)secs, ((ms % 1000) * 1000));
+  set((uint32)secs, ((ms % 1000) * 1000));
 }
 
-void VDateTime::set(uint32_t s, uint32_t us) {
+void VDateTime::set(uint32 s, uint32 us) {
   c_tv_.tv_sec = static_cast<long>(s);
   c_tv_.tv_usec = static_cast<long>(us);
 
@@ -123,11 +123,11 @@ void VDateTime::set(const struct timeval& tv) {
   set(tv.tv_sec, tv.tv_usec);
 }
 
-uint32_t VDateTime::tsec() const {
+uint32 VDateTime::tsec() const {
   return c_tv_.tv_sec;
 }
 
-uint32_t VDateTime::tusec() const {
+uint32 VDateTime::tusec() const {
   return c_tv_.tv_usec;
 }
 
@@ -147,42 +147,42 @@ uint64_t VDateTime::to_usec() const {
   return us;
 }
 
-int32_t VDateTime::year() const {
+int32 VDateTime::year() const {
   if (p_tm_) {
     return (p_tm_->tm_year+1900);
   }
   return 1900;
 }
 
-int32_t VDateTime::month() const {
+int32 VDateTime::month() const {
   if (p_tm_) {
     return (p_tm_->tm_mon+1);
   }
   return 1;
 }
 
-int32_t VDateTime::day() const {
+int32 VDateTime::day() const {
   if (p_tm_) {
     return (p_tm_->tm_mday);
   }
   return 1;
 }
 
-int32_t VDateTime::hour() const {
+int32 VDateTime::hour() const {
   if (p_tm_) {
     return (p_tm_->tm_hour);
   }
   return 0;
 }
 
-int32_t VDateTime::minute() const {
+int32 VDateTime::minute() const {
   if (p_tm_) {
     return (p_tm_->tm_min);
   }
   return 0;
 }
 
-int32_t VDateTime::second() const {
+int32 VDateTime::second() const {
   if (p_tm_) {
     return (p_tm_->tm_sec);
   }
@@ -205,7 +205,7 @@ VDateTime& VDateTime::operator +=(const VDateTime &dt) {
 
   s += us / ONE_SECOND_IN_USECS;
   us = us % ONE_SECOND_IN_USECS;
-  set((uint32_t)s, (uint32_t)us);
+  set((uint32)s, (uint32)us);
 
   return *this;
 }
@@ -286,8 +286,8 @@ bool operator>=(const VDateTime& dt1, const VDateTime& dt2) {
 
 VDateTime operator+(const VDateTime& dt1, const VDateTime& dt2) {
   uint64_t us = dt1.to_usec() + dt2.to_usec();
-  VDateTime timer((uint32_t)us / ONE_SECOND_IN_USECS, 
-    (uint32_t)us % ONE_SECOND_IN_USECS);
+  VDateTime timer((uint32)us / ONE_SECOND_IN_USECS, 
+    (uint32)us % ONE_SECOND_IN_USECS);
   return timer;
 }
 
@@ -298,8 +298,8 @@ VDateTime operator-(const VDateTime& dt1, const VDateTime& dt2) {
       us = dt1.to_usec() - dt2.to_usec();
     }
 
-    VDateTime timer((uint32_t)us / ONE_SECOND_IN_USECS, 
-      (uint32_t)us % ONE_SECOND_IN_USECS);
+    VDateTime timer((uint32)us / ONE_SECOND_IN_USECS, 
+      (uint32)us % ONE_SECOND_IN_USECS);
     return timer;
   }
 }

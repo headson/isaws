@@ -11,7 +11,7 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #include "vlock.h"
-#include "base/stdafx.h"
+#include "stdafx.h"
 
 ///MUTEX///////////////////////////////////////////////////////////////////////
 VMutex::VMutex() 
@@ -107,9 +107,9 @@ VSignal::~VSignal()
 #endif
 }
 
-int32_t VSignal::Wait(long msec)
+int32 VSignal::Wait(long msec)
 {
-    int32_t nRet = 0;
+    int32 nRet = 0;
     if (b_init_ == false) {
         return -1;
     }

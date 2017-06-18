@@ -271,7 +271,7 @@ int CVzLoggingFile::StartRecord(const char* s_usr_cmd) {
   int n_log = snprintf(s_log, 63,
                        "%s start at [%02d/%02d/%04d %02d:%02d:%02d %04d]\n",
                        s_usr_cmd,
-                       wtm->tm_mday, wtm->tm_mon, wtm->tm_year + 1900,
+                       wtm->tm_mday, wtm->tm_mon+1, wtm->tm_year + 1900,
                        wtm->tm_hour, wtm->tm_min, wtm->tm_sec,
                        (int)(tv.tv_usec / 1000));
   return Write(s_log, n_log);
@@ -291,7 +291,7 @@ int CVzLoggingFile::Write(const char* msg, unsigned int size) {
     unsigned int pos = 0;
     do {
       pos += fwrite(msg + pos, 1, size - pos, p_file_);
-    } while (pos < size);
+    } while (pos > 0 && pos < size && p_file_ != NULL);
 
     n_file_size_ += size;
     return size;
@@ -410,23 +410,30 @@ int CVzLoggingFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       // 第一包
       n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, file);
       char* p_log = strrchr(s_log, '\n');
-      fwrite(p_log + 1, 1, strlen(p_log) - 1, fd_err);
+      if (n_log > 0 && strlen(p_log) < DEF_LOG_MAX_SIZE) {
+        fwrite(p_log + 1, 1, strlen(p_log) - 1, fd_err);
+      }
       do {
         n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, file);
-        fwrite(s_log, 1, n_log, fd_err);
+        if (n_log > 0 && n_log < DEF_LOG_MAX_SIZE) {
+          fwrite(s_log, 1, n_log, fd_err);
+        }
       } while (!feof(file) && n_log > 0);
       fclose(file);
       file = NULL;
     }
 
     if (p_file_) {
-      fclose(p_file_); p_file_ = NULL;
+      fclose(p_file_);
+      p_file_ = NULL;
 
-      p_file_ = fopen(s_filename_[n_filename_idx_], "rt");
+      p_file_ = fopen(s_filename_[n_filename_idx_], "rt+");
       if (p_file_) {
         do {
           n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
-          fwrite(s_log, 1, n_log, fd_err);
+          if (n_log > 0 && n_log < DEF_LOG_MAX_SIZE) {
+            fwrite(s_log, 1, n_log, fd_err);
+          }
         } while (!feof(p_file_) && n_log > 0);
       }
     }
@@ -479,18 +486,24 @@ int CVzWatchdogFile::CheckFileReopen(unsigned int n_msg) {
       if (n_file_size_ > n_file_limit_size_) {
         FILE* file_temp = fopen(s_filename_[1], "wt+");
         if (file_temp) {
-          fseek(p_file_, n_file_limit_size_/2, SEEK_SET);  // 截取一半日志
+          int n_less_size = n_file_limit_size_ / 2;
+          fseek(p_file_,
+                n_file_size_-n_less_size, SEEK_SET);  // 截取一半日志
 
           int  n_log = 0;
           char s_log[DEF_LOG_MAX_SIZE+1] = {0};
           // 第一包
           n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
           char* p_log = strrchr(s_log, '\n');
-          fwrite(p_log + 1, 1, strlen(p_log) - 1, file_temp);
+          if (p_log && strlen(p_log) < DEF_LOG_MAX_SIZE) {
+            fwrite(p_log + 1, 1, strlen(p_log) - 1, file_temp);
+          }
 
           do {
             n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
-            fwrite(s_log, 1, n_log, file_temp);
+            if (n_log > 0 && n_log < DEF_LOG_MAX_SIZE) {
+              fwrite(s_log, 1, n_log, file_temp);
+            }
           } while (!feof(p_file_) && n_log > 0);
           fclose(file_temp);
           file_temp = NULL;

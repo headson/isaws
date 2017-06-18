@@ -6,18 +6,20 @@
 
 #include <string.h>
 
-#include "inc/vdefine.h"
+#include "stdafx.h"
 
-VShmVideo::VShmVideo() {
-
+VShmVideo::VShmVideo() 
+  : v_shm_()
+  , v_sem_w_()
+  , v_sem_r_() {
 }
 
 VShmVideo::~VShmVideo() {
   v_shm_.Close();
 }
 
-int32_t VShmVideo::Create(uint32_t n_shm_size) {
-  int32_t n_ret = Open(n_shm_size);
+int32 VShmVideo::Create(const uint8 *s_name, uint32 n_shm_size) {
+  int32 n_ret = Open(s_name, n_shm_size);
   if (n_ret == 0) {
     v_sem_w_.Signal();
     v_sem_r_.Signal();
@@ -25,23 +27,26 @@ int32_t VShmVideo::Create(uint32_t n_shm_size) {
   return n_ret;
 }
 
-int32_t VShmVideo::Open(uint32_t n_shm_size) {
-  int32_t n_ret = 0;
+int32 VShmVideo::Open(const uint8 *s_name, uint32 n_shm_size) {
+  int32 n_ret = 0;
 
   // ¹²ÏíÄÚ´æ
-  n_ret = v_shm_.Open(DEF_SHM_VIDEO_0, n_shm_size);
+  n_ret = v_shm_.Open((ShmKey)s_name, n_shm_size);
   if (n_ret != 0) {
     printf("shm open failed.%d.", n_ret);
     return n_ret;
   }
 
-  n_ret = v_sem_w_.Open(DEF_SEM_VIDEO_0_W);
+  char sem_name[64] = {0};
+  snprintf(sem_name, 63, "%s_W", s_name);
+  n_ret = v_sem_w_.Open((SemKey)sem_name);
   if (n_ret != 0) {
     printf("sem open failed.%d.\n", n_ret);
     return n_ret;
   }
 
-  n_ret = v_sem_r_.Open(DEF_SEM_VIDEO_0_R);
+  snprintf(sem_name, 63, "%s_R", s_name);
+  n_ret = v_sem_r_.Open((SemKey)sem_name);
   if (n_ret != 0) {
     printf("sem open failed.%d.\n", n_ret);
     return n_ret;
@@ -49,7 +54,7 @@ int32_t VShmVideo::Open(uint32_t n_shm_size) {
   return 0;
 }
 
-int32_t VShmVideo::Read(int8_t* p_data, uint32_t n_data, struct timeval* p_tm) {
+int32 VShmVideo::Read(int8* p_data, uint32 n_data, struct timeval* p_tm) {
   if (p_data == NULL || n_data <= 0 || p_tm == NULL) {
     printf("param is error.\n");
     return -1;
@@ -103,7 +108,7 @@ int32_t VShmVideo::Read(int8_t* p_data, uint32_t n_data, struct timeval* p_tm) {
   return 0;
 }
 
-int32_t VShmVideo::Write(const int8_t* p_data, uint32_t n_data, const struct timeval* p_tm) {
+int32 VShmVideo::Write(const int8* p_data, uint32 n_data, const struct timeval* p_tm) {
   if (p_data == NULL || n_data <= 0 || p_tm == NULL) {
     printf("param is error.\n");
     return -1;

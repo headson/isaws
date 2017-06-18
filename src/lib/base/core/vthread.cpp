@@ -28,7 +28,7 @@
 #include <sys/timeb.h>
 #endif
 
-#include "base/stdafx.h"
+#include "stdafx.h"
 
 ///THREAD//////////////////////////////////////////////////////////////////////
 VThread::VThread()
@@ -41,7 +41,7 @@ VThread::~VThread() {
   Stop();
 }
 
-int32_t VThread::Start(VFTHREAD pFunc, void* pArg, int32_t nPriority) {
+int32 VThread::Start(VFTHREAD pFunc, void* pArg, int32 nPriority) {
   callback_ = pFunc;
   user_arg_ = pArg;
   if (callback_ == NULL) {
@@ -54,7 +54,7 @@ int32_t VThread::Start(VFTHREAD pFunc, void* pArg, int32_t nPriority) {
     return -2;
   }
 #else
-  int32_t nRet = pthread_create(&pid_, NULL, callback_, user_arg_);
+  int32 nRet = pthread_create(&pid_, NULL, callback_, user_arg_);
   if (nRet != 0) {
     return -2;
   }
@@ -92,7 +92,7 @@ void VThread::Detach() {
   }
 }
 
-int32_t VThread::Kill() {
+int32 VThread::Kill() {
 #ifdef WIN32
   return 0;
 #else
@@ -100,8 +100,8 @@ int32_t VThread::Kill() {
 #endif
 }
 
-int32_t VThread::get_pid() {
-  int32_t id = 0;
+int32 VThread::get_pid() {
+  int32 id = 0;
 #if defined(WIN32)
   id = GetCurrentThreadId();
 #else  // WIN32
@@ -127,7 +127,7 @@ void VThread::run_cmd(const char* sCmd) {
 #endif
 }
 
-void VThread::set_cpu(int32_t nCpu) {
+void VThread::set_cpu(int32 nCpu) {
 #ifndef WIN32
   cpu_set_t mask;
 
@@ -157,7 +157,7 @@ VExThread::VExThread()
 VExThread::~VExThread() {
 }
 
-int32_t VExThread::Start(int32_t nPriority) {
+int32 VExThread::Start(int32 nPriority) {
   if (_isRuning) {
     return 0;
   }

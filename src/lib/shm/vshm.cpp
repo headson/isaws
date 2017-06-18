@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "inc/vdefine.h"
+#include "stdafx.h"
 
 VShm::VShm() {
   printf("%s[%d].\n", __FUNCTION__, __LINE__);
@@ -19,13 +19,13 @@ VShm::~VShm() {
 }
 
 #ifdef WIN32
-int32_t VShm::Open(const ShmKey key, ShmSize size) {
+int32 VShm::Open(const ShmKey key, ShmSize size) {
   if (!key || size == 0) {
     return -1;
   }
 
   // open
-  shm_hdl_ = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, key);
+  shm_hdl_ = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, (LPCSTR)key);
   if (shm_hdl_ == SHM_NULL) {
     // open
     shm_hdl_ = ::CreateFileMapping(INVALID_HANDLE_VALUE,
@@ -33,7 +33,7 @@ int32_t VShm::Open(const ShmKey key, ShmSize size) {
                                    PAGE_READWRITE,
                                    0,
                                    size + 1,
-                                   key);
+                                   (LPCSTR)key);
   }
   if (shm_hdl_ == SHM_NULL) {
     LOG_ERROR("CreateFileMapping %s failed.%d.\n", key, GetLastError());
@@ -54,7 +54,7 @@ int32_t VShm::Open(const ShmKey key, ShmSize size) {
 void VShm::Close() {
   if (shm_ptr_) {
     if (FALSE == ::UnmapViewOfFile(shm_ptr_)) {
-      LOG_ERROR("UnmapViewOfFile 0x%x failed.\n", (uint32_t)shm_hdl_);
+      LOG_ERROR("UnmapViewOfFile 0x%x failed.\n", (uint32)shm_hdl_);
     }
     shm_ptr_ = NULL;
   }
@@ -73,12 +73,12 @@ void VShm::Close() {
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-int32_t VShm::Open(const ShmKey key, ShmSize size) {
+int32 VShm::Open(const ShmKey key, ShmSize size) {
   if (key == 0 || size == 0) {
     return -1;
   }
 
-  key_t k = ftok(".", key);
+  key_t k = ftok(key, 0);
   if (k < 0) {
     LOG_ERROR("ftok failed.\n");
     return -1;
@@ -89,10 +89,10 @@ int32_t VShm::Open(const ShmKey key, ShmSize size) {
     shm_hdl_ = shmget(k, size, IPC_CREAT | 0660);
   }
   if(shm_hdl_ < 0) {
-    LOG_ERROR("shared memory open failed %d-0x%x.\n", key, k);
+    LOG_ERROR("shared memory open failed %s-0x%x.\n", key, k);
     return -1;
   }
-  LOG_INFO("shared memory id:%d %d 0x%x\n", shm_hdl_, key, k);
+  LOG_INFO("shared memory id:%d %s 0x%x\n", shm_hdl_, key, k);
 
   shm_ptr_ = shmat(shm_hdl_, 0, 0);
   if (shm_ptr_ == NULL) {

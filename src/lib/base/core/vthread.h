@@ -11,7 +11,7 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #pragma once
-#include "base/vtypes.h"
+#include "basictypes.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -26,15 +26,15 @@ class VThread {
   ~VThread();
 
  public:
-  int32_t         Start(VFTHREAD pFunc, void* pArg, int32_t nPriority=0); // 启动线程
+  int32         Start(VFTHREAD pFunc, void* pArg, int32 nPriority=0); // 启动线程
   void            Stop();
 
   void            Detach();
-  int32_t         Kill();
+  int32         Kill();
 
-  static int32_t  get_pid();
+  static int32  get_pid();
   static void     run_cmd(const char* sCmd);
-  static void     set_cpu(int32_t nCpu);
+  static void     set_cpu(int32 nCpu);
   // 睡眠毫秒
   // nMSec[IN] 毫秒
   static void     msleep(long msec);
@@ -56,7 +56,7 @@ class VExThread {
   virtual ~VExThread();
 
  public:
-  virtual int32_t Start(int32_t nPriority=0);
+  virtual int32 Start(int32 nPriority=0);
   virtual void    Stop();
   virtual void    Process() = 0;
 

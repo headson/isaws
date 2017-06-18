@@ -13,7 +13,7 @@
 
 #define DEF_LOG_FILE_NAME         256   // PATH+FILENAME
 #define DEF_ERR_FILE_COUNT        2     // 记录错误文件个数+1;
-// 文件大小为一般默认日志最大存储空间
+// 文件大小为一半默认日志最大存储空间
 
 #define DEF_SERVER_HOST          "127.0.0.1"     // 默认服务器地址
 #define DEF_SERVER_PORT          5760            // 默认服务器端口
@@ -43,7 +43,7 @@ typedef int         SOCKET;
 #define DEF_LOG_REC_FILE    "logfile"
 #define DEF_WDG_REC_FILE    "watchdog"
 
-#define DEF_WDG_MODULE_FILE "./watchdog_module.cfg"
+#define DEF_WDG_MODULE_FILE "/mnt/usr/module.cfg"
 #endif
 
 #ifdef __cplusplus
@@ -57,7 +57,7 @@ namespace vzlogging {
 
 unsigned int GetPid();
 unsigned int GetPpid();
-const char  *GetFileName(const char *filepath);
+const   char *GetFileName(const char *filepath);
 
 /*组包头*/
 int          VzLogPackHead(unsigned int level,

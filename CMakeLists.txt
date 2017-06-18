@@ -2,10 +2,15 @@
 # cmake ../.. -G "Visual Studio 12 2013"
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3516 -DCMAKE_BUILD_TYPE=Release
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=IMX6Q -DCMAKE_BUILD_TYPE=Release
-cmake_minimum_required(VERSION 3.6)
-project(isaw_project)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+PROJECT(isaws)
+
 
 INCLUDE(cmake_local/global_environment_settings.cmake)
+# This Include Will setting 
+# include path
+# include library path
+# link library
 IF(WIN32)
     IF(MSVC12)
         INCLUDE(cmake_local/win_vs2013_environment_settings.cmake)
@@ -29,22 +34,25 @@ ADD_SUBDIRECTORY(cmake_local)
 ## add third sdk
 #ADD_SUBDIRECTORY(src/third_sdk/live555)
 
+ADD_SUBDIRECTORY(src/lib/)
 ADD_SUBDIRECTORY(src/lib/base)
 ADD_SUBDIRECTORY(src/lib/shm)
+ADD_SUBDIRECTORY(src/lib/vzconn)
 ADD_SUBDIRECTORY(src/lib/vzlogging)
-ADD_SUBDIRECTORY(src/lib/network)
-#ADD_SUBDIRECTORY(src/lib/dispatcher)
+ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/platform/imx6q)
 #ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
 
 
 ## add run
-ADD_SUBDIRECTORY(src/run/watchdog)
+ADD_SUBDIRECTORY(src/run/vzlogserver)
 #ADD_SUBDIRECTORY(src/run/hi3516a)
 #ADD_SUBDIRECTORY(src/run/imx6q)
 #ADD_SUBDIRECTORY(src/run/live_stream)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_vzlogging)
-ADD_SUBDIRECTORY(src/test/test_event)
+ADD_SUBDIRECTORY(src/test/test_block_buffer)
+ADD_SUBDIRECTORY(src/test/test_vzconn_client)
+ADD_SUBDIRECTORY(src/test/test_vzconn_server)
 

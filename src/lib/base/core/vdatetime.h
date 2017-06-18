@@ -5,7 +5,7 @@
 #ifndef VDATETIME_H
 #define VDATETIME_H
 
-#include "base/vtypes.h"
+#include "basictypes.h"
 
 #ifdef WIN32
 #include <winsock2.h>
@@ -21,7 +21,7 @@ class VDateTime
 {
 public:
     VDateTime();
-    VDateTime(uint32_t s, uint32_t us=0);
+    VDateTime(uint32 s, uint32 us=0);
     VDateTime(const struct timeval& tv);
 
     ~VDateTime();
@@ -33,25 +33,25 @@ public:
 
     // 返回自系统开机以来的毫秒数（tick）
     static int64_t   get_sys_tick();
-    static bool      is_loop_yaer(int32_t ny);
+    static bool      is_loop_yaer(int32 ny);
 
     void set(int64_t ms);
-    void set(uint32_t s, uint32_t us);
+    void set(uint32 s, uint32 us);
     void set(const struct timeval& tv);
 
-    uint32_t    tsec() const;
-    uint32_t    tusec() const;
+    uint32    tsec() const;
+    uint32    tusec() const;
 
     int64_t     to_msec() const;
     uint64_t    to_usec() const;
     std::string to_string() const;  // 2016-12-30 13:41:33只一种格式
 
-    int32_t     year() const;
-    int32_t     month() const;
-    int32_t     day() const;
-    int32_t     hour() const;
-    int32_t     minute() const;
-    int32_t     second() const;
+    int32     year() const;
+    int32     month() const;
+    int32     day() const;
+    int32     hour() const;
+    int32     minute() const;
+    int32     second() const;
 
 public:
     VDateTime& operator =(const VDateTime& dt);

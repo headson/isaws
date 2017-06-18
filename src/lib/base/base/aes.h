@@ -1,7 +1,7 @@
 #ifndef _AES_H_
 #define _AES_H_
 
-#include <stdint.h>
+#include "basictypes.h"
 
 // #define the macros below to 1/0 to enable/disable the mode of operation.
 //
@@ -19,15 +19,15 @@
 
 #if defined(ECB) && ECB
 
-void AES128_ECB_encrypt(const uint8_t* input, const uint8_t* key, uint8_t *output);
-void AES128_ECB_decrypt(uint8_t* input, const uint8_t* key, uint8_t *output);
+void AES128_ECB_encrypt(const uint8* input, const uint8* key, uint8 *output);
+void AES128_ECB_decrypt(uint8* input, const uint8* key, uint8 *output);
 
 #endif // #if defined(ECB) && ECB
 
 #if defined(CBC) && CBC
 
-void AES128_CBC_encrypt_buffer(uint8_t* output, uint8_t* input, uint32_t length, const uint8_t* key, const uint8_t* iv);
-void AES128_CBC_decrypt_buffer(uint8_t* output, uint8_t* input, uint32_t length, const uint8_t* key, const uint8_t* iv);
+void AES128_CBC_encrypt_buffer(uint8* output, uint8* input, uint32 length, const uint8* key, const uint8* iv);
+void AES128_CBC_decrypt_buffer(uint8* output, uint8* input, uint32 length, const uint8* key, const uint8* iv);
 
 #endif // #if defined(CBC) && CBC
 

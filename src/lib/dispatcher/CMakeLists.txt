@@ -23,27 +23,27 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/client/cjobclient.h
-	${CMAKE_CURRENT_SOURCE_DIR}/client/cjobclient.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/server/cjobserver.h
-	${CMAKE_CURRENT_SOURCE_DIR}/server/cjobserver.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/worker/cjobworker.h
-	${CMAKE_CURRENT_SOURCE_DIR}/worker/cjobworker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/client/cdpclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/client/cdpclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cdpserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cdpserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/worker/cdpworker.h
+	${CMAKE_CURRENT_SOURCE_DIR}/worker/cdpworker.cpp
 )
 
 SOURCE_GROUP(client FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/client/cjobclient.h
-	${CMAKE_CURRENT_SOURCE_DIR}/client/cjobclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/client/cdpclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/client/cdpclient.cpp
 )
 
 SOURCE_GROUP(server FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/server/cjobserver.h
-	${CMAKE_CURRENT_SOURCE_DIR}/server/cjobserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cdpserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cdpserver.cpp
 )
 
 SOURCE_GROUP(worker FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/worker/cjobworker.h
-	${CMAKE_CURRENT_SOURCE_DIR}/worker/cjobworker.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/worker/cdpworker.h
+	${CMAKE_CURRENT_SOURCE_DIR}/worker/cdpworker.cpp
 )
 
 #########################################################################

@@ -11,7 +11,7 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #pragma once
-#include "base/vtypes.h"
+#include "basictypes.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -56,7 +56,7 @@ public:
     ~VSignal();
 
     // 1=接收到POST，0=超时
-    int32_t Wait(long msec=0);
+    int32 Wait(long msec=0);
     void    Signal();
 
 private:
