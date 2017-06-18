@@ -66,23 +66,13 @@ class EVT_TIMER {
   EVT_FUNC        p_callback_;  // 消息回调
   void*           p_usr_args_;  // 回调参数
 
-<<<<<<< HEAD:src/lib/vzconn/async/clibevent.h
   uint32          b_init_, b_start_;
 
  public:
   EVT_TIMER();
-=======
-  std::string     s_name_;      // 名称
-  bool            b_init_, b_start_;
-
- public:
-  EVT_TIMER();
-  void                SetName(const std::string& sName);
-  const std::string&  GetName() const;
->>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.h
 
   void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg);
-  int32         Start(uint32 after_ms, uint32 repeat_ms);
+  int32           Start(uint32 after_ms, uint32 repeat_ms);
   void            Stop();
 
   static void     evt_callback(int fd, short event, void *ctx);
@@ -96,25 +86,13 @@ class EVT_IO {
 
   EVT_FUNC        p_callback_;  // 消息回调
   void*           p_usr_args_;  // 回调参数
-
-<<<<<<< HEAD:src/lib/vzconn/async/clibevent.h
   uint32          b_init_, b_start_;
-=======
-  std::string     s_name_;      // 名称
-  bool            b_init_, b_start_;
->>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.h
 
  public:
   EVT_IO();
 
-<<<<<<< HEAD:src/lib/vzconn/async/clibevent.h
-=======
-  void                SetName(const std::string& s_name);
-  const std::string&  GetName() const;
-
->>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a:src/lib/network/vevent.h
   void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* p_arg);
-  int32         Start(SOCKET v_hdl, int32 nEvt, uint32 n_timeout=0);
+  int32           Start(SOCKET v_hdl, int32 nEvt, uint32 n_timeout=0);
   void            Stop();
 
   // 用户主动关闭链接时调用此函数,用于唤醒事件处理已关闭链接

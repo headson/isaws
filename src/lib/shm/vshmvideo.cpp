@@ -6,13 +6,7 @@
 
 #include <string.h>
 
-<<<<<<< HEAD
 #include "stdafx.h"
-=======
-#include "base/stdafx.h"
-
-VShmVideo::VShmVideo() {
->>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a
 
 VShmVideo::VShmVideo() 
   : v_shm_()

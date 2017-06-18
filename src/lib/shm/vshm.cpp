@@ -4,11 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
-<<<<<<< HEAD
 #include "stdafx.h"
-=======
-#include "base/stdafx.h"
->>>>>>> 8c471fd87910ea7f532ac1fc43711c32142c523a
 
 VShm::VShm() {
   printf("%s[%d].\n", __FUNCTION__, __LINE__);

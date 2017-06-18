@@ -25,8 +25,10 @@ MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/client/cdpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cdpclient.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cdpserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cdpserver.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/worker/cdpworker.h
 	${CMAKE_CURRENT_SOURCE_DIR}/worker/cdpworker.cpp
 )
