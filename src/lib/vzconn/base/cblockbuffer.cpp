@@ -7,52 +7,80 @@
 
 #include <stdio.h>
 
-CBlockBuffer::CBlockBuffer(uint32_t buff_size) 
-  : DEF_BUFF_SIZE(buff_size) {
-  read_pos_ = 0;
-  write_pos_ = 0;
-  buffer_size_ = DEF_BUFF_SIZE;
-  buffer_ = (uint8 *)malloc(buffer_size_ * sizeof(uint8));
+#include "connhead.h"
+#include "byteorder.h"
+
+namespace vzconn {
+CBlockBuffer::CBlockBuffer() {
+  Construct(DEF_BUFFER_SIZE);
+}
+
+CBlockBuffer::CBlockBuffer(uint8 *p_data,
+                           uint32 n_data) {
+  Construct(p_data, n_data);
 }
 
 CBlockBuffer::~CBlockBuffer() {
   read_pos_ = 0;
   write_pos_ = 0;
 
-  if (buffer_) {
-    free(buffer_);
-    buffer_ = NULL;
+  if (is_out_buffer_ == false) {
+    if (buffer_) {
+      delete[] buffer_;
+      buffer_ = NULL;
+    }
   }
   buffer_size_ = 0;
 }
 
-bool CBlockBuffer::ReallocBuffer(uint32 size) {
-  // 分配一个2倍的BUFFER
-  // 剩余空间够用
-  if (size < FreeSize() || buffer_size_ > MAX_BUFFER_SIZE)
-    return false;
+void CBlockBuffer::Construct(uint32 size) {
+  is_out_buffer_ = false;
 
-  uint32 buffer_size = buffer_size_ * 2;
-  while (buffer_size - UsedSize() < size) { // 计算新的剩余空间是否够用
-    buffer_size = buffer_size * 2;
-  }
-
-  buffer_ = (uint8 *)realloc(buffer_, buffer_size);
-  buffer_size_ = buffer_size;
-  return true;
+  read_pos_    = 0;
+  write_pos_   = 0;
+  buffer_size_ = size;
+  buffer_      = new uint8[buffer_size_ * sizeof(uint8)];
 }
 
-void CBlockBuffer::Reset() {
-  if (buffer_size_ > DEF_BUFF_SIZE) {
-    free(buffer_);
+void CBlockBuffer::Construct(uint8      *p_data,
+                             uint32      n_data) {
+  is_out_buffer_ = true;
+  read_pos_     = 0;
+  write_pos_    = 0;
+  buffer_size_  = n_data;
+  buffer_       = p_data;
+}
 
-    buffer_size_ = DEF_BUFF_SIZE;
-    buffer_ = (uint8 *)malloc(buffer_size_ * sizeof(uint8));
+bool CBlockBuffer::ReallocBuffer(uint32 size) {
+  // 剩余空间够用
+  Recycle();
+  if (size < FreeSize() ||
+      buffer_size_ > MAX_BUFFER_SIZE) {
+    return false;
   }
-  memset(buffer_, 0x00, buffer_size_);
 
-  read_pos_  = 0;
-  write_pos_ = 0;
+  // 分配一个1.5倍的BUFFER
+  uint32 buffer_size = 3 * buffer_size_ / 2;
+  while ((buffer_size - UsedSize()) < size) { // 计算新的剩余空间是否够用
+    buffer_size = 3 * buffer_size / 2;
+    if (buffer_size > MAX_BUFFER_SIZE) {      // 超过了最大空间
+      return false;
+    }
+  }
+
+  uint8 *new_buffer = new uint8[buffer_size];
+  if (new_buffer) {
+    //memcpy(new_buffer, GetWritePtr(), UsedSize());
+    memcpy(new_buffer, buffer_, write_pos_); // 全拷贝
+    delete[] buffer_;
+
+    //read_pos_    = read_pos_;
+    //write_pos_   = write_pos_;
+    buffer_      = new_buffer;
+    buffer_size_ = buffer_size;
+    return true;
+  }
+  return false;
 }
 
 uint8* CBlockBuffer::GetReadPtr() {
@@ -107,3 +135,5 @@ void CBlockBuffer::Recycle() {
     read_pos_ = 0;
   }
 }
+
+}  // namespace vzconn

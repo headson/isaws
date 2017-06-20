@@ -29,12 +29,14 @@ endforeach()
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST 	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/connhead.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/byteorder.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/cblockbuffer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/cblockbuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/csocketbuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/csocketbuffer.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.cpp
@@ -53,12 +55,14 @@ SET(SRC_LIST
 )
 
 SOURCE_GROUP(base FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/connhead.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/byteorder.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/cblockbuffer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/cblockbuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/csocketbuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/csocketbuffer.cpp
 )
 
 SOURCE_GROUP(sync FILES

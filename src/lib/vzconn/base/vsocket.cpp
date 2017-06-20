@@ -7,6 +7,10 @@
 #include <string.h>
 
 #include "stdafx.h"
+#include "vzconn/base/connhead.h"
+#include "vzconn/base/byteorder.h"
+
+namespace vzconn {
 
 CInetAddr::CInetAddr() {
   memset(&c_sock_addr_, 0, sizeof(c_sock_addr_));
@@ -95,7 +99,7 @@ CInetAddr& CInetAddr::operator =(const std::string &addr_str) {
   }
 
   SetPort(static_cast<uint16>(strtoul(addr_str.substr(pos + 1).c_str(), NULL, 10)));
-  SetIP(addr_str.substr(0, pos));
+  SetIP(addr_str.substr(0, pos).c_str());
 
   return *this;
 }
@@ -104,10 +108,10 @@ void CInetAddr::SetIP(uint32 ip) {
   c_sock_addr_.sin_addr.s_addr = htonl(ip);
 }
 
-void CInetAddr::SetIP(const std::string &hostname) {
-  c_sock_addr_.sin_addr.s_addr = inet_addr(hostname.c_str());
+void CInetAddr::SetIP(const char* hostname) {
+  c_sock_addr_.sin_addr.s_addr = inet_addr(hostname);
   if (c_sock_addr_.sin_addr.s_addr == (uint32)-1) { //地址为0.0.0.0，无效地址
-    if (hostent * pHost = gethostbyname(hostname.c_str())) {
+    if (hostent * pHost = gethostbyname(hostname)) {
       c_sock_addr_.sin_addr.s_addr = (*reinterpret_cast<uint32 *>(pHost->h_addr_list[0]));
     }
   }
@@ -137,7 +141,7 @@ const sockaddr_in* CInetAddr::GetAddr() const {
   return &c_sock_addr_;
 }
 
-std::string CInetAddr::ToString() const {
+const std::string CInetAddr::ToString() const {
   char ip_str[32] = {0};
 #ifdef WIN32
   sprintf(ip_str, "%d.%d.%d.%d", c_sock_addr_.sin_addr.S_un.S_un_b.s_b1,
@@ -152,7 +156,7 @@ std::string CInetAddr::ToString() const {
   return ip_str;
 }
 
-std::string CInetAddr::IP2String() const {
+const std::string CInetAddr::IP2String() const {
   char ip_str[32] = {0};
 
 #ifdef WIN32
@@ -165,6 +169,14 @@ std::string CInetAddr::IP2String() const {
 #endif
 
   return ip_str;
+}
+
+int32 CInetAddr::ToIpcAddr(char *p_addr, uint32 n_addr) const {
+  memset(p_addr, 0, n_addr);
+  int32 n = snprintf(p_addr, n_addr-1,
+                     "/tmp/_%d.sock", GetPort());
+
+  return n;
 }
 
 bool CInetAddr::operator ==(const CInetAddr& addr) const {
@@ -197,11 +209,10 @@ bool CInetAddr::operator >(const CInetAddr& addr) const {
 }
 
 //////////////////////////////////////////////////////////////////////////
-VSocket::VSocket()
+VSocket::VSocket(CClientInterface *cli_hdl)
   : handler_(INVALID_SOCKET)
   , rw_flag_(0)
-  , net_head_parse_(NULL)
-  , net_head_packet_(NULL) {
+  , cli_hdl_ptr_(cli_hdl) {
 #ifndef WIN32
   rw_flag_ = MSG_NOSIGNAL | MSG_DONTWAIT;
 #endif
@@ -317,8 +328,7 @@ int32 VSocket::Send(const void *buf, uint32 buf_size) {
   if (nRet < 0 && error_no() == XEAGAIN) {
     return 0;
   }
-
-  return -1;
+  return nRet;
 }
 
 /*****************************************************************************
@@ -343,21 +353,65 @@ int32 VSocket::Send(const void* buf, uint32 buf_size, const CInetAddr& remote_ad
     return 0;
   }
 
-  return -1;
+  return nRet;
 }
 
-NETHEAD_PARSE_CALLBACK VSocket::GetNetHeadParseCallback() {
-  return net_head_parse_;
+//////////////////////////////////////////////////////////////////////////
+int32 CClientInterface::NetHeadSize() {
+  return sizeof(NetHead);
 }
 
-void VSocket::SetNetHeadParseCallback(NETHEAD_PARSE_CALLBACK net_head_perse) {
-  net_head_parse_ = net_head_perse;
+int32 CClientInterface::NetHeadParse(const void *p_data,
+                                     uint32      n_data) {
+  if (n_data < NetHeadSize()) {
+    return 0;
+  }
+
+  int32 n_len = 0;
+  if ((((uint32)p_data) % sizeof(uint32)) == 0) {
+    // 对齐解析
+    NetHead* p_head = (NetHead*)p_data;
+    if (p_head->mark[0] == NET_MARK_0
+        && p_head->mark[1] == NET_MARK_1) {
+      n_len = NetHeadSize();
+      n_len += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+               NetworkToHost32(p_head->data_size) : p_head->data_size;
+    } else {
+      return -1;
+    }
+  } else {
+    // 未对齐解析
+    NetHead c_head;
+    memcpy(&c_head, p_data, NetHeadSize());
+    if (c_head.mark[0] == NET_MARK_0
+        && c_head.mark[1] == NET_MARK_1) {
+      n_len = NetHeadSize();
+      n_len += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+               NetworkToHost32(c_head.data_size) : c_head.data_size;
+    } else {
+      return -1;
+    }
+  }
+  return n_len;
 }
 
-NETHEAD_PACKET_CALLBACK VSocket::GetNetHeadPacketCallback() {
-  return net_head_packet_;
+int32 CClientInterface::NetHeadPacket(void  *p_data,
+                                      uint32 n_data,
+                                      uint32 n_body,
+                                      uint16 n_flag) {
+  if (p_data == NULL || n_data < NetHeadSize()) {
+    return -1;
+  }
+  NetHead c_head;
+  c_head.mark[0] = NET_MARK_0;
+  c_head.mark[1] = NET_MARK_1;
+  c_head.type_flag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+                     HostToNetwork16(n_flag) : n_flag;
+  c_head.data_size = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+                     HostToNetwork32(n_body) : n_body;
+  memcpy(p_data, &c_head, NetHeadSize());
+
+  return NetHeadSize();
 }
 
-void VSocket::SetNetHeadPacketCallback(NETHEAD_PACKET_CALLBACK net_head_packet) {
-  net_head_packet_ = net_head_packet;
-}
+}  // namespace vzconn

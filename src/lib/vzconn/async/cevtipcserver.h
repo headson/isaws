@@ -11,6 +11,8 @@
 #include "vzconn/base/vsocket.h"
 #include "vzconn/async/cevttcpserver.h"
 
+namespace vzconn {
+
 class CEvtIpcServer : public CEvtTcpServer {
  private:
   CEvtIpcServer(const EVT_LOOP      *p_loop,
@@ -26,15 +28,17 @@ class CEvtIpcServer : public CEvtTcpServer {
 
   /************************************************************************/
   /* Description : 打开网络监听,等待新链接进入
-  /* Parameters  : p_addr[IN] 监听地址
+  /* Parameters  : p_addr[IN]  监听地址
                    b_block[IN] true=阻塞,false=非阻塞
                    b_reuse[IN]
-  /* Return      : 0=成功 <0失败
+  /* Return      : true成功 false失败
   /************************************************************************/
-  int32 Open(const CInetAddr* p_addr, bool b_block=false, bool b_reuse=true);
+  bool Open(const CInetAddr* p_addr, bool b_block=false, bool b_reuse=true);
 
  private:
   virtual int32  OnAccept();
 };
+
+}  // namespace vzconn
 
 #endif  // LIBVZCONN_CEVTIPCSERVER_H

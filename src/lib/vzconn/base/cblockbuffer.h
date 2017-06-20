@@ -11,22 +11,21 @@
 #include <string.h>
 
 #include "basictypes.h"
+#include "byteorder.h"
 
-//最大缓冲大小:30M
-#define DEF_BUFFER_SIZE 16 * 1024
-#define MAX_BUFFER_SIZE 128 * 1024  // 128K
+namespace vzconn {
 
 class CBlockBuffer {
  public:
-  CBlockBuffer(uint32_t buff_size=DEF_BUFFER_SIZE);
+  CBlockBuffer();
+  CBlockBuffer(uint8 *p_data, uint32 n_data);
   virtual ~CBlockBuffer();
 
+ public:
   bool   ReallocBuffer(uint32 size);
-  void   Reset();
 
   uint8* GetReadPtr();            // 获取读位置
   void   MoveReadPtr(uint32 n);   // 移动读位置
-
 
   uint8* GetWritePtr();           // 获取写位置
   void   MoveWritePtr(uint32 n);  // 移动写位置
@@ -40,13 +39,18 @@ class CBlockBuffer {
   void   Recycle();               // 回收已读数据;移动已写数据到pos=0
 
  protected:
-  const uint32 DEF_BUFF_SIZE;     // 默认长度
+  void Construct(uint32 size);
+  void Construct(uint8 *p_data, uint32 size);
 
+ protected:
   uint8*    buffer_;              // 存储buffer
   uint32    buffer_size_;         // buffer长度
 
   uint32    read_pos_;            // 读偏移
   uint32    write_pos_;           // 写偏移
+
+  uint32    is_out_buffer_;       // 外部buffer不能delete
 };
 
+}  // namespace vzconn
 #endif  // LIBVZCONN_CBLOCKBUFFER_H_

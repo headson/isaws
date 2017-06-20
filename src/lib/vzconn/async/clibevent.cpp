@@ -1,18 +1,12 @@
-/*****************************************************************************
-* Copyright (c) 2011,ChengDu ThinkWatch Company
-* All rights reserved.
-*-----------------------------------------------------------------------------
-* Filename      : VLoopEvent.cpp
-* Author        : Sober.Peng
-* Date          : 18:1:2017
-* Description   :
-*-----------------------------------------------------------------------------
-* Modify        :
-*-----------------------------------------------------------------------------
-******************************************************************************/
+/************************************************************************/
+/* Author      : Sober.Peng 17-06-20
+/* Description :
+/************************************************************************/
 #include "clibevent.h"
 
 #include "stdafx.h"
+
+namespace vzconn {
 
 EVT_LOOP::EVT_LOOP()
   : p_event_(NULL) {
@@ -46,10 +40,23 @@ void EVT_LOOP::Stop() {
   }
 }
 
-int32 EVT_LOOP::RunLoop() {
+int32 EVT_LOOP::RunLoop(int e_flag) {
   int32 n_ret = 0;
-  n_ret = event_base_loop(p_event_, 0);
+  if (p_event_) {
+    n_ret = event_base_loop(p_event_, e_flag);
+    //n_ret = event_base_dispatch(p_event_);
+  }
   return n_ret;
+}
+
+void EVT_LOOP::LoopExit(const struct timeval *tv) {
+  if (p_event_) {
+    //event_base_loopbreak(p_event_);
+    int32 n_ret = event_base_loopexit(p_event_, tv);
+    if (n_ret == -1) {
+      LOG(L_ERROR) << "base loop exit failed.";
+    }
+  }
 }
 
 ///TIMER///////////////////////////////////////////////////////////////////////
@@ -153,13 +160,16 @@ int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 n_timeout) {
     b_init_ = 1;
     LOG(L_INFO) << "Set "<<vHdl<<" event "<<nEvt<<"-"<<c_evt_.ev_events;
   }
-  if (n_timeout == 0) {
-    n_ret = event_add(&c_evt_, NULL);
-  } else {
-    struct timeval tv = {0, 0};
-    tv.tv_sec  = n_timeout / 1000;
-    tv.tv_usec = (n_timeout % 1000) * 1000;
-    n_ret = event_add(&c_evt_, &tv);
+
+  if (b_start_ == 0) {
+    if (n_timeout == 0) {
+      n_ret = event_add(&c_evt_, NULL);
+    } else {
+      struct timeval tv = { 0, 0 };
+      tv.tv_sec = n_timeout / 1000;
+      tv.tv_usec = (n_timeout % 1000) * 1000;
+      n_ret = event_add(&c_evt_, &tv);
+    }
   }
   if (n_ret == 0) {
     b_start_ = 1;
@@ -186,3 +196,5 @@ void EVT_IO::evt_callback(evutil_socket_t fd, short events, void *ctx) {
     }
   }
 }
+
+}  // namespace vzconn

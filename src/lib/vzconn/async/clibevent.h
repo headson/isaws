@@ -28,15 +28,19 @@ extern "C" {
 
 #include "basictypes.h"
 
+namespace vzconn {
+
 typedef int32 (*EVT_FUNC)(SOCKET          fd,
                           short           events, 
                           const void      *p_usr_arg);
 
-#define EVT_READ        EV_READ     // 读事件
-#define EVT_WRITE       EV_WRITE    // 写事件
+#define EVT_READ          EV_READ     // 读事件
+#define EVT_WRITE         EV_WRITE    // 写事件
 
 // 永久事件，激活执行后会重新加到队列中等待下一次激活，否则激活执行后会自动移除  
-#define EVT_PERSIST     EV_PERSIST  
+#define EVT_PERSIST       EV_PERSIST  
+
+#define EVT_LOOP_NOBLOCK  EVLOOP_NONBLOCK
 ///LOOP////////////////////////////////////////////////////////////////////////
 class EVT_LOOP {
  private:
@@ -50,7 +54,9 @@ class EVT_LOOP {
   int32   Start();
   void    Stop();
 
-  int32   RunLoop();
+  int32   RunLoop(int e_flag=0);
+
+  void    LoopExit(const struct timeval *tv);
 
   struct event_base* get_event() const {
     return p_event_;
@@ -101,4 +107,5 @@ class EVT_IO {
   static void     evt_callback(evutil_socket_t fd, short events, void *ctx);
 };
 
+}  // namespace vzconn
 #endif  // LIBVZCONN_CLIBEVENT_H_

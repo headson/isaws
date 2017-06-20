@@ -1,6 +1,6 @@
 /************************************************************************/
 /* Author      : Sober.Peng 17-06-15
-/* Description : 由TCP Server创建的对象用户层不能直接调用delete干掉,调用CloseSocket关闭连接
+/* Description : TCP客户端session
 /************************************************************************/
 #ifndef LIBVZCONN_CEVTTCPCLIENT_H_
 #define LIBVZCONN_CEVTTCPCLIENT_H_
@@ -9,12 +9,15 @@
 #include "basictypes.h"
 
 #include "vzconn/base/vsocket.h"
-#include "vzconn/base/cblockbuffer.h"
+#include "vzconn/base/csocketbuffer.h"
+
+namespace vzconn {
 
 class CEvtTcpServer;
 class CEvtTcpClient : public VSocket {
  protected:
-  CEvtTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl);
+  CEvtTcpClient(const EVT_LOOP   *p_loop, 
+                CClientInterface *cli_hdl);
   virtual ~CEvtTcpClient();
 
  public:
@@ -22,40 +25,53 @@ class CEvtTcpClient : public VSocket {
                                CClientInterface *cli_hdl);
 
   // 主动断开链接
-  virtual void Remove();
+  virtual void  Remove();
 
  public:
   // 设置已打开的SCOKET
-  virtual int32 Open(SOCKET s, bool b_block=false);
+  virtual bool  Open(SOCKET s, bool b_block=false);
 
  public:
   // 链接到服务端;无需调用Open
-  virtual int32 Connect(const CInetAddr *p_remote_addr,
+  virtual bool  Connect(const CInetAddr *p_remote_addr,
                         bool             b_block,
                         bool             b_reuse,
                         uint32           n_timeout=5000);
 
  public:
   /************************************************************************/
-  /* Description : 发送一包数据
+  /* Description : 发送一包数据;缓存到发送cache中
   /* Parameters  : p_data[IN] 数据(body区)
                    n_data[IN] 数据长度
-                   p_param[IN] 参数.(VZ为包头的flag[uint16])
-  /* Return      :
+                   e_flag[IN] VZ为包头的flag[uint16]
+  /* Return      : >0 缓存数据长度,<=0 发送失败
   /************************************************************************/
-  virtual int32 SendPacket(const void  *p_data,
+  virtual int32 AsyncWrite(const void  *p_data,
                            uint32       n_data,
-                           const void  *p_param);
+                           uint16       e_flag);
+
+  /************************************************************************/
+  /* Description : 发送一包数据;缓存到发送cache中
+  /* Parameters  : iov[IN]    数据(body区)
+                   n_iov[IN]  iov个数
+                   e_flag[IN] VZ为包头的flag[uint16]
+  /* Return      : >0 缓存数据长度,<=0 发送失败
+  /************************************************************************/
+  virtual int32 AsyncWrite(struct iovec iov[],
+                           uint32       n_iov,
+                           uint16       e_flag);
 
  protected:
   friend class CEvtTcpServer;
 
  protected:
+  // 接收事件
   static int32  EvtRecv(SOCKET        fd,
                         short         events,
                         const void   *p_usr_arg);
   virtual int32 OnRecv();
 
+  // 发送事件
   static int32  EvtSend(SOCKET        fd,
                         short         events,
                         const void   *p_usr_arg);
@@ -72,13 +88,11 @@ class CEvtTcpClient : public VSocket {
 
  protected:
   EVT_IO            c_evt_recv_;    // 接收事件
-  CBlockBuffer      c_recv_data_;   // 接收buffer
+  CSockRecvData     c_recv_data_;   // 接收buffer
 
   EVT_IO            c_evt_send_;    // 发送事件
-  CBlockBuffer      c_send_data_;   // 发送buffer
-
- protected:
-  CClientInterface  *cli_handle_ptr_;  // 客户端事件处理
+  CSockSendData     c_send_data_;   // 发送buffer
 };
 
+}  // namespace vzconn
 #endif  // LIBVZCONN_CEVTTCPCLIENT_H_

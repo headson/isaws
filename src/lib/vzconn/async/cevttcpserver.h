@@ -10,6 +10,8 @@
 
 #include "vzconn/base/vsocket.h"
 
+namespace vzconn {
+
 class CEvtTcpServer : public VSocket {
  protected:
   CEvtTcpServer(const EVT_LOOP      *p_loop,
@@ -28,9 +30,11 @@ class CEvtTcpServer : public VSocket {
   /* Parameters  : p_addr[IN] 监听地址
                    b_block[IN] true=阻塞,false=非阻塞
                    b_reuse[IN]
-  /* Return      : 0=成功 <0失败
+  /* Return      : true成功 false失败
   /************************************************************************/
-  virtual int32 Open(const CInetAddr* p_addr, bool b_block=false, bool b_reuse=true);
+  virtual bool  Open(const CInetAddr *p_addr,
+                     bool             b_block=false,
+                     bool             b_reuse=true);
 
  protected:
   static  int32  EvtAccept(SOCKET          fd,
@@ -45,8 +49,9 @@ class CEvtTcpServer : public VSocket {
   EVT_IO                c_evt_accept_;  // 接收事件
 
  protected:
-  CClientInterface      *cli_handle_ptr_;
+  CClientInterface      *cli_hdl_ptr_;
   CTcpServerInterface   *srv_handle_ptr_;
 };
 
+}  // namespace vzconn
 #endif  // LIBVZCONN_CEVTTCPSERVER_H_

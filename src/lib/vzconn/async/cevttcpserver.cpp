@@ -6,18 +6,18 @@
 
 #include "stdafx.h"
 #include "cevttcpclient.h"
-#include "vzconn/base/pkghead.h"
+#include "vzconn/base/connhead.h"
+
+namespace vzconn {
 
 CEvtTcpServer::CEvtTcpServer(const EVT_LOOP      *p_loop,
                              CClientInterface    *cli_hdl,
                              CTcpServerInterface *srv_hdl)
-  : VSocket()
+  : VSocket(cli_hdl)
   , p_evt_loop_(p_loop)
-  , cli_handle_ptr_(cli_hdl)
+  , cli_hdl_ptr_(cli_hdl)
   , srv_handle_ptr_(srv_hdl)
   , c_evt_accept_() {
-  SetNetHeadParseCallback(vz_head_parse);
-  SetNetHeadPacketCallback(vz_head_packet);
 }
 
 CEvtTcpServer *CEvtTcpServer::Create(const EVT_LOOP      *p_loop,
@@ -41,22 +41,22 @@ CEvtTcpServer::~CEvtTcpServer() {
   Close();
 }
 
-int32 CEvtTcpServer::Open(const CInetAddr*  p_addr,
-                          bool              b_block,
-                          bool              b_reuse) {
+bool CEvtTcpServer::Open(const CInetAddr *p_addr,
+                         bool            b_block,
+                         bool            b_reuse) {
   if (NULL == p_evt_loop_ ) {
     LOG(L_ERROR) << "event loop is NULL.";
-    return -1;
+    return false;
   }
-  if (NULL == p_addr) {
+  if (NULL == p_addr || p_addr->IsNull()) {
     LOG(L_ERROR) << "param is error.";
-    return -2;
+    return false;
   }
 
   SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (INVALID_SOCKET == s) {
     LOG(L_ERROR) << "socket failed.";
-    return -1;
+    return false;
   }
   SetSocket(s);
 
@@ -79,14 +79,14 @@ int32 CEvtTcpServer::Open(const CInetAddr*  p_addr,
                  (socklen_t)sizeof(sockaddr));
     if (0 != ret) {
       LOG(L_ERROR) << "bind failed." << error_no();
-      return ret;
+      return false;
     }
   }
 
   ret = listen(GetSocket(), 10);
   if (0 != ret) {
     LOG(L_ERROR) << "listen failed." << error_no();
-    return ret;
+    return false;
   }
 
   // 关联SOCKET的READ事件
@@ -94,10 +94,10 @@ int32 CEvtTcpServer::Open(const CInetAddr*  p_addr,
   ret = c_evt_accept_.Start(GetSocket(), EVT_READ | EVT_PERSIST);
   if (0 != ret) {
     LOG(L_ERROR) << "set recv event failed." << error_no();
-    return ret;
+    return false;
   }
-
-  return ret;
+  LOG(L_INFO) << "open tcp server success "<<p_addr->ToString();
+  return true;
 }
 
 int32 CEvtTcpServer::EvtAccept(SOCKET          fd,
@@ -126,16 +126,23 @@ int32 CEvtTcpServer::OnAccept() {
     return -1;
   }
 
-  CEvtTcpClient *cli_ptr = CEvtTcpClient::Create(p_evt_loop_,
-                           cli_handle_ptr_);
+  CEvtTcpClient *cli_ptr = CEvtTcpClient::Create(p_evt_loop_, cli_hdl_ptr_);
   if (cli_ptr) {
-    cli_ptr->SetNetHeadParseCallback(GetNetHeadParseCallback());
-    cli_ptr->SetNetHeadPacketCallback(GetNetHeadPacketCallback());
-    cli_ptr->Open(s, true);
-
+    bool b_open = false;
     if (srv_handle_ptr_) {
-      srv_handle_ptr_->HandleNewConnection(this, cli_ptr);
+      b_open = srv_handle_ptr_->HandleNewConnection(this, cli_ptr);
+    }
+
+    if (b_open) {
+      cli_ptr->Open(s, true);
+    } else {
+      delete cli_ptr;
+
+      closesocket(s);
+      s = INVALID_SOCKET;
     }
   }
   return 0;
 }
+
+}  // namespace vzconn

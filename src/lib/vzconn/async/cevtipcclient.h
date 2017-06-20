@@ -11,10 +11,13 @@
 #include "vzconn/base/vsocket.h"
 #include "vzconn/async/cevttcpclient.h"
 
+namespace vzconn {
+
 class CEvtIpcServer;
 class CEvtIpcClient : public CEvtTcpClient {
  protected:
-  CEvtIpcClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl);
+  CEvtIpcClient(const EVT_LOOP    *p_loop, 
+                CClientInterface  *cli_hdl);
   virtual ~CEvtIpcClient();
 
  public:
@@ -22,11 +25,12 @@ class CEvtIpcClient : public CEvtTcpClient {
                                CClientInterface *cli_hdl);
  public:
   // 链接到服务端;无需调用Open
-  virtual int32 Connect(const CInetAddr *p_remote_addr,
-                        bool             b_block,
-                        bool             b_reuse,
-                        uint32           n_timeout=5000);
+  virtual bool Connect(const CInetAddr *p_remote_addr,
+                       bool             b_block,
+                       bool             b_reuse,
+                       uint32           n_timeout=5000);
 
 };
 
+}  // namespace vzconn
 #endif  // LIBVZCONN_CEVTIPCCLIENT_H
