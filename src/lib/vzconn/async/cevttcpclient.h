@@ -16,8 +16,7 @@ namespace vzconn {
 class CEvtTcpServer;
 class CEvtTcpClient : public VSocket {
  protected:
-  CEvtTcpClient(const EVT_LOOP   *p_loop, 
-                CClientInterface *cli_hdl);
+  CEvtTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl);
   virtual ~CEvtTcpClient();
 
  public:

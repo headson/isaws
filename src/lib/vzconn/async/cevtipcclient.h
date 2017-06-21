@@ -16,8 +16,7 @@ namespace vzconn {
 class CEvtIpcServer;
 class CEvtIpcClient : public CEvtTcpClient {
  protected:
-  CEvtIpcClient(const EVT_LOOP    *p_loop, 
-                CClientInterface  *cli_hdl);
+  CEvtIpcClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl);
   virtual ~CEvtIpcClient();
 
  public:

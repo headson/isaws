@@ -6,21 +6,23 @@
 
 class CServerProcess : public vzconn::CTcpServerInterface {
  public:
-  virtual bool HandleNewConnection(void *p_srv, vzconn::VSocket *new_sock) {
+  virtual bool HandleNewConnection(vzconn::VSocket *p_srv,
+                                   vzconn::VSocket *new_sock) {
     printf("-------------------- %s[%d].\n", __FUNCTION__, __LINE__);
     return true;
   }
 
-  virtual void HandleClose(void *p_srv) {
+  virtual void HandleServerClose(vzconn::VSocket *p_srv) {
     printf("-------------------- %s[%d].\n", __FUNCTION__, __LINE__);
   }
 };
 
 class CClientProcess : public vzconn::CClientInterface {
  public:
-  virtual int32 HandleRecvPacket(void       *p_cli,
-                                 const void *p_data,
-                                 uint32      n_data) {
+  virtual int32 HandleRecvPacket(vzconn::VSocket *p_cli,
+                                 const uint8     *p_data,
+                                 uint32           n_data,
+                                 uint16           n_flag) {
     NetHead* p_head = (NetHead*)p_data;
     ((char*)p_data)[n_data] = '\0';
     //printf("-------------------- %s[%d] %d %s.\n",
@@ -29,17 +31,16 @@ class CClientProcess : public vzconn::CClientInterface {
     printf("-------------------- %s[%d] %d %d.\n",
            __FUNCTION__, __LINE__, n_data, (uint32)p_head->type_flag);
 
-    vzconn::CEvtTcpClient *pp = (vzconn::CEvtTcpClient*)p_cli;
-    pp->AsyncWrite(((char*)p_data + 8),
+    p_cli->AsyncWrite(((char*)p_data + 8),
                    n_data - sizeof(NetHead),
                    vzconn::NetworkToHost16(p_head->type_flag));
     return 0;
   }
-  virtual int32 HandleSendPacket(void *p_cli) {
+  virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
     printf("-------------------- %s[%d].\n", __FUNCTION__, __LINE__);
     return 0;
   }
-  virtual void  HandleClose(void *p_cli) {
+  virtual void  HandleClose(vzconn::VSocket *p_cli) {
     printf("-------------------- %s[%d].\n", __FUNCTION__, __LINE__);
   }
 };

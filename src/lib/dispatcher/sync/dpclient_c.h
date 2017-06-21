@@ -2,8 +2,8 @@
 /* Author      : Sober.Peng 17-06-20
 /* Description :
 /************************************************************************/
-#ifndef LIBDISPATCH_CDPCLIENT_H_
-#define LIBDISPATCH_CDPCLIENT_H_
+#ifndef LIBDISPATCH_DPCLIENT_C_H_
+#define LIBDISPATCH_DPCLIENT_C_H_
 
 #ifdef WIN32
 #define EXPORT_DLL _declspec(dllexport)
@@ -14,8 +14,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct _TagDpMsg TagDpMsg;
-typedef void(*DpClient_MessageCallback)(const TagDpMsg *dmp, void*);
+typedef struct _TagDpMsg DpMessage;
+typedef void(*DpClient_MessageCallback)(const DpMessage *dmp, void* p_usr_arg);
 
 // Not thread safe
 EXPORT_DLL void DpClient_Init(const char* ip_addr, unsigned short port);
@@ -28,6 +28,14 @@ EXPORT_DLL int  DpClient_Start(int new_thread);
 
 // Only call once
 EXPORT_DLL void DpClient_Stop();
+
+// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
+EXPORT_DLL int  DpClient_AddListenMessage(const char *methodset[],
+    unsigned int set_size);
+
+// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
+EXPORT_DLL int  DpClient_RemoveListenMessage(const char  *methodset[],
+    unsigned int set_size);
 
 // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
 EXPORT_DLL int  DpClient_SendDpMessage(const char    *method,
@@ -53,8 +61,14 @@ EXPORT_DLL int DpClient_SendDpReply(const char      *method,
                                     const char      *data,
                                     int              data_size);
 
+// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
+EXPORT_DLL int DpClient_PollRecvMessage(DpClient_MessageCallback   call_back,
+                                        void                      *user_data,
+                                        unsigned int               timeout);
+
+
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // LIBDISPATCH_CDPCLIENT_H_
+#endif  // LIBDISPATCH_DPCLIENT_C_H_

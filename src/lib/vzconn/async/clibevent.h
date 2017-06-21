@@ -31,14 +31,14 @@ extern "C" {
 namespace vzconn {
 
 typedef int32 (*EVT_FUNC)(SOCKET          fd,
-                          short           events, 
+                          short           events,
                           const void      *p_usr_arg);
 
 #define EVT_READ          EV_READ     // 读事件
 #define EVT_WRITE         EV_WRITE    // 写事件
 
-// 永久事件，激活执行后会重新加到队列中等待下一次激活，否则激活执行后会自动移除  
-#define EVT_PERSIST       EV_PERSIST  
+// 永久事件，激活执行后会重新加到队列中等待下一次激活，否则激活执行后会自动移除
+#define EVT_PERSIST       EV_PERSIST
 
 #define EVT_LOOP_NOBLOCK  EVLOOP_NONBLOCK
 ///LOOP////////////////////////////////////////////////////////////////////////
@@ -54,9 +54,10 @@ class EVT_LOOP {
   int32   Start();
   void    Stop();
 
-  int32   RunLoop(int e_flag=0);
+  int32   RunLoop(unsigned int n_timeout=0);
 
-  void    LoopExit(const struct timeval *tv);
+  // 定时退出
+  void    LoopExit(unsigned int n_timeout);
 
   struct event_base* get_event() const {
     return p_event_;

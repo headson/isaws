@@ -1,6 +1,6 @@
 /************************************************************************/
 /* Author      : Sober.Peng 17-06-20
-/* Description :
+/* Description : 
 /************************************************************************/
 #include "clibevent.h"
 
@@ -22,11 +22,12 @@ int32 EVT_LOOP::Start() {
 //#else
 //  evthread_use_pthreads();
 //#endif
-
-  p_event_ = event_base_new();
-  if (!p_event_) {
-    printf("can't new a loop.\n");
-    return -1;
+  if (p_event_ == NULL) {
+    p_event_ = event_base_new();
+    if (!p_event_) {
+      printf("can't new a loop.\n");
+      return -1;
+    }
   }
   return 0;
 }
@@ -40,19 +41,30 @@ void EVT_LOOP::Stop() {
   }
 }
 
-int32 EVT_LOOP::RunLoop(int e_flag) {
+int32 EVT_LOOP::RunLoop(unsigned int n_timeout) {
   int32 n_ret = 0;
   if (p_event_) {
-    n_ret = event_base_loop(p_event_, e_flag);
+    if (n_timeout > 0) {
+      LoopExit(n_timeout);
+    }
+
+    n_ret = event_base_loop(p_event_, 0);
     //n_ret = event_base_dispatch(p_event_);
   }
   return n_ret;
 }
 
-void EVT_LOOP::LoopExit(const struct timeval *tv) {
+void EVT_LOOP::LoopExit(unsigned int n_timeout) {
   if (p_event_) {
-    //event_base_loopbreak(p_event_);
-    int32 n_ret = event_base_loopexit(p_event_, tv);
+    int32 n_ret = 0;
+    if (n_timeout > 0) {
+      struct timeval tv;
+      tv.tv_sec = n_timeout / 1000;
+      tv.tv_usec = n_timeout % 1000 * 1000;
+      n_ret = event_base_loopexit(p_event_, &tv);
+    } else {
+      n_ret = event_base_loopexit(p_event_, NULL);
+    }
     if (n_ret == -1) {
       LOG(L_ERROR) << "base loop exit failed.";
     }

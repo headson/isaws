@@ -75,8 +75,8 @@ class VSocket;
 /* TCP服务网络事件接口 */
 class CTcpServerInterface {
  public:
-  virtual bool HandleNewConnection(void *p_srv, VSocket *new_sock) = 0;
-  virtual void HandleClose(void *p_srv) = 0;
+  virtual bool HandleNewConnection(VSocket *p_srv, VSocket *new_sock) = 0;
+  virtual void HandleServerClose(VSocket *p_srv) = 0;
 };
 
 /* 客户端网络事件接口 */
@@ -95,8 +95,9 @@ class CClientInterface {
                    n_data[IN] 数据长度
   /* Return      : 0=未找到包头,>0一整包长度(head+body),<0(脏数据)未找到包头
   /************************************************************************/
-  virtual int32 NetHeadParse(const void *p_data,
-                             uint32      n_data);
+  virtual int32 NetHeadParse(const uint8 *p_data, 
+                             uint32       n_data, 
+                             uint16      *n_flag);
   /************************************************************************/
   /* Description : 回调网络头部打包
   /* Parameters  : p_data[OUT] 数据
@@ -105,17 +106,18 @@ class CClientInterface {
                    n_flag[IN]  VZ包头的flag
   /* Return      : >0包头占用数据长度
   /************************************************************************/
-  virtual int32 NetHeadPacket(void  *p_data,
-                              uint32 n_data,
-                              uint32 n_body,
-                              uint16 n_flag);
+  virtual int32 NetHeadPacket(uint8  *p_data,
+                              uint32  n_data,
+                              uint32  n_body,
+                              uint16  n_flag);
 
  public:
-  virtual int32 HandleRecvPacket(void       *p_cli,
-                                 const void *p_data,
-                                 uint32      n_data) = 0;
-  virtual int32 HandleSendPacket(void *p_cli) = 0;
-  virtual void  HandleClose(void *p_cli) = 0;
+  virtual int32 HandleRecvPacket(VSocket       *p_cli,
+                                 const uint8   *p_data,
+                                 uint32         n_data,
+                                 uint16         n_flag) = 0;
+  virtual int32 HandleSendPacket(VSocket *p_cli) = 0;
+  virtual void  HandleClose(VSocket *p_cli) = 0;
 };
 
 class VSocket {
@@ -133,6 +135,28 @@ class VSocket {
   //属性设置
   int32 SetOption(int level, int option, void *optval, int optlen) const;
   int32 GetOption(int level, int option, void *optval, int *optlen) const;
+
+    /************************************************************************/
+  /* Description : 发送一包数据;缓存到发送cache中
+  /* Parameters  : p_data[IN] 数据(body区)
+                   n_data[IN] 数据长度
+                   e_flag[IN] VZ为包头的flag[uint16]
+  /* Return      : >0 缓存数据长度,<=0 发送失败
+  /************************************************************************/
+  virtual int32 AsyncWrite(const void  *p_data,
+                           uint32       n_data,
+                           uint16       e_flag);
+
+  /************************************************************************/
+  /* Description : 发送一包数据;缓存到发送cache中
+  /* Parameters  : iov[IN]    数据(body区)
+                   n_iov[IN]  iov个数
+                   e_flag[IN] VZ为包头的flag[uint16]
+  /* Return      : >0 缓存数据长度,<=0 发送失败
+  /************************************************************************/
+  virtual int32 AsyncWrite(struct iovec iov[],
+                           uint32       n_iov,
+                           uint16       e_flag);
 
   /*****************************************************************************
   * Author        : Sober.Peng 28:12:2016
@@ -162,7 +186,7 @@ class VSocket {
   int32               rw_flag_;
 
  protected:
-  CClientInterface   *cli_hdl_ptr_;  // 客户端事件处理
+  CClientInterface    *cli_hdl_ptr_;  // 客户端事件处理
 };
 
 }  // namespace vzconn

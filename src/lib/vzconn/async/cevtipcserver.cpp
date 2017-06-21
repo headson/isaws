@@ -17,9 +17,9 @@ CEvtIpcServer::CEvtIpcServer(const EVT_LOOP       *p_loop,
   : CEvtTcpServer(p_loop, cli_hdl, srv_hdl) {
 }
 
-CEvtIpcServer *CEvtIpcServer::Create(const EVT_LOOP       *p_loop,
-                                     CClientInterface     *cli_hdl,
-                                     CTcpServerInterface  *srv_hdl) {
+CEvtIpcServer *CEvtIpcServer::Create(const EVT_LOOP *p_loop,
+                                     CClientInterface *cli_hdl,
+                                     CTcpServerInterface *srv_hdl) {
   if (NULL == p_loop || p_loop->get_event() == NULL) {
     LOG(L_ERROR) << "param is failed.";
     return NULL;
@@ -130,7 +130,7 @@ int32 CEvtIpcServer::OnAccept() {
   if (INVALID_SOCKET == s)  {
     LOG(L_ERROR) << "accept new socket failed.";
     if (srv_handle_ptr_) {
-      srv_handle_ptr_->HandleClose(this);
+      srv_handle_ptr_->HandleServerClose(this);
     }
     return -1;
   }

@@ -22,7 +22,7 @@ class CSockRecvData : public CBlockBuffer {
   int32 ParseSplitData(VSocket* p_sock, bool b_move=true);
 
  private:
-  uint32_t n_wait_len_;  // 等待数据长度
+  uint32  n_wait_len_;  // 等待数据长度
 };
 
 class CSockSendData : public CBlockBuffer {

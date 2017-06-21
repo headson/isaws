@@ -38,6 +38,23 @@ class CBlockBuffer {
   bool   isFull() const;          // 数据区是否已满
   void   Recycle();               // 回收已读数据;移动已写数据到pos=0
 
+  void   Clear();                 // 清空数据
+
+ public:
+  bool ReadUInt8(uint8* val);
+  bool ReadUInt16(uint16* val);
+  bool ReadUInt24(uint32* val);
+  bool ReadUInt32(uint32* val);
+  bool ReadUInt64(uint64* val);
+  bool ReadBytes(char* val, size_t len);
+
+  bool WriteUInt8(uint8 val);
+  bool WriteUInt16(uint16 val);
+  bool WriteUInt24(uint32 val);
+  bool WriteUInt32(uint32 val);
+  bool WriteUInt64(uint64 val);
+  bool WriteBytes(const uint8* val, uint32 len);
+
  protected:
   void Construct(uint32 size);
   void Construct(uint8 *p_data, uint32 size);

@@ -9,8 +9,7 @@
 
 namespace vzconn {
 
-CEvtTcpClient::CEvtTcpClient(const EVT_LOOP   *p_loop,
-                             CClientInterface *cli_hdl)
+CEvtTcpClient::CEvtTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl)
   : VSocket(cli_hdl)
   , p_evt_loop_(p_loop)
   , c_evt_recv_()

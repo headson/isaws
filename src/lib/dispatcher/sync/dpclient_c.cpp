@@ -5,10 +5,11 @@
 #include "dpclient_c.h"
 
 #include "stdafx.h"
-#include "dispatcher/base/dphead.h"
+#include "dispatcher/base/pkghead.h"
+#include "dispatcher/sync/cdpclient.h"
 
 #include "vzconn/async/clibevent.h"
-#include "vzconn/sync/ctcpclient.h"
+#include "vzconn/async/cevttcpclient.h"
 
 // TLS
 #ifdef WIN32
@@ -19,6 +20,8 @@ typedef DWORD               TlsKey;
 #include <pthread.h>
 typedef pthread_key_t       TlsKey;
 #define TLS_NULL            -1
+
+#include <netinet/tcp.h>
 #endif
 
 class VTls {
@@ -88,79 +91,95 @@ class VTls {
   TlsKey  tls_key_;
 };
 
-class CClientProcess : public vzconn::CClientInterface {
- public:
-  virtual int32 HandleRecvPacket(void       *p_cli,
-                                 const void *p_data,
-                                 uint32      n_data);
-  virtual int32 HandleSendPacket(void *p_cli) {
-    return 0;
-  }
-  virtual void  HandleClose(void *p_cli) {
-  }
-};
-
 static VTls                 g_cli_tls;                      //
-static vzconn::EVT_LOOP     g_evt_loop;                     //
 static vzconn::CInetAddr    g_remote_addr;                  //
-typedef struct _TagTcpCli {
-  vzconn::CTcpClient*       p_cli;
-  CClientProcess            c_proc;
-  uint32                    n_msg_seq;
-  DpClient_MessageCallback  p_callback;
-  void                      *p_usr_arg;
-} TagTcpCli;
-static TagTcpCli            g_tcp_client[MAX_CLIS_PER_PROC];
+static CTcpClient*          g_tcp_client[MAX_CLIS_PER_PROC];
 
-int32 CClientProcess::HandleRecvPacket(void       *p_cli,
-                                       const void *p_data,
-                                       uint32      n_data) {
-  if (!p_cli || !p_data || n_data == 0) {
-    return -1;
+//////////////////////////////////////////////////////////////////////////
+static int DpClientSendMessage(CTcpClient    *p_tcp,
+                               unsigned char  n_type,
+                               const char    *method,
+                               unsigned char  channel_id,
+                               const char    *data,
+                               int            data_size,
+                               bool           b_wait_recv) {
+  // dp head
+  DpMessage c_dp_msg;
+  int32 n_dp_msg = CTcpClient::EncDpMsg(&c_dp_msg,
+                                        n_type,
+                                        channel_id,
+                                        method,
+                                        p_tcp->new_msg_seq(),
+                                        data_size);
+  if (n_dp_msg < 0) {
+    LOG(L_ERROR) << "create dp msg head failed." << n_dp_msg;
+    return VZNETDP_FAILURE;
   }
 
-  TagTcpCli *p_tcp = (TagTcpCli*)p_cli;
+  // body
+  iovec iov[2];
+  iov[0].iov_base = &c_dp_msg;
+  iov[0].iov_len = n_dp_msg;
+  iov[1].iov_base = (void*)data;
+  iov[1].iov_len = data_size;
 
-  TagDpMsg dp_msg;
-  if (DecDpMsg(&dp_msg, p_data, n_data) < 0) {
-    return -2;
+  p_tcp->Reset(b_wait_recv);
+  int32 n_ret = p_tcp->AsyncWrite(
+                  iov, 2, FLAG_DISPATCHER_MESSAGE);
+  if (n_ret <= 0) {
+    LOG(L_ERROR) << "async write failed " << n_dp_msg + data_size;
+    return n_ret;
   }
-  if (dp_msg.id == p_tcp->n_msg_seq) {
-  }
-
-  char *p_body = (char*)p_data + NetHeadSize() + sizeof(dp_msg);
-  p_tcp->p_callback(&dp_msg, p_body);
-  return 0;
+  return n_ret;
 }
 
-TagTcpCli* GetTcpCli() {
-  TagTcpCli* p_tcp = NULL;
-  p_tcp = (TagTcpCli*)g_cli_tls.GetValue();
-  if (p_tcp == NULL) {
-    for (int32 i = 0; i < MAX_CLIS_PER_PROC; i++) {
-      if (g_tcp_client[i].p_cli == NULL) {
-        g_tcp_client[i].p_cli = vzconn::CTcpClient::Create(&g_evt_loop,
-                                &g_tcp_client[i].c_proc);
-        if (g_tcp_client[i].p_cli) {
-          int32 n_ret = g_tcp_client[i].p_cli->Connect(&g_remote_addr, false, true, 5000);
-          if (n_ret < 0) {
-            LOG(L_ERROR) << "connect to server failed "<<g_remote_addr.ToString();
-            delete g_tcp_client[i].p_cli;
-            g_tcp_client[i].p_cli = NULL;
-            return NULL;
-          }
-        }
-        g_tcp_client[i].p_callback = NULL;
-        p_tcp = &g_tcp_client[i];
-        break;
-      }
+CTcpClient* GetTcpCli() {
+  CTcpClient* p_tcp = NULL;
+  p_tcp = (CTcpClient*)g_cli_tls.GetValue();
+  if (p_tcp) {
+#ifndef _WIN32
+    struct tcp_info info;
+    int len = sizeof(info);
+    p_tcp->GetOption(IPPROTO_TCP, TCP_INFO, &info, &len);
+    if ((info.tcpi_state == TCP_ESTABLISHED)) {
+      // 
+    } else {
+      // 断开链接
+      g_cli_tls.SetValue(NULL);
+      delete p_tcp; p_tcp = NULL;
     }
-    g_cli_tls.SetValue(p_tcp);
+#endif
   }
-  
-  p_tcp->p_callback = NULL;
-  p_tcp->p_usr_arg  = NULL;
-  p_tcp->p_cli->ResetEvent();
+
+  if (p_tcp == NULL) {
+    // 新建
+    p_tcp = CTcpClient::Create();
+    if (p_tcp) {
+      int32 n_ret = p_tcp->Connect(&g_remote_addr, false, true, DEF_TIMEOUT_MSEC);
+      if (n_ret < 0) {
+        LOG(L_ERROR) << "connect to server failed "<<g_remote_addr.ToString();
+        delete p_tcp;
+        p_tcp = NULL;
+        return NULL;
+      }
+
+      DpClientSendMessage(p_tcp,
+                          TYPE_GET_SESSION_ID,
+                          NULL,
+                          0,
+                          NULL,
+                          0,
+                          true);
+      p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
+      if (p_tcp->get_chn_id() <= 0) {
+        LOG(L_ERROR) << "get session id failed " << g_remote_addr.ToString();
+        delete p_tcp;
+        p_tcp = NULL;
+        return NULL;
+      }
+      g_cli_tls.SetValue(p_tcp);
+    }
+  }
   return p_tcp;
 }
 
@@ -169,18 +188,11 @@ EXPORT_DLL void DpClient_Init(const char* ip_addr, unsigned short port) {
   g_remote_addr.SetPort(port);
 
   for (int32 i = 0; i < MAX_CLIS_PER_PROC; i++) {
-    g_tcp_client[i].p_cli      = NULL;
-    g_tcp_client[i].p_callback = NULL;
-    g_tcp_client[i].n_msg_seq  = 0;
+    g_tcp_client[i] = NULL;
   }
 }
 
 EXPORT_DLL int DpClient_Start(int new_thread) {
-  int32 n_ret = g_evt_loop.Start();
-  if (n_ret < 0) {
-    LOG(L_ERROR) << "dp client's event loop start failed.";
-    return VZNETDP_FAILURE;
-  }
   TlsKey tk = g_cli_tls.KeyAlloc();
   if (tk == TLS_NULL) {
     LOG(L_ERROR) << "alloc tls key failed.";
@@ -192,13 +204,103 @@ EXPORT_DLL int DpClient_Start(int new_thread) {
 
 EXPORT_DLL void DpClient_Stop() {
   for (int32 i = 0; i < MAX_CLIS_PER_PROC; i++) {
-    if (g_tcp_client[i].p_cli != NULL) {
-      delete g_tcp_client[i].p_cli;
+    if (g_tcp_client[i] != NULL) {
+      delete g_tcp_client[i];
     }
-    g_tcp_client[i].p_cli      = NULL;
-    g_tcp_client[i].p_callback = NULL;
+    g_tcp_client[i] = NULL;
   }
-  g_evt_loop.Stop();
+}
+
+EXPORT_DLL int DpClient_AddListenMessage(const char   *method_set[],
+    unsigned int  set_size) {
+  int32 n_ret = 0;
+  CTcpClient* p_tcp = GetTcpCli();
+  if (!p_tcp) {
+    LOG(L_ERROR) << "get tls client failed.";
+    return VZNETDP_FAILURE;
+  }
+
+  uint32 n_data = 0;
+  for (uint32 i = 0; i < set_size; i++) {
+    if (method_set[i] == NULL) {
+      continue;
+    }
+    if (method_set[i][0] == '\0') {
+      continue;
+    }
+    uint32 n_method = strlen(method_set[i]) + 1;
+    if (n_method >= MAX_METHOD_SIZE) {
+      continue;
+    }
+    n_data += MAX_METHOD_SIZE;
+  }
+
+  DpMessage c_dp_msg;
+  int32 n_dp_msg = CTcpClient::EncDpMsg(&c_dp_msg,
+                                        TYPE_ADD_MESSAGE,
+                                        0,
+                                        NULL,
+                                        p_tcp->new_msg_seq(),
+                                        n_data);
+
+  p_tcp->Reset();
+  n_ret = p_tcp->ListenMessage(&c_dp_msg,
+                               method_set,
+                               set_size,
+                               FLAG_ADDLISTEN_MESSAGE);
+  if (n_ret <= 0) {
+    LOG(L_ERROR) << "async write failed " << n_ret;
+    return n_ret;
+  }
+
+  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
+  return p_tcp->get_resp_type();
+}
+
+EXPORT_DLL int DpClient_RemoveListenMessage(const char* method_set[],
+    unsigned int set_size) {
+  int32 n_ret = 0;
+  CTcpClient* p_tcp = GetTcpCli();
+  if (!p_tcp) {
+    LOG(L_ERROR) << "get tls client failed.";
+    return VZNETDP_FAILURE;
+  }
+
+  uint32 n_data = 0;
+  for (uint32 i = 0; i < set_size; i++) {
+    if (method_set[i] == NULL) {
+      continue;
+    }
+    if (method_set[i][0] == '\0') {
+      continue;
+    }
+    uint32 n_method = strlen(method_set[i]) + 1;
+    if (n_method >= MAX_METHOD_SIZE) {
+      continue;
+    }
+    n_data += MAX_METHOD_SIZE;
+  }
+
+  DpMessage c_dp_msg;
+  int32 n_dp_msg = CTcpClient::EncDpMsg(&c_dp_msg,
+                                        TYPE_REMOVE_MESSAGE,
+                                        0,
+                                        NULL,
+                                        p_tcp->new_msg_seq(),
+                                        n_data);
+
+  p_tcp->Reset();
+  n_ret = p_tcp->ListenMessage(&c_dp_msg,
+                               method_set,
+                               set_size,
+                               FLAG_REMOVELISTEN_MESSAGE);
+  if (n_ret <= 0) {
+    LOG(L_ERROR) << "async write failed " << n_ret;
+    return n_ret;
+  }
+
+  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
+  return p_tcp->get_resp_type();
 }
 
 EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
@@ -206,46 +308,25 @@ EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
                                       const char    *data,
                                       int            data_size) {
   int32 n_ret = 0;
-  TagTcpCli* p_tcp = GetTcpCli();
-  if (!p_tcp || !p_tcp->p_cli) {
+  CTcpClient* p_tcp = GetTcpCli();
+  if (!p_tcp) {
     LOG(L_ERROR) << "get tls client failed.";
     return VZNETDP_FAILURE;
   }
-  // dp head
-  TagDpMsg c_dp_msg;
-  int32 n_dp_msg = EncDpMsg(&c_dp_msg,
-                            TYPE_MESSAGE,
-                            channel_id,
-                            method,
-                            ++p_tcp->n_msg_seq,
-                            data_size);
-  if (n_dp_msg < 0) {
-    LOG(L_ERROR) << "create dp msg head failed." << n_dp_msg;
+
+  n_ret = DpClientSendMessage(p_tcp,
+                              TYPE_MESSAGE,
+                              method,
+                              channel_id,
+                              data,
+                              data_size,
+                              true);
+  if (n_ret <= 0) {
     return VZNETDP_FAILURE;
   }
 
-  iovec iov[2];
-  iov[0].iov_base = &c_dp_msg;
-  iov[0].iov_len  = n_dp_msg;
-  iov[1].iov_base = (void*)data;
-  iov[1].iov_len  = data_size;
-
-  n_ret = p_tcp->p_cli->AsyncWrite(
-            iov, 2, FLAG_DISPATCHER_MESSAGE);
-  if (n_ret <= 0) {
-    LOG(L_ERROR) << "async write failed "<<n_dp_msg+data_size;
-    return n_ret;
-  }
-
-  for (uint32 i = 0; i < 1000; i+=2) {
-    g_evt_loop.RunLoop(EVT_LOOP_NOBLOCK);
-    if (p_tcp->p_cli->isSendAllBuffer()
-        && p_tcp->p_cli->isRecvOnePacket()) {
-      return VZNETDP_SUCCEED;
-    }
-    usleep(2 * 1000);
-  }
-  return VZNETDP_FAILURE;
+  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
+  return p_tcp->get_resp_type();
 }
 
 EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
@@ -256,48 +337,25 @@ EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
     void                     *user_data,
     unsigned int              timeout) {
   int32 n_ret = 0;
-  TagTcpCli* p_tcp = GetTcpCli();
-  if (!p_tcp || !p_tcp->p_cli) {
+  CTcpClient* p_tcp = GetTcpCli();
+  if (!p_tcp) {
     LOG(L_ERROR) << "get tls client failed.";
     return VZNETDP_FAILURE;
   }
-  // dp head
-  TagDpMsg c_dp_msg;
-  int32 n_dp_msg = EncDpMsg(&c_dp_msg,
-                            TYPE_MESSAGE,
-                            channel_id,
-                            method,
-                            ++p_tcp->n_msg_seq,
-                            data_size);
-  if (n_dp_msg < 0) {
-    LOG(L_ERROR) << "create dp msg head failed." << n_dp_msg;
+
+  n_ret = DpClientSendMessage(p_tcp,
+                              TYPE_MESSAGE,
+                              method,
+                              channel_id,
+                              data,
+                              data_size,
+                              true);
+  if (n_ret <= 0) {
     return VZNETDP_FAILURE;
   }
 
-  iovec iov[2];
-  iov[0].iov_base = &c_dp_msg;
-  iov[0].iov_len  = n_dp_msg;
-  iov[1].iov_base = (void*)data;
-  iov[1].iov_len  = data_size;
-
-  p_tcp->p_callback = call_back;
-  p_tcp->p_usr_arg  = user_data;
-  n_ret = p_tcp->p_cli->AsyncWrite(
-            iov, 2, FLAG_DISPATCHER_MESSAGE);
-  if (n_ret <= 0) {
-    LOG(L_ERROR) << "async write failed "<<n_dp_msg+data_size;
-    return n_ret;
-  }
-
-  for (uint32 i = 0; i < timeout; i+=2) {
-    g_evt_loop.RunLoop(EVT_LOOP_NOBLOCK);
-    if (p_tcp->p_cli->isSendAllBuffer()
-        && p_tcp->p_cli->isRecvOnePacket()) {
-      return VZNETDP_SUCCEED;
-    }
-    usleep(2 * 1000);
-  }
-  return VZNETDP_FAILURE;
+  p_tcp->RunLoop(timeout);
+  return p_tcp->get_resp_type();
 }
 
 EXPORT_DLL int DpClient_SendDpReply(const char    *method,
@@ -306,44 +364,41 @@ EXPORT_DLL int DpClient_SendDpReply(const char    *method,
                                     const char    *data,
                                     int            data_size) {
   int32 n_ret = 0;
-  TagTcpCli* p_tcp = GetTcpCli();
-  if (!p_tcp || !p_tcp->p_cli) {
+  CTcpClient* p_tcp = GetTcpCli();
+  if (!p_tcp) {
     LOG(L_ERROR) << "get tls client failed.";
     return VZNETDP_FAILURE;
   }
-  // dp head
-  TagDpMsg c_dp_msg;
-  int32 n_dp_msg = EncDpMsg(&c_dp_msg,
-                            TYPE_MESSAGE,
-                            channel_id,
-                            method,
-                            ++p_tcp->n_msg_seq,
-                            data_size);
-  if (n_dp_msg < 0) {
-    LOG(L_ERROR) << "create dp msg head failed." << n_dp_msg;
+
+  n_ret = DpClientSendMessage(p_tcp,
+                              TYPE_MESSAGE,
+                              method,
+                              channel_id,
+                              data,
+                              data_size,
+                              false);
+  if (n_ret <= 0) {
     return VZNETDP_FAILURE;
   }
 
-  iovec iov[2];
-  iov[0].iov_base = &c_dp_msg;
-  iov[0].iov_len  = n_dp_msg;
-  iov[1].iov_base = (void*)data;
-  iov[1].iov_len  = data_size;
+  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
+  return p_tcp->get_send_all_buffer()
+         ? VZNETDP_SUCCEED : VZNETDP_FAILURE;
+}
 
-  n_ret = p_tcp->p_cli->AsyncWrite(
-            iov, 2, FLAG_DISPATCHER_MESSAGE);
-  if (n_ret <= 0) {
-    LOG(L_ERROR) << "async write failed "<<n_dp_msg+data_size;
-    return n_ret;
+EXPORT_DLL int DpClient_PollRecvMessage(DpClient_MessageCallback call_back,
+                                        void                    *user_data,
+                                        unsigned int             timeout) {
+  int32 n_ret = 0;
+  CTcpClient* p_tcp = GetTcpCli();
+  if (!p_tcp) {
+    LOG(L_ERROR) << "get tls client failed.";
+    return VZNETDP_FAILURE;
   }
 
-  for (uint32 i = 0; i < 1000; i+=2) {
-    g_evt_loop.RunLoop(EVT_LOOP_NOBLOCK);
-    if (p_tcp->p_cli->isSendAllBuffer()) {
-      return VZNETDP_SUCCEED;
-    }
-    usleep(2 * 1000);
-  }
-  return VZNETDP_FAILURE;
+  p_tcp->Reset(false);
+  p_tcp->PollRunLoop(DEF_TIMEOUT_MSEC);
+  return ((p_tcp->get_recv_one_packet() > 0)
+          ? VZNETDP_SUCCEED : VZNETDP_FAILURE);
 }
 

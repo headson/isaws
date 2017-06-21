@@ -236,7 +236,7 @@ int32 CTcpClient::EvtRecv(SOCKET      fd,
 int32 CTcpClient::OnRecv() {
   int32 n_ret = c_recv_data_.RecvData(this);
   if (n_ret > 0) {
-    n_ret = c_recv_data_.ParseSplitData(this, false); // 通过回调反馈给用户层
+    n_ret = c_recv_data_.ParseSplitData(this); // 通过回调反馈给用户层
     if (n_ret > 0) {
       b_recv_one_packet_ = 1;
     }

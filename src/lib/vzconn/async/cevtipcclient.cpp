@@ -8,7 +8,7 @@
 #include "vzconn/base/connhead.h"
 
 namespace vzconn {
-CEvtIpcClient::CEvtIpcClient(const EVT_LOOP   *p_loop,
+CEvtIpcClient::CEvtIpcClient(const EVT_LOOP *p_loop,
                              CClientInterface *cli_hdl)
   : CEvtTcpClient(p_loop, cli_hdl) {
   LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
@@ -18,7 +18,7 @@ CEvtIpcClient::~CEvtIpcClient() {
   LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
-CEvtIpcClient* CEvtIpcClient::Create(const EVT_LOOP   *p_loop,
+CEvtIpcClient* CEvtIpcClient::Create(const EVT_LOOP *p_loop,
                                      CClientInterface *cli_hdl) {
   if (NULL == p_loop || p_loop->get_event() == NULL) {
     LOG(L_ERROR) << "param is failed.";
@@ -33,9 +33,9 @@ CEvtIpcClient* CEvtIpcClient::Create(const EVT_LOOP   *p_loop,
 }
 
 bool CEvtIpcClient::Connect(const CInetAddr *p_remote_addr,
-                            bool             b_block,
-                            bool             b_reuse,
-                            uint32           n_timeout/*=5000*/) {
+                             bool             b_block,
+                             bool             b_reuse,
+                             uint32           n_timeout/*=5000*/) {
   if (NULL == p_evt_loop_) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
@@ -66,7 +66,7 @@ bool CEvtIpcClient::Connect(const CInetAddr *p_remote_addr,
   //unlink(un.sun_path);               /* in case it already exists */
   //ret = bind(fd, (struct sockaddr *)&un, len) < 0);
 
-  /* fill socket address structure with server's address */
+  /* fill socket address structure with server's address */  
   p_remote_addr->ToIpcAddr(ipc_addr, 32);
   LOG(L_INFO) << "use ipc to connect server."<<ipc_addr;
 

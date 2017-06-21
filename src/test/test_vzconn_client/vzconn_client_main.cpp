@@ -9,18 +9,21 @@ char* p_data = NULL;
 vzconn::CEvtIpcClient *c_tcp = NULL;
 class CSocketProcess : public vzconn::CClientInterface {
  public:
-  virtual int32 HandleRecvPacket(void *p_cli, const void *p_data, uint32 n_data) {
+   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
+                                  const uint8      *p_data,
+                                  uint32            n_data,
+                                  uint16            n_flag) {
     NetHead* p_head = (NetHead*)p_data;
     printf("data length [%d] flag %d\n", n_data, (uint32)p_head->type_flag);
     return 0;
   }
 
-  virtual int32 HandleSendPacket(void *p_cli) {
+  virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
     printf("-------------------- %s[%d].\n", __FUNCTION__, __LINE__);
     return 0;
   }
 
-  virtual void HandleClose(void *p_cli) {
+  virtual void HandleClose(vzconn::VSocket *p_cli) {
     c_tcp = NULL;
     printf("-------------------- %s[%d].\n", __FUNCTION__, __LINE__);
   }
@@ -53,7 +56,7 @@ int main(int argc, char* argv[]) {
   int32 n_ret = 0;
   CSocketProcess c_cli_proc;
 
-  vzconn::CInetAddr c_addr("192.168.7.18", 12345);
+  vzconn::CInetAddr c_addr("192.168.6.8", 12345);
   c_tcp = vzconn::CEvtIpcClient::Create(&c_loop, &c_cli_proc);
 
   c_tcp->Connect(&c_addr, false, true, 5000);

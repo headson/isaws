@@ -29,7 +29,7 @@ typedef struct _NetHead {
 
 namespace vzconn {
   // 默认字符顺序[大端]
-  const ByteOrder VZ_ORDER_BYTE = ORDER_NETWORK;
+  const ByteOrder VZ_ORDER_BYTE       = ORDER_NETWORK;
 
   // 包默认大小
   static const uint32 DEF_BUFFER_SIZE = 4096;

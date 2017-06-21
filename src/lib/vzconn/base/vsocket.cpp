@@ -253,6 +253,16 @@ int32 VSocket::GetOption(int level, int option, void *optval, int *optlen) const
 #endif
 }
 
+int32 VSocket::AsyncWrite(const void *p_data, uint32 n_data, uint16 e_flag) {
+  LOG(L_ERROR) << "you need overload this function.";
+  return -1;
+}
+
+int32 VSocket::AsyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
+  LOG(L_ERROR) << "you need overload this function.";
+  return -1;
+}
+
 /*****************************************************************************
 * Author        : Sober.Peng 28:12:2016
 * Description   : 网络数据接收
@@ -361,8 +371,9 @@ int32 CClientInterface::NetHeadSize() {
   return sizeof(NetHead);
 }
 
-int32 CClientInterface::NetHeadParse(const void *p_data,
-                                     uint32      n_data) {
+int32 CClientInterface::NetHeadParse(const uint8 *p_data,
+                                     uint32       n_data,
+                                     uint16      *n_flag) {
   if (n_data < NetHeadSize()) {
     return 0;
   }
@@ -376,6 +387,7 @@ int32 CClientInterface::NetHeadParse(const void *p_data,
       n_len = NetHeadSize();
       n_len += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
                NetworkToHost32(p_head->data_size) : p_head->data_size;
+      *n_flag = p_head->type_flag;
     } else {
       return -1;
     }
@@ -388,6 +400,8 @@ int32 CClientInterface::NetHeadParse(const void *p_data,
       n_len = NetHeadSize();
       n_len += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
                NetworkToHost32(c_head.data_size) : c_head.data_size;
+
+      *n_flag = c_head.type_flag;
     } else {
       return -1;
     }
@@ -395,7 +409,7 @@ int32 CClientInterface::NetHeadParse(const void *p_data,
   return n_len;
 }
 
-int32 CClientInterface::NetHeadPacket(void  *p_data,
+int32 CClientInterface::NetHeadPacket(uint8 *p_data,
                                       uint32 n_data,
                                       uint32 n_body,
                                       uint16 n_flag) {

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 #########################################################################
 
 # Basic environment setting
-SET(BUILD_PROJECT_NAME "vzconn_client")
+SET(BUILD_PROJECT_NAME "dp_client")
 
 #########################################################################
 #INCLUDE_DIRECTORIES(${LIBVZNET_INCLUDE_DIR})
@@ -25,10 +25,10 @@ endforeach()
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST 
-	${CMAKE_CURRENT_SOURCE_DIR}/vzconn_client_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/dp_client_main.cpp
 	)
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/vzconn_client_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/dp_client_main.cpp
 )
 #########################################################################
 #Step 4 : Add PROJECT define 
@@ -50,7 +50,7 @@ set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_TES
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libdispatch.lib
+		libdpclient.lib
 		libvzconn.lib
 		libvzlogging.lib
 		libevent_core.lib
@@ -59,6 +59,7 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+		libdpclient.a
 		libvzconn.a
 		libvzlogging.a
 		${VZPROJECT_LINK_LIB}

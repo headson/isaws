@@ -42,8 +42,8 @@ CEvtTcpServer::~CEvtTcpServer() {
 }
 
 bool CEvtTcpServer::Open(const CInetAddr *p_addr,
-                         bool            b_block,
-                         bool            b_reuse) {
+                          bool            b_block,
+                          bool            b_reuse) {
   if (NULL == p_evt_loop_ ) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
@@ -121,24 +121,24 @@ int32 CEvtTcpServer::OnAccept() {
   if (INVALID_SOCKET == s)  {
     LOG(L_ERROR) << "accept new socket failed.";
     if (srv_handle_ptr_) {
-      srv_handle_ptr_->HandleClose(this);
+      srv_handle_ptr_->HandleServerClose(this);
     }
     return -1;
   }
 
-  CEvtTcpClient *cli_ptr = CEvtTcpClient::Create(p_evt_loop_, cli_hdl_ptr_);
+  CEvtTcpClient *cli_ptr = CEvtTcpClient::Create(p_evt_loop_,
+                           cli_hdl_ptr_);
   if (cli_ptr) {
     bool b_open = false;
     if (srv_handle_ptr_) {
       b_open = srv_handle_ptr_->HandleNewConnection(this, cli_ptr);
     }
 
-    if (b_open) {
+    if (b_open) { 
       cli_ptr->Open(s, true);
     } else {
       delete cli_ptr;
-
-      closesocket(s);
+      evutil_closesocket(s);
       s = INVALID_SOCKET;
     }
   }
