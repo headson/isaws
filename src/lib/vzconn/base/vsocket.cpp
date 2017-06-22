@@ -432,7 +432,8 @@ int32 CClientInterface::NetHeadParse(const uint8 *p_data,
       n_len = NetHeadSize();
       n_len += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
                NetworkToHost32(p_head->data_size) : p_head->data_size;
-      *n_flag = p_head->type_flag;
+      *n_flag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+                NetworkToHost16(p_head->type_flag) : p_head->type_flag;
     } else {
       return -1;
     }
@@ -446,7 +447,8 @@ int32 CClientInterface::NetHeadParse(const uint8 *p_data,
       n_len += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
                NetworkToHost32(c_head.data_size) : c_head.data_size;
 
-      *n_flag = c_head.type_flag;
+      *n_flag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+        NetworkToHost16(c_head.type_flag) : c_head.type_flag;;
     } else {
       return -1;
     }

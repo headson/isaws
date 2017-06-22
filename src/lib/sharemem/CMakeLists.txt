@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 if(WIN32)
-    SET(BUILD_PROJECT_NAME "libshm")
+    SET(BUILD_PROJECT_NAME "libsharemem")
 elseif(UNIX)
-    SET(BUILD_PROJECT_NAME "shm")
+    SET(BUILD_PROJECT_NAME "sharemem")
 endif()
 
 #########################################################################

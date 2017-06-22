@@ -175,16 +175,17 @@ EXPORT_DLL int DpClient_AddListenMessage(const char   *method_set[],
     unsigned int  set_size) {
   int32 n_ret = VZNETDP_FAILURE;
   CTcpClient* p_tcp = GetTcpCli();
+  LOG(L_WARNING) << "add listen message "<<n_ret;
   if (!p_tcp) {
     LOG(L_ERROR) << "get tls client failed.";
     return VZNETDP_FAILURE;
   }
-
+  LOG(L_WARNING) << "add listen message "<<n_ret;
   p_tcp->Reset();
   n_ret = p_tcp->ListenMessage(TYPE_ADD_MESSAGE,
                                method_set,
                                set_size,
-                               FLAG_REMOVELISTEN_MESSAGE);
+                               FLAG_ADDLISTEN_MESSAGE);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "add message failed " << n_ret;
     return n_ret;
@@ -320,6 +321,7 @@ EXPORT_DLL int DpClient_PollDpMessage(DpClient_MessageCallback call_back,
     LOG(L_ERROR) << "get tls client failed.";
     return VZNETDP_FAILURE;
   }
+  LOG(L_ERROR) << "hello";
 
   p_tcp->Reset();
   p_tcp->SetCallback(call_back, user_data);

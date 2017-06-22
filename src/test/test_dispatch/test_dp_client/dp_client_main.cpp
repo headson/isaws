@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
   ShowVzLoggingAlways();
 #endif
 
-  dp::DpClient_Init("192.168.6.8", 3730);
+  dp::DpClient_Init("192.168.1.11", 3730);
 
   dp::DpClient_Start(0);
 

@@ -137,7 +137,7 @@ class VSocket {
   int32 SetOption(int level, int option, void *optval, int optlen) const;
   int32 GetOption(int level, int option, void *optval, int *optlen) const;
 
-    /************************************************************************/
+  /************************************************************************/
   /* Description : 发送一包数据;缓存到发送cache中
   /* Parameters  : p_data[IN] 数据(body区)
                    n_data[IN] 数据长度

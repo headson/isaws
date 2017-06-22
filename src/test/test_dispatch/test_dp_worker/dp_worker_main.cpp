@@ -54,13 +54,13 @@ const char* MSG_TYPES[] = {
 };
 
 void DpMsgallback(const DpMessage *dmp, void* p_usr_arg) {
-  printf("dp message %s, replay id %d %d.\n", 
+  printf("dp message %s, replay id %d %d.\n",
          dmp->method, dmp->id, ((dmp->id >> 24) & 0xff));
   dp::DpClient_SendDpReply(dmp->method,
-                       dmp->channel_id,
-                       dmp->id,
-                       (char*)dmp+sizeof(DpMessage),
-                       dmp->data_size);
+                           dmp->channel_id,
+                           dmp->id,
+                           (char*)dmp+sizeof(DpMessage),
+                           dmp->data_size);
 }
 
 int main(int argc, char* argv[]) {
@@ -69,17 +69,25 @@ int main(int argc, char* argv[]) {
   ShowVzLoggingAlways();
 #endif
 
-  dp::DpClient_Init("192.168.6.8", 3730);
+  int32 n_ret = 0;
+  dp::DpClient_Init("192.168.1.11", 3730);
 
   dp::DpClient_Start(0);
 
-  dp::DpClient_AddListenMessage(MSG_TYPES, MAX_TYPES_SIZE);
+RE_ADD_LISTEN:
+  while (true) {
+    n_ret = dp::DpClient_AddListenMessage(MSG_TYPES, MAX_TYPES_SIZE);
+    if (n_ret == VZNETDP_SUCCEED) {
+      break;
+    }
+  }
 
   while (true) {
-    int32 n_ret = dp::DpClient_PollDpMessage(DpMsgallback, NULL, 1000);
     if (n_ret == VZNETDP_FAILURE) {
-      dp::DpClient_AddListenMessage(MSG_TYPES, MAX_TYPES_SIZE);
+      goto RE_ADD_LISTEN;
     }
+
+    n_ret = dp::DpClient_PollDpMessage(DpMsgallback, NULL, 1000);
   }
 
   getchar();
