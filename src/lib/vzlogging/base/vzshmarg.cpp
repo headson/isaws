@@ -24,7 +24,7 @@ namespace vzlogging {
 
 /**VShm******************************************************************/
 VShm::VShm() {
-  VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+  //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
   memset(shm_key_, 0, 32);
   shm_hdl_  = SHM_NULL;
   shm_ptr_  = NULL;
@@ -33,7 +33,7 @@ VShm::VShm() {
 
 VShm::~VShm() {
   Close();
-  VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+  //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
 #ifdef WIN32
@@ -141,7 +141,7 @@ void VShm::Close() {
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
-int32 VShm::Open(ShmKey key, ShmSize size) {
+int VShm::Open(ShmKey key, ShmSize size) {
   if (!key || size == 0) {
     return -1;
   }

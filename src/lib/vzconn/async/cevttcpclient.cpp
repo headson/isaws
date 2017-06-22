@@ -16,7 +16,7 @@ CEvtTcpClient::CEvtTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl)
   , c_recv_data_()
   , c_evt_send_()
   , c_send_data_() {
-  LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
 CEvtTcpClient* CEvtTcpClient::Create(const EVT_LOOP   *p_loop,
@@ -39,7 +39,7 @@ CEvtTcpClient::~CEvtTcpClient() {
 
   Close();
 
-  LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
 void CEvtTcpClient::Remove() {
@@ -164,7 +164,7 @@ bool CEvtTcpClient::Connect(const CInetAddr *p_remote_addr,
 int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
                                 uint32       n_data,
                                 uint16       e_flag) {
-  if (IsOpen()) {
+  if (isOpen()) {
     int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this, 
                                                        p_data, 
                                                        n_data, 
@@ -188,7 +188,7 @@ int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
 int32 CEvtTcpClient::AsyncWrite(struct iovec iov[], 
                                 uint32       n_iov,
                                 uint16       e_flag) {
-  if (IsOpen()) {
+  if (isOpen()) {
     int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this, 
                                                        iov,
                                                        n_iov,

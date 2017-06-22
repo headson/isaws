@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
   CServerProcess c_srv_proc;
   CClientProcess c_cli_proc;
 
-  vzconn::CInetAddr c_addr("0.0.0.0", 12345);
+  vzconn::CInetAddr c_addr("0.0.0.0", 3730);
   vzconn::CEvtTcpServer *srv_ptr = vzconn::CEvtTcpServer::Create(&c_loop,
                                    &c_cli_proc,
                                    &c_srv_proc);

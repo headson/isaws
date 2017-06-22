@@ -45,6 +45,7 @@ typedef int32 (*EVT_FUNC)(SOCKET          fd,
 class EVT_LOOP {
  private:
   struct event_base* p_event_;
+  bool               b_runging_;   // 运行状态
 
  public:
   EVT_LOOP();
@@ -58,6 +59,8 @@ class EVT_LOOP {
 
   // 定时退出
   void    LoopExit(unsigned int n_timeout);
+
+  bool    isRuning();
 
   struct event_base* get_event() const {
     return p_event_;

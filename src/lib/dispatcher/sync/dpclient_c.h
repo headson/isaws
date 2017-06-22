@@ -11,10 +11,14 @@
 #define EXPORT_DLL
 #endif
 
+typedef struct _TagDpMsg DpMessage;
+
+namespace dp {
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-typedef struct _TagDpMsg DpMessage;
+
 typedef void(*DpClient_MessageCallback)(const DpMessage *dmp, void* p_usr_arg);
 
 // Not thread safe
@@ -62,13 +66,15 @@ EXPORT_DLL int DpClient_SendDpReply(const char      *method,
                                     int              data_size);
 
 // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-EXPORT_DLL int DpClient_PollRecvMessage(DpClient_MessageCallback   call_back,
-                                        void                      *user_data,
-                                        unsigned int               timeout);
+EXPORT_DLL int DpClient_PollDpMessage(DpClient_MessageCallback   call_back,
+                                      void                      *user_data,
+                                      unsigned int               timeout);
 
 
 #ifdef __cplusplus
 }
 #endif
+
+}  // namespace dp
 
 #endif  // LIBDISPATCH_DPCLIENT_C_H_

@@ -164,7 +164,7 @@ int32 CTcpClient::AsyncWrite(const void  *p_data,
   b_send_all_buffer_ = 0;
   b_recv_one_packet_ = 0;
 
-  if (IsOpen()) {
+  if (isOpen()) {
     int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this,
                     p_data,
                     n_data,
@@ -191,7 +191,7 @@ int32 CTcpClient::AsyncWrite(struct iovec iov[],
   b_send_all_buffer_ = 0;
   b_recv_one_packet_ = 0;
 
-  if (IsOpen()) {
+  if (isOpen()) {
     int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this,
                     iov,
                     n_iov,

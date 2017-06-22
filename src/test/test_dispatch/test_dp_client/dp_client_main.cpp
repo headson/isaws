@@ -3,10 +3,6 @@
 #include "dispatcher/base/pkghead.h"
 #include "dispatcher/sync/dpclient_c.h"
 
-void Dpmsgallback(const DpMessage *dmp, void* p_usr_arg) {
-  printf("dp message %s.\n", dmp->method);
-}
-
 const int MAX_TYPES_SIZE = 36;
 const char* MSG_TYPES[] = {
   "TEST_MSG_TYPE_01",
@@ -47,28 +43,33 @@ const char* MSG_TYPES[] = {
   "TEST_MSG_TYPE_36",
 };
 
+void DpMsgallback(const DpMessage *dmp, void* p_usr_arg) {
+  printf("dp message %s %d.\n", dmp->method, dmp->type);
+}
+
 int main(int argc, char* argv[]) {
   InitVzLogging(argc, argv);
 #ifdef WIN32
   ShowVzLoggingAlways();
 #endif
 
-  DpClient_Init("192.168.6.8", 5291);
+  dp::DpClient_Init("192.168.6.8", 3730);
 
-  DpClient_Start(0);
+  dp::DpClient_Start(0);
 
-  DpClient_AddListenMessage(MSG_TYPES, MAX_TYPES_SIZE);
+  //DpClient_AddListenMessage(MSG_TYPES, MAX_TYPES_SIZE);
 
   //DpClient_SendDpMessage("hello", 112, "hello worlds.", 13);
-  DpClient_SendDpRequest("TEST_MSG_TYPE_16", 
-                         112, 
-                         "hello worlds.", 
-                         13,
-                         Dpmsgallback, 
-                         NULL,
-                         1000);
+  dp::DpClient_SendDpRequest("TEST_MSG_TYPE_16",
+                             112,
+                             "hello worlds.",
+                             13,
+                             DpMsgallback,
+                             NULL,
+                             10000);
 
   getchar();
 
+  dp::DpClient_Stop();
   return 0;
 }

@@ -21,7 +21,7 @@ namespace vzlogging {
 CVzSockDgram::CVzSockDgram()
   : recv_cb_(NULL)
   , timeout_cb_(NULL) {
-  VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+  //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 
   FD_ZERO(&rfds_);
   sock_recv_ = INVALID_SOCKET;
@@ -31,7 +31,7 @@ CVzSockDgram::CVzSockDgram()
 CVzSockDgram::~CVzSockDgram() {
   Close();
 
-  VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+  //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
 void CVzSockDgram::SetCallback(RECV_CALLBACK recv_cb,
@@ -186,7 +186,7 @@ void CVzSockDgram::Loop() {
 
 //////////////////////////////////////////////////////////////////////////
 CVzLoggingFile::CVzLoggingFile() {
-  VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+  //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 
   n_file_limit_size_  = 1024*1024;  // 1MB
 
@@ -203,7 +203,7 @@ CVzLoggingFile::~CVzLoggingFile() {
     fclose(p_file_);
     p_file_ = NULL;
   }
-  VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+  //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
 int CVzLoggingFile::Open(const char*  s_path,
@@ -453,11 +453,11 @@ int CVzLoggingFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
 /************************************************************************/
 CVzWatchdogFile::CVzWatchdogFile()
   : CVzLoggingFile() {
-  VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+  //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
 CVzWatchdogFile::~CVzWatchdogFile() {
-  VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+  //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
 int CVzWatchdogFile::Open(const char* s_path,

@@ -14,12 +14,17 @@ class Session {
           vzconn::VSocket *vz_socket,
           SessionInterface *session_interface);
   virtual ~Session();
+
   bool StartSession();
   bool StopSession();
   bool HandleSessionMessage(const DpMessage *dmp,
                             const char *data,
                             int size,
                             int flag);
+  vzconn::VSocket* GetSocket() {
+    return vz_socket_;
+  }
+
  private:
   bool ProcessGetSessionIdMessage(const DpMessage *dmp);
   bool ProcessAddListenMessage(const DpMessage *dmp,
@@ -36,7 +41,8 @@ class Session {
   //////////////////////////////////////////////////////////////////////////////
   void AddListenMessage(const char *message);
   void RemoveListenMessage(const char *message);
- private:
+
+ public:
   SessionInterface *session_interface_;
   unsigned char session_id_;
   char listen_messages_[MAX_METHOD_COUNT][MAX_METHOD_SIZE];
@@ -48,10 +54,11 @@ class Session {
 
 class SessionInterface {
  public:
-  virtual void AsyncWrite(Session *session,
+  virtual bool AsyncWrite(Session *session,
                           vzconn::VSocket *vz_socket,
                           const DpMessage *dmp,
                           const char *data, int size) = 0;
+  
   virtual void OnSessionError(Session *session, vzconn::VSocket *vz_socket) = 0;
   // virtual void OnPushMessage(Session *session,
   //                           const DpMessage *dmp,

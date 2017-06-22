@@ -53,7 +53,7 @@ class CTlsLog {
   CTlsLog()
     : s_(INVALID_SOCKET)
     , nlog_max_(DEF_LOG_MAX_SIZE) {
-    VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+    //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
     addr_.sin_family = AF_INET;
     addr_.sin_port = htons(DEF_SERVER_PORT);
     addr_.sin_addr.s_addr = inet_addr(DEF_SERVER_HOST);
@@ -68,7 +68,7 @@ class CTlsLog {
 #endif
       s_ = INVALID_SOCKET;
     }
-    VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+    //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
   }
 
   int InitSocket() {
@@ -123,7 +123,7 @@ class CTlsLog {
     int ns = ::sendto(s_, msg, size, 0,
                       (sockaddr*)&addr_, sizeof(addr_));
     if (ns != size) {
-      VZ_PRINT("sendto log failed.\n");
+      //VZ_PRINT("sendto log failed.\n");
     }
 
     k_total_log += ns;
@@ -143,7 +143,7 @@ class CTlsLog {
 class VTls {
  public:
   VTls() : tls_key_(TLS_NULL) {
-    VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+    //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
   }
   ~VTls() {
     KeyFree();
@@ -153,7 +153,7 @@ class VTls {
         k_tls_void[i] = NULL;
       }
     }
-    VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
+    //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
   }
 
   // 启动进程时调用一次，分配关键字

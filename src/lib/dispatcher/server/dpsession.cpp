@@ -31,21 +31,21 @@ bool Session::HandleSessionMessage(const DpMessage *dmp,
                                    const char *data,
                                    int size,
                                    int flag) {
+  bool b_ret = false;
   if (dmp->type == TYPE_GET_SESSION_ID) {
-    ProcessGetSessionIdMessage(dmp);
+    b_ret = ProcessGetSessionIdMessage(dmp);
   } else if (dmp->type == TYPE_ADD_MESSAGE) {
-    ProcessAddListenMessage(dmp, data, size);
+    b_ret = ProcessAddListenMessage(dmp, data, size);
   } else if (dmp->type == TYPE_REMOVE_MESSAGE) {
-    ProcessRemoveListenMessage(dmp, data, size);
+    b_ret = ProcessRemoveListenMessage(dmp, data, size);
   } else if (dmp->type == TYPE_MESSAGE) {
-    ProcessDpMessage(dmp, data, size);
+    b_ret = ProcessDpMessage(dmp, data, size);
   } else if (dmp->type == TYPE_REQUEST) {
-    ProcessDpMessage(dmp, data, size);
+    b_ret = ProcessDpMessage(dmp, data, size);
   } else if (dmp->type == TYPE_REPLY) {
-    ProcessDpMessage(dmp, data, size);
-  } else {
+    b_ret = ProcessDpMessage(dmp, data, size);
   }
-  return true;
+  return b_ret;
 }
 
 bool Session::ProcessGetSessionIdMessage(const DpMessage *dmp) {
@@ -85,31 +85,41 @@ bool Session::ProcessRemoveListenMessage(const DpMessage *dmp,
   return true;
 }
 
-
 bool Session::ProcessDpMessage(const DpMessage *dmp,
                                const char *data,
                                int size) {
   if (session_interface_ == NULL) {
     return false;
   }
-  // 如果这个client_id与当前session一样，那么就直接回复这个消息
-  if (session_id_ == GET_CLIENT_ID(dmp->id)) {
-    if (session_interface_) {
-      session_interface_->AsyncWrite(this, vz_socket_, dmp, data, size);
-    }
-  }
-  // 小数据量查找，不需要考虑太多的性能因素在里面
-  for (int i = 0; i < cur_pos_; i++) {
-    if (strncmp(listen_messages_[i], dmp->method, MAX_METHOD_SIZE) == 0) {
+
+  bool b_send = false;
+  if (dmp->type == TYPE_REPLY) {
+    // 回执类型的消息,通过session id去查找对应session
+    uint32 id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK) ?
+                vzconn::NetworkToHost32(dmp->id) : dmp->id;
+    // 如果这个client_id与当前session一样，那么就直接回复这个消息
+    if (session_id_ == GET_CLIENT_ID(id)) {
       if (session_interface_) {
         session_interface_->AsyncWrite(this, vz_socket_, dmp, data, size);
+        b_send = true;
       }
-      return true;
+    }
+  } else  {
+    // 小数据量查找，不需要考虑太多的性能因素在里面
+    for (int i = 0; i < cur_pos_; i++) {
+      if (strncmp(listen_messages_[i], dmp->method, MAX_METHOD_SIZE) == 0) {
+        if (session_interface_) {
+          session_interface_->AsyncWrite(this, vz_socket_, dmp, data, size);
+        }
+        b_send = true;
+        break;
+      }
     }
   }
-  return false;
+  return b_send;
 }
 
+//////////////////////////////////////////////////////////////////////////
 void Session::AddListenMessage(const char *message) {
   LOG(L_INFO) << "Add listen message >> " << message;
   if (cur_pos_ < MAX_METHOD_COUNT) {

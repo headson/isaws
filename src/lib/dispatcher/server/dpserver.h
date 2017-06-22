@@ -18,29 +18,30 @@ class DpServer : public vzconn::CTcpServerInterface,
   bool StopDpServer();
  private:
   // 服务端回调函数
-  virtual bool HandleNewConnection(vzconn::VSocket *p_srv, 
+  virtual bool HandleNewConnection(vzconn::VSocket *p_srv,
                                    vzconn::VSocket *new_sock);
   virtual void HandleServerClose(vzconn::VSocket *p_srv);
   // 客户端回调函数
-  virtual int32 HandleRecvPacket(vzconn::VSocket       *p_cli,
-                                 const uint8 *p_data,
-                                 uint32      n_data,
-                                 uint16      n_flag);
+  virtual int32 HandleRecvPacket(vzconn::VSocket *p_cli,
+                                 const uint8   *p_data,
+                                 uint32         n_data,
+                                 uint16         n_flag);
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli);
   virtual void  HandleClose(vzconn::VSocket *p_cli);
   // Session回调
-
-  virtual void AsyncWrite(Session *session,
+  virtual bool AsyncWrite(Session *session,
                           vzconn::VSocket *vz_socket,
                           const DpMessage *dmp,
                           const char *data, int size);
   virtual void OnSessionError(Session *session, vzconn::VSocket *vz_socket);
+
  private:
-  bool AddSession(Session *session, vzconn::VSocket *socket);
+  bool AddSession(uint32 n_idx, Session *session, vzconn::VSocket *socket);
   bool RemoveBySession(Session *session);
   bool RemoveBySocket(vzconn::VSocket *socket);
   Session *FindSessionBySocket(vzconn::VSocket *socket);
   vzconn::VSocket *FindSocketBySession(Session *session);
+
  private:
   bool DispatcherSession(Session *session,
                          const DpMessage *dmsg,
@@ -53,8 +54,7 @@ class DpServer : public vzconn::CTcpServerInterface,
   };
  private:
   vzconn::CEvtTcpServer *tcp_server_;
-  SessionSocketPair session_socket_map_[MAX_SESSION_SIZE];
-  int cur_session_size_;
+  SessionSocketPair      session_socket_map_[MAX_SESSION_SIZE];
 };
 
 };

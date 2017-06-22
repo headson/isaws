@@ -130,7 +130,8 @@ class VSocket {
 
   virtual void    Close();
 
-  bool            IsOpen() const;
+  bool            isOpen() const;
+  bool            isClose();
 
   // Ù–‘…Ë÷√
   int32 SetOption(int level, int option, void *optval, int optlen) const;

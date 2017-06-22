@@ -9,7 +9,8 @@
 namespace vzconn {
 
 EVT_LOOP::EVT_LOOP()
-  : p_event_(NULL) {
+  : p_event_(NULL) 
+  , b_runging_(false) {
 }
 
 EVT_LOOP::~EVT_LOOP() {
@@ -42,14 +43,19 @@ void EVT_LOOP::Stop() {
 }
 
 int32 EVT_LOOP::RunLoop(unsigned int n_timeout) {
-  int32 n_ret = 0;
+  int32 n_ret = -1;
   if (p_event_) {
     if (n_timeout > 0) {
       LoopExit(n_timeout);
     }
+    if (false == b_runging_) {
+      b_runging_ = true;
+      n_ret = event_base_loop(p_event_, 0);
+      //n_ret = event_base_dispatch(p_event_);
 
-    n_ret = event_base_loop(p_event_, 0);
-    //n_ret = event_base_dispatch(p_event_);
+      b_runging_ = false;
+      return n_ret;
+    }
   }
   return n_ret;
 }
@@ -69,6 +75,10 @@ void EVT_LOOP::LoopExit(unsigned int n_timeout) {
       LOG(L_ERROR) << "base loop exit failed.";
     }
   }
+}
+
+bool EVT_LOOP::isRuning() {
+  return b_runging_;
 }
 
 ///TIMER///////////////////////////////////////////////////////////////////////
@@ -170,7 +180,7 @@ int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 n_timeout) {
       return n_ret;
     }
     b_init_ = 1;
-    LOG(L_INFO) << "Set "<<vHdl<<" event "<<nEvt<<"-"<<c_evt_.ev_events;
+    //LOG(L_INFO) << "Set "<<vHdl<<" event "<<nEvt<<"-"<<c_evt_.ev_events;
   }
 
   if (b_start_ == 0) {

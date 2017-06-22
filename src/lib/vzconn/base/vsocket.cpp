@@ -237,8 +237,53 @@ void VSocket::Close() {
   }
 }
 
-bool VSocket::IsOpen() const {
+bool VSocket::isOpen() const {
   return (handler_ != INVALID_SOCKET);
+}
+
+#ifdef _WIN32
+static bool IsSocketClosed(SOCKET s) {
+  bool ret = false;
+  if (s == INVALID_SOCKET) {
+    return true;
+  }
+  HANDLE closeEvent = WSACreateEvent();
+  WSAEventSelect(s, closeEvent, FD_CLOSE);
+
+  DWORD dwRet = WaitForSingleObject(closeEvent, 0);
+  if (dwRet == WSA_WAIT_EVENT_0)
+    ret = true;
+  else if (dwRet == WSA_WAIT_TIMEOUT)
+    ret = false;
+
+  WSACloseEvent(closeEvent);
+  return ret;
+}
+#else
+#include <errno.h>
+
+static bool IsSocketClosed(SOCKET s) {
+  if (s == INVALID_SOCKET) {
+    return true;
+  }
+
+  char buff[32];
+  int recvBytes = recv(s, buff, sizeof(buff), MSG_PEEK);
+
+  int sockErr = errno;
+  if (recvBytes > 0)  // Get data
+    return false;
+
+  if ((recvBytes == -1) &&
+      (sockErr == EWOULDBLOCK)) // No receive data
+    return false;
+
+  return true;
+}
+#endif
+
+bool VSocket::isClose() {
+  return IsSocketClosed(GetSocket());
 }
 
 int32 VSocket::SetOption(int level, int option, void *optval, int optlen) const {
@@ -271,7 +316,7 @@ int32 VSocket::AsyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
 ******************************************************************************/
 int32 VSocket::Recv(void *pData, uint32 nData) {
   int32 nRet = -1;
-  if(!IsOpen()) {
+  if(!isOpen()) {
     return nRet;
   }
 
@@ -295,7 +340,7 @@ int32 VSocket::Recv(void *pData, uint32 nData) {
 ******************************************************************************/
 int32 VSocket::Recv(void* pData, uint32 nData, CInetAddr& cRemoteAddr) {
   int32 nRet = -1;
-  if(!IsOpen()) {
+  if(!isOpen()) {
     return nRet;
   }
 
@@ -326,7 +371,7 @@ int32 VSocket::Recv(void* pData, uint32 nData, CInetAddr& cRemoteAddr) {
 ******************************************************************************/
 int32 VSocket::Send(const void *buf, uint32 buf_size) {
   int32 nRet = -1;
-  if(!IsOpen()) {
+  if(!isOpen()) {
     return nRet;
   }
 
@@ -349,7 +394,7 @@ int32 VSocket::Send(const void *buf, uint32 buf_size) {
 ******************************************************************************/
 int32 VSocket::Send(const void* buf, uint32 buf_size, const CInetAddr& remote_addr) {
   int32 nRet = -1;
-  if(!IsOpen()) {
+  if(!isOpen()) {
     return nRet;
   }
 
