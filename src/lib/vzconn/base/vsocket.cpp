@@ -419,7 +419,7 @@ int32 CClientInterface::NetHeadSize() {
 int32 CClientInterface::NetHeadParse(const uint8 *p_data,
                                      uint32       n_data,
                                      uint16      *n_flag) {
-  if (n_data < NetHeadSize()) {
+  if (n_data < (uint32)NetHeadSize()) {
     return 0;
   }
 
@@ -460,7 +460,7 @@ int32 CClientInterface::NetHeadPacket(uint8 *p_data,
                                       uint32 n_data,
                                       uint32 n_body,
                                       uint16 n_flag) {
-  if (p_data == NULL || n_data < NetHeadSize()) {
+  if (p_data == NULL || n_data < (uint32)NetHeadSize()) {
     return -1;
   }
   NetHead c_head;

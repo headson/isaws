@@ -53,23 +53,24 @@ int main(int argc, char* argv[]) {
   ShowVzLoggingAlways();
 #endif
 
-  dp::DpClient_Init("192.168.1.11", 3730);
+  DpClient_Init("127.0.0.1", 3730);
 
-  dp::DpClient_Start(0);
+  DpClient_Start(0);
 
   //DpClient_AddListenMessage(MSG_TYPES, MAX_TYPES_SIZE);
 
   //DpClient_SendDpMessage("hello", 112, "hello worlds.", 13);
-  dp::DpClient_SendDpRequest("TEST_MSG_TYPE_16",
-                             112,
-                             "hello worlds.",
-                             13,
-                             DpMsgallback,
-                             NULL,
-                             10000);
-
+  while(1) {
+    DpClient_SendDpRequest("TEST_MSG_TYPE_16",
+                           112,
+                           "hello worlds.",
+                           13,
+                           DpMsgallback,
+                           NULL,
+                           10000);
+  }
   getchar();
 
-  dp::DpClient_Stop();
+  DpClient_Stop();
   return 0;
 }

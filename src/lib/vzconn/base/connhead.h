@@ -17,7 +17,6 @@ typedef struct _NetHead {
   uint8   mark[2];    // [0]='V' [1]='Z'
   uint16  type_flag;  // 类型标签; 0=分发消息,1=注册监听,2=取消监听,3=客户端注册
   uint32  data_size;  //
-  uint8   data[0];
 } NetHead;
 #pragma pack(pop)     // 作用：恢复对齐状态
 

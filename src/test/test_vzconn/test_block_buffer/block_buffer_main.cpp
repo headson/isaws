@@ -53,10 +53,7 @@ int main(int argc, char* argv[]) {
   c_timer.Init(&c_evt_base, FuncTimeout, NULL);
   c_timer.Start(1000, 1000);
 
-  struct timeval tv;
-  tv.tv_sec  = 5;
-  tv.tv_usec = 0;
-  c_evt_base.LoopExit(&tv);
+  c_evt_base.LoopExit(5000);
 
   while (1) {
     int32 n_ret = c_evt_base.RunLoop(EVLOOP_NO_EXIT_ON_EMPTY);

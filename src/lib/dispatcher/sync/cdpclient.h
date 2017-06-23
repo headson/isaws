@@ -94,11 +94,11 @@ class CTcpClient : public vzconn::CEvtTcpClient {
   int32                     n_session_id_;    // SESSION ID
   uint32                    n_message_id_;    // ID[8bit] + 包序号[24bit]
 
-  uint32                    n_cur_msg_id_;   // 当前发送msg id
+  uint32                    n_cur_msg_id_;    // 当前发送msg id
 
  protected:
-  uint32                    n_resp_type_;
-  uint32                    n_recv_packet_;
+  uint32                    n_resp_type_;     // 回执类型,也做evt loop退出标签
+  uint32                    n_recv_packet_;   // poll loop退出标签
 
   static const int          MAX_MESSAGE_ID = 0X00FFFFFF;
 
@@ -113,6 +113,8 @@ class CTcpClient : public vzconn::CEvtTcpClient {
   static int DecDpMsg(DpMessage     *p_msg,
                       const void    *p_data,
                       uint32         n_data);
+  static DpMessage *DecDpMsg(const void *p_data,
+                             uint32      n_data);
 };
 
 #endif  // LIBDISPATCH_CDPCLIENT_H_

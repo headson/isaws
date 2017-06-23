@@ -180,7 +180,7 @@ EXPORT_DLL void DpClient_Stop() {
   }
 }
 
-EXPORT_DLL int DpClient_AddListenMessage(const char   *method_set[],
+EXPORT_DLL int DpClient_AddListenMessage(const char *method_set[],
     unsigned int  set_size) {
   int32 n_ret = VZNETDP_FAILURE;
   CTcpClient* p_tcp = GetTcpCli();
@@ -189,20 +189,8 @@ EXPORT_DLL int DpClient_AddListenMessage(const char   *method_set[],
     return VZNETDP_FAILURE;
   }
 
-  n_ret = p_tcp->ListenMessage(TYPE_ADD_MESSAGE,
-                               method_set,
-                               set_size,
-                               FLAG_ADDLISTEN_MESSAGE);
-  if (n_ret <= 0) {
-    LOG(L_ERROR) << "add message failed " << n_ret;
-    return n_ret;
-  }
-  LOG(L_WARNING) << "add listen message "<<n_ret;
-
-  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  LOG(L_WARNING) << "add listen message "<<p_tcp->get_resp_type();
-  return p_tcp->get_resp_type() == TYPE_SUCCEED
-         ? VZNETDP_SUCCEED : VZNETDP_FAILURE;
+  n_ret = DpClient_HdlAddListenMessage(p_tcp, method_set, set_size);
+  return n_ret;
 }
 
 EXPORT_DLL int DpClient_RemoveListenMessage(const char* method_set[],
@@ -214,19 +202,8 @@ EXPORT_DLL int DpClient_RemoveListenMessage(const char* method_set[],
     return VZNETDP_FAILURE;
   }
 
-  n_ret = p_tcp->ListenMessage(TYPE_REMOVE_MESSAGE,
-                               method_set,
-                               set_size,
-                               FLAG_REMOVELISTEN_MESSAGE);
-  if (n_ret <= 0) {
-    LOG(L_ERROR) << "remove message failed " << n_ret;
-    return n_ret;
-  }
-
-  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  LOG(L_WARNING) << "remove listen message "<<p_tcp->get_resp_type();
-  return p_tcp->get_resp_type() == TYPE_SUCCEED
-         ? VZNETDP_SUCCEED : VZNETDP_FAILURE;
+  n_ret = DpClient_HdlRemoveListenMessage(p_tcp, method_set, set_size);
+  return n_ret;
 }
 
 EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
@@ -253,8 +230,8 @@ EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
 
   p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
   LOG(L_WARNING) << "send message" << p_tcp->get_resp_type();
-  return p_tcp->get_resp_type() == TYPE_SUCCEED
-         ? VZNETDP_SUCCEED : VZNETDP_FAILURE;
+  return p_tcp->get_resp_type() == VZNETDP_FAILURE
+         ? VZNETDP_FAILURE : VZNETDP_SUCCEED;
 }
 
 EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
@@ -288,8 +265,8 @@ EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
     LOG(L_WARNING) << "not recv response.";
     return VZNETDP_FAILURE;
   }
-  return p_tcp->get_resp_type() == TYPE_SUCCEED
-         ? VZNETDP_SUCCEED : VZNETDP_FAILURE;
+  return p_tcp->get_resp_type() == VZNETDP_FAILURE
+         ? VZNETDP_FAILURE : VZNETDP_SUCCEED;
 }
 
 EXPORT_DLL int DpClient_SendDpReply(const char    *method,
@@ -317,8 +294,8 @@ EXPORT_DLL int DpClient_SendDpReply(const char    *method,
 
   p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
   LOG(L_WARNING) << "send replay "<<p_tcp->get_resp_type();
-  return p_tcp->get_resp_type() == TYPE_SUCCEED
-         ? VZNETDP_SUCCEED : VZNETDP_FAILURE;
+  return p_tcp->get_resp_type() == VZNETDP_FAILURE
+         ? VZNETDP_FAILURE : VZNETDP_SUCCEED;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -333,13 +310,13 @@ EXPORT_DLL void DpClient_ReleasePollHandle(void *p_poll_handle) {
   }
 }
 
-EXPORT_DLL int DpClient_PollAddListenMessage(const void *p_poll_handle,
-                                             const char *method_set[],
-                                             unsigned int set_size) {
+EXPORT_DLL int DpClient_HdlAddListenMessage(const void *p_poll_handle,
+    const char *method_set[],
+    unsigned int set_size) {
   int32 n_ret = VZNETDP_FAILURE;
   CTcpClient* p_tcp = (CTcpClient*)p_poll_handle;
   if (!p_tcp) {
-    LOG(L_ERROR) << "get tls client failed.";
+    LOG(L_ERROR) << "client failed.";
     return VZNETDP_FAILURE;
   }
 
@@ -351,12 +328,39 @@ EXPORT_DLL int DpClient_PollAddListenMessage(const void *p_poll_handle,
     LOG(L_ERROR) << "add message failed " << n_ret;
     return n_ret;
   }
-  LOG(L_WARNING) << "add listen message " << n_ret;
+  // LOG(L_WARNING) << "add listen message " << n_ret;
 
   p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  LOG(L_WARNING) << "add listen message " << p_tcp->get_resp_type();
-  return p_tcp->get_resp_type() == TYPE_SUCCEED
-    ? VZNETDP_SUCCEED : VZNETDP_FAILURE;
+  LOG(L_WARNING) << "add listen message "
+                 << p_tcp->get_resp_type();
+  return p_tcp->get_resp_type() == VZNETDP_FAILURE
+         ? VZNETDP_FAILURE : VZNETDP_SUCCEED;
+}
+
+EXPORT_DLL int DpClient_HdlRemoveListenMessage(const void *p_poll_handle,
+    const char *method_set[],
+    unsigned int set_size) {
+  int32 n_ret = VZNETDP_FAILURE;
+  CTcpClient* p_tcp = (CTcpClient*)p_poll_handle;
+  if (!p_tcp) {
+    LOG(L_ERROR) << "client failed.";
+    return VZNETDP_FAILURE;
+  }
+
+  n_ret = p_tcp->ListenMessage(TYPE_REMOVE_MESSAGE,
+                               method_set,
+                               set_size,
+                               FLAG_REMOVELISTEN_MESSAGE);
+  if (n_ret <= 0) {
+    LOG(L_ERROR) << "remove message failed " << n_ret;
+    return n_ret;
+  }
+
+  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
+  LOG(L_WARNING) << "remove listen message "
+                 << p_tcp->get_resp_type();
+  return p_tcp->get_resp_type() == VZNETDP_FAILURE
+         ? VZNETDP_FAILURE : VZNETDP_SUCCEED;
 }
 
 EXPORT_DLL int DpClient_PollDpMessage(const void              *p_poll_handle,
@@ -371,7 +375,6 @@ EXPORT_DLL int DpClient_PollDpMessage(const void              *p_poll_handle,
     return VZNETDP_FAILURE;
   }
   if (p_tcp->isClose()) {        // ¶Ï¿ªÁ´½Ó
-    delete p_tcp; p_tcp = NULL;
     return VZNETDP_FAILURE;
   }
 

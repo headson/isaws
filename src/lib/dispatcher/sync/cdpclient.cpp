@@ -11,33 +11,32 @@ int32 CClientProcess::HandleRecvPacket(vzconn::VSocket  *p_cli,
                                        const uint8      *p_data,
                                        uint32            n_data,
                                        uint16            n_flag) {
-  LOG(L_WARNING) << "recv packet length " << n_data;
+  //LOG(L_WARNING) << "recv packet length " << n_data;
   if (!p_cli || !p_data || n_data == 0) {
     return -1;
   }
-  
-
-  DpMessage dp_msg;
-  CTcpClient::DecDpMsg(&dp_msg, p_data, n_data);
-
-  CTcpClient *p_tcp = (CTcpClient*)p_cli;
-  LOG(L_INFO) << "message seq "<<dp_msg.id <<"  "<<p_tcp->get_msg_id();
-
-  // 回调,可能再次RunLoop
-  if (p_tcp->callback_) {
-    p_tcp->callback_(&dp_msg, p_tcp->p_usr_arg_);
+  DpMessage *p_msg = CTcpClient::DecDpMsg(p_data, n_data);
+  if (p_msg == NULL) {
+    return -2;
   }
 
-  if (dp_msg.id == p_tcp->get_msg_id()) { // 接收到正确的包,停止接收
-    p_tcp->n_resp_type_ = dp_msg.type;
-    // p_tcp->evt_loop_.LoopExit(NULL);
-    LOG(L_INFO) << "message type "<<p_tcp->n_resp_type_;
+  CTcpClient *p_tcp = (CTcpClient*)p_cli;
+  //LOG(L_INFO) << "message seq "<<p_msg->id <<"  "<<p_tcp->get_msg_id();
+
+  // 在回调中,避免使用同一个socket send数据,造成递归evt loop
+  if (p_tcp->callback_) {
+    p_tcp->callback_(p_msg, p_tcp->p_usr_arg_);
+  }
+
+  if (p_msg->id == p_tcp->get_msg_id()) {  // 接收到正确的包
+    p_tcp->n_resp_type_ = p_msg->type;     // evt_loop判断不为0时退出loop
+    //LOG(L_INFO) << "message type "<<p_tcp->n_resp_type_;
   }
 
   if (n_flag == FLAG_GET_CLIENT_ID
-      || dp_msg.type == TYPE_GET_SESSION_ID) {
-    p_tcp->n_session_id_ = (dp_msg.channel_id << 24);
-    LOG(L_WARNING) << "get session id "<< dp_msg.channel_id;
+      || p_msg->type == TYPE_GET_SESSION_ID) {
+    p_tcp->n_session_id_ = (p_msg->channel_id << 24);
+    LOG(L_WARNING) << "get session id "<< p_msg->channel_id;
   }
 
   p_tcp->n_recv_packet_++;  // 收包计数
@@ -263,7 +262,7 @@ int32 CTcpClient::SendMessage(unsigned char             n_type,
     LOG(L_ERROR) << "create dp msg head failed." << n_dp_msg;
     return VZNETDP_FAILURE;
   }
-  LOG(L_WARNING) << "send message id "<<n_cur_msg_id_;
+  // LOG(L_WARNING) << "send message id "<<n_cur_msg_id_;
 
   // body
   iovec iov[2];
@@ -320,17 +319,30 @@ int CTcpClient::EncDpMsg(DpMessage      *p_msg,
 }
 
 int CTcpClient::DecDpMsg(DpMessage *p_msg, const void *p_data, uint32 n_data) {
-  if (!p_msg || !p_data) {
+  if (!p_msg) {
     return -1;
   }
-
-  if (n_data >= sizeof(DpMessage)) {
-    memcpy(p_msg, p_data, sizeof(DpMessage));
-    p_msg->id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK)
-                ? vzconn::NetworkToHost32(p_msg->id) : p_msg->id;
-    p_msg->data_size = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK)
-                       ? vzconn::NetworkToHost32(p_msg->data_size) : p_msg->data_size;
-    return sizeof(DpMessage);
+  if (!p_data || n_data < sizeof(DpMessage)) {
+    return -2;
   }
-  return -2;
+
+  memcpy(p_msg, p_data, sizeof(DpMessage));
+  p_msg->id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK)
+              ? vzconn::NetworkToHost32(p_msg->id) : p_msg->id;
+  p_msg->data_size = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK)
+                     ? vzconn::NetworkToHost32(p_msg->data_size) : p_msg->data_size;
+  return sizeof(DpMessage);
+}
+
+DpMessage *CTcpClient::DecDpMsg(const void *p_data, uint32 n_data) {
+  if (!p_data || n_data < sizeof(DpMessage)) {
+    return NULL;
+  }
+
+  DpMessage *p_msg = (DpMessage*)p_data;
+  p_msg->id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK)
+              ? vzconn::NetworkToHost32(p_msg->id) : p_msg->id;
+  p_msg->data_size = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK)
+                     ? vzconn::NetworkToHost32(p_msg->data_size) : p_msg->data_size;
+  return p_msg;
 }

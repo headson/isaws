@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 #########################################################################
 
 # Basic environment setting
-SET(BUILD_PROJECT_NAME "vzlogserver")
+SET(BUILD_PROJECT_NAME "vzlogserverapp")
 
 #########################################################################
 #INCLUDE_DIRECTORIES(${LIBVZNET_INCLUDE_DIR})
@@ -50,12 +50,12 @@ MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libvzlogserver.lib
+		libvzlogserver
 		ws2_32.lib
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libvzlogserver.a
+		vzlogserver
 		pthread
 		rt
 	)

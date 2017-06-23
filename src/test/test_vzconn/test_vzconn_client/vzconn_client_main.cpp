@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "vzconn/base/connhead.h"
-#include "vzconn/sync/ctcpclient.h"
 #include "vzconn/async/cevtipcclient.h"
 
 static int i = 0;
