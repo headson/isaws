@@ -39,6 +39,7 @@ int32 CSockRecvData::RecvData(VSocket* p_sock) {
   n_ret = p_sock->Recv(GetWritePtr(), n_wait_len_ - UsedSize());
   if (n_ret > 0) {
     MoveWritePtr(n_ret);
+    LOG(L_INFO) << "recv buffer size "<<n_ret;
   } else {
     n_ret = -1;
   }
@@ -46,7 +47,7 @@ int32 CSockRecvData::RecvData(VSocket* p_sock) {
   return n_ret;
 }
 
-int32 CSockRecvData::ParseSplitData(VSocket* p_sock, bool b_move) {
+int32 CSockRecvData::ParseSplitData(VSocket* p_sock) {
   int32 n_ret = 0;
   if (!p_sock && !p_sock->cli_hdl_ptr_) {
     return -1;
@@ -56,7 +57,7 @@ int32 CSockRecvData::ParseSplitData(VSocket* p_sock, bool b_move) {
     // 解析包头,获取整包数据长度
     uint16 n_flag = 0;
     uint32 n_offset = 0;  // 解析时,发现起始数据无包头,矫正包头的偏移
-    uint32 n_pkg_size = 0;  // 一整包数据长度;head+body
+    int32 n_pkg_size = 0;  // 一整包数据长度;head+body
     n_pkg_size = p_sock->cli_hdl_ptr_->NetHeadParse(GetReadPtr(),
                  UsedSize(),
                  &n_flag);
@@ -76,15 +77,13 @@ int32 CSockRecvData::ParseSplitData(VSocket* p_sock, bool b_move) {
         if (n_ret >= 0) {
           n_ret = n_pkg_size;
         }
-        if (b_move) {
-          MoveReadPtr(n_pkg_size);
-          Recycle(); // 每次移动趋近于移动单位为0
-        }
+        MoveReadPtr(n_pkg_size);
+        Recycle(); // 每次移动趋近于移动单位为0
 
         n_wait_len_ = p_sock->cli_hdl_ptr_->NetHeadSize();
       }
     } else if (n_pkg_size < 0) {
-      LOG(L_ERROR) << "error packet.";
+      LOG(L_ERROR) << "error packet." << (uint32)buffer_;
       n_ret = -1;
     }
   }

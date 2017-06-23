@@ -19,10 +19,10 @@ class CSockRecvData : public CBlockBuffer {
   // 网络接收数据
   int32 RecvData(VSocket* p_sock);
   // 解析分割数据
-  int32 ParseSplitData(VSocket* p_sock, bool b_move=true);
+  int32 ParseSplitData(VSocket* p_sock);
 
  private:
-  uint32  n_wait_len_;  // 等待数据长度
+  int32  n_wait_len_;  // 等待数据长度
 };
 
 class CSockSendData : public CBlockBuffer {

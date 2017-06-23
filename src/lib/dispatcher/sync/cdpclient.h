@@ -9,8 +9,6 @@
 #include "dpclient_c.h"
 #include "vzconn/async/cevttcpclient.h"
 
-namespace dp {
-
 class CClientProcess : public vzconn::CClientInterface {
  public:
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
@@ -37,11 +35,10 @@ class CTcpClient : public vzconn::CEvtTcpClient {
   virtual bool  Open(SOCKET s, bool b_block = false);
 
   int32         RunLoop(uint32 n_timeout);
+  int32         PollRunLoop(uint32 n_timeout);
 
-  void          SetCallback(DpClient_MessageCallback callback,
-                            void *p_usr_arg);
-
-  void          Reset();
+  void          Reset(DpClient_MessageCallback callback,
+                      void *p_usr_arg);
 
  public:
   /* method;add\remove */
@@ -101,6 +98,7 @@ class CTcpClient : public vzconn::CEvtTcpClient {
 
  protected:
   uint32                    n_resp_type_;
+  uint32                    n_recv_packet_;
 
   static const int          MAX_MESSAGE_ID = 0X00FFFFFF;
 
@@ -116,7 +114,5 @@ class CTcpClient : public vzconn::CEvtTcpClient {
                       const void    *p_data,
                       uint32         n_data);
 };
-
-}  // namespace dp
 
 #endif  // LIBDISPATCH_CDPCLIENT_H_

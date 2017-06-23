@@ -13,8 +13,6 @@
 
 typedef struct _TagDpMsg DpMessage;
 
-namespace dp {
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -65,8 +63,17 @@ EXPORT_DLL int DpClient_SendDpReply(const char      *method,
                                     const char      *data,
                                     int              data_size);
 
+///Poll///////////////////////////////////////////////////////////////////
+EXPORT_DLL void *DpClient_CreatePollHandle();
+EXPORT_DLL void  DpClient_ReleasePollHandle(void  *p_poll_handle);
+EXPORT_DLL int   DpClient_PollAddListenMessage(
+  const void  *p_poll_handle,
+  const char   *method_set[],
+  unsigned int  set_size);
+
 // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-EXPORT_DLL int DpClient_PollDpMessage(DpClient_MessageCallback   call_back,
+EXPORT_DLL int DpClient_PollDpMessage(const void  *p_poll_handle,
+                                      DpClient_MessageCallback   call_back,
                                       void                      *user_data,
                                       unsigned int               timeout);
 
@@ -74,7 +81,5 @@ EXPORT_DLL int DpClient_PollDpMessage(DpClient_MessageCallback   call_back,
 #ifdef __cplusplus
 }
 #endif
-
-}  // namespace dp
 
 #endif  // LIBDISPATCH_DPCLIENT_C_H_

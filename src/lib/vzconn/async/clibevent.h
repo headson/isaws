@@ -43,7 +43,7 @@ typedef int32 (*EVT_FUNC)(SOCKET          fd,
 #define EVT_LOOP_NOBLOCK  EVLOOP_NONBLOCK
 ///LOOP////////////////////////////////////////////////////////////////////////
 class EVT_LOOP {
- private:
+ public:
   struct event_base* p_event_;
   bool               b_runging_;   // ÔËÐÐ×´Ì¬
 

@@ -7,8 +7,6 @@
 #include "stdafx.h"
 #include "dispatcher/base/pkghead.h"
 
-namespace dp {
-
 int32 CClientProcess::HandleRecvPacket(vzconn::VSocket  *p_cli,
                                        const uint8      *p_data,
                                        uint32            n_data,
@@ -17,6 +15,7 @@ int32 CClientProcess::HandleRecvPacket(vzconn::VSocket  *p_cli,
   if (!p_cli || !p_data || n_data == 0) {
     return -1;
   }
+  
 
   DpMessage dp_msg;
   CTcpClient::DecDpMsg(&dp_msg, p_data, n_data);
@@ -31,9 +30,7 @@ int32 CClientProcess::HandleRecvPacket(vzconn::VSocket  *p_cli,
 
   if (dp_msg.id == p_tcp->get_msg_id()) { // 接收到正确的包,停止接收
     p_tcp->n_resp_type_ = dp_msg.type;
-    if (p_tcp->c_send_data_.UsedSize() <= 0) { // 有数据没发送完,暂时不退出
-      p_tcp->evt_loop_.LoopExit(NULL);
-    }
+    // p_tcp->evt_loop_.LoopExit(NULL);
     LOG(L_INFO) << "message type "<<p_tcp->n_resp_type_;
   }
 
@@ -42,6 +39,8 @@ int32 CClientProcess::HandleRecvPacket(vzconn::VSocket  *p_cli,
     p_tcp->n_session_id_ = (dp_msg.channel_id << 24);
     LOG(L_WARNING) << "get session id "<< dp_msg.channel_id;
   }
+
+  p_tcp->n_recv_packet_++;  // 收包计数
   return 0;
 }
 
@@ -56,7 +55,7 @@ CTcpClient::CTcpClient()
   , p_usr_arg_(NULL)
   , n_session_id_(-1)
   , n_message_id_(1) {
-  n_resp_type_        = TYPE_FAILURE;
+  n_resp_type_ = 0;
   evt_loop_.Start();
 }
 
@@ -110,16 +109,18 @@ bool CTcpClient::Open(SOCKET s, bool b_block /*= false*/) {
   return true;
 }
 
-void CTcpClient::Reset() {
-  callback_    = NULL;
-  p_usr_arg_   = NULL;
-
-  n_resp_type_ = 0;
+void CTcpClient::Reset(DpClient_MessageCallback callback,
+                       void *p_usr_arg) {
+  callback_ = callback;
+  p_usr_arg_ = p_usr_arg;
 
   // loop 没在运行,清空标记
   if (!evt_loop_.isRuning()) {
-    c_recv_data_.Clear();
-    c_send_data_.Clear();
+    n_resp_type_   = 0;
+    n_recv_packet_ = 0;
+
+    //c_recv_data_.Clear();
+    //c_send_data_.Clear();
 
     //c_evt_recv_.Stop();
     c_evt_send_.Stop();
@@ -128,19 +129,31 @@ void CTcpClient::Reset() {
 
 int32 CTcpClient::RunLoop(uint32 n_timeout) {
   int32 n_ret = 0;
-  n_ret = evt_loop_.RunLoop(n_timeout);
+  for (uint32 i = 0; i < n_timeout/10; i++) {
+    n_ret = evt_loop_.RunLoop(10);
+    if (get_resp_type() != 0) {
+      break;
+    }
+  }
   return n_ret;
 }
 
-void CTcpClient::SetCallback(DpClient_MessageCallback callback, void *p_usr_arg) {
-  callback_ = callback;
-  p_usr_arg_ = p_usr_arg;
+int32 CTcpClient::PollRunLoop(uint32 n_timeout) {
+  int32 n_ret = 0;
+  for (uint32 i = 0; i < n_timeout / 10; i++) {
+    n_ret = evt_loop_.RunLoop(10);
+    if (n_recv_packet_ > 0) {
+      break;
+    }
+  }
+  return n_ret;
 }
 
 int32 CTcpClient::ListenMessage(uint8        e_type,
                                 const char  *method_set[],
                                 unsigned int set_size,
                                 uint16       n_flag) {
+  Reset(NULL, NULL);
   if (isOpen()) {
     // 需写数据大小
     uint32 n_data = sizeof(DpMessage);
@@ -259,8 +272,7 @@ int32 CTcpClient::SendMessage(unsigned char             n_type,
   iov[1].iov_base = (void*)p_data;
   iov[1].iov_len = n_data;
 
-  Reset();
-  SetCallback(call_back, user_data);
+  Reset(call_back, user_data);
   int32 n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "async write failed " << n_dp_msg + n_data;
@@ -322,5 +334,3 @@ int CTcpClient::DecDpMsg(DpMessage *p_msg, const void *p_data, uint32 n_data) {
   }
   return -2;
 }
-
-}  // namespace dp

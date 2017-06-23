@@ -97,7 +97,9 @@ int main(int argc, char* argv[]) {
   srand((unsigned int)time(NULL));
   srandom((unsigned int)time(NULL));
 #endif
-  VZ_PRINT("%s %s\n", __TIME__, __DATE__);
+  system("killall watchdog");
+
+  VZ_ERROR("applet compile time: %s %s\n", __TIME__, __DATE__);
   memset(k_pro_heart, 0, sizeof(k_pro_heart));
 
   int ret = 0;
@@ -127,7 +129,7 @@ int main(int argc, char* argv[]) {
       n_recv_port = atoi(optarg);
       break;
 
-    case 's':   // 配置转发服务器地址
+    case 's':   // 日志存储路径
     case 'S': {
       memset(s_log_path, 0, 64);
       strncpy(s_log_path, optarg, 64);
@@ -188,6 +190,17 @@ int main(int argc, char* argv[]) {
 }
 
 /***static function******************************************************/
+unsigned int get_sys_sec() {
+#ifdef WIN32
+  return (unsigned int)(GetTickCount()/1000);
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (unsigned int )ts.tv_sec;
+#endif
+  return 0;
+}
+
 /*初始化共享内存*/
 int InitShareParam(const char*    ip,
                    unsigned short port,
@@ -269,7 +282,8 @@ int InitMonitorModule(const char* s_path) {
           n_timeout = atoi(p_desc + 1);
           if (s_app_name[0] == '\0' ||
               s_descrebe[0] =='\0' ||
-              n_timeout <= 0) {
+              n_timeout < 5 || n_timeout > 80) {
+            VZ_ERROR("get a error config %s.\n", s_line);
             break;
           }
 
@@ -288,7 +302,7 @@ int InitMonitorModule(const char* s_path) {
           if (b_find == false) {
             k_pro_heart[i].n_mark = DEF_TAG_MARK;
             k_pro_heart[i].n_timeout = n_timeout;
-            k_pro_heart[i].last_heartbeat = time(NULL);
+            k_pro_heart[i].last_heartbeat = get_sys_sec();
             strncpy(k_pro_heart[i].s_app_name, s_app_name, DEF_PROCESS_NAME_MAX);
             strncpy(k_pro_heart[i].s_descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
             VZ_ERROR("add module %s-%s-%d.\n",
@@ -360,7 +374,7 @@ int callback_receive(SOCKET             sock,
 
 /*超时回调*/
 int callback_timeout() {
-  time_t n_now = time(NULL);
+  time_t n_now = get_sys_sec();
   static time_t n_last = n_now;
   if ((n_now - n_last) > 1) {  // 1S检查一次
     // 进程超时检查
@@ -369,9 +383,9 @@ int callback_timeout() {
           && k_pro_heart[i].s_app_name[0] != '\0') {
         unsigned int n_diff_time = abs(n_now - k_pro_heart[i].last_heartbeat);
         if (n_diff_time > k_pro_heart[i].n_timeout) {
-          if (k_en_watchdog) {
-            OnModuleLostHeartbeat(n_now);
-          }
+          //if (k_en_watchdog) {
+          OnModuleLostHeartbeat(n_now);
+          //}
 
           memset(&k_pro_heart[i], 0, sizeof(k_pro_heart[i]));
           break;
@@ -411,7 +425,10 @@ int WatchdogProcess(const char* s_msg, unsigned int n_msg) {
                  s_descrebe, DEF_USER_DESCREBE_MAX)       // 描述符
         && !strncmp(k_pro_heart[i].s_app_name,
                     s_app_name, DEF_PROCESS_NAME_MAX)) {  // 进程名
-      k_pro_heart[i].last_heartbeat = time(NULL);
+      if (5 <= n_timeout && n_timeout <= 80) {
+        k_pro_heart[i].n_timeout = n_timeout;
+      }
+      k_pro_heart[i].last_heartbeat = get_sys_sec();
       return 0;
     }
 
@@ -432,7 +449,7 @@ int WatchdogProcess(const char* s_msg, unsigned int n_msg) {
   strncpy(k_pro_heart[n_empty].s_app_name, s_app_name, DEF_PROCESS_NAME_MAX);
   strncpy(k_pro_heart[n_empty].s_descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
   k_pro_heart[n_empty].n_timeout      = n_timeout;
-  k_pro_heart[n_empty].last_heartbeat = time(NULL);
+  k_pro_heart[n_empty].last_heartbeat = get_sys_sec();
   VZ_PRINT("%s %s register.\n", s_app_name, s_descrebe);
   return 0;
 }
@@ -464,9 +481,9 @@ int OnModuleLostHeartbeat(time_t n_now) {
   for (int j = 0; j < DEF_PER_DEV_PROCESS_MAX; j++) {
     if (k_pro_heart[j].n_mark == DEF_TAG_MARK
         && k_pro_heart[j].s_app_name[0] != '\0') {
-      char *p_fmt = "--%s-%s[%d]";
+      char *p_fmt = (char*)"--%s-%s[%d]";
       if (n_1_log == n_log) {  // 只有开始数据,第一包不包含"--"
-        p_fmt = "%s-%s[%d]";
+        p_fmt = (char*)"%s-%s[%d]";
       }
       n_log += snprintf(s_log + n_log, DEF_LOG_MAX_SIZE - n_log,
                         p_fmt,
@@ -482,11 +499,13 @@ int OnModuleLostHeartbeat(time_t n_now) {
   k_wdg_file.Write(s_log, n_log);
   k_wdg_file.StartRecord("watchdog");
 
-  // 日志文件转存
-  k_log_file.OnModuleLostHeartbeat(s_log, n_log);
-
-  // 重启设备
-  system("reboot");
+  // 使能看门狗
+  if (k_en_watchdog) {
+    // 日志文件转存
+    k_log_file.OnModuleLostHeartbeat(s_log, n_log);
+    // 重启设备
+    system("reboot");
+  }
   return 0;
 }
 

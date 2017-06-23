@@ -94,3 +94,50 @@ int32 CMCastSocket::OnRecv() {
   return n_ret;
 }
 
+#if 0
+int BroadcastInfo::SendUdpData(char* center_ip, int port,  char* data,
+      int len, unsigned int our_ip, int our_port, int is_multicast) {
+  int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (socket_fd <0) {return -1;}
+
+  struct  sockaddr_in address;
+
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = inet_addr(center_ip);
+  address.sin_port = htons(port);
+
+  struct  sockaddr_in our_addr;
+  our_addr.sin_family = AF_INET;
+  our_addr.sin_addr.s_addr = our_ip;
+  our_addr.sin_port = htons(our_port);
+  if (bind(socket_fd,  (struct sockaddr *) &our_addr,
+           sizeof(struct sockaddr_in)) == -1) {
+    LOG(L_ERROR) << "Bind error";
+    close(socket_fd);
+    return -1;
+  }
+
+  if (is_multicast) {
+    u_char ttl = 1;
+    int ret = setsockopt(socket_fd,  IPPROTO_IP,  IP_MULTICAST_TTL,  &ttl,
+                         sizeof(ttl));
+    if (ret < 0) {
+      LOG(L_ERROR) << "Setsockopt IP_MULTICAST_TTL fall:" << strerror(errno);
+    }
+
+    u_char loop = 0;
+    ret = setsockopt(socket_fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop,
+      sizeof(loop));
+    if (ret < 0) {
+      LOG(L_ERROR) << "Setsockopt IP_MULTICAST_LOOP fall:" << strerror(errno);
+    }
+  }
+
+  int ret = sendto(socket_fd,  data,  len,  0, (struct sockaddr*)&address,
+                   sizeof(struct sockaddr));
+  close(socket_fd);
+  return ret;
+}
+#endif
+
+

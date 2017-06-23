@@ -28,7 +28,7 @@ bool Session::StopSession() {
 }
 
 bool Session::HandleSessionMessage(const DpMessage *dmp,
-                                   const char *data,
+                                   const uint8 *data,
                                    int size,
                                    int flag) {
   bool b_ret = false;
@@ -49,74 +49,76 @@ bool Session::HandleSessionMessage(const DpMessage *dmp,
 }
 
 bool Session::ProcessGetSessionIdMessage(const DpMessage *dmp) {
-  memcpy(&dmp_, dmp, sizeof(DpMessage));
-  dmp_.channel_id = session_id_;
-  if (session_interface_) {
-    session_interface_->AsyncWrite(this, vz_socket_, &dmp_, NULL, 0);
-  }
-  return true;
+  return ReplyDpMessage(dmp, dmp->type, session_id_);
 }
 
 bool Session::ProcessAddListenMessage(const DpMessage *dmp,
-                                      const char *data,
+                                      const uint8 *data,
                                       int size) {
   for (int i = 0; i < size; i+= MAX_METHOD_SIZE) {
-    AddListenMessage(data + i);
+    AddListenMessage((const char *)data + i);
   }
-  if (session_interface_) {
-    memcpy(&dmp_, dmp, sizeof(DpMessage));
-    dmp_.type = TYPE_SUCCEED;
-    session_interface_->AsyncWrite(this, vz_socket_, &dmp_, NULL, 0);
-  }
-  return true;
+  return ReplyDpMessage(dmp, TYPE_SUCCEED, dmp->channel_id);
 }
 
 bool Session::ProcessRemoveListenMessage(const DpMessage *dmp,
-    const char *data,
+    const uint8 *data,
     int size) {
   for (int i = 0; i < size; i+= MAX_METHOD_SIZE) {
-    RemoveListenMessage(data + i);
+    RemoveListenMessage((const char *)data + i);
   }
-  if (session_interface_) {
-    memcpy(&dmp_, dmp, sizeof(DpMessage));
-    dmp_.type = TYPE_SUCCEED;
-    session_interface_->AsyncWrite(this, vz_socket_, &dmp_, NULL, 0);
-  }
-  return true;
+  return ReplyDpMessage(dmp, TYPE_SUCCEED, dmp->channel_id);
 }
 
 bool Session::ProcessDpMessage(const DpMessage *dmp,
-                               const char *data,
+                               const uint8 *data,
                                int size) {
   if (session_interface_ == NULL) {
     return false;
   }
-
-  bool b_send = false;
-  if (dmp->type == TYPE_REPLY) {
+  if (dmp->type == TYPE_REPLY) { // TYPE_REPLY的method没改变,也会被worker捕获
+    LOG(L_INFO) << "pause";
+  }
+  
+  if (dmp->type == TYPE_REPLY) {  // 当worker和reply不是同一个SOCKET,就来死循环了
     // 回执类型的消息,通过session id去查找对应session
     uint32 id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK) ?
-                vzconn::NetworkToHost32(dmp->id) : dmp->id;
+      vzconn::NetworkToHost32(dmp->id) : dmp->id;
+
+    LOG(L_WARNING) << "type " << dmp->type
+      << " session id " << session_id_
+      << " msg session id " << GET_CLIENT_ID(id);
     // 如果这个client_id与当前session一样，那么就直接回复这个消息
     if (session_id_ == GET_CLIENT_ID(id)) {
       if (session_interface_) {
         session_interface_->AsyncWrite(this, vz_socket_, dmp, data, size);
-        b_send = true;
+        return true;
       }
     }
-  } else  {
+  } else {
     // 小数据量查找，不需要考虑太多的性能因素在里面
     for (int i = 0; i < cur_pos_; i++) {
       if (strncmp(listen_messages_[i], dmp->method, MAX_METHOD_SIZE) == 0) {
         if (session_interface_) {
           session_interface_->AsyncWrite(this, vz_socket_, dmp, data, size);
         }
-        b_send = true;
-        break;
+        return true;
       }
     }
   }
-  return b_send;
+  return false;
+}
+
+bool Session::ReplyDpMessage(const DpMessage *dmsg, uint8 type, uint8 channel) {
+  if (session_interface_) {
+    memcpy(&dmp_, dmsg, sizeof(DpMessage));
+    dmp_.channel_id = session_id_;
+    dmp_.type       = type;
+    session_interface_->AsyncWrite(this, vz_socket_, &dmp_, NULL, 0);
+    LOG(L_WARNING) << "send reply message";
+    return true;
+  }
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -32,20 +32,21 @@ class DpServer : public vzconn::CTcpServerInterface,
   virtual bool AsyncWrite(Session *session,
                           vzconn::VSocket *vz_socket,
                           const DpMessage *dmp,
-                          const char *data, int size);
+                          const uint8 *data, int size);
   virtual void OnSessionError(Session *session, vzconn::VSocket *vz_socket);
 
  private:
-  bool AddSession(uint32 n_idx, Session *session, vzconn::VSocket *socket);
+  uint8 GetNewSessionId();
+  bool AddSession(uint8 n_idx, Session *session, vzconn::VSocket *socket);
   bool RemoveBySession(Session *session);
   bool RemoveBySocket(vzconn::VSocket *socket);
   Session *FindSessionBySocket(vzconn::VSocket *socket);
   vzconn::VSocket *FindSocketBySession(Session *session);
 
  private:
-  bool DispatcherSession(Session *session,
+  uint32 DispatcherSession(Session *session,
                          const DpMessage *dmsg,
-                         const char *data,
+                         const uint8 *data,
                          uint32 data_size);
  private:
   struct SessionSocketPair {

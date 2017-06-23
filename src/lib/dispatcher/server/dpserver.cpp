@@ -36,30 +36,20 @@ bool DpServer::StopDpServer() {
 bool DpServer::HandleNewConnection(vzconn::VSocket *p_srv,
                                    vzconn::VSocket *new_sock) {
   // 找到可用index
-  uint32 n_index = 0;
-  for (n_index = 0; n_index < MAX_SESSION_SIZE; n_index++) {
-    if (session_socket_map_[n_index].session == NULL
-        || session_socket_map_[n_index].socket == NULL) {
-      break;
-    }
+  uint8 session_id = GetNewSessionId();
+  if (session_id > MAX_SESSION_SIZE) {
+    LOG(L_ERROR) << "Failure to get new session id, reject this connect";
+    return false;
   }
-
   //
-  if (n_index < MAX_SESSION_SIZE) {
-    Session *session = new Session((unsigned char)n_index,
-                                   new_sock,
-                                   this);
-    if (!AddSession(n_index, session, new_sock)) {
-      LOG(L_ERROR) << "Failure to add session";
-      return false;
-    }
-    LOG(L_WARNING) << "new session " << (uint32)session
-                   << " connection " << (uint32)new_sock;
-    return true;
+  Session *session = new Session(session_id, new_sock, this);
+  if (!AddSession(session_id, session, new_sock)) {
+    LOG(L_ERROR) << "Failure to add session";
+    return false;
   }
-
-  LOG(L_ERROR) << "have no session to use.";
-  return false;
+  LOG(L_INFO) << "new session " << (uint32)session
+              << " connection " << (uint32)new_sock;
+  return true;
 }
 
 void DpServer::HandleServerClose(vzconn::VSocket *p_srv) {
@@ -70,75 +60,74 @@ int32 DpServer::HandleRecvPacket(vzconn::VSocket *p_cli,
                                  const uint8   *p_data,
                                  uint32         n_data,
                                  uint16         n_flag) {
+
   const DpMessage *dmsg = (const DpMessage *)(p_data);
 
   Session *session = FindSessionBySocket(p_cli);
-  LOG(L_WARNING) << "recv packet length " << n_data
-                 << " type " << dmsg->type
-                 << " id " << (int32)(dmsg->id & 0xff)
-                 << " session connection " << (uint32)session->vz_socket_
-                 << " connection " << (uint32)p_cli;
+  LOG(L_INFO) << "recv packet length " << n_data
+              << " type " << dmsg->type
+              << " id " << vzconn::NetworkToHost32(dmsg->id) 
+              << " session connection " << (uint32)session->vz_socket_
+              << " connection " << (uint32)p_cli;
   if (session == NULL) {
     LOG(L_ERROR) << "No session Handle";
   }
-  if (dmsg->type == TYPE_MESSAGE
-      || dmsg->type == TYPE_REQUEST
-      || dmsg->type == TYPE_REPLY) {
-    // 分发处理
-    DispatcherSession(session,
-                      dmsg,
-                      (const char *)p_data + sizeof(DpMessage),
-                      n_data - sizeof(DpMessage));
-  } else {
+  //if (dmsg->type == TYPE_MESSAGE
+  //    || dmsg->type == TYPE_REQUEST
+  //    || dmsg->type == TYPE_REPLY) {
+  //  // 分发处理
+  //} else {
+  //}
+  if (dmsg->type == TYPE_GET_SESSION_ID
+      || dmsg->type == TYPE_ADD_MESSAGE
+      || dmsg->type == TYPE_REMOVE_MESSAGE) {
     // 自处理消息
     session->HandleSessionMessage(dmsg,
-                                  (const char *)p_data + sizeof(DpMessage),
+                                  p_data + sizeof(DpMessage),
                                   n_data - sizeof(DpMessage),
                                   0);
+  } else {
+    uint32 handler_size = DispatcherSession(session,
+                                            dmsg,
+                                            p_data + sizeof(DpMessage),
+                                            n_data - sizeof(DpMessage));
+    if (dmsg->type == TYPE_REPLY || dmsg->type == TYPE_MESSAGE
+        || (dmsg->type == TYPE_REQUEST && handler_size == 0)) {
+      if(handler_size) {
+        session->ReplyDpMessage(dmsg, TYPE_SUCCEED, dmsg->channel_id);
+      } else {
+        session->ReplyDpMessage(dmsg, TYPE_FAILURE, dmsg->channel_id);
+      }
+    }
   }
   return 0;
 }
 
-bool DpServer::DispatcherSession(Session *session,
-                                 const DpMessage *dmsg,
-                                 const char *data,
-                                 uint32 data_size) {
-  bool b_send = false;
-  for (int i = 0; i < MAX_SESSION_SIZE; i++) {
-    if (session && session != session_socket_map_[i].session) {  // 去除自身
-      // 去除不存在session
-      if (session_socket_map_[i].session == NULL
-          || session_socket_map_[i].socket == NULL) {
-        memset(&session_socket_map_[i], 0, sizeof(SessionSocketPair));
-        continue;
-      }
+uint32 DpServer::DispatcherSession(Session *session,
+                                   const DpMessage *dmsg,
+                                   const uint8 *data,
+                                   uint32 data_size) {
 
+  LOG(L_INFO) << "send packet length " << data_size
+    << " type " << dmsg->type
+    << " id " << vzconn::NetworkToHost32(dmsg->id)
+    << "  " << (dmsg->id & 0xff);
+
+  uint32 handler_size = 0;
+  for (int i = 0; i < MAX_SESSION_SIZE; i++) {
+    if (session && session != session_socket_map_[i].session
+        && session_socket_map_[i].session != NULL) {  // 去除自身
       // 判断发送
       if(session_socket_map_[i].session->HandleSessionMessage(
             dmsg, data, data_size, 0)) {
-        //LOG(L_WARNING) << "send session index " << i
-        //               << " method "<< dmsg->method
-        //               << " message id " << (uint32)(dmsg->id & 0xff)
-        //               << " message type " << (int32)dmsg->type;
-        b_send = true;
+        handler_size++;
         if (dmsg->type != TYPE_MESSAGE) {
-          break;
+          return handler_size;
         }
       }
     }
   }
-
-  if (dmsg->type == TYPE_REQUEST && b_send == true) {
-    return b_send;
-  }
-  DpMessage dp_msg;
-  memcpy(&dp_msg, dmsg, sizeof(DpMessage));
-  dp_msg.type = b_send ? TYPE_SUCCEED : TYPE_FAILURE;
-  b_send = AsyncWrite(session, session->GetSocket(), &dp_msg, NULL, 0);
-  if (b_send == false) {
-    LOG(L_ERROR) << "send failed.";
-  }
-  return b_send;
+  return handler_size;
 }
 
 int32 DpServer::HandleSendPacket(vzconn::VSocket *p_cli) {
@@ -152,7 +141,7 @@ void  DpServer::HandleClose(vzconn::VSocket *p_cli) {
 bool DpServer::AsyncWrite(Session *session,
                           vzconn::VSocket *vz_socket,
                           const DpMessage *dmp,
-                          const char *data, int size) {
+                          const uint8 *data, int size) {
   //vzconn::CEvtTcpClient * client = static_cast<vzconn::CEvtTcpClient*>(vz_socket);
   //if (data) {
   //  client->AsyncWrite(data, size, 0);
@@ -176,7 +165,20 @@ void DpServer::OnSessionError(Session *session, vzconn::VSocket *vz_socket) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-bool DpServer::AddSession(uint32 n_idx, Session *session, vzconn::VSocket *socket) {
+uint8 DpServer::GetNewSessionId() {
+  for (int i = 0; i < MAX_SESSION_SIZE; i++) {
+    if (session_socket_map_[i].session == NULL
+        && session_socket_map_[i].socket == NULL) {
+      return (uint8)i;
+    }
+  }
+  LOG(L_ERROR) << "Failure to get new session id";
+  return MAX_SESSION_SIZE + 1;
+}
+
+bool DpServer::AddSession(uint8 n_idx,
+                          Session *session,
+                          vzconn::VSocket *socket) {
   LOG(L_INFO) << "Add session ";
   if (session == NULL || socket == NULL) {
     return false;
