@@ -26,8 +26,8 @@ class VShmVideo {
   VShmVideo();
   virtual ~VShmVideo();
 
-  int32 Create(const uint8 *s_name, uint32 n_shm_size);
-  int32 Open(const uint8 *s_name, uint32 n_shm_size);
+  int32 Create(const uint8 *s_path, uint32 n_shm_size);
+  int32 Open(const uint8 *s_path, uint32 n_shm_size);
 
   int32 Read(int8* p_data, uint32 n_data, struct timeval* p_tm);
   int32 Write(const int8* p_data, uint32 n_data, const struct timeval* p_tm);

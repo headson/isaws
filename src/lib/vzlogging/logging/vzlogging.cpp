@@ -632,7 +632,7 @@ int InitVzLogging(int argc, char* argv[]) {
 
   // 进程名
   memcpy(vzlogging::k_app_name, vzlogging::GetFileName(argv[0]), 31);
-  VZ_ERROR("this applet name is: %s, compile time %s %s.\n",
+  VZ_ERROR("%s, compile time %s %s.\n",
            vzlogging::k_app_name, __DATE__, __TIME__);
 
   // 传参数

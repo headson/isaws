@@ -379,6 +379,6 @@ EXPORT_DLL int DpClient_PollDpMessage(const void              *p_poll_handle,
   }
 
   p_tcp->Reset(call_back, user_data);
-  p_tcp->PollRunLoop(DEF_TIMEOUT_MSEC);
+  p_tcp->PollRunLoop(timeout);
   return VZNETDP_SUCCEED;
 }

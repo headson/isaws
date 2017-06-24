@@ -11,6 +11,9 @@
 #define EXPORT_DLL
 #endif
 
+#define DEF_DP_IP   "127.0.0.1"
+#define DEF_DP_PORT 5291
+
 typedef struct _TagDpMsg DpMessage;
 
 #ifdef __cplusplus

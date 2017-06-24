@@ -1,7 +1,7 @@
 /* ===========================================================================
 * @path $(IPNCPATH)\sys_adm\system_server
 *
-* @desc 
+* @desc
 * .
 * Copyright (c) Appro Photoelectron Inc.  2008
 *
@@ -16,27 +16,24 @@
 #ifndef __NET_CONFIG_H_
 #define __NET_CONFIG_H_
 
-
+#ifdef _LINUX
 #include <paths.h>
 
-#define RESOLV_CONF				"/etc/resolv.conf"
-//#define RESOLV_CONF				"/var/dhcpc/resolv.conf"
-#define PROCNET_ROUTE_PATH		"/proc/net/route"
+#define RESOLV_CONF           "/etc/resolv.conf"
+#define PROCNET_ROUTE_PATH    "/proc/net/route"
 /**
 * @brief Structure to save network status
 */
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 struct NET_CONFIG {
-	unsigned char mac[6];
-	in_addr_t	ifaddr;
-	in_addr_t	netmask;
-	in_addr_t	gateway;
-	in_addr_t	dns;
+  unsigned char mac[6];
+  in_addr_t	ifaddr;
+  in_addr_t	netmask;
+  in_addr_t	gateway;
+  in_addr_t	dns;
 };
 
 //int net_set_flag(const char *ifname, short flag);
@@ -70,6 +67,6 @@ struct in_addr net_get_ip(int skfd, const char *ifname);
 }
 #endif
 
-
+#endif  // _LINUX
 
 #endif // __NET_CONFIG_H_

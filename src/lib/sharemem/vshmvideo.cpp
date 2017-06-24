@@ -18,8 +18,8 @@ VShmVideo::~VShmVideo() {
   v_shm_.Close();
 }
 
-int32 VShmVideo::Create(const uint8 *s_name, uint32 n_shm_size) {
-  int32 n_ret = Open(s_name, n_shm_size);
+int32 VShmVideo::Create(const uint8 *s_path, uint32 n_shm_size) {
+  int32 n_ret = Open(s_path, n_shm_size);
   if (n_ret == 0) {
     v_sem_w_.Signal();
     v_sem_r_.Signal();
@@ -27,25 +27,25 @@ int32 VShmVideo::Create(const uint8 *s_name, uint32 n_shm_size) {
   return n_ret;
 }
 
-int32 VShmVideo::Open(const uint8 *s_name, uint32 n_shm_size) {
+int32 VShmVideo::Open(const uint8 *s_path, uint32 n_shm_size) {
   int32 n_ret = 0;
 
   // ¹²ÏíÄÚ´æ
-  n_ret = v_shm_.Open((ShmKey)s_name, n_shm_size);
+  n_ret = v_shm_.Open((ShmKey)s_path, n_shm_size);
   if (n_ret != 0) {
     printf("shm open failed.%d.", n_ret);
     return n_ret;
   }
 
   char sem_name[64] = {0};
-  snprintf(sem_name, 63, "%s_W", s_name);
+  snprintf(sem_name, 63, "%s_W", s_path);
   n_ret = v_sem_w_.Open((SemKey)sem_name);
   if (n_ret != 0) {
     printf("sem open failed.%d.\n", n_ret);
     return n_ret;
   }
 
-  snprintf(sem_name, 63, "%s_R", s_name);
+  snprintf(sem_name, 63, "%s_R", s_path);
   n_ret = v_sem_r_.Open((SemKey)sem_name);
   if (n_ret != 0) {
     printf("sem open failed.%d.\n", n_ret);

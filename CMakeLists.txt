@@ -27,20 +27,24 @@ LINK_DIRECTORIES(${VZPROJECT_LIBRARY_DIR})
 ADD_SUBDIRECTORY(cmake_local)
 
 ## add third sdk
-#ADD_SUBDIRECTORY(src/third_sdk/live555)
+ADD_SUBDIRECTORY(src/third_part/json)
+#ADD_SUBDIRECTORY(src/third_part/live555)
 
+ADD_SUBDIRECTORY(src/lib)
+ADD_SUBDIRECTORY(src/lib/vzlogging)
+ADD_SUBDIRECTORY(src/lib/web)
 ADD_SUBDIRECTORY(src/lib/base)
 ADD_SUBDIRECTORY(src/lib/vzconn)
 ADD_SUBDIRECTORY(src/lib/vzconn/multicast)
 ADD_SUBDIRECTORY(src/lib/sharemem)
-ADD_SUBDIRECTORY(src/lib/vzlogging)
+ADD_SUBDIRECTORY(src/lib/syscfg)
 ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/platform/imx6q)
 #ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
 
-
 ## add run
+ADD_SUBDIRECTORY(src/run/web_srv)
 ADD_SUBDIRECTORY(src/run/vzlogserver)
 ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/hi3516a)
