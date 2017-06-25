@@ -25,6 +25,8 @@ MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
     ${CMAKE_CURRENT_SOURCE_DIR}/base/mongoose.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/mongoose.c
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/v7.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/v7.c
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_handle.h
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_login.cpp
@@ -33,6 +35,8 @@ SET(PROJECT_SOURCE_LIST
 SOURCE_GROUP(base FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/base/mongoose.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/mongoose.c
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/v7.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/v7.c
 )
 
 SOURCE_GROUP(process FILES

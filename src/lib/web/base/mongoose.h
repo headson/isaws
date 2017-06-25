@@ -2869,7 +2869,7 @@ struct {								\
 #endif
 
 #ifndef MG_ENABLE_HTTP_CGI
-#define MG_ENABLE_HTTP_CGI 1
+#define MG_ENABLE_HTTP_CGI 0
 #endif
 
 #ifndef MG_ENABLE_HTTP_SSI
@@ -2881,7 +2881,7 @@ struct {								\
 #endif
 
 #ifndef MG_ENABLE_HTTP_STREAMING_MULTIPART
-#define MG_ENABLE_HTTP_STREAMING_MULTIPART 1
+#define MG_ENABLE_HTTP_STREAMING_MULTIPART 0
 #endif
 
 #ifndef MG_ENABLE_HTTP_WEBDAV
