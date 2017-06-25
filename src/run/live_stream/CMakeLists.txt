@@ -7,11 +7,11 @@ SET(BUILD_PROJECT_NAME "live_stream")
 #########################################################################
 INCLUDE_DIRECTORIES(
 	${CMAKE_CURRENT_SOURCE_DIR}
-	${PROJECT_SOURCE_DIR}/src/third_sdk/
-	${PROJECT_SOURCE_DIR}/src/third_sdk/live555/groupsock/include
-	${PROJECT_SOURCE_DIR}/src/third_sdk/live555/liveMedia/include
-	${PROJECT_SOURCE_DIR}/src/third_sdk/live555/UsageEnvironment/include
-	${PROJECT_SOURCE_DIR}/src/third_sdk/live555/BasicUsageEnvironment/include
+	${PROJECT_SOURCE_DIR}/src/third_part/
+	${PROJECT_SOURCE_DIR}/src/third_part/live555/groupsock/include
+	${PROJECT_SOURCE_DIR}/src/third_part/live555/liveMedia/include
+	${PROJECT_SOURCE_DIR}/src/third_part/live555/UsageEnvironment/include
+	${PROJECT_SOURCE_DIR}/src/third_part/live555/BasicUsageEnvironment/include
 )
 
 #########################################################################
@@ -71,8 +71,8 @@ ENDIF()
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		libshm.lib
-		libvzlogging.lib
+		libvzlogging
+		libsharemem
 		BasicUsageEnvironment
 		groupsock
 		liveMedia
@@ -82,8 +82,8 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		libvzlogging.a
-		libshm.a
+		sharemem
+		vzlogging
 		#live555 四个库的顺序不能变
 		libliveMedia.a
 		libgroupsock.a

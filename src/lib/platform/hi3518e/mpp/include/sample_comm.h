@@ -9,6 +9,8 @@
 #ifndef __SAMPLE_COMM_H__
 #define __SAMPLE_COMM_H__
 
+#include <stdio.h>
+
 #include "tw2865.h"
 #include "hi_common.h"
 #include "hi_comm_sys.h"
@@ -183,6 +185,7 @@ typedef struct sample_venc_getstream_s
 {
      HI_BOOL bThreadStart;
      HI_S32  s32Cnt;
+     void*   p_usr_arg;
 }SAMPLE_VENC_GETSTREAM_PARA_S;
 
 typedef struct sample_vi_config_s
@@ -255,7 +258,7 @@ HI_S32 SAMPLE_COMM_VENC_Stop(VENC_GRP VencGrp,VENC_CHN VencChn);
 HI_S32 SAMPLE_COMM_VENC_SnapStart(VENC_GRP VencGrp,VENC_CHN VencChn, SIZE_S *pstSize);
 HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_GRP VencGrp, VENC_CHN VencChn);
 HI_S32 SAMPLE_COMM_VENC_SnapStop(VENC_GRP VencGrp,VENC_CHN VencChn);
-HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt);
+HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt, void* p_usr_arg);
 HI_S32 SAMPLE_COMM_VENC_StopGetStream();
 HI_S32 SAMPLE_COMM_VENC_BindVpss(VENC_GRP GrpChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn);
 HI_S32 SAMPLE_COMM_VENC_UnBindVpss(VENC_GRP GrpChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn);
@@ -298,6 +301,9 @@ HI_S32 SAMPLE_COMM_AUDIO_StartAenc(HI_S32 s32AencChnCnt, PAYLOAD_TYPE_E enType);
 HI_S32 SAMPLE_COMM_AUDIO_StopAenc(HI_S32 s32AencChnCnt);
 HI_S32 SAMPLE_COMM_AUDIO_StartAdec(ADEC_CHN AdChn, PAYLOAD_TYPE_E enType);
 HI_S32 SAMPLE_COMM_AUDIO_StopAdec(ADEC_CHN AdChn);
+
+
+HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_usr_arg);
 
 #ifdef __cplusplus
 #if __cplusplus

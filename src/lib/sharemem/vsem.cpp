@@ -55,37 +55,55 @@ bool VSem::Signal() {
 #include <sys/ipc.h>
 #include <sys/sem.h>
 
-int32 VSem::Open(const SemKey key) {
-  sem_ = sem_open(key, O_CREAT, 0777, 1);
-  if(sem_ == NULL) {
-    sem_ = sem_open(key, O_CREAT, 0777, 1);
-  }
-  if(sem_ == NULL) {
+VSem::VSem()
+  : sem_(-1) {
+}
+
+VSem::~VSem() {
+}
+
+int32_t VSem::Open(const SemKey key) {
+  key_t k = ftok((char*)key, 0);
+  if (k < 0) {
+    LOG_ERROR("ftok failed.\n");
     return -1;
   }
-  LOG_INFO("sem id:0x%0x %s %d\n", sem_, key, k);
+
+  sem_ = semget(k, 1, IPC_CREAT|IPC_EXCL|0666);
+  if(sem_< 0 ) {
+    sem_ = semget(k, 0, 0666);
+  }
+  if(sem_ < 0 ) {
+    LOG(L_ERROR) << "semget failed."<<key;
+    return -1;
+  }
+  LOG_INFO("sem id:%d %d %d\n", sem_, key, k);
   return 0;
 }
 
 bool VSem::IsValid() {
-  if (sem_ == NULL){
+  if (sem_ < 0) {
     return false;
   }
   return true;
 }
 
-int32 VSem::Wait(uint32 timeout) {
-  if (sem_ != NULL) {
-    sem_wait(sem_);
-    return 0;
+int32_t VSem::Wait(uint32_t timeout) {
+  struct sembuf sem_op = {0, -1, 0};
+  sem_op.sem_num = 0;
+  sem_op.sem_flg = IPC_NOWAIT;
+  if( (semop(sem_, &sem_op, 1)) == -1) {
+    return -1;
   }
-  return -1;
+  return 0;
 }
 
 bool VSem::Signal() {
-  if (sem_ != NULL) {
-    sem_post(sem_);
-    return 0;
+  struct sembuf sem_op = {0, 1, 0};
+  sem_op.sem_num = 0;
+  sem_op.sem_flg = IPC_NOWAIT;
+  if( (semop(sem_, &sem_op, 1)) == -1) {
+    return -1;
   }
   return 0;
 }

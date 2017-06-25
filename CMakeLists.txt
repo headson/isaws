@@ -2,6 +2,7 @@
 # cmake ../.. -G "Visual Studio 12 2013"
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3516 -DCMAKE_BUILD_TYPE=Release
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=IMX6Q -DCMAKE_BUILD_TYPE=Release
+# cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3518 -DCMAKE_BUILD_TYPE=Release
 cmake_minimum_required(VERSION 3.6)
 project(isaw_project)
 
@@ -17,6 +18,8 @@ ELSEIF(UNIX)
         INCLUDE(cmake_local/arm_imx6q_environment_settings.cmake)
     ELSEIF(CMAKE_BUILD_PLATFORM MATCHES HI3516)
         INCLUDE(cmake_local/arm_hi3516_environment_settings.cmake)
+    ELSEIF(CMAKE_BUILD_PLATFORM MATCHES HI3518)
+        INCLUDE(cmake_local/arm_hi3518_environment_settings.cmake)
     ENDIF()
 ENDIF()
 
@@ -32,27 +35,29 @@ ADD_SUBDIRECTORY(src/third_part/json)
 
 ADD_SUBDIRECTORY(src/lib)
 ADD_SUBDIRECTORY(src/lib/vzlogging)
-ADD_SUBDIRECTORY(src/lib/web)
+#ADD_SUBDIRECTORY(src/lib/web)
 ADD_SUBDIRECTORY(src/lib/base)
-ADD_SUBDIRECTORY(src/lib/vzconn)
-ADD_SUBDIRECTORY(src/lib/vzconn/multicast)
+#ADD_SUBDIRECTORY(src/lib/vzconn)
+#ADD_SUBDIRECTORY(src/lib/vzconn/multicast)
 ADD_SUBDIRECTORY(src/lib/sharemem)
-ADD_SUBDIRECTORY(src/lib/syscfg)
-ADD_SUBDIRECTORY(src/lib/dispatcher)
+#ADD_SUBDIRECTORY(src/lib/syscfg)
+#ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/platform/imx6q)
+ADD_SUBDIRECTORY(src/lib/platform/hi3518e)
 #ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
 
 ## add run
-ADD_SUBDIRECTORY(src/run/web_srv)
+#ADD_SUBDIRECTORY(src/run/web_srv)
 ADD_SUBDIRECTORY(src/run/vzlogserver)
-ADD_SUBDIRECTORY(src/run/dispatcherserver)
+#ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/hi3516a)
+ADD_SUBDIRECTORY(src/run/hi3518e)
 #ADD_SUBDIRECTORY(src/run/imx6q)
-#ADD_SUBDIRECTORY(src/run/live_stream)
+ADD_SUBDIRECTORY(src/run/live_stream)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_vzlogging)
-ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_client)
-ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_worker)
+#ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_client)
+#ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_worker)
 

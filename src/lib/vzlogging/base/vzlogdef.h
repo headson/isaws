@@ -39,11 +39,11 @@
 #else
 typedef int         SOCKET;
 
-#define DEF_RECORD_PATH     "/mnt/log/system_server_files/"
+#define DEF_RECORD_PATH     "/tmp/"
 #define DEF_LOG_REC_FILE    "logfile"
 #define DEF_WDG_REC_FILE    "watchdog"
 
-#define DEF_WDG_MODULE_FILE "/mnt/usr/module.cfg"
+#define DEF_WDG_MODULE_FILE "/tmp/module.cfg"
 #endif
 
 #ifdef __cplusplus

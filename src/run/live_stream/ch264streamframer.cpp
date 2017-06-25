@@ -2,7 +2,7 @@
 
 #include "GroupsockHelper.hh"
 
-#include "shm/vshmvideo.h"
+#include "sharemem/vshmvideo.h"
 
 // CamH264VideoStreamFramer *********************************************************
 CamH264VideoStreamFramer::CamH264VideoStreamFramer(UsageEnvironment& env,

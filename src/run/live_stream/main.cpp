@@ -1,10 +1,11 @@
 
 #include <stdlib.h>
+#include "stdafx.h"
 
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 
-#include "shm/vshmvideo.h"
+#include "sharemem/vshmvideo.h"
 #include "ch264streamframer.h"
 #include "ch264servermediasubsession.h"
 
@@ -36,7 +37,7 @@ int main(int argc, char** argv) {
     = "Session streamed by \"testOnDemandRTSPServer\"";
 
   VShmVideo v_chm_vdo;
-  v_chm_vdo.Open(sizeof(TAG_SHM_VIDEO));
+  v_chm_vdo.Open((uint8*)DEF_SHM_VIDEO_0, sizeof(TAG_SHM_VIDEO));
 
   {
     char const* s_stream_name = "live";

@@ -2,8 +2,8 @@
 
 #include "GroupsockHelper.hh"
 
-#include "shm/vshmvideo.h"
 #include "ch264streamframer.h"
+#include "sharemem/vshmvideo.h"
 
 H264LiveVideoServerMediaSubsession *H264LiveVideoServerMediaSubsession::createNew(
   UsageEnvironment  &env,

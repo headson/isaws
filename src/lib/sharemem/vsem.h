@@ -33,7 +33,7 @@ class VSem {
 #ifdef WIN32
   HANDLE    sem_;
 #else
-  sem_t*    sem_;
+  int       sem_;
 #endif
 };
 

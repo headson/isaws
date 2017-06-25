@@ -78,19 +78,19 @@ int32 VShm::Open(const ShmKey key, ShmSize size) {
     return -1;
   }
 
-  key_t k = ftok(key, 0);
+  key_t k = ftok((char*)key, 0);
   if (k < 0) {
-    LOG_ERROR("ftok failed.\n");
+    LOG_ERROR("ftok failed %s.\n", key);
     return -1;
   }
 
-  shm_hdl_ = shmget(k, 0, 0);
+  shm_hdl_ = shmget(k, size, IPC_CREAT | 0660);
   if(shm_hdl_ < 0) {
-    shm_hdl_ = shmget(k, size, IPC_CREAT | 0660);
-  }
-  if(shm_hdl_ < 0) {
-    LOG_ERROR("shared memory open failed %s-0x%x.\n", key, k);
-    return -1;
+    shm_hdl_ = shmget(k, 0, 0);
+    if(shm_hdl_ < 0) {
+      LOG_ERROR("shared memory create failed %s-0x%x.\n", key, k);
+      return -1;
+    }
   }
   LOG_INFO("shared memory id:%d %s 0x%x\n", shm_hdl_, key, k);
 

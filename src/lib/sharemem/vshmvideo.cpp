@@ -41,14 +41,14 @@ int32 VShmVideo::Open(const uint8 *s_path, uint32 n_shm_size) {
   snprintf(sem_name, 63, "%s_W", s_path);
   n_ret = v_sem_w_.Open((SemKey)sem_name);
   if (n_ret != 0) {
-    printf("sem open failed.%d.\n", n_ret);
+    printf("sem open failed.%d, %s.\n", n_ret, sem_name);
     return n_ret;
   }
 
   snprintf(sem_name, 63, "%s_R", s_path);
   n_ret = v_sem_r_.Open((SemKey)sem_name);
   if (n_ret != 0) {
-    printf("sem open failed.%d.\n", n_ret);
+    printf("sem open failed.%d, %s.\n", n_ret, sem_name);
     return n_ret;
   }
   return 0;
@@ -67,11 +67,11 @@ int32 VShmVideo::Read(int8* p_data, uint32 n_data, struct timeval* p_tm) {
   TAG_SHM_VIDEO* p_shm = (TAG_SHM_VIDEO*)v_shm_.GetData();
   if (p_shm) { // ╤асеох
 #if 1
-    v_sem_r_.Wait();
-    p_shm->n_read_count++;
-    if (p_shm->n_read_count == 1)
-      v_sem_w_.Wait();
-    v_sem_r_.Signal();
+    //v_sem_r_.Wait();
+    //p_shm->n_read_count++;
+    //if (p_shm->n_read_count == 1)
+    //  v_sem_w_.Wait();
+    //v_sem_r_.Signal();
 
     int n_size = 0;
     if (p_shm->c_tm_capture.tv_sec != p_tm->tv_sec
@@ -84,11 +84,11 @@ int32 VShmVideo::Read(int8* p_data, uint32 n_data, struct timeval* p_tm) {
       p_tm->tv_usec = p_shm->c_tm_capture.tv_usec;
     }
 
-    v_sem_r_.Wait();
-    p_shm->n_read_count--;
-    if (p_shm->n_read_count == 0)
-      v_sem_w_.Signal();
-    v_sem_r_.Signal();
+    //v_sem_r_.Wait();
+    //p_shm->n_read_count--;
+    //if (p_shm->n_read_count == 0)
+    //  v_sem_w_.Signal();
+    //v_sem_r_.Signal();
 #else
     v_sem_w_.Wait();
     int n_size = 0;
@@ -118,7 +118,7 @@ int32 VShmVideo::Write(const int8* p_data, uint32 n_data, const struct timeval* 
     return -1;
   }
 
-  v_sem_w_.Wait();
+  //v_sem_w_.Wait();
 
   TAG_SHM_VIDEO* p_shm = (TAG_SHM_VIDEO*)v_shm_.GetData();
   if (p_shm) {
@@ -130,7 +130,7 @@ int32 VShmVideo::Write(const int8* p_data, uint32 n_data, const struct timeval* 
     p_shm->c_tm_capture.tv_usec = p_tm->tv_usec;
   }
 
-  v_sem_w_.Signal();
+  //v_sem_w_.Signal();
   return 0;
 }
 
