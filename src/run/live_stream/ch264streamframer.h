@@ -1,25 +1,25 @@
 /************************************************************************/
-/* Author      : SoberPeng 2017-06-09
-/* Description :
+/* Author      : Sober.Peng 17-06-26
+/* Description : 
 /************************************************************************/
-#ifndef CH264STREAMFRAMER_H
-#define CH264STREAMFRAMER_H
+#ifndef LIVE_STREAM_CH264STREAMFRAMER_H
+#define LIVE_STREAM_CH264STREAMFRAMER_H
 
 #include "MediaSink.hh"
 #include "H264VideoStreamFramer.hh"
 
 class VShmVideo;
 //*********************************************************************
-class CamH264VideoStreamFramer: public H264VideoStreamFramer {
+class CH264VideoStreamFramer: public H264VideoStreamFramer {
  public:
-  virtual ~CamH264VideoStreamFramer();
+  virtual ~CH264VideoStreamFramer();
 
-  CamH264VideoStreamFramer(
+  CH264VideoStreamFramer(
     UsageEnvironment  &env,
     FramedSource      *inputSource,
     VShmVideo         *p_shm_vdo);
 
-  static CamH264VideoStreamFramer* createNew(
+  static CH264VideoStreamFramer* createNew(
     UsageEnvironment &env,
     FramedSource     *inputSource,
     VShmVideo        *p_shm_vdo);
@@ -34,4 +34,5 @@ class CamH264VideoStreamFramer: public H264VideoStreamFramer {
 // These should be called before each RTPSink is created.
 #define RTP_MAX_FRAME_SIZE    400000
 inline void setRTPSinkBufferSize() { OutPacketBuffer::maxSize = RTP_MAX_FRAME_SIZE; }
-#endif  // CH264STREAMFRAMER_H
+
+#endif  // LIVE_STREAM_CH264STREAMFRAMER_H

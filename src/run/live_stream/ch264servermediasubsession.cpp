@@ -5,14 +5,14 @@
 #include "ch264streamframer.h"
 #include "sharemem/vshmvideo.h"
 
-H264LiveVideoServerMediaSubsession *H264LiveVideoServerMediaSubsession::createNew(
+CH264LiveVideoServerMediaSubsession *CH264LiveVideoServerMediaSubsession::createNew(
   UsageEnvironment  &env,
   Boolean           reuseFirstSource,
   VShmVideo         *p_shm_vdo) {
-  return new H264LiveVideoServerMediaSubsession(env, reuseFirstSource, p_shm_vdo);
+  return new CH264LiveVideoServerMediaSubsession(env, reuseFirstSource, p_shm_vdo);
 }
 
-H264LiveVideoServerMediaSubsession::H264LiveVideoServerMediaSubsession(
+CH264LiveVideoServerMediaSubsession::CH264LiveVideoServerMediaSubsession(
   UsageEnvironment  &env,
   Boolean           reuseFirstSource,
   VShmVideo         *p_shm_vdo)
@@ -20,26 +20,25 @@ H264LiveVideoServerMediaSubsession::H264LiveVideoServerMediaSubsession(
   , p_shm_vdo_(p_shm_vdo) {
 }
 
-H264LiveVideoServerMediaSubsession::~H264LiveVideoServerMediaSubsession() {
+CH264LiveVideoServerMediaSubsession::~CH264LiveVideoServerMediaSubsession() {
 }
 
-FramedSource* H264LiveVideoServerMediaSubsession::createNewStreamSource(
+FramedSource* CH264LiveVideoServerMediaSubsession::createNewStreamSource(
   unsigned,
   unsigned& estBitrate) {
   //estBitrate = 96;
   estBitrate = 1000000; // kbps, estimate
   // Create the video source:
-  return CamH264VideoStreamFramer::createNew(envir(), NULL, p_shm_vdo_);
+  return CH264VideoStreamFramer::createNew(envir(), NULL, p_shm_vdo_);
 }
 
-RTPSink* H264LiveVideoServerMediaSubsession::createNewRTPSink(
-  Groupsock     *rtpGroupsock,
-  unsigned char rtpPayloadTypeIfDynamic,
-  FramedSource  *inputSource) {
+RTPSink* CH264LiveVideoServerMediaSubsession::createNewRTPSink(Groupsock     *rtpGroupsock,
+    unsigned char rtpPayloadTypeIfDynamic,
+    FramedSource  *inputSource) {
   return H264VideoRTPSink::createNew(envir(), rtpGroupsock, 96);
 }
 
-char const* H264LiveVideoServerMediaSubsession::sdpLines() {
+char const* CH264LiveVideoServerMediaSubsession::sdpLines() {
   return fSDPLines =
            "m=video 0 RTP/AVP 96\r\n"
            "c=IN IP4 0.0.0.0\r\n"

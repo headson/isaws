@@ -11,19 +11,19 @@
 #include "FileServerMediaSubsession.hh"
 
 class VShmVideo;
-class H264LiveVideoServerMediaSubsession: public OnDemandServerMediaSubsession {
+class CH264LiveVideoServerMediaSubsession: public OnDemandServerMediaSubsession {
  public:
-  static H264LiveVideoServerMediaSubsession *createNew(
+  static CH264LiveVideoServerMediaSubsession *createNew(
     UsageEnvironment  &env,
     Boolean           reuseFirstSource,
     VShmVideo         *p_shm_vdo);
 
  private:
-  H264LiveVideoServerMediaSubsession(UsageEnvironment &env,
+  CH264LiveVideoServerMediaSubsession(UsageEnvironment &env,
                                      Boolean          reuseFirstSource,
                                      VShmVideo        *p_shm_vdo);
   // called only by createNew();
-  virtual ~H264LiveVideoServerMediaSubsession();
+  virtual ~CH264LiveVideoServerMediaSubsession();
 
  private:
   // redefined virtual functions

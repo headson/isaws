@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     ServerMediaSession* sms = 
       ServerMediaSession::createNew(
       *env, s_stream_name, s_stream_name, descriptionString);
-    sms->addSubsession(H264LiveVideoServerMediaSubsession::createNew(
+    sms->addSubsession(CH264LiveVideoServerMediaSubsession::createNew(
       *env, reuseFirstSource, &v_chm_vdo));
     rtspServer->addServerMediaSession(sms);
 
