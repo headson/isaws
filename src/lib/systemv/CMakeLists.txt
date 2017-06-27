@@ -23,21 +23,17 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/vsem.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vsem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/vshm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vshm.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vshmvideo.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vshmvideo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/csystemv.h
+	${CMAKE_CURRENT_SOURCE_DIR}/csystemv.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cshmvideo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cshmvideo.cpp
 )
 
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/vsem.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vsem.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/vshm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vshm.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vshmvideo.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vshmvideo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/csystemv.h
+	${CMAKE_CURRENT_SOURCE_DIR}/csystemv.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cshmvideo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cshmvideo.cpp
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
