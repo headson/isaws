@@ -8,7 +8,7 @@
 #include "dispatcher/base/pkghead.h"
 
 CKvdbClient::CKvdbClient()
-  : vzconn::CEvtTcpClient(&evt_loop_, this)
+  : vzconn::CTcpClient(&evt_loop_, this)
   , n_resp_ret_((uint32)-1)
   , p_callback_(NULL)
   , p_usr_arg_(NULL)

@@ -9,9 +9,9 @@
 #include "dpclient_c.h"
 
 #include "dispatcher/base/pkghead.h"
-#include "vzconn/async/cevttcpclient.h"
+#include "vzconn/sync/ctcpclient.h"
 
-class CKvdbClient : public vzconn::CEvtTcpClient,
+class CKvdbClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
   CKvdbClient();
@@ -60,17 +60,6 @@ class CKvdbClient : public vzconn::CEvtTcpClient,
   bool Delete(const char *p_key, uint8 n_key);
   bool BackupDatabase();
   bool RestoreDatabase();
-
- protected:
-  virtual int32 OnRecv() {
-    CEvtTcpClient::OnRecv();
-    return 0;  // 避免回调主动删除自己
-  }
-
-  virtual int32 OnSend() {
-    CEvtTcpClient::OnSend();
-    return 0;  // 避免回调主动删除自己
-  }
 
  protected:
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,

@@ -8,9 +8,9 @@
 #include "vzbase/base/basictypes.h"
 
 #include "dpclient_c.h"
-#include "vzconn/async/cevttcpclient.h"
+#include "vzconn/sync/ctcpclient.h"
 
-class CDpClient : public vzconn::CEvtTcpClient,
+class CDpClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
   CDpClient();
@@ -44,17 +44,6 @@ class CDpClient : public vzconn::CEvtTcpClient,
                     int                       n_data,
                     DpClient_MessageCallback  p_callback,
                     void                     *p_user_arg);
-
- protected:
-  virtual int32 OnRecv() {
-    CEvtTcpClient::OnRecv();
-    return 0;  // 避免回调后台删除自己
-  }
-
-  virtual int32 OnSend() {
-    CEvtTcpClient::OnSend();
-    return 0;  // 避免回调后台删除自己
-  }
 
  protected:
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,

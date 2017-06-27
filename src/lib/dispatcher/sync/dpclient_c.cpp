@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #include "dpclient_c.h"
 
@@ -9,8 +9,8 @@
 #include "dispatcher/sync/cdpclient.h"
 #include "dispatcher/sync/ckvdbclient.h"
 
-#include "vzconn/async/clibevent.h"
-#include "vzconn/async/cevttcpclient.h"
+#include "vzconn/base/clibevent.h"
+#include "vzconn/sync/ctcpclient.h"
 
 // TLS
 #ifdef WIN32
@@ -264,7 +264,7 @@ EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
   }
 
   p_tcp->RunLoop(timeout);
-  if (p_tcp->get_resp_ret() == TYPE_SUCCEED) {
+  if (p_tcp->get_resp_ret() == TYPE_REPLY) {
     return VZNETDP_SUCCEED;
   }
   LOG(L_ERROR) << p_tcp->get_resp_ret();
@@ -386,10 +386,7 @@ EXPORT_DLL int DpClient_PollDpMessage(const void              *p_poll_handle,
 
   p_tcp->Reset(call_back, user_data);
   n_ret = p_tcp->PollRunLoop(DEF_TIMEOUT_MSEC);
-  if (n_ret == 1) {
-    return VZNETDP_SUCCEED;
-  }
-  return VZNETDP_FAILURE;
+  return VZNETDP_SUCCEED;
 }
 
 //////////////////////////////////////////////////////////////////////////
