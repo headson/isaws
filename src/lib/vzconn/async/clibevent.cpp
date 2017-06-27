@@ -1,10 +1,10 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-20
-/* Description : 
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
 #include "clibevent.h"
 
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 
 namespace vzconn {
 
@@ -139,7 +139,7 @@ void EVT_TIMER::Stop() {
   }
 }
 
-void EVT_TIMER::evt_callback(int fd, short events, void *ctx) {
+void EVT_TIMER::evt_callback(evutil_socket_t fd, short events, void *ctx) {
   if (ctx) {
     EVT_TIMER* pEvt = (EVT_TIMER*)ctx;
     if (pEvt->p_callback_) {

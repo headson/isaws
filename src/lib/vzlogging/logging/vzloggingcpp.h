@@ -1,9 +1,9 @@
-/************************************************************************/
-/* Author      : Sober.Peng 19:5:2017
-/* Description : VZLOG    C格式输出字符串
-/*               VZLOGB   C格式输出二进制
-/*               VZLOGSTR C++流输出日志
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 19:5:2017
+*Description : VZLOG    C格式输出字符串
+*              VZLOGB   C格式输出二进制
+*              VZLOGSTR C++流输出日志
+************************************************************************/
 #ifndef SRC_LIB_VZLOGGING_INCLUDE_VZLOGGINGCPP_H_
 #define SRC_LIB_VZLOGGING_INCLUDE_VZLOGGINGCPP_H_
 
@@ -12,14 +12,14 @@
 
 #include "vzlogging/logging/vzlogging.h"
 
-/************************************************************************/
-/* Description : C++流输出方式实现日志打包
-/* Param       : level[IN] 日志等级
-                 file[IN]  __FILE__
-                 line[IN]  __LINE__
-                 b_local_print[IN] true本地打印\不上传,
-                                   false不直接打印(-v实现打印)\上传
-/************************************************************************/
+/************************************************************************
+*Description : C++流输出方式实现日志打包
+*Param       : level[IN] 日志等级
+*                file[IN]  __FILE__
+*                line[IN]  __LINE__
+*                b_local_print[IN] true本地打印\不上传,
+*                                  false不直接打印(-v实现打印)\上传
+*************************************************************************/
 namespace vzlogging {
 
 class CVzLogStream {

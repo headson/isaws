@@ -33,10 +33,15 @@ endforeach()
 SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.h
 
-	${CMAKE_CURRENT_SOURCE_DIR}/server/dpsession.h
-	${CMAKE_CURRENT_SOURCE_DIR}/server/dpsession.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/server/dpserver.h 
-	${CMAKE_CURRENT_SOURCE_DIR}/server/dpserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpsession.h
+	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpsession.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpserver.h 
+	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpserver.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbsqlite.h 
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbsqlite.cpp
 )
 
 SET(SRC_CLI_LIST 
@@ -46,8 +51,37 @@ SET(SRC_CLI_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.cpp 
 )
 
+SOURCE_GROUP(base FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.h
+	)
+
+SOURCE_GROUP(dpserver FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpsession.h
+	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpsession.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpserver.h 
+	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpserver.cpp
+	)
+
+
+SOURCE_GROUP(kvdbserver FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbsqlite.h 
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbsqlite.cpp
+	)
+
+SOURCE_GROUP(client FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.h 
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.cpp 
+	)
 #########################################################################
 #Step 4 : Add PROJECT define 
 MESSAGE(STATUS "Step 4 : Add code source")

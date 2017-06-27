@@ -1,12 +1,12 @@
-/************************************************************************/
-/* Author      : SoberPeng 2017-06-14
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : IPV4网络地址,SOCKET封装
+************************************************************************/
 #include "vzconn/base/vsocket.h"
 
 #include <string.h>
 
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 #include "vzconn/base/connhead.h"
 #include "vzconn/base/byteorder.h"
 
@@ -309,11 +309,11 @@ int32 VSocket::AsyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
 }
 
 /*****************************************************************************
-* Author        : Sober.Peng 28:12:2016
-* Description   : 网络数据接收
-* Param         : pData[OUT] 接收数据，nData[IN] 缓存大小
-* Return        : >0 数据长度，0 没收到数据，-1 断网
-******************************************************************************/
+*Author        : Sober.Peng 28:12:2016
+*Description   : 网络数据接收
+*Param         : pData[OUT] 接收数据，nData[IN] 缓存大小
+*Return        : >0 数据长度，0 没收到数据，-1 断网
+*****************************************************************************/
 int32 VSocket::Recv(void *pData, uint32 nData) {
   int32 nRet = -1;
   if(!isOpen()) {
@@ -333,11 +333,11 @@ int32 VSocket::Recv(void *pData, uint32 nData) {
 }
 
 /*****************************************************************************
-* Author        : Sober.Peng 28:12:2016
-* Description   : 网络数据接收
-* Param         : pData[OUT] 接收数据，nData[IN] 缓存大小
-* Return        : >0 数据长度，0 没收到数据，-1 断网
-******************************************************************************/
+*Author        : Sober.Peng 28:12:2016
+*Description   : 网络数据接收
+*Param         : pData[OUT] 接收数据，nData[IN] 缓存大小
+*Return        : >0 数据长度，0 没收到数据，-1 断网
+*****************************************************************************/
 int32 VSocket::Recv(void* pData, uint32 nData, CInetAddr& cRemoteAddr) {
   int32 nRet = -1;
   if(!isOpen()) {
@@ -364,11 +364,11 @@ int32 VSocket::Recv(void* pData, uint32 nData, CInetAddr& cRemoteAddr) {
 }
 
 /*****************************************************************************
-* Author        : Sober.Peng 28:12:2016
-* Description   : 网络发送接收
-* Param         : pData[IN] 发送数据，nData[IN] 缓存大小
-* Return        : >0 数据长度，0 没发送数据，-1 断网
-******************************************************************************/
+*Author        : Sober.Peng 28:12:2016
+*Description   : 网络发送接收
+*Param         : pData[IN] 发送数据，nData[IN] 缓存大小
+*Return        : >0 数据长度，0 没发送数据，-1 断网
+*****************************************************************************/
 int32 VSocket::Send(const void *buf, uint32 buf_size) {
   int32 nRet = -1;
   if(!isOpen()) {
@@ -387,11 +387,11 @@ int32 VSocket::Send(const void *buf, uint32 buf_size) {
 }
 
 /*****************************************************************************
-* Author        : Sober.Peng 28:12:2016
-* Description   : 网络发送接收
-* Param         : pData[IN] 发送数据，nData[IN] 缓存大小
-* Return        : >0 数据长度，0 没发送数据，-1 断网
-******************************************************************************/
+*Author        : Sober.Peng 28:12:2016
+*Description   : 网络发送接收
+*Param         : pData[IN] 发送数据，nData[IN] 缓存大小
+*Return        : >0 数据长度，0 没发送数据，-1 断网
+*****************************************************************************/
 int32 VSocket::Send(const void* buf, uint32 buf_size, const CInetAddr& remote_addr) {
   int32 nRet = -1;
   if(!isOpen()) {
@@ -412,7 +412,7 @@ int32 VSocket::Send(const void* buf, uint32 buf_size, const CInetAddr& remote_ad
 }
 
 //////////////////////////////////////////////////////////////////////////
-int32 CClientInterface::NetHeadSize() {
+uint32 CClientInterface::NetHeadSize() {
   return sizeof(NetHead);
 }
 
@@ -448,7 +448,7 @@ int32 CClientInterface::NetHeadParse(const uint8 *p_data,
                NetworkToHost32(c_head.data_size) : c_head.data_size;
 
       *n_flag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
-        NetworkToHost16(c_head.type_flag) : c_head.type_flag;;
+                NetworkToHost16(c_head.type_flag) : c_head.type_flag;;
     } else {
       return -1;
     }

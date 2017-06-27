@@ -1,5 +1,9 @@
-#ifndef SRC_LIB_VZLOGGING_BASE_VZLOGDEF_H_
-#define SRC_LIB_VZLOGGING_BASE_VZLOGDEF_H_
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
+#ifndef LIBVZLOGGING_VZLOGDEF_H_
+#define LIBVZLOGGING_VZLOGDEF_H_
 
 #include <stdio.h>
 #define DEF_TAG_MARK             0x55AAEEFF
@@ -39,11 +43,11 @@
 #else
 typedef int         SOCKET;
 
-#define DEF_RECORD_PATH     "/tmp/"
+#define DEF_RECORD_PATH     "/mnt/log/system_server_files/"
 #define DEF_LOG_REC_FILE    "logfile"
 #define DEF_WDG_REC_FILE    "watchdog"
 
-#define DEF_WDG_MODULE_FILE "/tmp/module.cfg"
+#define DEF_WDG_MODULE_FILE "/mnt/usr/module.cfg"
 #endif
 
 #ifdef __cplusplus
@@ -90,4 +94,4 @@ void         VzDumpLogging(const char* s_msg, int n_msg);
 #define VZ_PRINT(VZ_FM, ...)
 #endif
 
-#endif  // SRC_LIB_VZLOGGING_BASE_VZLOGDEF_H_
+#endif  // LIBVZLOGGING_VZLOGDEF_H_

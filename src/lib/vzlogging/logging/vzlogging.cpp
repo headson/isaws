@@ -1,11 +1,7 @@
-/************************************************************************/
-/* Copyright@ 2008 vzenith.com
-/* All rights reserved.
-/* ----------------------------------------------------------------------
-/* Author      : Sober.Peng
-/* Date        : 19:5:2017
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
 #include "vzlogging/logging/vzlogging.h"
 #include "vzlogging/logging/vzloggingcpp.h"
 
@@ -39,7 +35,7 @@ typedef DWORD               TlsKey;
 // TLS
 #include <pthread.h>
 typedef pthread_key_t       TlsKey;
-#define TLS_NULL            -1
+#define TLS_NULL            (pthread_key_t)-1
 #endif
 
 namespace vzlogging {
@@ -47,7 +43,7 @@ namespace vzlogging {
 static int      k_total_log = 0;
 static void*    k_tls_void[DEF_PER_PRO_THREAD_MAX];   // 私有数据指针
 /**VTls******************************************************************/
-/**日志线程私有数据******************************************************/
+/**日志线程私有数据*******************************************************/
 class CTlsLog {
  public:
   CTlsLog()
@@ -86,7 +82,7 @@ class CTlsLog {
     ::ioctlsocket(s, FIONBIO, (u_long FAR*)&mode);
 #else
     int mode = fcntl(s, F_GETFL, 0);
-    fcntl(s, F_SETFL, val | O_NONBLOCK);
+    fcntl(s, F_SETFL, mode | O_NONBLOCK);
 #endif
     s_ = s;
     return 0;
@@ -122,10 +118,6 @@ class CTlsLog {
     }
     int ns = ::sendto(s_, msg, size, 0,
                       (sockaddr*)&addr_, sizeof(addr_));
-    if (ns != size) {
-      //VZ_PRINT("sendto log failed.\n");
-    }
-
     k_total_log += ns;
     return ns;
   }
@@ -232,7 +224,7 @@ static VTls           k_tls_log;                      // 日志线程私有数据
 static TAG_WATCHDOG   k_watchdog[DEF_PER_PRO_WATCHDOG_MAX];  // 看门狗结构
 
 static bool           k_en_stdout = false;            // 输出使能
-static unsigned int   k_snd_level = L_ERROR;          // 发送等级
+//static unsigned int   k_snd_level = L_ERROR;          // 发送等级
 
 /**静态函数**************************************************************/
 #ifdef __cplusplus
@@ -545,7 +537,7 @@ if (p_tls_) {
 
   tls_log->nlog_ += snprintf(tls_log->slog_ + tls_log->nlog_,
                              tls_log->nlog_max_ - tls_log->nlog_,
-                             "%lf", val);
+                             "%Lf", val);
 }
 return *this;
 }
@@ -632,7 +624,7 @@ int InitVzLogging(int argc, char* argv[]) {
 
   // 进程名
   memcpy(vzlogging::k_app_name, vzlogging::GetFileName(argv[0]), 31);
-  VZ_ERROR("%s, compile time %s %s.\n",
+  VZ_ERROR("this applet name is: %s, compile time %s %s.\n",
            vzlogging::k_app_name, __DATE__, __TIME__);
 
   // 传参数
@@ -673,15 +665,15 @@ void ShowVzLoggingAlways() {
   vzlogging::k_en_stdout = true;
 }
 
-/************************************************************************/
-/* Description : 打印日志
-/* Parameters  : level 日志等级,
-file  调用此函数文件,
-line  调用此函数文件行,
-fmt   格式化字符串,
-...   不定长参数
-/* Return      : 0 success,-1 failed
-/************************************************************************/
+/************************************************************************
+*Description : 打印日志
+*Parameters  : level 日志等级,
+*              file  调用此函数文件,
+*              line  调用此函数文件行,
+*              fmt   格式化字符串,
+*              ...   不定长参数
+*Return      : 0 success,-1 failed
+************************************************************************/
 int VzLog(unsigned int  n_level,
           int           b_local_print,
           const char    *p_file,
@@ -796,15 +788,15 @@ int VzLogBin(unsigned int n_level,
   return -1;
 }
 
-/************************************************************************/
-/* Description : 注册一个喂狗KEY,并传入观察进程名,进程描述
-/* Parameters  : key 进程名+KEY形成唯一主键,
-                     看门狗通过监听此主键心跳判断是否挂掉
-                 max_timeout    最大超时时间
-                 descrebe       用户描述[MAX:8Byte]
-                 descrebe_size  用户描述大小
-/* Return      : !=NULL 注册成功,==NULL 注册失败
-/************************************************************************/
+/************************************************************************
+*Description : 注册一个喂狗KEY, 并传入观察进程名, 进程描述
+*Parameters  : key 进程名 + KEY形成唯一主键,
+*              看门狗通过监听此主键心跳判断是否挂掉
+*              max_timeout    最大超时时间
+*              descrebe       用户描述[MAX:8Byte]
+*              descrebe_size  用户描述大小
+*Return      : != NULL 注册成功, == NULL 注册失败
+************************************************************************/
 void *RegisterWatchDogKey(const char   *s_descrebe,
                           unsigned int n_descrebe_size,
                           unsigned int n_max_timeout) {
@@ -834,11 +826,11 @@ void *RegisterWatchDogKey(const char   *s_descrebe,
   return NULL;
 }
 
-/************************************************************************/
-/* Description : 喂狗接口,定时调用,否则看门狗服务判断此key相关线程挂掉
-/* Parameters  : key[IN] 注册看门狗时使用传入的key值
-/* Return      : true 喂狗成功,false 喂狗失败
-/************************************************************************/
+/************************************************************************
+*Description : 喂狗接口, 定时调用, 否则看门狗服务判断此key相关线程挂掉
+*Parameters  : key[IN] 注册看门狗时使用传入的key值
+*Return      : true 喂狗成功, false 喂狗失败
+************************************************************************/
 int FeedDog(const void *p_arg) {
   vzlogging::TAG_WATCHDOG* p_wdg = (vzlogging::TAG_WATCHDOG*)p_arg;
   if (p_wdg && p_wdg->n_mark == DEF_TAG_MARK) {

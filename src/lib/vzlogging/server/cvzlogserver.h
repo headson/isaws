@@ -1,13 +1,9 @@
-/************************************************************************/
-/* Copyright@ 2008 vzenith.com
-/* All rights reserved.
-/* ----------------------------------------------------------------------
-/* Author      : Sober.Peng
-/* Date        : 19:5:2017
-/* Description : 日志网络服务器
-/************************************************************************/
-#ifndef SRC_LIB_VZLOGGING_SERVER_CVZLOGSERVER_H_
-#define SRC_LIB_VZLOGGING_SERVER_CVZLOGSERVER_H_
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 日志网络服务器
+************************************************************************/
+#ifndef LIBVZLOGSERVER_CVZLOGSERVER_H_
+#define LIBVZLOGSERVER_CVZLOGSERVER_H_
 
 #include <stdio.h>
 
@@ -93,13 +89,13 @@ class CVzLoggingFile {
   CVzLoggingFile();
   virtual ~CVzLoggingFile();
 
-  /************************************************************************/
-  /* Description : 打开日志文件
-  /* Parameters  : s_path[IN]       日志存储路径
-                   s_filename[IN]   日志文件名
-                   n_limit_size[IN] 总共能使用的日志文件大小
-  /* Return      : 0 成功,其他失败
-  /************************************************************************/
+  /************************************************************************
+  *Description : 打开日志文件
+  *Parameters  : s_path[IN]       日志存储路径
+  *              s_filename[IN]   日志文件名
+  *              n_limit_size[IN] 总共能使用的日志文件大小
+  *Return      : 0 成功,其他失败
+  ************************************************************************/
   virtual int Open(const char*  s_path,
                    const char*  s_filename,
                    unsigned int n_limit_size);
@@ -139,13 +135,13 @@ class CVzWatchdogFile : public CVzLoggingFile {
   CVzWatchdogFile();
   virtual ~CVzWatchdogFile();
 
-  /************************************************************************/
-  /* Description : 打开日志文件
-  /* Parameters  : s_path[IN]       日志存储路径
-                   s_filename[IN]   日志文件名
-                   n_limit_size[IN] 总共能使用的日志文件大小
-  /* Return      : 0 成功,其他失败
-  /************************************************************************/
+  /************************************************************************
+  *Description : 打开日志文件
+  *Parameters  : s_path[IN]       日志存储路径
+  *              s_filename[IN]   日志文件名
+  *              n_limit_size[IN] 总共能使用的日志文件大小
+  *Return      : 0 成功,其他失败
+  ************************************************************************/
   virtual int Open(const char*  s_path,
                    const char*  s_filename,
                    unsigned int n_limit_size);
@@ -157,4 +153,4 @@ class CVzWatchdogFile : public CVzLoggingFile {
 
 }  // namespace vzlogging
 
-#endif  // SRC_LIB_VZLOGGING_SERVER_CVZLOGSERVER_H_
+#endif  // LIBVZLOGSERVER_CVZLOGSERVER_H_

@@ -1,10 +1,10 @@
 /************************************************************************/
-/* Author      : Sober.Peng 17-06-19
-/* Description :
+/* Author      : Sober.Peng 17-06-19                                    */
+/* Description :                                                        */
 /************************************************************************/
 #include "csocketbuffer.h"
 
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 #include "connhead.h"
 
 namespace vzconn {
@@ -31,7 +31,7 @@ int32 CSockRecvData::RecvData(VSocket* p_sock) {
   }
 
   // 数据不够,分配大一点的空间
-  if (n_wait_len_ > (int32)Length()) {
+  if (n_wait_len_ > static_cast<int32>(Length())) {
     ReallocBuffer(n_wait_len_);
   }
 
@@ -53,7 +53,7 @@ int32 CSockRecvData::ParseSplitData(VSocket* p_sock) {
     return -1;
   }
 
-  if (n_wait_len_ <= (int32)UsedSize()) {
+  if (n_wait_len_ <= static_cast<int32>(UsedSize())) {
     // 解析包头,获取整包数据长度
     uint16 n_flag = 0;
     uint32 n_offset = 0;  // 解析时,发现起始数据无包头,矫正包头的偏移
@@ -69,8 +69,9 @@ int32 CSockRecvData::ParseSplitData(VSocket* p_sock) {
       n_wait_len_ = n_pkg_size;
 
       // 回调
-      if ((n_pkg_size <= (int32)UsedSize()) && p_sock->cli_hdl_ptr_) {
-        if (n_pkg_size < (int32)Length()) {
+      if ((n_pkg_size <= static_cast<int32>(UsedSize()))
+          && p_sock->cli_hdl_ptr_) {
+        if (n_pkg_size < static_cast<int32>(Length())) {
           buffer_[write_pos_] = '\0';
         }
         n_ret = p_sock->cli_hdl_ptr_->HandleRecvPacket(p_sock,
@@ -189,7 +190,6 @@ int32 CSockSendData::DataCacheToSendBuffer(VSocket      *p_sock,
     MoveWritePtr(iov[i].iov_len);
     n_data += iov[i].iov_len;
   }
-  buffer_;
   return n_head_size + n_data;
 }
 

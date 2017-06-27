@@ -1,7 +1,7 @@
 /************************************************************************/
-/* Author      : Sober.Peng 17-06-16
-/* Description : 实现SOCKET的接受和发送BUFFER控制,
-                 主要针对TCP定义的收发缓冲区,缓冲区最大128K
+/* Author      : Sober.Peng 17-06-16                                    */
+/* Description : 实现SOCKET的接受和发送BUFFER控制,                       */
+/*                 主要针对TCP定义的收发缓冲区,缓冲区最大128K             */
 /************************************************************************/
 #ifndef LIBVZCONN_CBLOCKBUFFER_H_
 #define LIBVZCONN_CBLOCKBUFFER_H_
@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 #include "byteorder.h"
 
 namespace vzconn {

@@ -1,19 +1,18 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-15
-/* Description : TCP客户端session
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : TCP客户端
+************************************************************************/
 #ifndef LIBVZCONN_CEVTTCPCLIENT_H_
 #define LIBVZCONN_CEVTTCPCLIENT_H_
 
 #include "clibevent.h"
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 
 #include "vzconn/base/vsocket.h"
 #include "vzconn/base/csocketbuffer.h"
 
 namespace vzconn {
 
-class CEvtTcpServer;
 class CEvtTcpClient : public VSocket {
  protected:
   CEvtTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl);
@@ -38,24 +37,24 @@ class CEvtTcpClient : public VSocket {
                         uint32           n_timeout=5000);
 
  public:
-  /************************************************************************/
-  /* Description : 发送一包数据;缓存到发送cache中
-  /* Parameters  : p_data[IN] 数据(body区)
-                   n_data[IN] 数据长度
-                   e_flag[IN] VZ为包头的flag[uint16]
-  /* Return      : >0 缓存数据长度,<=0 发送失败
-  /************************************************************************/
+  /***********************************************************************
+  *Description : 发送一包数据;缓存到发送cache中
+  *Parameters  : p_data[IN] 数据(body区)
+  *              n_data[IN] 数据长度
+  *              e_flag[IN] VZ为包头的flag[uint16]
+  *Return      : >0 缓存数据长度,<=0 发送失败
+  ***********************************************************************/
   virtual int32 AsyncWrite(const void  *p_data,
                            uint32       n_data,
                            uint16       e_flag);
 
-  /************************************************************************/
-  /* Description : 发送一包数据;缓存到发送cache中
-  /* Parameters  : iov[IN]    数据(body区)
-                   n_iov[IN]  iov个数
-                   e_flag[IN] VZ为包头的flag[uint16]
-  /* Return      : >0 缓存数据长度,<=0 发送失败
-  /************************************************************************/
+  /***********************************************************************
+  *Description : 发送一包数据;缓存到发送cache中
+  *Parameters  : iov[IN]    数据(body区)
+  *              n_iov[IN]  iov个数
+  *              e_flag[IN] VZ为包头的flag[uint16]
+  *Return      : >0 缓存数据长度,<=0 发送失败
+  ***********************************************************************/
   virtual int32 AsyncWrite(struct iovec iov[],
                            uint32       n_iov,
                            uint16       e_flag);
@@ -81,6 +80,20 @@ class CEvtTcpClient : public VSocket {
                            short       events,
                            const void *p_usr_arg);
   virtual int32 OnConnect(SOCKET fd);
+
+ public:
+  EVT_IO& GetEvtRecv() {
+    return c_evt_recv_;
+  }
+  EVT_IO& GetEvtSend() {
+    return c_evt_send_;
+  }
+  CSockRecvData& GetRecvData() {
+    return c_recv_data_;
+  }
+  CSockSendData& GetSendData() {
+    return c_send_data_;
+  }
 
  protected:
   const EVT_LOOP   *p_evt_loop_;    // 随进程退出而销毁,不必关心生命周期

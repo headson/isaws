@@ -1,12 +1,12 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-15
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
 #ifndef LIBVZCONN_CEVTTCPSERVER_H_
 #define LIBVZCONN_CEVTTCPSERVER_H_
 
 #include "clibevent.h"
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 
 #include "vzconn/base/vsocket.h"
 
@@ -25,13 +25,13 @@ class CEvtTcpServer : public VSocket {
 
   virtual ~CEvtTcpServer();
 
-  /************************************************************************/
-  /* Description : 打开网络监听,等待新链接进入
-  /* Parameters  : p_addr[IN] 监听地址
-                   b_block[IN] true=阻塞,false=非阻塞
-                   b_reuse[IN]
-  /* Return      : true成功 false失败
-  /************************************************************************/
+  /************************************************************************
+  *Description : 打开网络监听,等待新链接进入
+  *Parameters  : p_addr[IN] 监听地址
+  *              b_block[IN] true=阻塞,false=非阻塞
+  *              b_reuse[IN]
+  *Return      : true成功 false失败
+  ***********************************************************************/
   virtual bool  Open(const CInetAddr *p_addr,
                      bool             b_block=false,
                      bool             b_reuse=true);

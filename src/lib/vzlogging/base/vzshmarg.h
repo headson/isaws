@@ -1,10 +1,10 @@
 /************************************************************************/
-/* Copyright@ 2008 vzenith.com
-/* All rights reserved.
-/* ----------------------------------------------------------------------
-/* Author      : Sober.Peng
-/* Date        : 19:5:2017
-/* Description : 通过共享内存实现进程间日志参数传递
+/* Copyright@ 2008 vzenith.com                                          */
+/* All rights reserved.                                                 */
+/* -------------------------------------------------------------------- */
+/* Author      : Sober.Peng                                             */
+/* Date        : 19:5:2017                                              */
+/* Description : 通过共享内存实现进程间日志参数传递                       */
 /************************************************************************/
 #ifndef SRC_LIB_VZLOGGING_BASE_VZSHMARG_H_
 #define SRC_LIB_VZLOGGING_BASE_VZSHMARG_H_

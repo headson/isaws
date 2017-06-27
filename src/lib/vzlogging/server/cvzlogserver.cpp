@@ -1,11 +1,7 @@
-/************************************************************************/
-/* Copyright@ 2008 vzenith.com
-/* All rights reserved.
-/* ----------------------------------------------------------------------
-/* Author      : Sober.Peng
-/* Date        : 19:5:2017
-/* Description : 日志网络服务器
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 日志网络服务器
+************************************************************************/
 #include "vzlogging/server/cvzlogserver.h"
 
 #include <time.h>
@@ -131,7 +127,7 @@ int CVzSockDgram::OpenListenAddr(const char* ip, unsigned short port) {
   ::ioctlsocket(sock_recv_, FIONBIO, (u_long FAR*)&mode);
 #else
   int mode = fcntl(sock_recv_, F_GETFL, 0);
-  fcntl(sock_recv_, F_SETFL, val | O_NONBLOCK);
+  fcntl(sock_recv_, F_SETFL, mode | O_NONBLOCK);
 #endif
 
   return 0;
@@ -220,7 +216,11 @@ int CVzLoggingFile::Open(const char*  s_path,
   snprintf(s_err_fname_, DEF_LOG_FILE_NAME,
            "%s%s_err_%d.log", s_path, s_filename, DEF_ERR_FILE_COUNT);
   // 此错误文件已存在,干掉之前的错误文件
+#ifdef WIN32
+  if (_access(s_err_fname_, 0) == 0) {
+#else
   if (access(s_err_fname_, 0) == 0) {
+#endif
     char s_temp_fname[DEF_LOG_FILE_NAME+1];
     for (int i = 0; i < DEF_ERR_FILE_COUNT; i++) {
       // i文件
@@ -366,7 +366,7 @@ int CVzLoggingFile::OpenFileFirst() {
 // 运行中打开,以wt+打开
 int CVzLoggingFile::OpenFileNext(unsigned int size) {
   // 关闭原文件
-  if ((n_file_size_ + size) >= n_file_limit_size_) {
+  if ((int)(n_file_size_ + size) >= n_file_limit_size_) {
     fclose(p_file_);
     p_file_ = NULL;
   } else {
@@ -392,7 +392,11 @@ int CVzLoggingFile::OpenFileNext(unsigned int size) {
 
 time_t CVzLoggingFile::GetFileMTime(FILE* file) {
   struct stat buf;
+#ifdef WIN32
+  int fd = _fileno(file);
+#else
   int fd = fileno(file);
+#endif
   fstat(fd, &buf);
   return buf.st_mtime;
 }
@@ -448,9 +452,7 @@ int CVzLoggingFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
   return -1;
 }
 
-/************************************************************************/
-/* 看门狗日志文件
-/************************************************************************/
+/*看门狗日志文件**********************************************************/
 CVzWatchdogFile::CVzWatchdogFile()
   : CVzLoggingFile() {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);

@@ -1,12 +1,12 @@
-/************************************************************************/
-/* Author      : SoberPeng 2017-06-17
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
 #ifndef LIBVZCONN_CEVTIPCSERVER_H
 #define LIBVZCONN_CEVTIPCSERVER_H
 
 #include "clibevent.h"
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 
 #include "vzconn/base/vsocket.h"
 #include "vzconn/async/cevttcpserver.h"
@@ -26,13 +26,13 @@ class CEvtIpcServer : public CEvtTcpServer {
 
   virtual ~CEvtIpcServer();
 
-  /************************************************************************/
-  /* Description : 打开网络监听,等待新链接进入
-  /* Parameters  : p_addr[IN]  监听地址
-                   b_block[IN] true=阻塞,false=非阻塞
-                   b_reuse[IN]
-  /* Return      : true成功 false失败
-  /************************************************************************/
+  /***********************************************************************
+  *Description : 打开网络监听,等待新链接进入
+  *Parameters  : p_addr[IN]  监听地址
+  *              b_block[IN] true=阻塞,false=非阻塞
+  *              b_reuse[IN]
+  *Return      : true成功 false失败
+  ***********************************************************************/
   bool Open(const CInetAddr* p_addr, bool b_block=false, bool b_reuse=true);
 
  private:

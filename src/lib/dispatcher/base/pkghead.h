@@ -1,7 +1,7 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-20
-/* Description : 分发服务器包结构,不可在.h中引用此文件
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : dispatch\kvdb包结构
+************************************************************************/
 #ifndef LIBDISPATCH_PKGHEAD_H_
 #define LIBDISPATCH_PKGHEAD_H_
 
@@ -46,7 +46,31 @@ typedef struct _TagDpMsg {
   char          method[MAX_METHOD_SIZE];  // 消息类型[32*8bits]
   unsigned int  id;                       // [消息序号]32 bits;8+24
   unsigned int  data_size;                // [数据长度]32 bits
+  unsigned int  reserved02;               // [保留] 对齐48bits
   char          data[0];                  //  * bits
 } DpMessage;
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum {
+  KVDB_REPLACE = 0,
+  KVDB_DELETE = 1,
+  KVDB_SELECT = 2,
+
+  KVDB_BACKUP = 3,
+  KVDB_RESTORE = 4,
+
+  KVDB_SUCCEED = 5,
+  KVDB_FAILURE = 6,
+};
+
+#define MAX_KVDB_KEY_SIZE 32
+
+typedef struct _KvdbMsg {
+  unsigned int type;            // 请求类型;回执错误代码
+  unsigned int id;              // 
+  char key[MAX_KVDB_KEY_SIZE];
+  char value[0];
+} KvdbMessage;
 
 #endif  // LIBDISPATCH_PKGHEAD_H_

@@ -1,6 +1,6 @@
 /************************************************************************/
-/* Author      : Sober.Peng 17-06-19
-/* Description :
+/* Author      : Sober.Peng 17-06-19                                    */
+/* Description :                                                        */
 /************************************************************************/
 #ifndef LIBVZCONN_CSOCKETBUFFER_H_
 #define LIBVZCONN_CSOCKETBUFFER_H_

@@ -1,12 +1,12 @@
-/************************************************************************/
-/* Author      : SoberPeng 2017-06-17
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
 #include "cevtipcserver.h"
 
 #include <stddef.h>
 
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 #include "cevtipcclient.h"
 
 namespace vzconn {

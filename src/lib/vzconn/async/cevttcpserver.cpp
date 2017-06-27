@@ -1,10 +1,10 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-15
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description :
+************************************************************************/
 #include "cevttcpserver.h"
 
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 #include "cevttcpclient.h"
 #include "vzconn/base/connhead.h"
 
@@ -15,9 +15,9 @@ CEvtTcpServer::CEvtTcpServer(const EVT_LOOP      *p_loop,
                              CTcpServerInterface *srv_hdl)
   : VSocket(cli_hdl)
   , p_evt_loop_(p_loop)
+  , c_evt_accept_()
   , cli_hdl_ptr_(cli_hdl)
-  , srv_handle_ptr_(srv_hdl)
-  , c_evt_accept_() {
+  , srv_handle_ptr_(srv_hdl) {
 }
 
 CEvtTcpServer *CEvtTcpServer::Create(const EVT_LOOP      *p_loop,
@@ -42,8 +42,8 @@ CEvtTcpServer::~CEvtTcpServer() {
 }
 
 bool CEvtTcpServer::Open(const CInetAddr *p_addr,
-                          bool            b_block,
-                          bool            b_reuse) {
+                         bool            b_block,
+                         bool            b_reuse) {
   if (NULL == p_evt_loop_ ) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
@@ -134,7 +134,7 @@ int32 CEvtTcpServer::OnAccept() {
       b_open = srv_handle_ptr_->HandleNewConnection(this, cli_ptr);
     }
 
-    if (b_open) { 
+    if (b_open) {
       cli_ptr->Open(s, true);
     } else {
       delete cli_ptr;

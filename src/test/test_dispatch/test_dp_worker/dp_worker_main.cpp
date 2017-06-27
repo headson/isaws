@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 
 #include "dispatcher/base/pkghead.h"
 #include "dispatcher/sync/dpclient_c.h"
@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
   ShowVzLoggingAlways();
 #endif
 
-  DpClient_Init("127.0.0.1", 3730);
+  DpClient_Init("127.0.0.1", 5291);
 
   DpClient_Start(0);
 

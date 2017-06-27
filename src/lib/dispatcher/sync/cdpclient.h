@@ -1,16 +1,62 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-21
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
 #ifndef LIBDISPATCH_CDPCLIENT_H_
 #define LIBDISPATCH_CDPCLIENT_H_
 
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
+
 #include "dpclient_c.h"
 #include "vzconn/async/cevttcpclient.h"
 
-class CClientProcess : public vzconn::CClientInterface {
+class CDpClient : public vzconn::CEvtTcpClient,
+  public vzconn::CClientInterface {
+ protected:
+  CDpClient();
+  virtual void  Remove() { }
+
  public:
+  static CDpClient* Create();
+  virtual ~CDpClient();
+
+ public:
+  // return 0=timeout,1=success
+  int32 RunLoop(uint32 n_timeout);
+
+  // 轮询使用
+  // return 0=timeout,1=success
+  int32 PollRunLoop(uint32 n_timeout);
+
+ public:
+  void  Reset(DpClient_MessageCallback callback, void *p_usr_arg);
+
+  /* method;add\remove */
+  int32 ListenMessage(uint8        e_type,
+                      const char  *p_method[],    /* 方法名组成32Byte长度发送 */
+                      unsigned int n_method_no,   /* 方法个数 */
+                      uint16       n_flag);
+
+  int32 SendMessage(unsigned char             n_type,
+                    const char               *p_method,
+                    unsigned int              n_method,
+                    const char               *p_data,
+                    int                       n_data,
+                    DpClient_MessageCallback  p_callback,
+                    void                     *p_user_arg);
+
+ protected:
+  virtual int32 OnRecv() {
+    CEvtTcpClient::OnRecv();
+    return 0;  // 避免回调后台删除自己
+  }
+
+  virtual int32 OnSend() {
+    CEvtTcpClient::OnSend();
+    return 0;  // 避免回调后台删除自己
+  }
+
+ protected:
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
                                  const uint8            *p_data,
                                  uint32                  n_data,
@@ -18,49 +64,8 @@ class CClientProcess : public vzconn::CClientInterface {
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
     return 0;
   }
-  virtual void  HandleClose(vzconn::VSocket *p_cli);
-};
-
-class CTcpClient : public vzconn::CEvtTcpClient {
- protected:
-  CTcpClient();
-  virtual void  Remove() { }
-
- public:
-  static CTcpClient* Create();
-  virtual ~CTcpClient();
-
- public:
-  // 设置已打开的SCOKET
-  virtual bool  Open(SOCKET s, bool b_block = false);
-
-  int32         RunLoop(uint32 n_timeout);
-  int32         PollRunLoop(uint32 n_timeout);
-
-  void          Reset(DpClient_MessageCallback callback,
-                      void *p_usr_arg);
-
- public:
-  /* method;add\remove */
-  int32 ListenMessage(uint8        e_type,
-                      const char  *method_set[],
-                      unsigned int set_size,
-                      uint16       n_flag);
-
-  int32 SendMessage(unsigned char              n_type,
-                    const char                *p_method,
-                    unsigned int               n_msg_id,
-                    const char                *p_data,
-                    int                       n_data,
-                    DpClient_MessageCallback  call_back,
-                    void                     *user_data);
-
- protected:
-  virtual int32 OnRecv();
-  virtual int32 OnSend();
-
- public:
-  friend class CClientProcess;
+  virtual void  HandleClose(vzconn::VSocket *p_cli) {
+  }
 
  public:
   uint32 get_session_id() {
@@ -78,8 +83,8 @@ class CTcpClient : public vzconn::CEvtTcpClient {
     return n_cur_msg_id_;
   }
 
-  uint32 get_resp_type() {
-    return n_resp_type_;
+  int32 get_resp_ret() {
+    return n_resp_ret_;
   }
 
  protected:
@@ -88,7 +93,6 @@ class CTcpClient : public vzconn::CEvtTcpClient {
  protected:
   DpClient_MessageCallback  callback_;    // 回调
   void                     *p_usr_arg_;   // 回调用户参数
-  CClientProcess            c_cli_proc_;  // 消息处理
 
  protected:
   int32                     n_session_id_;    // SESSION ID
@@ -97,10 +101,10 @@ class CTcpClient : public vzconn::CEvtTcpClient {
   uint32                    n_cur_msg_id_;    // 当前发送msg id
 
  protected:
-  uint32                    n_resp_type_;     // 回执类型,也做evt loop退出标签
+  uint32                    n_resp_ret_;      // 回执类型,也做evt loop退出标签
   uint32                    n_recv_packet_;   // poll loop退出标签
 
-  static const int          MAX_MESSAGE_ID = 0X00FFFFFF;
+  static const uint32       MAX_MESSAGE_ID = 0X00FFFFFF;
 
  public:
   static int EncDpMsg(DpMessage      *p_msg,
@@ -110,9 +114,6 @@ class CTcpClient : public vzconn::CEvtTcpClient {
                       unsigned int    n_message_id,
                       int             data_size);
 
-  static int DecDpMsg(DpMessage     *p_msg,
-                      const void    *p_data,
-                      uint32         n_data);
   static DpMessage *DecDpMsg(const void *p_data,
                              uint32      n_data);
 };

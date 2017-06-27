@@ -1,11 +1,11 @@
 /************************************************************************/
-/* Author      : Sober.Peng 17-06-16
-/* Description : 网络包头结构
+/* Author      : Sober.Peng 17-06-16                                    */
+/* Description : 网络包头结构                                            */
 /************************************************************************/
 #ifndef LIBVZCONN_PKGHEAD_H_
 #define LIBVZCONN_PKGHEAD_H_
 
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 #include "byteorder.h"
 
 #define NET_MARK_0  'V'
@@ -33,7 +33,7 @@ namespace vzconn {
   // 包默认大小
   static const uint32 DEF_BUFFER_SIZE = 4096;
   // 最大包尺寸
-  static const uint32 MAX_BUFFER_SIZE = 128 * 1024;
+  static const uint32 MAX_BUFFER_SIZE = 256 * 1024;
 }  // namespace vzconn
 
 #endif  // LIBVZCONN_PKGHEAD_H_

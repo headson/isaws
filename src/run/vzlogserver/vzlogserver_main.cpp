@@ -1,11 +1,7 @@
-/************************************************************************/
-/* Copyright@ 2008 vzenith.com
-/* All rights reserved.
-/* ----------------------------------------------------------------------
-/* Author      : Sober.Peng
-/* Date        : 19:5:2017
-/* Description : 日志\看门狗服务器入口
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 日志\看门狗服务器入口
+************************************************************************/
 #include <time.h>   // 超时
 #include <stdio.h>
 #include <stdlib.h>
@@ -381,7 +377,8 @@ int callback_timeout() {
     for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
       if (k_pro_heart[i].n_mark == DEF_TAG_MARK
           && k_pro_heart[i].s_app_name[0] != '\0') {
-        unsigned int n_diff_time = abs(n_now - k_pro_heart[i].last_heartbeat);
+        unsigned long long n_diff_time =
+          abs(n_now - k_pro_heart[i].last_heartbeat);
         if (n_diff_time > k_pro_heart[i].n_timeout) {
           //if (k_en_watchdog) {
           OnModuleLostHeartbeat(n_now);

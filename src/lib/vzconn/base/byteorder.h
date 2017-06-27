@@ -1,6 +1,6 @@
 /************************************************************************/
-/* Author      : Sober.Peng 17-06-19
-/* Description : 
+/* Author      : Sober.Peng 17-06-19                                    */
+/* Description :                                                        */
 /************************************************************************/
 #ifndef LIBVZCONN_BYTEORDER_H_
 #define LIBVZCONN_BYTEORDER_H_
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #endif
 
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 
 namespace vzconn {
 

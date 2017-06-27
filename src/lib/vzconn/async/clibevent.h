@@ -1,7 +1,7 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-15
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
 #ifndef LIBVZCONN_CLIBEVENT_H_
 #define LIBVZCONN_CLIBEVENT_H_
 
@@ -26,7 +26,7 @@ extern "C" {
 
 #include <string>
 
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 
 namespace vzconn {
 
@@ -85,7 +85,7 @@ class EVT_TIMER {
   int32           Start(uint32 after_ms, uint32 repeat_ms);
   void            Stop();
 
-  static void     evt_callback(int fd, short event, void *ctx);
+  static void     evt_callback(evutil_socket_t fd, short event, void *ctx);
 };
 
 ///IO//////////////////////////////////////////////////////////////////////////
@@ -110,6 +110,8 @@ class EVT_IO {
 
   static void     evt_callback(evutil_socket_t fd, short events, void *ctx);
 };
+
+typedef EVT_LOOP EventService;
 
 }  // namespace vzconn
 #endif  // LIBVZCONN_CLIBEVENT_H_

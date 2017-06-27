@@ -1,12 +1,12 @@
-/************************************************************************/
-/* Author      : SoberPeng 2017-06-17
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-06-27
+*Description : 
+************************************************************************/
 #ifndef LIBVZCONN_CEVTIPCCLIENT_H
 #define LIBVZCONN_CEVTIPCCLIENT_H
 
 #include "clibevent.h"
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 
 #include "vzconn/base/vsocket.h"
 #include "vzconn/async/cevttcpclient.h"
