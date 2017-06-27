@@ -28,35 +28,35 @@ along with this library; if not, write to the Free Software Foundation, Inc.,
 ////////// 16-bit PCM (in various byte orderings) -> 8-bit u-Law //////////
 
 class uLawFromPCMAudioSource: public FramedFilter {
-public:
+ public:
   static uLawFromPCMAudioSource*
   createNew(UsageEnvironment& env, FramedSource* inputSource,
-	    int byteOrdering = 0);
+            int byteOrdering = 0);
   // "byteOrdering" == 0 => host order (the default)
   // "byteOrdering" == 1 => little-endian order
   // "byteOrdering" == 2 => network (i.e., big-endian) order
 
-protected:
+ protected:
   uLawFromPCMAudioSource(UsageEnvironment& env, FramedSource* inputSource,
-			 int byteOrdering);
-      // called only by createNew()
+                         int byteOrdering);
+  // called only by createNew()
   virtual ~uLawFromPCMAudioSource();
 
-private:
+ private:
   // Redefined virtual functions:
   virtual void doGetNextFrame();
 
-private:
+ private:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
-				unsigned numTruncatedBytes,
-				struct timeval presentationTime,
-				unsigned durationInMicroseconds);
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
   void afterGettingFrame1(unsigned frameSize,
-			  unsigned numTruncatedBytes,
-			  struct timeval presentationTime,
-			  unsigned durationInMicroseconds);
+                          unsigned numTruncatedBytes,
+                          struct timeval presentationTime,
+                          unsigned durationInMicroseconds);
 
-private:
+ private:
   int fByteOrdering;
   unsigned char* fInputBuffer;
   unsigned fInputBufferSize;
@@ -66,31 +66,31 @@ private:
 ////////// u-Law -> 16-bit PCM (in host order) //////////
 
 class PCMFromuLawAudioSource: public FramedFilter {
-public:
+ public:
   static PCMFromuLawAudioSource*
   createNew(UsageEnvironment& env, FramedSource* inputSource);
 
-protected:
+ protected:
   PCMFromuLawAudioSource(UsageEnvironment& env,
-			 FramedSource* inputSource);
-      // called only by createNew()
+                         FramedSource* inputSource);
+  // called only by createNew()
   virtual ~PCMFromuLawAudioSource();
 
-private:
+ private:
   // Redefined virtual functions:
   virtual void doGetNextFrame();
 
-private:
+ private:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
-				unsigned numTruncatedBytes,
-				struct timeval presentationTime,
-				unsigned durationInMicroseconds);
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
   void afterGettingFrame1(unsigned frameSize,
-			  unsigned numTruncatedBytes,
-			  struct timeval presentationTime,
-			  unsigned durationInMicroseconds);
+                          unsigned numTruncatedBytes,
+                          struct timeval presentationTime,
+                          unsigned durationInMicroseconds);
 
-private:
+ private:
   unsigned char* fInputBuffer;
   unsigned fInputBufferSize;
 };
@@ -99,110 +99,110 @@ private:
 ////////// 16-bit values (in host order) -> 16-bit network order //////////
 
 class NetworkFromHostOrder16: public FramedFilter {
-public:
+ public:
   static NetworkFromHostOrder16*
   createNew(UsageEnvironment& env, FramedSource* inputSource);
 
-protected:
+ protected:
   NetworkFromHostOrder16(UsageEnvironment& env, FramedSource* inputSource);
-      // called only by createNew()
+  // called only by createNew()
   virtual ~NetworkFromHostOrder16();
 
-private:
+ private:
   // Redefined virtual functions:
   virtual void doGetNextFrame();
 
-private:
+ private:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
-				unsigned numTruncatedBytes,
-				struct timeval presentationTime,
-				unsigned durationInMicroseconds);
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
   void afterGettingFrame1(unsigned frameSize,
-			  unsigned numTruncatedBytes,
-			  struct timeval presentationTime,
-			  unsigned durationInMicroseconds);
+                          unsigned numTruncatedBytes,
+                          struct timeval presentationTime,
+                          unsigned durationInMicroseconds);
 };
 
 
 ////////// 16-bit values (in network order) -> 16-bit host order //////////
 
 class HostFromNetworkOrder16: public FramedFilter {
-public:
+ public:
   static HostFromNetworkOrder16*
   createNew(UsageEnvironment& env, FramedSource* inputSource);
 
-protected:
+ protected:
   HostFromNetworkOrder16(UsageEnvironment& env, FramedSource* inputSource);
-      // called only by createNew()
+  // called only by createNew()
   virtual ~HostFromNetworkOrder16();
 
-private:
+ private:
   // Redefined virtual functions:
   virtual void doGetNextFrame();
 
-private:
+ private:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
-				unsigned numTruncatedBytes,
-				struct timeval presentationTime,
-				unsigned durationInMicroseconds);
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
   void afterGettingFrame1(unsigned frameSize,
-			  unsigned numTruncatedBytes,
-			  struct timeval presentationTime,
-			  unsigned durationInMicroseconds);
+                          unsigned numTruncatedBytes,
+                          struct timeval presentationTime,
+                          unsigned durationInMicroseconds);
 };
 
 
 ////////// 16-bit values: little-endian <-> big-endian //////////
 
 class EndianSwap16: public FramedFilter {
-public:
+ public:
   static EndianSwap16* createNew(UsageEnvironment& env, FramedSource* inputSource);
 
-protected:
+ protected:
   EndianSwap16(UsageEnvironment& env, FramedSource* inputSource);
-      // called only by createNew()
+  // called only by createNew()
   virtual ~EndianSwap16();
 
-private:
+ private:
   // Redefined virtual functions:
   virtual void doGetNextFrame();
 
-private:
+ private:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
-				unsigned numTruncatedBytes,
-				struct timeval presentationTime,
-				unsigned durationInMicroseconds);
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
   void afterGettingFrame1(unsigned frameSize,
-			  unsigned numTruncatedBytes,
-			  struct timeval presentationTime,
-			  unsigned durationInMicroseconds);
+                          unsigned numTruncatedBytes,
+                          struct timeval presentationTime,
+                          unsigned durationInMicroseconds);
 };
 
 
 ////////// 24-bit values: little-endian <-> big-endian //////////
 
 class EndianSwap24: public FramedFilter {
-public:
+ public:
   static EndianSwap24* createNew(UsageEnvironment& env, FramedSource* inputSource);
 
-protected:
+ protected:
   EndianSwap24(UsageEnvironment& env, FramedSource* inputSource);
-      // called only by createNew()
+  // called only by createNew()
   virtual ~EndianSwap24();
 
-private:
+ private:
   // Redefined virtual functions:
   virtual void doGetNextFrame();
 
-private:
+ private:
   static void afterGettingFrame(void* clientData, unsigned frameSize,
-				unsigned numTruncatedBytes,
-				struct timeval presentationTime,
-				unsigned durationInMicroseconds);
+                                unsigned numTruncatedBytes,
+                                struct timeval presentationTime,
+                                unsigned durationInMicroseconds);
   void afterGettingFrame1(unsigned frameSize,
-			  unsigned numTruncatedBytes,
-			  struct timeval presentationTime,
-			  unsigned durationInMicroseconds);
+                          unsigned numTruncatedBytes,
+                          struct timeval presentationTime,
+                          unsigned durationInMicroseconds);
 };
 
 #endif

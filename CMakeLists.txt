@@ -31,7 +31,7 @@ ADD_SUBDIRECTORY(cmake_local)
 
 ## add third sdk
 ADD_SUBDIRECTORY(src/third_part/json)
-#ADD_SUBDIRECTORY(src/third_part/live555)
+ADD_SUBDIRECTORY(src/third_part/live555)
 
 ADD_SUBDIRECTORY(src/lib)
 ADD_SUBDIRECTORY(src/lib/vzlogging)
@@ -44,7 +44,7 @@ ADD_SUBDIRECTORY(src/lib/sharemem)
 #ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/platform/imx6q)
-ADD_SUBDIRECTORY(src/lib/platform/hi3518e)
+ADD_SUBDIRECTORY(src/lib/platform/hi3518ev200)
 #ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
 
 ## add run

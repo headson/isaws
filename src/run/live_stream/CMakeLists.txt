@@ -37,10 +37,10 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/ch264streamframer.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ch264servermediasubsession.h
 	${CMAKE_CURRENT_SOURCE_DIR}/ch264servermediasubsession.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/caacstreamframer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/caacstreamframer.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/caacservermediasubsession.h
-	${CMAKE_CURRENT_SOURCE_DIR}/caacservermediasubsession.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cpcmstreamframer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cpcmstreamframer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cpcmservermediasubsession.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cpcmservermediasubsession.cpp
 )
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
@@ -48,10 +48,10 @@ SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/ch264streamframer.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/ch264servermediasubsession.h
 	${CMAKE_CURRENT_SOURCE_DIR}/ch264servermediasubsession.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/caacstreamframer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/caacstreamframer.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/caacservermediasubsession.h
-	${CMAKE_CURRENT_SOURCE_DIR}/caacservermediasubsession.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cpcmstreamframer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cpcmstreamframer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cpcmservermediasubsession.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cpcmservermediasubsession.cpp
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
