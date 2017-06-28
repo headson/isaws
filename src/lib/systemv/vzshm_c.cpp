@@ -35,30 +35,46 @@ class CShareMemory {
       return n_ret;
     }
 
-    char sem_name[64] = { 0 };
-    snprintf(sem_name, 63, "%s_sem_w", s_file);
-    hdl_sem_w_ = vzSemOpen(sem_name);
+    // пе╨е
+    char s_sem_key[64] = { 0 };
+    
+    // W
+    memset(s_sem_key, 0, 64);
+    snprintf(s_sem_key, 63, "%s_sem_w", s_file);
+    hdl_sem_w_ = vzSemOpen(s_sem_key);
     if (hdl_sem_w_ == HDL_NULL) {
-      printf("sem open failed %s.\n", sem_name);
+      printf("sem open failed %s.\n", s_sem_key);
+      return n_ret;
+    }
+
+    // R
+    memset(s_sem_key, 0, 64);
+    snprintf(s_sem_key, 63, "%s_sem_r", s_file);
+    hdl_sem_r_ = vzSemOpen(s_sem_key);
+    if (hdl_sem_r_ == HDL_NULL) {
+      printf("sem open failed %s.\n", s_sem_key);
       return n_ret;
     }
     return 0;
   }
 
-  int32 Read(int8* p_data, uint32 n_data, struct timeval* p_tm) {
-    if (p_data == NULL || n_data <= 0 || p_tm == NULL) {
+  int32 Read(char* p_data, unsigned int n_data, 
+             unsigned int *n_sec, unsigned int *n_usec) {
+    if (p_data == NULL || n_data == 0) {
       printf("param is error.\n");
       return -1;
     }
-    if (!v_shm_.IsValid() || !v_sem_w_.IsValid()) {
+    if (hdl_shm_ == HDL_NULL || 
+        hdl_sem_r_ == HDL_NULL || 
+        hdl_sem_w_ == HDL_NULL ) {
       printf("shm or sem is invalid.\n");
       return -1;
     }
 
-    TAG_SHM_DATA* p_shm = (TAG_SHM_DATA*)v_shm_.GetData();
+    TAG_SHM *p_shm = (TAG_SHM*)vzShmAt(hdl_shm_);
     if (p_shm) { // ╤асеох
       int n_size = 0;
-      if (v_sem_w_.Wait(5) == 0) {
+      if (vzSemLock(hdl_sem_w_, 5) == 0) {
         if (p_shm->c_tm_capture.tv_sec != p_tm->tv_sec
             || p_shm->c_tm_capture.tv_usec != p_tm->tv_usec) {
           n_size = n_data > p_shm->n_buffer ?
@@ -68,7 +84,7 @@ class CShareMemory {
           p_tm->tv_sec = p_shm->c_tm_capture.tv_sec;
           p_tm->tv_usec = p_shm->c_tm_capture.tv_usec;
         }
-        v_sem_w_.Signal();
+        vzSemUnLock(hdl_sem_w_);
       }
       return n_size;
     }
