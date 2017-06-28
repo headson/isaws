@@ -38,7 +38,7 @@ typedef struct tagSAMPLE_AENC_S
     pthread_t stAencPid;
     HI_S32  AeChn;
     HI_S32  AdChn;
-    FILE    *pfd;
+    void   *pfd;
     HI_BOOL bSendAdChn;
 } SAMPLE_AENC_S;
 
@@ -209,7 +209,7 @@ void *SAMPLE_COMM_AUDIO_AencProc(void *parg)
             }
             
             /* save audio stream to file */
-            fwrite(stStream.pStream,1,stStream.u32Len, pstAencCtl->pfd);
+            HisiPutAudioDataToBuffer(stStream.pStream, stStream.u32Len, pstAencCtl->pfd);
 
             /* finally you must release the stream */
             HI_MPI_AENC_ReleaseStream(pstAencCtl->AeChn, &stStream);
@@ -315,11 +315,11 @@ HI_S32 SAMPLE_COMM_AUDIO_CreatTrdAiAenc(AUDIO_DEV AiDev, AI_CHN AiChn, AENC_CHN 
 /******************************************************************************
 * function : Create the thread to get stream from aenc and send to adec
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_AUDIO_CreatTrdAencAdec(AENC_CHN AeChn, ADEC_CHN AdChn, FILE *pAecFd)
+HI_S32 SAMPLE_COMM_AUDIO_CreatTrdAencAdec(AENC_CHN AeChn, ADEC_CHN AdChn, void *p_arg)
 {
     SAMPLE_AENC_S *pstAenc = NULL;
 
-    if (NULL == pAecFd)
+    if (NULL == p_arg)
     {
         return HI_FAILURE;
     }
@@ -328,7 +328,7 @@ HI_S32 SAMPLE_COMM_AUDIO_CreatTrdAencAdec(AENC_CHN AeChn, ADEC_CHN AdChn, FILE *
     pstAenc->AeChn = AeChn;
     pstAenc->AdChn = AdChn;
     pstAenc->bSendAdChn = HI_TRUE;
-    pstAenc->pfd = pAecFd;    
+    pstAenc->pfd = p_arg;    
     pstAenc->bStart = HI_TRUE;    
     pthread_create(&pstAenc->stAencPid, 0, SAMPLE_COMM_AUDIO_AencProc, pstAenc);
     

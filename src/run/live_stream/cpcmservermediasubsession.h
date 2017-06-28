@@ -7,15 +7,14 @@
 
 #include <OnDemandServerMediaSubsession.hh>
 
-class VShmVideo;
 class CPCMAudioServerMediaSubsession : public OnDemandServerMediaSubsession {
  public:
   static CPCMAudioServerMediaSubsession *createNew(
-    UsageEnvironment  &env, Boolean reuseFirstSource, VShmVideo *p_shm_vdo);
+    UsageEnvironment  &env, Boolean reuseFirstSource, void *p_shm_vdo);
 
  private:
   CPCMAudioServerMediaSubsession(
-    UsageEnvironment &env, Boolean reuseFirstSource, VShmVideo *p_shm_vdo);
+    UsageEnvironment &env, Boolean reuseFirstSource, void *p_shm_vdo);
   // called only by createNew();
   virtual ~CPCMAudioServerMediaSubsession();
 
@@ -30,7 +29,7 @@ class CPCMAudioServerMediaSubsession : public OnDemandServerMediaSubsession {
   unsigned             fSamplingFrequency;
   unsigned             fNumChannels;
   unsigned             fEstimatedKbps;
-  VShmVideo           *p_shm_vdo_;
+  void                *p_shm_vdo_;
 };
 
 #endif  // LIVE_STREAM_CPCMSERVERMEDIASUBSESSION_H

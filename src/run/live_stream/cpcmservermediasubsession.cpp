@@ -14,12 +14,12 @@ unsigned audioOutputBitrate     = 128000;
 
 CPCMAudioServerMediaSubsession*
 CPCMAudioServerMediaSubsession::createNew(
-  UsageEnvironment &env, Boolean reuseFirstSource, VShmVideo *p_shm_vdo) {
+  UsageEnvironment &env, Boolean reuseFirstSource, void *p_shm_vdo) {
   return new CPCMAudioServerMediaSubsession(env, reuseFirstSource, p_shm_vdo);
 }
 
 CPCMAudioServerMediaSubsession::CPCMAudioServerMediaSubsession(
-  UsageEnvironment& env, Boolean reuseFirstSource, VShmVideo *p_shm_vdo)
+  UsageEnvironment& env, Boolean reuseFirstSource, void *p_shm_vdo)
   : OnDemandServerMediaSubsession(env, reuseFirstSource)
   , p_shm_vdo_(p_shm_vdo) {
 

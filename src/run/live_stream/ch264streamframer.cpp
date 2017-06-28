@@ -2,11 +2,12 @@
 
 #include "GroupsockHelper.hh"
 
-#include "sharemem/vshmvideo.h"
+#include "systemv/vzshm_c.h"
+//#include "vzbase/helper/stdafx.h"
 
 // CamH264VideoStreamFramer *********************************************************
 CH264VideoStreamFramer::CH264VideoStreamFramer(UsageEnvironment& env,
-    FramedSource* inputSource, VShmVideo* p_shm_vdo)
+    FramedSource* inputSource, void* p_shm_vdo)
   : H264VideoStreamFramer(env, inputSource, False, False)
   , p_shm_vdo_(p_shm_vdo) {
   fFrameRate = 25.0;
@@ -20,7 +21,7 @@ CH264VideoStreamFramer::~CH264VideoStreamFramer() {
 CH264VideoStreamFramer* CH264VideoStreamFramer::createNew(
   UsageEnvironment  &env,
   FramedSource      *inputSource,
-  VShmVideo         *p_shm_vdo) {
+  void              *p_shm_vdo) {
   setRTPSinkBufferSize();
 
   CH264VideoStreamFramer* fr =
@@ -33,7 +34,15 @@ CH264VideoStreamFramer* CH264VideoStreamFramer::createNew(
 void CH264VideoStreamFramer::doGetNextFrame() {
   gettimeofday(&fPresentationTime, NULL);
 
-  fFrameSize = p_shm_vdo_->Read((int8_t*)fTo, fMaxSize, &c_tm_capture_);
+  int n_r_size = Shm_Read(p_shm_vdo_,
+                          (char*)fTo, fMaxSize,
+                          (unsigned int*)&c_tm_capture_.tv_sec,
+                          (unsigned int*)&c_tm_capture_.tv_usec);
+  if (n_r_size <= 0) {
+    n_r_size = 0;
+    printf("shm read failed.");
+  }
+  fFrameSize = n_r_size;
   fNumTruncatedBytes = 0;
 
   fPresentationTime.tv_sec = c_tm_capture_.tv_sec;

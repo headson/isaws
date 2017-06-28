@@ -8,6 +8,9 @@
 #ifdef WIN32
 #include <windows.h>
 #define HDL_NULL  NULL
+#ifndef snprintf
+#define snprintf    _snprintf
+#endif // snprintf
 #else   // LINUX
 typedef int       HANDLE;
 #define HDL_NULL  -1

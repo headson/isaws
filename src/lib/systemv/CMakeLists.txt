@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 if(WIN32)
-    SET(BUILD_PROJECT_NAME "libsharemem")
+    SET(BUILD_PROJECT_NAME "libsystemv")
 elseif(UNIX)
-    SET(BUILD_PROJECT_NAME "sharemem")
+    SET(BUILD_PROJECT_NAME "systemv")
 endif()
 
 #########################################################################
@@ -23,17 +23,17 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/csystemv.h
-	${CMAKE_CURRENT_SOURCE_DIR}/csystemv.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/cshmvideo.h
-	${CMAKE_CURRENT_SOURCE_DIR}/cshmvideo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/vzshm_c.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vzshm_c.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vz_shm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vz_shm.cpp
 )
 
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/csystemv.h
-	${CMAKE_CURRENT_SOURCE_DIR}/csystemv.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/cshmvideo.h
-	${CMAKE_CURRENT_SOURCE_DIR}/cshmvideo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/vzshm_c.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vzshm_c.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vz_shm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/vz_shm.cpp
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")

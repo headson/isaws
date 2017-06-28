@@ -5,7 +5,7 @@
 #ifndef LIBPLATFORM_CVIDEO_H
 #define LIBPLATFORM_CVIDEO_H
 
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 
 #include <string.h>
 #include <sys/types.h>
@@ -27,8 +27,6 @@ extern "C"
 };
 #endif
 
-#include "sharemem/vshmvideo.h"
-
 class CVideoCatch {
  public:
   CVideoCatch();
@@ -40,10 +38,8 @@ class CVideoCatch {
   HI_S32 GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream);
 
  private:
-  pthread_t id;
-  
-  VShmVideo c_shm_vdo_;
-  char*     p_vdo_data_;
+  pthread_t    id;
+  void        *p_shm_vdo_;
 };
 
 #endif  // LIBPLATFORM_CVIDEO_H
