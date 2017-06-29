@@ -52,6 +52,10 @@ int InitSrvSocket(const char*     s_ip,
 
 /*超时回调*/
 int callback_timeout();
+
+/*喂狗回调*/
+int callback_feeddog();
+
 /*接收回调*/
 int callback_receive(SOCKET             sock,
                      const sockaddr_in* addr,
@@ -321,7 +325,8 @@ int InitMonitorModule(const char* s_path) {
 int InitSrvSocket(const char* ip, unsigned short port,
                   const char* s_snd_addr) {
   k_srv_sock.SetCallback(callback_receive,
-                         callback_timeout);
+                         callback_timeout,
+                         callback_feeddog);
 
   int ret = -1;
   // 打开网络监听
@@ -395,6 +400,11 @@ int callback_timeout() {
 
   k_log_file.Sync();
   k_wdg_file.Sync();
+  return 0;
+}
+
+/*喂狗回调*/
+int callback_feeddog() {
   return 0;
 }
 

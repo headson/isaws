@@ -29,26 +29,53 @@ endforeach()
 
 #########################################################################
 #Step 3 : Add code source
+
+IF(WIN32)
+	SET(WIN32_LOAD_FILE
+	${CMAKE_CURRENT_SOURCE_DIR}/base/win32.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/win32.cpp
+		)
+ELSEIF()
+	SET(WIN32_LOAD_FILE
+		)
+ENDIF()
+
 SET(SRC_LIST 	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basictypes.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/verror.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vmessage.h
-	
-	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.c
-	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.h
-	${CMAKE_CURRENT_SOURCE_DIR}/flags/vzflags.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/boost_settings.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/common.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/constructormagic.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
+	${WIN32_LOAD_FILE}
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/thread.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/thread.h
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/messagequeue.h
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/messagequeue.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/messagehandler.h
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/messagehandler.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/eventserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/eventserver.cpp
 )
 
 SOURCE_GROUP(base FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basictypes.h
-	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/verror.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/boost_settings.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/common.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/constructormagic.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
+	${WIN32_LOAD_FILE}
 )
 
 SOURCE_GROUP(helper FILES
@@ -56,12 +83,16 @@ SOURCE_GROUP(helper FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
 )
 
-SOURCE_GROUP(flags FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.c
-	${CMAKE_CURRENT_SOURCE_DIR}/flags/getopt.h
-	${CMAKE_CURRENT_SOURCE_DIR}/flags/vzflags.h
+SOURCE_GROUP(thread FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/thread.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/thread.h
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/messagequeue.h
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/messagequeue.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/messagehandler.h
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/messagehandler.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/eventserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/thread/eventserver.cpp
 )
-
 #########################################################################
 #Step 4 : Add PROJECT define 
 MESSAGE(STATUS "Step 4 : Add code source")
@@ -70,7 +101,11 @@ MESSAGE(STATUS "Step 4 : Add code source")
 #Step 5 : Add executable or library target
 MESSAGE(STATUS "Step 5 : Add executable or library target")
 #ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
-ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
+if(WIN32)
+	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
+ELSE()
+	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
+ENDIF()
 set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 
 #########################################################################

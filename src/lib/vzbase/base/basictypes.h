@@ -97,6 +97,8 @@ typedef int             SOCKET;
 #define INVALID_SOCKET  -1
 #endif
 
+const int kForever = -1;
+
 // The following only works for C++
 #ifdef __cplusplus
 
@@ -127,8 +129,10 @@ inline void Unused(const void*) {}
 
 // Use these to declare and define a static local variable (static T;) so that
 // it is leaked so that its destructors are not called at exit.
-#define LIBTMQ_DEFINE_STATIC_LOCAL(type, name, arguments) \
+#define VZBASE_DEFINE_STATIC_LOCAL(type, name, arguments) \
   static type& name = *new type arguments
+
+#define STACK_ARRAY(TYPE, LEN) static_cast<TYPE*>(::alloca((LEN)*sizeof(TYPE)))
 
 #endif  // __cplusplus
 #endif  // LIB_BASICTYPES_H_

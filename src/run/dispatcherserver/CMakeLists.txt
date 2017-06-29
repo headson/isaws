@@ -64,6 +64,7 @@ else()
 		vzlogging
 		sqlite3
 		libevent_core.so
+		libevent_pthreads.so
 		pthread
 		rt
 	)

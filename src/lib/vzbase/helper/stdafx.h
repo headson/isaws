@@ -1,7 +1,7 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-15
-/* Description :
-/************************************************************************/
+/*************************************************************************
+*Author      : Sober.Peng 17-06-15
+*Description :
+*************************************************************************/
 #ifndef LIB_STDAFX_H_
 #define LIB_STDAFX_H_
 
@@ -89,7 +89,7 @@ inline int gettimeofday(struct timeval *tp, void *tzp) {
 #include <unistd.h>
 #include <fcntl.h>
 
-#include "basictypes.h"
+#include "vzbase/base/basictypes.h"
 
 #define i_sync()        sync()
 
@@ -120,9 +120,6 @@ inline int closesocket(SOCKET socket) {
 
 #endif  // WIN32
 
-#include "verror.h"
-#include "vmessage.h"
-
 #include "vzlogging/logging/vzlogging.h"
 #include "vzlogging/logging/vzwatchdog.h"
 
@@ -132,20 +129,20 @@ inline int closesocket(SOCKET socket) {
 extern "C" {
 #endif // __cplusplus
 #if 0
-/************************************************************************/
-/* Description : 初始化日志系统;其中包含了WSAStartup
-/* Parameters  : 
-/* Return      : 
-/************************************************************************/
+/***********************************************************************
+*Description : 初始化日志系统;其中包含了WSAStartup
+*Parameters  : 
+*Return      : 
+***********************************************************************/
 inline void InitSetLogging(int argc, char* argv[]) {
   InitVzLogging(argc, argv);
 }
 
-/************************************************************************/
-/* Description : 退出日志系统;其中包含了WSACleanup
-/* Parameters  :
-/* Return      :
-/************************************************************************/
+/***********************************************************************
+*Description : 退出日志系统;其中包含了WSACleanup
+*Parameters  :
+*Return      :
+***********************************************************************/
 inline void ExitSetLogging() {
   ExitVzLogging();
 }

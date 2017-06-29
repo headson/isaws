@@ -8,7 +8,7 @@
 #include "dispatcher/base/pkghead.h"
 
 CDpClient::CDpClient()
-  : vzconn::CTcpClient(&evt_loop_, this)
+  : vzconn::CEvtTcpClient(&evt_loop_, this)
   , callback_(NULL)
   , p_usr_arg_(NULL)
   , n_session_id_(-1)

@@ -39,13 +39,17 @@ typedef int (*RECV_CALLBACK)(SOCKET             sock,
 /* 超时回调 */
 typedef int(*TIMEOUT_CALLBACK)();
 
+typedef int(*FEEDOG_CALLBACK)();
+
 class CVzSockDgram {
  public:
   CVzSockDgram();
   virtual ~CVzSockDgram();
 
   // 设置回调函数
-  void SetCallback(RECV_CALLBACK recv_cb, TIMEOUT_CALLBACK timeout_cb);
+  void SetCallback(RECV_CALLBACK recv_cb,
+                   TIMEOUT_CALLBACK timeout_cb,
+                   FEEDOG_CALLBACK feeddog_cb);
 
   // 打开透传地址
   int  OpenTransAddr(const char* s_srv_addr);
@@ -61,6 +65,7 @@ class CVzSockDgram {
  private:
   RECV_CALLBACK    recv_cb_;                // 接收回调
   TIMEOUT_CALLBACK timeout_cb_;             // 超时回调
+  FEEDOG_CALLBACK  feeddog_cb_;             // 喂狗回调
 
  private:  // 需要初始化
   fd_set           rfds_;

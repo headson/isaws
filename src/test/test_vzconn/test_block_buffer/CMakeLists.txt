@@ -53,6 +53,7 @@ if(WIN32)
 		libvzconn.lib
 		libvzlogging.lib
 		libevent_core.lib
+		
 		${VZPROJECT_LINK_LIB}
 		ws2_32.lib
 	)

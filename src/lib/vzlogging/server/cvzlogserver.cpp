@@ -30,10 +30,12 @@ CVzSockDgram::~CVzSockDgram() {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-void CVzSockDgram::SetCallback(RECV_CALLBACK recv_cb,
-                               TIMEOUT_CALLBACK timeout_cb) {
+void CVzSockDgram::SetCallback(RECV_CALLBACK    recv_cb,
+                               TIMEOUT_CALLBACK timeout_cb,
+                               FEEDOG_CALLBACK  feeddog_cb) {
   recv_cb_    = recv_cb;
   timeout_cb_ = timeout_cb;
+  feeddog_cb_ = feeddog_cb;
 }
 
 //
@@ -177,6 +179,11 @@ void CVzSockDgram::Loop() {
     if (timeout_cb_) {
       timeout_cb_();
     }
+  }
+
+  // Î¹¹·»Øµ÷
+  if (feeddog_cb_) {
+    feeddog_cb_();
   }
 }
 

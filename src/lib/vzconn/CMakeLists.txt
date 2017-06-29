@@ -33,15 +33,13 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/byteorder.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/cblockbuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/cblockbuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/csocketbuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/csocketbuffer.cpp
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/clibevent.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/clibevent.cpp
-	
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.cpp
-	
+	${CMAKE_CURRENT_SOURCE_DIR}/async/clibevent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/async/clibevent.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevttcpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevttcpclient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevttcpserver.h
@@ -51,9 +49,6 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevtipcclient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevtipcserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevtipcserver.cpp
-	
-	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.h
-	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.cpp
 )
 
 SOURCE_GROUP(base FILES
@@ -61,19 +56,16 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/byteorder.h
-	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/clibevent.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/clibevent.cpp
-)
-
-SOURCE_GROUP(buffer FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/cblockbuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/cblockbuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/csocketbuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/csocketbuffer.cpp
 )
 
 SOURCE_GROUP(async FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/async/clibevent.h
+	${CMAKE_CURRENT_SOURCE_DIR}/async/clibevent.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevttcpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevttcpclient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevttcpserver.h
@@ -83,11 +75,6 @@ SOURCE_GROUP(async FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevtipcclient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevtipcserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevtipcserver.cpp
-)
-
-SOURCE_GROUP(sync FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.h
-	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.cpp
 )
 
 #########################################################################

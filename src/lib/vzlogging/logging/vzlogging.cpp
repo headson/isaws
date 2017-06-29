@@ -611,14 +611,14 @@ return *this;
 
 /**日志对外接口**********************************************************/
 int InitVzLogging(int argc, char* argv[]) {
-  #ifdef WIN32
+#ifdef WIN32
   WSADATA wsaData;
   WSAStartup(MAKEWORD(2, 2), &wsaData);
   srand((unsigned int)time(NULL));
-  #else
+#else
   srand((unsigned int)time(NULL));
   srandom((unsigned int)time(NULL));
-  #endif
+#endif
   memset(vzlogging::k_tls_void, 0, sizeof(vzlogging::k_tls_void));
   memset(vzlogging::k_watchdog, 0, sizeof(vzlogging::k_watchdog));
 
@@ -644,8 +644,8 @@ int InitVzLogging(int argc, char* argv[]) {
   if (ret != 0) {
     VZ_ERROR("share memory failed. %d.\n", ret);
   }
-  VZ_PRINT("share memory success. level %d.\n",
-           vzlogging::k_shm_arg.GetSendLevel());
+  //VZ_PRINT("share memory success. level %d.\n",
+  //         vzlogging::k_shm_arg.GetSendLevel());
   return ret;
 }
 

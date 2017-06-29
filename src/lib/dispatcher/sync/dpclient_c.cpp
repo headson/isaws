@@ -9,8 +9,8 @@
 #include "dispatcher/sync/cdpclient.h"
 #include "dispatcher/sync/ckvdbclient.h"
 
-#include "vzconn/base/clibevent.h"
-#include "vzconn/sync/ctcpclient.h"
+#include "vzconn/async/clibevent.h"
+#include "vzconn/async/cevttcpclient.h"
 
 // TLS
 #ifdef WIN32
@@ -264,7 +264,8 @@ EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
   }
 
   p_tcp->RunLoop(timeout);
-  if (p_tcp->get_resp_ret() == TYPE_REPLY) {
+  if ((p_tcp->get_resp_ret() == TYPE_REPLY) ||
+      (p_tcp->get_resp_ret() == TYPE_SUCCEED)) {
     return VZNETDP_SUCCEED;
   }
   LOG(L_ERROR) << p_tcp->get_resp_ret();

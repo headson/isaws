@@ -8,7 +8,7 @@
 #include "dispatcher/base/pkghead.h"
 
 CKvdbClient::CKvdbClient()
-  : vzconn::CTcpClient(&evt_loop_, this)
+  : vzconn::CEvtTcpClient(&evt_loop_, this)
   , n_resp_ret_((uint32)-1)
   , p_callback_(NULL)
   , p_usr_arg_(NULL)
@@ -135,11 +135,12 @@ bool CKvdbClient::GetKey(const char          *p_key,
                          Kvdb_GetKeyCallback  p_callback,
                          void                *p_usr_arg,
                          bool                 absolute /*= false*/) {
-  if (n_key > MAX_KVDB_KEY_SIZE) {
+  if (n_key > (MAX_KVDB_KEY_SIZE-1)) {
     LOG(L_ERROR) << "key is length than "<<MAX_KVDB_KEY_SIZE;
     return false;
   }
-  memcpy(s_key_, p_key, MAX_KVDB_KEY_SIZE);
+  strncpy((char*)s_key_, p_key, MAX_KVDB_KEY_SIZE);
+  s_key_[n_key] = '\0';
   n_key_ = n_key;
 
   int32 n_ret = 0;

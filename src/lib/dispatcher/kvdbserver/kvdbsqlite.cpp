@@ -1,6 +1,7 @@
 #include "dispatcher/kvdbserver/kvdbsqlite.h"
 #include "vzlogging/logging/vzloggingcpp.h"
 #include <string.h>
+#include <stdio.h>
 
 namespace kvdb {
 
@@ -30,7 +31,7 @@ KvdbSqlite::~KvdbSqlite() {
 
 void KvdbSqlite::RemoveDatabase(const char *kvdb_path) {
   UinitKvdb();
-  std::remove(kvdb_path);
+  remove(kvdb_path);
 }
 
 bool KvdbSqlite::InitKvdb(const char *kvdb_path, const char *backup_path) {

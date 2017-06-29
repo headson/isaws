@@ -55,10 +55,10 @@ class EVT_LOOP {
   int32   Start();
   void    Stop();
 
-  int32   RunLoop(unsigned int n_timeout=0);
+  int32   RunLoop(uint32 n_timeout=0);
 
   // ¶¨Ê±ÍË³ö
-  void    LoopExit(unsigned int n_timeout);
+  void    LoopExit(uint32 n_timeout);
 
   bool    isRuning();
 
