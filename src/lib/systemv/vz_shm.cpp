@@ -65,7 +65,7 @@ HANDLE vzShmOpen(const char* name, int size) {
                                  (LPCSTR)name);
   }
   if (shm_id == NULL) {
-    perror("OpenFileMapping failed.\n");
+    printf("OpenFileMapping failed.\n");
     return NULL;
   }
 
@@ -76,7 +76,7 @@ HANDLE vzShmOpen(const char* name, int size) {
 void *vzShmAt(HANDLE shm_id) {
   void *p_ptr = ::MapViewOfFile(shm_id, FILE_MAP_ALL_ACCESS, 0, 0, 0);
   if (p_ptr == NULL) {
-    perror("MapViewOfFile failed.\n");
+    printf("MapViewOfFile failed.\n");
     return NULL;
   }
   return p_ptr;
@@ -85,7 +85,7 @@ void *vzShmAt(HANDLE shm_id) {
 void vzShmDt(void *p_ptr) {
   if (p_ptr) {
     if (FALSE == ::UnmapViewOfFile(p_ptr)) {
-      perror("UnmapViewOfFile failed.\n");
+      printf("UnmapViewOfFile failed.\n");
     }
     p_ptr = NULL;
   }
@@ -187,7 +187,7 @@ HANDLE vzShmOpen(const char* name, int size) {
 void *vzShmAt(HANDLE shm_id) {
   void *p_ptr = shmat(shm_id, 0, 0);
   if (p_ptr == NULL) {
-    perror("shmat failed.\n");
+    printf("shmat failed.\n");
     return NULL;
   }
   return p_ptr;

@@ -70,9 +70,10 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vo.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vpss.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_venc.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_audio.c
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/caudio.h
-	${CMAKE_CURRENT_SOURCE_DIR}/caudio.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
+	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.cpp
 )
@@ -116,11 +117,12 @@ SOURCE_GROUP(common FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vo.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vpss.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_venc.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_audio.cpp
 )
 
 SOURCE_GROUP(audio_video FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/caudio.h
-	${CMAKE_CURRENT_SOURCE_DIR}/caudio.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
+	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.cpp
 )

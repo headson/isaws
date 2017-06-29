@@ -9,13 +9,23 @@ typedef struct {
   unsigned int  n_w_sec;      // 写秒
   unsigned int  n_w_usec;     // 写微妙
 
-  unsigned int  n_data;       // 数据长度
+  unsigned int  n_size;       // 数据长度
+  unsigned int  n_data;       // 写长度
   unsigned char p_data[0];    // 数据指针
 } TAG_SHM;
 
 // 视频通道0
 #define SHM_VIDEO_0       "/dev/shm/video_0"
 #define SHM_VIDEO_0_SIZE  1024*1024
+
+#define SHM_AUDIO_0       "/dev/shm/audio_0"
+#define SHM_AUDIO_0_SIZE  1024
+
+#ifdef __cplusplus
+#if __cplusplus
+extern "C"{
+#endif
+#endif /* End of #ifdef __cplusplus */
 
 /************************************************************************
 *Description : 创建共享HANDLE
@@ -88,5 +98,11 @@ int   Shm_W_Write(void *p_hdl,
 *Return      : <0 失败, 0 成功
 ************************************************************************/
 int   Shm_W_End(void *p_hdl, unsigned int n_sec, unsigned int n_usec);
+
+#ifdef __cplusplus
+#if __cplusplus
+}
+#endif 
+#endif /* End of #ifdef __cplusplus */
 
 #endif  // _VZSHM_C_H_

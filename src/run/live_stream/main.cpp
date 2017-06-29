@@ -1,13 +1,16 @@
 
 #include <stdlib.h>
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 
-#include "sharemem/vshmvideo.h"
+#include "systemv/vzshm_c.h"
+
 #include "ch264streamframer.h"
 #include "ch264servermediasubsession.h"
+#include "cpcmstreamframer.h"
+#include "cpcmservermediasubsession.h"
 
 UsageEnvironment* env;
 
@@ -36,16 +39,17 @@ int main(int argc, char** argv) {
   char const* descriptionString
     = "Session streamed by \"testOnDemandRTSPServer\"";
 
-  VShmVideo v_chm_vdo;
-  v_chm_vdo.Open((uint8*)DEF_SHM_VIDEO_0, sizeof(TAG_SHM_VIDEO));
-
+  void *p_shm_vdo = Shm_Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+  void *p_shm_ado = Shm_Create(SHM_AUDIO_0, SHM_AUDIO_0_SIZE);
   {
     char const* s_stream_name = "live";
     ServerMediaSession* sms = 
       ServerMediaSession::createNew(
       *env, s_stream_name, s_stream_name, descriptionString);
-    sms->addSubsession(CH264LiveVideoServerMediaSubsession::createNew(
-      *env, reuseFirstSource, &v_chm_vdo));
+    //sms->addSubsession(CH264LiveVideoServerMediaSubsession::createNew(
+    //  *env, reuseFirstSource, p_shm_vdo));
+    sms->addSubsession(CPCMAudioServerMediaSubsession::createNew(
+      *env, reuseFirstSource, p_shm_ado));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, s_stream_name);

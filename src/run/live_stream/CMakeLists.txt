@@ -71,8 +71,8 @@ ENDIF()
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
+		libsystemv
 		libvzlogging
-		libsharemem
 		BasicUsageEnvironment
 		groupsock
 		liveMedia
@@ -82,7 +82,7 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		sharemem
+		systemv
 		vzlogging
 		#live555 四个库的顺序不能变
 		libliveMedia.a

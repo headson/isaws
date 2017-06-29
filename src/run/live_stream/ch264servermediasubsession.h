@@ -10,18 +10,17 @@
 #include "H264VideoStreamFramer.hh"
 #include "FileServerMediaSubsession.hh"
 
-class VShmVideo;
 class CH264LiveVideoServerMediaSubsession: public OnDemandServerMediaSubsession {
  public:
   static CH264LiveVideoServerMediaSubsession *createNew(
     UsageEnvironment  &env,
     Boolean           reuseFirstSource,
-    VShmVideo         *p_shm_vdo);
+    void             *p_shm_vdo);
 
  private:
   CH264LiveVideoServerMediaSubsession(UsageEnvironment &env,
-                                     Boolean          reuseFirstSource,
-                                     VShmVideo        *p_shm_vdo);
+                                     Boolean            reuseFirstSource,
+                                     void              *p_shm_vdo);
   // called only by createNew();
   virtual ~CH264LiveVideoServerMediaSubsession();
 
@@ -35,7 +34,7 @@ class CH264LiveVideoServerMediaSubsession: public OnDemandServerMediaSubsession 
                                     FramedSource  *inputSource);
  protected:
   virtual char const  *sdpLines();
-  VShmVideo           *p_shm_vdo_;
+  void                *p_shm_vdo_;
 };
 
 #endif  // CH264SERVERMEDIASUBSESSION_H

@@ -3,19 +3,21 @@
 #include "GroupsockHelper.hh"
 
 #include "ch264streamframer.h"
-#include "sharemem/vshmvideo.h"
+
+#include "systemv/vz_shm.h"
+#include "vzbase/helper/stdafx.h"
 
 CH264LiveVideoServerMediaSubsession *CH264LiveVideoServerMediaSubsession::createNew(
   UsageEnvironment  &env,
   Boolean           reuseFirstSource,
-  VShmVideo         *p_shm_vdo) {
+  void             *p_shm_vdo) {
   return new CH264LiveVideoServerMediaSubsession(env, reuseFirstSource, p_shm_vdo);
 }
 
 CH264LiveVideoServerMediaSubsession::CH264LiveVideoServerMediaSubsession(
   UsageEnvironment  &env,
   Boolean           reuseFirstSource,
-  VShmVideo         *p_shm_vdo)
+  void             *p_shm_vdo)
   : OnDemandServerMediaSubsession(env, reuseFirstSource)
   , p_shm_vdo_(p_shm_vdo) {
 }
