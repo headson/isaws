@@ -1,8 +1,7 @@
 #include "cvideocatch.h"
 
-#include "stdafx.h"
-#include "sharemem/vshmvideo.h"
-
+#include "systemv/vzshm_c.h"
+#include "vzbase/helper/stdafx.h"
 
 HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_usr_arg) {
   if (p_usr_arg) {
@@ -12,8 +11,7 @@ HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_us
 }
 
 CVideoCatch::CVideoCatch()
-  : c_shm_vdo_()
-  , p_vdo_data_(NULL) {
+  : p_shm_vdo_(NULL) {
 }
 
 CVideoCatch::~CVideoCatch() {
@@ -21,14 +19,11 @@ CVideoCatch::~CVideoCatch() {
 
 
 int32 CVideoCatch::Start() {
-  int32 n_ret = -1;
-  n_ret = c_shm_vdo_.Open((uint8*)DEF_SHM_VIDEO_0,
-                          sizeof(TAG_SHM_VIDEO));
-  if (n_ret != 0) {
+  p_shm_vdo_ = Shm_Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+  if (p_shm_vdo_ == NULL) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
   }
-  p_vdo_data_ = new char[1024*1024];
 
   pthread_create(&id, NULL, SAMPLE_VENC_1080P_CLASSIC, this);
   return 0;
@@ -38,11 +33,17 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream) {
   if (n_chn != 0) {
     return 0;
   }
+  Shm_W_Begin(p_shm_vdo_);
   uint32 n_vdo_data = 0;
   for (uint32 i = 0; i < p_stream->u32PackCount; i++) {
-    memcpy(p_vdo_data_ + n_vdo_data, p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
-           p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
+
+    Shm_W_Write(p_shm_vdo_, (char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
+                p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset, n_vdo_data);
     n_vdo_data += p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset;
+
+    /*memcpy(p_vdo_data_ + n_vdo_data, p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
+           p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
+           n_vdo_data += p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset;*/
   }
   //for (uint32 i = 0; i < p_stream->u32PackCount; i++) {
   //  memcpy(p_vdo_data_ + n_vdo_data, p_stream->pstPack[i].pu8Addr[0],
@@ -62,7 +63,7 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream) {
 
   struct timeval tv;
   gettimeofday(&tv, NULL);
-  c_shm_vdo_.Write((int8*)p_vdo_data_, n_vdo_data, &tv);
+  Shm_W_End(p_shm_vdo_, tv.tv_sec, tv.tv_usec);
   return 0;
 }
 

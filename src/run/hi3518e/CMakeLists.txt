@@ -13,7 +13,7 @@ foreach(inc_dir ${inc_dirs})
 endforeach()
 
 #########################################################################
-LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/lib/platform/hi3518e/lib/)
+LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/lib/platform/hi3518ev200/lib/)
 MESSAGE(STATUS "Print the link directores")
 get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
 	PROPERTY LINK_DIRECTORIES)
@@ -54,18 +54,37 @@ else()
 		platform
 		systemv
 		vzlogging
+		#libmpi.a 
+		#libVoiceEngine.a 
+		#libaec.a 
+		#libresampler.a 
+		#libanr.a 
+		#libisp.a 
+		#libsns_ov9712.a 
+		#lib_hiae.a 
+		#lib_hiawb.a 
+		#lib_hiaf.a
+		#${VZPROJECT_LINK_LIB}
+#		#-lpthread
+		#-lm
 		libmpi.a 
-		libVoiceEngine.a 
-		libaec.a 
-		libresampler.a 
-		libanr.a 
-		libisp.a 
-		libsns_ov9712.a 
+		libive.a
+		libmd.a 
+		libtde.a 
+		libVoiceEngine.a
+		libupvqe.a 
+		libdnvqe.a
+		libisp.a
+		libsns_f02.a 
+		lib_cmoscfg.a
+		lib_iniparser.a
 		lib_hiae.a 
 		lib_hiawb.a 
 		lib_hiaf.a
-		${VZPROJECT_LINK_LIB}
-#		-lpthread
+		lib_hidefog.a
+		${YHPROJECT_LINK_LIB}
+		-lpthread
 		-lm
+		-ldl
 	)
 endif()

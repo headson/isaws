@@ -76,8 +76,8 @@ SET(PROJECT_SOURCE_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/sample_venc.c
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/caudio.h
-	${CMAKE_CURRENT_SOURCE_DIR}/caudio.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
+	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.cpp
 )
@@ -129,8 +129,8 @@ SOURCE_GROUP(common FILES
 SOURCE_GROUP(audio_video FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sample_venc.c
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/caudio.h
-	${CMAKE_CURRENT_SOURCE_DIR}/caudio.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
+	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.cpp
 )

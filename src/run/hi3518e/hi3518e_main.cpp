@@ -9,11 +9,11 @@
 int main(int argc, char* argv[]) {
   InitVzLogging(argc, argv);
 
-  //CVideoCatch c_vdo_1;
-  CAudioCatch c_ado_0;
+  CVideoCatch c_vdo_1;
+  //CAudioCatch c_ado_0;
 
-  //c_vdo_1.Start();
-  c_ado_0.Start();
+  c_vdo_1.Start();
+  //c_ado_0.Start();
   while (true) {
     usleep(100*1000);
   }
