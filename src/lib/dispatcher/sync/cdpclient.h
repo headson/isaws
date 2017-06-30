@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #ifndef LIBDISPATCH_CDPCLIENT_H_
 #define LIBDISPATCH_CDPCLIENT_H_
@@ -8,9 +8,9 @@
 #include "vzbase/base/basictypes.h"
 
 #include "dpclient_c.h"
-#include "vzconn/async/cevttcpclient.h"
+#include "vzconn/sync/ctcpclient.h"
 
-class CDpClient : public vzconn::CEvtTcpClient,
+class CDpClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
   CDpClient();
@@ -31,6 +31,7 @@ class CDpClient : public vzconn::CEvtTcpClient,
  public:
   void  Reset(DpClient_MessageCallback callback, void *p_usr_arg);
 
+ public:
   /* method;add\remove */
   int32 ListenMessage(uint8        e_type,
                       const char  *p_method[],    /* 方法名组成32Byte长度发送 */
@@ -44,17 +45,6 @@ class CDpClient : public vzconn::CEvtTcpClient,
                     int                       n_data,
                     DpClient_MessageCallback  p_callback,
                     void                     *p_user_arg);
-
- protected:
-  virtual int32 OnRecv() {
-    CEvtTcpClient::OnRecv();
-    return 0;  // 避免回调后台删除自己
-  }
-
-  virtual int32 OnSend() {
-    CEvtTcpClient::OnSend();
-    return 0;  // 避免回调后台删除自己
-  }
 
  protected:
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
@@ -83,8 +73,8 @@ class CDpClient : public vzconn::CEvtTcpClient,
     return n_cur_msg_id_;
   }
 
-  int32 get_resp_ret() {
-    return n_resp_ret_;
+  int32 get_ret_type() {
+    return n_ret_type_;
   }
 
  protected:
@@ -101,7 +91,10 @@ class CDpClient : public vzconn::CEvtTcpClient,
   uint32                    n_cur_msg_id_;    // 当前发送msg id
 
  protected:
-  uint32                    n_resp_ret_;      // 回执类型,也做evt loop退出标签
+  uint32                    n_ret_type_;      // 回执结果,也做evt loop退出标签
+
+ protected:
+  uint32                    b_poll_enabel_;   // poll 使能
   uint32                    n_recv_packet_;   // poll loop退出标签
 
   static const uint32       MAX_MESSAGE_ID = 0X00FFFFFF;

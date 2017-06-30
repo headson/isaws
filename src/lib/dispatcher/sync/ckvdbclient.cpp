@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #include "ckvdbclient.h"
 
@@ -8,15 +8,15 @@
 #include "dispatcher/base/pkghead.h"
 
 CKvdbClient::CKvdbClient()
-  : vzconn::CEvtTcpClient(&evt_loop_, this)
-  , n_resp_ret_((uint32)-1)
+  : vzconn::CTcpClient(&evt_loop_, this)
+  , n_ret_type_((uint32)-1)
   , p_callback_(NULL)
   , p_usr_arg_(NULL)
   , p_get_data_(NULL)
   , n_get_data_(0) {
   n_key_ = 0;
 
-  n_msg_id_ = 0;
+  n_message_id_ = 0;
   evt_loop_.Start();
 }
 
@@ -35,7 +35,7 @@ int32 CKvdbClient::RunLoop(uint32 n_timeout) {
   int32 n_ret = 0;
   for (uint32 i = 0; i < n_timeout / 10; i++) {
     n_ret = evt_loop_.RunLoop(10);
-    if (n_resp_ret_ != (uint32)-1) {
+    if (n_ret_type_ != (uint32)-1) {
       return 1;
     }
   }
@@ -46,7 +46,7 @@ void CKvdbClient::Reset(Kvdb_GetKeyCallback  callback,
                         void                *p_usr_arg,
                         uint8               *p_get_data,
                         uint32               n_get_data) {
-  n_resp_ret_ = (uint32)-1;
+  n_ret_type_ = (uint32)-1;
 
   p_callback_ = callback;
   p_usr_arg_  = p_usr_arg;
@@ -96,7 +96,7 @@ bool CKvdbClient::SetKey(const char *p_key,
     LOG(L_ERROR) << "set key time out";
     return false;
   }
-  return (n_resp_ret_ == KVDB_SUCCEED);
+  return (n_ret_type_ == KVDB_SUCCEED);
 }
 
 bool CKvdbClient::GetKey(const char *p_key,
@@ -127,7 +127,7 @@ bool CKvdbClient::GetKey(const char *p_key,
     LOG(L_ERROR) << "get key time out";
     return false;
   }
-  return (n_resp_ret_ == KVDB_SUCCEED);
+  return (n_ret_type_ == KVDB_SUCCEED);
 }
 
 bool CKvdbClient::GetKey(const char          *p_key,
@@ -167,7 +167,7 @@ bool CKvdbClient::GetKey(const char          *p_key,
     LOG(L_ERROR) << "get key time out";
     return false;
   }
-  return (n_resp_ret_ == KVDB_SUCCEED);
+  return (n_ret_type_ == KVDB_SUCCEED);
 }
 
 bool CKvdbClient::Delete(const char *p_key, uint8 n_key) {
@@ -194,7 +194,7 @@ bool CKvdbClient::Delete(const char *p_key, uint8 n_key) {
     LOG(L_ERROR) << "delete key time out";
     return false;
   }
-  return (n_resp_ret_ == KVDB_SUCCEED);
+  return (n_ret_type_ == KVDB_SUCCEED);
 }
 
 bool CKvdbClient::BackupDatabase() {
@@ -221,7 +221,7 @@ bool CKvdbClient::BackupDatabase() {
     LOG(L_ERROR) << "bakup time out";
     return false;
   }
-  return (n_resp_ret_ == KVDB_SUCCEED);
+  return (n_ret_type_ == KVDB_SUCCEED);
 }
 
 bool CKvdbClient::RestoreDatabase() {
@@ -248,7 +248,7 @@ bool CKvdbClient::RestoreDatabase() {
     LOG(L_ERROR) << "restore time out";
     return false;
   }
-  return (n_resp_ret_ == KVDB_SUCCEED);
+  return (n_ret_type_ == KVDB_SUCCEED);
 }
 
 int32 CKvdbClient::HandleRecvPacket(vzconn::VSocket *p_cli,
@@ -261,10 +261,16 @@ int32 CKvdbClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   }
 
   if (n_data >= sizeof(KvdbMessage)) {
-    int32 n_value  = n_data - sizeof(KvdbMessage);
     KvdbMessage *p_msg = DecKvdbMsg(p_data, n_data);
-    n_resp_ret_ = (uint32)p_msg->type;
+    if (p_msg->id != get_msg_id()) {
+      LOG(L_WARNING) << "id is not current message id.";
+      return 0;
+    }
 
+    evt_loop_.LoopExit(0);
+    n_ret_type_ = (uint32)p_msg->type;
+
+    int32 n_value  = n_data - sizeof(KvdbMessage);
     if (p_callback_) {
       p_callback_((char*)s_key_, n_key_, (char*)p_msg->value, n_value, p_usr_arg_);
     }
@@ -277,7 +283,7 @@ int32 CKvdbClient::HandleRecvPacket(vzconn::VSocket *p_cli,
       }
     }
   } else {
-    n_resp_ret_ = KVDB_FAILURE;
+    n_ret_type_ = KVDB_FAILURE;
     LOG(L_ERROR) << "unkown the response.";
   }
   return 0;
@@ -291,7 +297,9 @@ int CKvdbClient::EncKvdbMsg(KvdbMessage   *p_msg,
   memset(p_msg, 0, sizeof(KvdbMessage));
 
   p_msg->type   = n_type;
-  p_msg->id     = n_msg_id_++;
+  p_msg->id     = get_msg_id();
+
+  n_cur_msg_id_ = p_msg->id;
 
   strncpy(p_msg->key, p_key, MAX_KVDB_KEY_SIZE);
   return sizeof(KvdbMessage);

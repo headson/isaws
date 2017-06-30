@@ -9,8 +9,8 @@
 #include "dispatcher/sync/cdpclient.h"
 #include "dispatcher/sync/ckvdbclient.h"
 
-#include "vzconn/async/clibevent.h"
-#include "vzconn/async/cevttcpclient.h"
+#include "vzconn/base/clibevent.h"
+#include "vzconn/sync/ctcpclient.h"
 
 // TLS
 #ifdef WIN32
@@ -231,10 +231,10 @@ EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
   }
 
   p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  if (p_tcp->get_resp_ret() == TYPE_SUCCEED) {
+  if (p_tcp->get_ret_type() == TYPE_SUCCEED) {
     return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) << p_tcp->get_resp_ret();
+  LOG(L_ERROR) << p_tcp->get_ret_type();
   return VZNETDP_FAILURE;
 }
 
@@ -264,11 +264,10 @@ EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
   }
 
   p_tcp->RunLoop(timeout);
-  if ((p_tcp->get_resp_ret() == TYPE_REPLY) ||
-      (p_tcp->get_resp_ret() == TYPE_SUCCEED)) {
-    return VZNETDP_SUCCEED;
+  if ((p_tcp->get_ret_type() == TYPE_REPLY) ||
+      (p_tcp->get_ret_type() == TYPE_SUCCEED)) {    return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) << p_tcp->get_resp_ret();
+  LOG(L_ERROR) << p_tcp->get_ret_type();
   return VZNETDP_FAILURE;
 }
 
@@ -296,10 +295,10 @@ EXPORT_DLL int DpClient_SendDpReply(const char    *method,
   }
 
   p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  if (p_tcp->get_resp_ret() == TYPE_SUCCEED) {
+  if (p_tcp->get_ret_type() == TYPE_SUCCEED) {
     return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) << p_tcp->get_resp_ret();
+  LOG(L_ERROR) << p_tcp->get_ret_type();
   return VZNETDP_FAILURE;
 }
 
@@ -336,10 +335,10 @@ EXPORT_DLL int DpClient_HdlAddListenMessage(const void *p_poll_handle,
   // LOG(L_WARNING) << "add listen message " << n_ret;
 
   p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  if (p_tcp->get_resp_ret() == TYPE_SUCCEED) {
+  if (p_tcp->get_ret_type() == TYPE_SUCCEED) {
     return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) << p_tcp->get_resp_ret();
+  LOG(L_ERROR) << p_tcp->get_ret_type();
   return VZNETDP_FAILURE;
 }
 
@@ -363,10 +362,10 @@ EXPORT_DLL int DpClient_HdlRemoveListenMessage(const void *p_poll_handle,
   }
 
   p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  if (p_tcp->get_resp_ret() == TYPE_SUCCEED) {
+  if (p_tcp->get_ret_type() == TYPE_SUCCEED) {
     return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) << p_tcp->get_resp_ret();
+  LOG(L_ERROR) << p_tcp->get_ret_type();
   return VZNETDP_FAILURE;
 }
 

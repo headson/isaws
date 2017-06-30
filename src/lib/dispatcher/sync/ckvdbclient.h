@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #ifndef LIBDPCLIENT_CKVDBCLIENT_H_
 #define LIBDPCLIENT_CKVDBCLIENT_H_
@@ -9,9 +9,9 @@
 #include "dpclient_c.h"
 
 #include "dispatcher/base/pkghead.h"
-#include "vzconn/async/cevttcpclient.h"
+#include "vzconn/sync/ctcpclient.h"
 
-class CKvdbClient : public vzconn::CEvtTcpClient,
+class CKvdbClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
   CKvdbClient();
@@ -25,9 +25,9 @@ class CKvdbClient : public vzconn::CEvtTcpClient,
   // return 0=timeout,1=success
   int32 RunLoop(uint32 n_timeout);
 
- public:
+ protected:
   /***********************************************************************
-  *Description : 
+  *Description :
   *Parameters  : p_callback[IN] 回调函数指针
   *              p_user_arg[IN] 回调函数参数
   *              p_get_data[IN] 返回数据buffer
@@ -38,8 +38,7 @@ class CKvdbClient : public vzconn::CEvtTcpClient,
              void                *p_user_arg,
              uint8               *p_get_data,
              uint32               n_get_data);
-
-  /* method;add\remove */
+ public:
   bool SetKey(const char *p_key,
               uint8       n_key,
               const char *p_value,
@@ -62,17 +61,6 @@ class CKvdbClient : public vzconn::CEvtTcpClient,
   bool RestoreDatabase();
 
  protected:
-  virtual int32 OnRecv() {
-    CEvtTcpClient::OnRecv();
-    return 0;  // 避免回调主动删除自己
-  }
-
-  virtual int32 OnSend() {
-    CEvtTcpClient::OnSend();
-    return 0;  // 避免回调主动删除自己
-  }
-
- protected:
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
                                  const uint8            *p_data,
                                  uint32                  n_data,
@@ -83,6 +71,19 @@ class CKvdbClient : public vzconn::CEvtTcpClient,
   virtual void  HandleClose(vzconn::VSocket *p_cli) {
   }
 
+ public:
+  uint32 new_msg_id() {
+    n_message_id_++;
+    return n_message_id_;
+  }
+  uint32 get_msg_id() {
+    return n_cur_msg_id_;
+  }
+
+  int32 get_ret_type() {
+    return n_ret_type_;
+  }
+
  protected:
   vzconn::EVT_LOOP          evt_loop_;    //
 
@@ -91,7 +92,7 @@ class CKvdbClient : public vzconn::CEvtTcpClient,
   uint8                     s_key_[MAX_KVDB_KEY_SIZE];
   uint32                    n_key_;
 
-  uint32                    n_resp_ret_;  // 回执
+  uint32                    n_ret_type_;  // 回执结果,也做evt loop退出标签
 
   Kvdb_GetKeyCallback       p_callback_;  // 回调
   void                     *p_usr_arg_;   // 回调用户参数
@@ -100,7 +101,8 @@ class CKvdbClient : public vzconn::CEvtTcpClient,
   int32                     n_get_data_;
 
  protected:
-  uint32                   n_msg_id_;
+  uint32                    n_message_id_;    // 包序号[32bit]
+  uint32                    n_cur_msg_id_;    // 当前发送msg id
 
  public:
   int EncKvdbMsg(KvdbMessage    *p_msg,

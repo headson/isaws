@@ -23,6 +23,7 @@ const unsigned short FLAG_REMOVELISTEN_MESSAGE = 2;
 const unsigned short FLAG_GET_CLIENT_ID = 3;
 
 enum {
+  TYPE_INVALID = -1,            // 非法TYPE
   TYPE_MESSAGE = 0,
   TYPE_REQUEST = 1,
   TYPE_REPLY = 2,
@@ -53,6 +54,7 @@ typedef struct _TagDpMsg {
 ////////////////////////////////////////////////////////////////////////////////
 
 enum {
+  KVDB_INVALID = -1,            // 非法KVDB
   KVDB_REPLACE = 0,
   KVDB_DELETE = 1,
   KVDB_SELECT = 2,

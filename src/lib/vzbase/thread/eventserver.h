@@ -25,7 +25,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "vzconn/async/clibevent.h"
+#include "vzconn/base/clibevent.h"
 
 #ifndef VZBASE_BASE_PHYSICALSOCKETSERVER_H__
 #define VZBASE_BASE_PHYSICALSOCKETSERVER_H__

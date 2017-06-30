@@ -10,7 +10,7 @@ void kvdb_GetKeyCallBack(const char *p_key,
                          void       *p_usr_arg) {
   ((char*)p_key)[n_key] = '\0';
   ((char*)p_value)[n_value] = '\0';
-  //printf("callback get %s \t %s \ t %d.\n", p_key, p_value, n_value);
+  printf("callback get %s \t %s \ t %d.\n", p_key, p_value, n_value);
 }
 
 int main(int argc, char* argv[]) {
@@ -27,8 +27,7 @@ int main(int argc, char* argv[]) {
   uint32 n_value = 0;
   char   s_value[128];
 
-  while(1) {
-    
+  while(1) {    
     snprintf(s_key, 63, "key_work-%d", time(NULL));
     n_key = strlen(s_key);
 

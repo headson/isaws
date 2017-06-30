@@ -5,10 +5,10 @@
 #ifndef LIBVZCONN_CEVTIPCCLIENT_H
 #define LIBVZCONN_CEVTIPCCLIENT_H
 
-#include "clibevent.h"
 #include "vzbase/base/basictypes.h"
 
 #include "vzconn/base/vsocket.h"
+#include "vzconn/base/clibevent.h"
 #include "vzconn/async/cevttcpclient.h"
 
 namespace vzconn {

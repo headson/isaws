@@ -1,7 +1,7 @@
 #include "vzbase/helper/stdafx.h"
 
-#include "vzconn/async/clibevent.h"
-#include "vzconn/base/cblockbuffer.h"
+#include "vzconn/base/clibevent.h"
+#include "vzconn/buffer/cblockbuffer.h"
 
 using namespace vzconn;
 

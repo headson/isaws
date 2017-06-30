@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 
 #include "vzconn/base/connhead.h"
 #include "vzconn/async/cevtipcclient.h"

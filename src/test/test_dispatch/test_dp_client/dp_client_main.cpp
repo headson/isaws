@@ -61,13 +61,15 @@ int main(int argc, char* argv[]) {
 
   //DpClient_SendDpMessage("hello", 112, "hello worlds.", 13);
   while(1) {
+    LOG(L_ERROR) << "begin."; 
     DpClient_SendDpRequest("TEST_MSG_TYPE_16",
                            112,
                            "hello worlds.",
                            13,
                            DpMsgallback,
                            NULL,
-                           10000);
+                           2000);
+    LOG(L_ERROR) << "end.";
   }
   getchar();
 

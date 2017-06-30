@@ -8,12 +8,14 @@
 #include "dispatcher/base/pkghead.h"
 
 CDpClient::CDpClient()
-  : vzconn::CEvtTcpClient(&evt_loop_, this)
+  : vzconn::CTcpClient(&evt_loop_, this)
   , callback_(NULL)
   , p_usr_arg_(NULL)
   , n_session_id_(-1)
-  , n_message_id_(1) {
-  n_resp_ret_ = (uint32)-1;
+  , n_message_id_(1) 
+  , n_ret_type_((uint32)TYPE_INVALID)
+  , b_poll_enabel_(false)
+  , n_recv_packet_(0) {
   evt_loop_.Start();
 }
 
@@ -32,7 +34,7 @@ int32 CDpClient::RunLoop(uint32 n_timeout) {
   int32 n_ret = 0;
   for (uint32 i = 0; i < n_timeout/10; i++) {
     n_ret = evt_loop_.RunLoop(10);
-    if (n_resp_ret_ != (uint32)-1) {
+    if (n_ret_type_ != (uint32)TYPE_INVALID) {
       return 1;
     }
   }
@@ -41,6 +43,7 @@ int32 CDpClient::RunLoop(uint32 n_timeout) {
 
 int32 CDpClient::PollRunLoop(uint32 n_timeout) {
   int32 n_ret = 0;
+  b_poll_enabel_ = 1;
   for (uint32 i = 0; i < n_timeout / 10; i++) {
     n_ret = evt_loop_.RunLoop(10);
     if (n_recv_packet_ > 0) {
@@ -57,7 +60,7 @@ void CDpClient::Reset(DpClient_MessageCallback callback,
 
   // loop 没在运行,清空标记
   if (!evt_loop_.isRuning()) {
-    n_resp_ret_ = (uint32)-1;
+    n_ret_type_ = (uint32)TYPE_INVALID;
     n_recv_packet_ = 0;
 
     //c_recv_data_.Clear();
@@ -222,9 +225,9 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   }
 
   if (p_msg->id == p_tcp->get_msg_id()) {  // 接收到正确的包
-    // evt_loop判断不为-1时退出loop
-    p_tcp->n_resp_ret_ = static_cast<uint32>(p_msg->type);
-    //LOG(L_INFO) << "message type "<<p_tcp->n_resp_type_;
+    evt_loop_.LoopExit(0);
+
+    p_tcp->n_ret_type_ = static_cast<uint32>(p_msg->type);
   }
 
   if (n_flag == FLAG_GET_CLIENT_ID
@@ -234,6 +237,11 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   }
 
   p_tcp->n_recv_packet_++;  // 收包计数
+  // 如果是轮询,接收到一个包就退出event的run_loop
+  if (b_poll_enabel_ > 0) {
+    evt_loop_.LoopExit(0);
+    b_poll_enabel_ = 0;
+  }
   return 0;
 }
 

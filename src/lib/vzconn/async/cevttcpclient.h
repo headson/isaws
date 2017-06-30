@@ -5,11 +5,11 @@
 #ifndef LIBVZCONN_CEVTTCPCLIENT_H_
 #define LIBVZCONN_CEVTTCPCLIENT_H_
 
-#include "clibevent.h"
 #include "vzbase/base/basictypes.h"
 
 #include "vzconn/base/vsocket.h"
-#include "vzconn/base/csocketbuffer.h"
+#include "vzconn/base/clibevent.h"
+#include "vzconn/buffer/csocketbuffer.h"
 
 namespace vzconn {
 

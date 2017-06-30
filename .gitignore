@@ -1,6 +1,10 @@
-/lib/*
-/bin/*
-/sdk/*
-/builds/*
-/ftp_dir/*
-/cmake_local
+/builds
+/lib
+/bin
+/cmake
+/Debug
+/release
+/CMakeLists.txt
+/Debug
+cmake_local
+ftp_dir

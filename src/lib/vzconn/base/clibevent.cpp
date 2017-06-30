@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #include "clibevent.h"
 
@@ -9,7 +9,7 @@
 namespace vzconn {
 
 EVT_LOOP::EVT_LOOP()
-  : p_event_(NULL) 
+  : p_event_(NULL)
   , b_runging_(false) {
 }
 
@@ -18,11 +18,11 @@ EVT_LOOP::~EVT_LOOP() {
 }
 
 int32 EVT_LOOP::Start() {
-//#ifdef WIN32
-//  evthread_use_windows_threads();
-//#else
-//  evthread_use_pthreads();
-//#endif
+#ifdef WIN32
+  evthread_use_windows_threads();
+#else
+  evthread_use_pthreads();
+#endif
   if (p_event_ == NULL) {
     p_event_ = event_base_new();
     if (!p_event_) {
@@ -42,15 +42,19 @@ void EVT_LOOP::Stop() {
   }
 }
 
-int32 EVT_LOOP::RunLoop(unsigned int n_timeout) {
+int32 EVT_LOOP::RunLoop(uint32 n_timeout) {
   int32 n_ret = -1;
   if (p_event_) {
-    if (n_timeout > 0) {
+    if (n_timeout > 0 &&
+        n_timeout != (uint32)-1) {
       LoopExit(n_timeout);
     }
     if (false == b_runging_) {
       b_runging_ = true;
-      n_ret = event_base_loop(p_event_, 0);
+      // 无事件也不退出
+      n_ret = event_base_loop(p_event_, EVLOOP_NO_EXIT_ON_EMPTY);
+
+      //n_ret = event_base_loop(p_event_, 0);
       //n_ret = event_base_dispatch(p_event_);
 
       b_runging_ = false;
@@ -70,6 +74,7 @@ void EVT_LOOP::LoopExit(unsigned int n_timeout) {
       n_ret = event_base_loopexit(p_event_, &tv);
     } else {
       n_ret = event_base_loopexit(p_event_, NULL);
+      //n_ret = event_base_loopbreak(p_event_);
     }
     if (n_ret == -1) {
       LOG(L_ERROR) << "base loop exit failed.";

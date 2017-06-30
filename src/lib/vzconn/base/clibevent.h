@@ -39,8 +39,6 @@ typedef int32 (*EVT_FUNC)(SOCKET          fd,
 
 // 永久事件，激活执行后会重新加到队列中等待下一次激活，否则激活执行后会自动移除
 #define EVT_PERSIST       EV_PERSIST
-
-#define EVT_LOOP_NOBLOCK  EVLOOP_NONBLOCK
 ///LOOP////////////////////////////////////////////////////////////////////////
 class EVT_LOOP {
  public:
@@ -55,10 +53,12 @@ class EVT_LOOP {
   int32   Start();
   void    Stop();
 
-  int32   RunLoop(unsigned int n_timeout=0);
+  // n_timeout>0,超时退出
+  // n_timeout=0,永久循环,除非调用LoopExit退出
+  int32   RunLoop(uint32 n_timeout=0);
 
-  // 定时退出
-  void    LoopExit(unsigned int n_timeout);
+  // 定时退出,0=立刻退出
+  void    LoopExit(uint32 n_timeout);
 
   bool    isRuning();
 
