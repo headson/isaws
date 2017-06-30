@@ -71,6 +71,8 @@ void EVT_LOOP::LoopExit(unsigned int n_timeout) {
       struct timeval tv;
       tv.tv_sec = n_timeout / 1000;
       tv.tv_usec = n_timeout % 1000 * 1000;
+      //LOG(L_ERROR) << "timeout "<<tv.tv_sec
+      //  << "   "<<tv.tv_usec;
       n_ret = event_base_loopexit(p_event_, &tv);
     } else {
       n_ret = event_base_loopexit(p_event_, NULL);

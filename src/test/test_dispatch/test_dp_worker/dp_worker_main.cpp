@@ -63,11 +63,11 @@ void DpMsgallback(const DpMessage *dmp, void* p_usr_arg) {
                 << " data " << dmp->data;
   }
   //if (dmp->type == TYPE_REQUEST) {
-  DpClient_SendDpReply(dmp->method,
+  /*DpClient_SendDpReply(dmp->method,
                        dmp->channel_id,
                        dmp->id,
                        "reply",
-                       5);
+                       5);*/
   //}
 }
 

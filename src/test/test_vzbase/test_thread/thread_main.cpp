@@ -153,7 +153,7 @@ void ThreadTest_Priorities() {
 #ifdef WIN32
   ASSERT(thread->SetPriority(PRIORITY_ABOVE_NORMAL));
 #else
-  EXPECT_FALSE(thread->SetPriority(PRIORITY_ABOVE_NORMAL));
+  ASSERT(thread->SetPriority(PRIORITY_ABOVE_NORMAL));
 #endif
   thread->Stop();
   delete thread;

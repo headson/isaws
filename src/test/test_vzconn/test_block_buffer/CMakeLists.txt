@@ -51,19 +51,11 @@ MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libvzconn.lib
-		libvzlogging.lib
-		libevent_core.lib
-		
 		${VZPROJECT_LINK_LIB}
-		ws2_32.lib
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libvzconn.a
-		libvzlogging.a
 		${VZPROJECT_LINK_LIB}
-		libevent_core.so
-		pthread
-		rt
 	)
 endif()

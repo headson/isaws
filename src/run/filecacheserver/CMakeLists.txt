@@ -52,9 +52,8 @@ if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libcachedserver
 		libvzconn
-		libvzlogging
 		libvzbase
-		libevent_core.lib
+		${VZPROJECT_LINK_LIB}
 		Winmm.lib
 	)
 else()
@@ -63,8 +62,6 @@ else()
 		vzconn
 		vzlogging
 		vzbase
-		libevent_core.so
-		libevent_pthreads.so
-		pthread
+		${VZPROJECT_LINK_LIB}
 	)
 endif()

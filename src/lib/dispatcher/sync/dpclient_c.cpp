@@ -307,14 +307,14 @@ EXPORT_DLL void *DpClient_CreatePollHandle() {
   return (void*)DpConnAndGetSessionID();
 }
 
-EXPORT_DLL void DpClient_ReleasePollHandle(void *p_poll_handle) {
+EXPORT_DLL void DpClient_ReleasePollHandle(DPPollHandle p_poll_handle) {
   if (p_poll_handle) {
     delete ((CDpClient*)p_poll_handle);
     p_poll_handle = NULL;
   }
 }
 
-EXPORT_DLL int DpClient_HdlAddListenMessage(const void *p_poll_handle,
+EXPORT_DLL int DpClient_HdlAddListenMessage(const DPPollHandle p_poll_handle,
     const char *method_set[],
     unsigned int set_size) {
   int32 n_ret = VZNETDP_FAILURE;
@@ -342,7 +342,7 @@ EXPORT_DLL int DpClient_HdlAddListenMessage(const void *p_poll_handle,
   return VZNETDP_FAILURE;
 }
 
-EXPORT_DLL int DpClient_HdlRemoveListenMessage(const void *p_poll_handle,
+EXPORT_DLL int DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
     const char *method_set[],
     unsigned int set_size) {
   int32 n_ret = VZNETDP_FAILURE;
@@ -369,7 +369,7 @@ EXPORT_DLL int DpClient_HdlRemoveListenMessage(const void *p_poll_handle,
   return VZNETDP_FAILURE;
 }
 
-EXPORT_DLL int DpClient_PollDpMessage(const void              *p_poll_handle,
+EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
                                       DpClient_MessageCallback call_back,
                                       void                    *user_data,
                                       unsigned int             timeout) {

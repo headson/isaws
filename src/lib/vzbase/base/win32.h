@@ -33,7 +33,7 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-
+#include "vzbase/base/basictypes.h"
 // Make sure we don't get min/max macros
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -54,7 +54,6 @@ typedef struct _TOKEN_MANDATORY_LABEL {
 #undef SetPort
 
 #include <string>
-#include "vzbase/base/basictypes.h"
 
 namespace vzbase {
 

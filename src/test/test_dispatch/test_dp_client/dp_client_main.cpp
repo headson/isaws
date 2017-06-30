@@ -68,8 +68,8 @@ int main(int argc, char* argv[]) {
                            13,
                            DpMsgallback,
                            NULL,
-                           2000);
-    LOG(L_ERROR) << "end.";
+                           3000);
+    LOG(L_ERROR) << "end.\n\n";
   }
   getchar();
 

@@ -51,19 +51,12 @@ if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libdpclient
 		libvzconn
-		libvzlogging
-		libevent_core.lib
 		${VZPROJECT_LINK_LIB}
-		ws2_32.lib
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		dpclient
 		vzconn
-		vzlogging
 		${VZPROJECT_LINK_LIB}
-		libevent_core.so
-		pthread
-		rt
 	)
 endif()

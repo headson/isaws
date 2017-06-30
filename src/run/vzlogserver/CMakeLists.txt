@@ -21,7 +21,7 @@ get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIREC
 foreach(link_dir ${link_dirs})
   message(STATUS "    link directory='${link_dir}'")
 endforeach()
-
+ 
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST 

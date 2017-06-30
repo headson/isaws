@@ -50,21 +50,15 @@ set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_TES
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libvzbase
-		libvzlogging
+		libvzbases
 		libvzconn
-		libevent_core.lib
-		ws2_32.lib
+		${VZPROJECT_LINK_LIB}
 		winmm.lib
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		vzbase
-		vzlogging
 		vzconn
-		libevent_core.so
-		libevent_pthreads.so
-		pthread
-		rt
+		${VZPROJECT_LINK_LIB}
 	)
 endif()
