@@ -120,6 +120,9 @@ inline int closesocket(SOCKET socket) {
 
 #endif  // WIN32
 
+#include "verror.h"
+#include "vmessage.h"
+
 #include "vzlogging/logging/vzlogging.h"
 #include "vzlogging/logging/vzwatchdog.h"
 

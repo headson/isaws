@@ -1,10 +1,4 @@
 /builds
 /lib
 /bin
-/cmake
-/Debug
-/release
-/CMakeLists.txt
-/Debug
-cmake_local
 ftp_dir

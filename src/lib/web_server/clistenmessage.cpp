@@ -3,10 +3,11 @@
 /* Description :
 /************************************************************************/
 #include "clistenmessage.h"
-
 #include "vzbase/helper/stdafx.h"
 
 #include "json/json.h"
+
+#include "web_server/process/uri_handle.h"
 
 CListenMessage::CListenMessage()
   : p_dp_cli_(NULL)
@@ -70,7 +71,7 @@ bool CListenMessage::Start(const uint8 *s_dp_ip,
   // Set up HTTP server parameters
   mg_set_protocol_http_websocket(p_web_conn_);
 
-  s_web_opts_.document_root = "c:/tools/web/";
+  s_web_opts_.document_root = (char*)s_http_path;
   s_web_opts_.enable_directory_listing = "yes";
   return (n_ret == VZNETDP_SUCCEED);
 }
@@ -79,7 +80,7 @@ int32 CListenMessage::RunLoop() {
   mg_mgr_poll(&c_web_srv_, 10);
 
   int32 n_ret = DpClient_PollDpMessage(p_dp_cli_,
-                                       MsgFunc,
+                                       msg_handler,
                                        this,
                                        10);
   if (n_ret == VZNETDP_SUCCEED) {
@@ -151,7 +152,7 @@ void CListenMessage::broadcast(const void* p_data, uint32 n_data) {
   }
 }
 
-void CListenMessage::MsgFunc(const DpMessage *dmp, void* p_usr_arg) {
+void CListenMessage::msg_handler(const DpMessage *dmp, void* p_usr_arg) {
   if (p_usr_arg) {
     ((CListenMessage*)p_usr_arg)->OnMessage(dmp);
   }

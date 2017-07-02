@@ -378,7 +378,7 @@ EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
   // 此处判断断开不重连,目的是为了让注册method重连
   CDpClient* p_tcp = (CDpClient*)p_poll_handle;
   if (!p_tcp) {
-    LOG(L_ERROR) << "get client failed.";
+    // LOG(L_ERROR) << "get client failed.";
     return VZNETDP_FAILURE;
   }
   if (p_tcp->isClose()) {        // 断开链接

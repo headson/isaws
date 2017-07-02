@@ -6,14 +6,8 @@
 #define _CLISTENMESSAGE_H
 
 #include "vzbase/base/basictypes.h"
-
-#include "dispatcher/sync/dpclient_c.h"
-
 #include "web_server/base/mongoose.h"
-#include "web_server/process/uri_handle.h"
-
-#include "vzlogging/logging/vzwatchdog.h"
-#include "vzlogging/logging/vzloggingcpp.h"
+#include "dispatcher/sync/dpclient_c.h"
 
 class CListenMessage {
  public:
@@ -30,7 +24,7 @@ class CListenMessage {
   void broadcast(const void* p_data, uint32 n_data);
 
  protected:
-  static void MsgFunc(const DpMessage *dmp, void* p_usr_arg);
+  static void msg_handler(const DpMessage *dmp, void* p_usr_arg);
   void OnMessage(const DpMessage *dmp);
 
   /************************************************************************/
@@ -42,7 +36,7 @@ class CListenMessage {
   void OnEvHdl(struct mg_connection *nc, int ev, void *ev_data);
 
  private:
-  DPPollHandle       p_dp_cli_;
+  DPPollHandle               p_dp_cli_;
 
   struct mg_mgr              c_web_srv_;
   struct mg_connection      *p_web_conn_;
