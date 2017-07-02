@@ -3,8 +3,8 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 ##########################################################
 ## Step 1 
-#SET(INTERFACE_INCLUDE_DIR     "E:/vz/sdk/interface_8127/inc")
-#SET(INTERFACE_LIBRARY_DIR     "E:/vz/sdk/interface_8127/lib")
+SET(INTERFACE_INCLUDE_DIR     "E:/vz/sdk/interface_8127/inc")
+SET(INTERFACE_LIBRARY_DIR     "E:/vz/sdk/interface_8127/lib")
 
 ##1. INCLUDE_DIRECTORES
 SET(VZPROJECT_INCLUDE_DIR
@@ -25,6 +25,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	)
 	SET(VZPROJECT_LINK_LIB
 		libvzlogging.lib
+		ws2_32.lib
 	)
 elseif(CMAKE_BUILD_TYPE MATCHES Release)
 	MESSAGE(STATUS "       Release Mode")
@@ -36,6 +37,7 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
 	)
 	SET(VZPROJECT_LINK_LIB
 		libvzlogging.lib
+		ws2_32.lib
 	)
 endif()
 

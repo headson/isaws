@@ -44,13 +44,13 @@ int vzSemLock(HANDLE sem_id, unsigned int n_msec) {
 
 int vzSemUnLock(HANDLE sem_id) {
   if (sem_id == NULL) {
-    return false;
+    return -1;
   }
   unsigned int lReleaseCount = 1;
   unsigned int *lpPreviousCount = NULL;
   return (ReleaseSemaphore(sem_id,
                            lReleaseCount,
-                           (LPLONG)lpPreviousCount) == TRUE);
+                           (LPLONG)lpPreviousCount) == TRUE) ? 0 : -1;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ int vzSemLock(HANDLE sem_id, unsigned int n_msec) {
   struct sembuf sem_op = {0, -1, 0};
   sem_op.sem_num = 0;
   sem_op.sem_flg = IPC_NOWAIT;
-  if (n_msec = (unsigned int)-1) {
+  if (n_msec == (unsigned int)-1) {
     if ((semop(sem_id, &sem_op, 1)) == -1) {
       return -1;
     }

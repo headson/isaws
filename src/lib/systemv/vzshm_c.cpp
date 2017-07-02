@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "systemv/vz_shm.h"
+#include "vz_shm.h"
 
 class CShareMemory {
  public:
@@ -36,17 +36,26 @@ class CShareMemory {
       printf("shm open failed.");
       return -1;
     }
-    printf("shm handle 0x%x.\n", hdl_shm_);
+    p_mem_ptr_ = vzShmAt(hdl_shm_);
+    if (p_mem_ptr_ == NULL) {
+      printf("shm memory point failed.\n");
+      return -2;
+    }
+    TAG_SHM *p_shm = (TAG_SHM*)p_mem_ptr_;
+    p_shm->n_size = n_size;
+    p_shm->n_data = 0;
+    p_shm->n_w_sec = p_shm->n_w_usec = 0;
+    printf("shm handle 0x%x, 0x%x.\n", hdl_shm_, p_mem_ptr_);
+
     // 信号
     char s_sem_key[64] = { 0 };
-
     // W
     memset(s_sem_key, 0, 64);
     snprintf(s_sem_key, 63, "%s_sem_w", s_file);
     hdl_sem_w_ = vzSemOpen(s_sem_key);
     if (hdl_sem_w_ == HDL_NULL) {
       printf("sem open failed %s.", s_sem_key);
-      return -2;
+      return -3;
     }
     printf("sem w handle 0x%x.\n", hdl_sem_w_);
     // R
@@ -55,7 +64,7 @@ class CShareMemory {
     hdl_sem_r_ = vzSemOpen(s_sem_key);
     if (hdl_sem_r_ == HDL_NULL) {
       printf("sem open failed %s.", s_sem_key);
-      return -3;
+      return -4;
     }
     printf("sem r handle 0x%x.\n", hdl_sem_r_);
     return 0;
@@ -69,26 +78,29 @@ class CShareMemory {
       return -1;
     }
     if (hdl_shm_ == HDL_NULL ||
+        p_mem_ptr_ == NULL    ||
         hdl_sem_r_ == HDL_NULL ||
         hdl_sem_w_ == HDL_NULL) {
       printf("shm or sem is invalid.");
       return -2;
     }
 
-    TAG_SHM *p_shm = (TAG_SHM*)vzShmAt(hdl_shm_);
+    TAG_SHM *p_shm = (TAG_SHM*)p_mem_ptr_;
     if (!p_shm || n_data < p_shm->n_data) { // 读优先
       return -3;
     }
-    if (vzSemLock(hdl_sem_w_, 5) != 0) {
+    if (vzSemLock(hdl_sem_w_, -1) != 0) {
       return -4;
     }
     if (*n_sec == p_shm->n_w_sec
         && *n_usec == p_shm->n_w_usec) {
+      vzSemUnLock(hdl_sem_w_);
       return 0;
     }
 
     n_data = p_shm->n_data;
     memcpy(p_data, p_shm->p_data, n_data);
+    printf("read data length %d.\n", n_data);
 
     *n_sec = p_shm->n_w_sec;
     *n_usec = p_shm->n_w_usec;
@@ -103,18 +115,19 @@ class CShareMemory {
       return -1;
     }
     if (hdl_shm_ == HDL_NULL ||
+        p_mem_ptr_ == NULL    ||
         hdl_sem_r_ == HDL_NULL ||
         hdl_sem_w_ == HDL_NULL) {
       printf("shm or sem is invalid.");
       return -2;
     }
 
-    TAG_SHM *p_shm = (TAG_SHM*)vzShmAt(hdl_shm_);
+    TAG_SHM *p_shm = (TAG_SHM*)p_mem_ptr_;
     if (!p_shm || n_data > p_shm->n_size) {
       return -3;
     }
 
-    if (vzSemLock(hdl_sem_w_, 5) != 0) {
+    if (vzSemLock(hdl_sem_w_, -1) != 0) {
       return -4;
     }
 
@@ -129,13 +142,14 @@ class CShareMemory {
 ///分批写入buffer[h264: head + body]///////////////////////////////////////
   int WriteBegin() {
     if (hdl_shm_ == HDL_NULL ||
+        p_mem_ptr_ == NULL    ||
         hdl_sem_r_ == HDL_NULL ||
         hdl_sem_w_ == HDL_NULL) {
       printf("shm or sem is invalid.");
       return -1;
     }
 
-    if (vzSemLock(hdl_sem_w_, 5) == 0) {
+    if (vzSemLock(hdl_sem_w_, -1) == 0) {
       return 0;
     }
     return -2;
@@ -147,15 +161,17 @@ class CShareMemory {
       return -1;
     }
     if (hdl_shm_ == HDL_NULL ||
+        p_mem_ptr_ == NULL    ||
         hdl_sem_r_ == HDL_NULL ||
         hdl_sem_w_ == HDL_NULL) {
       printf("shm or sem is invalid.");
       return -2;
     }
 
-    TAG_SHM *p_shm = (TAG_SHM*)vzShmAt(hdl_shm_);
+    TAG_SHM *p_shm = (TAG_SHM*)p_mem_ptr_;
     if (p_shm && (n_data+n_offset) <= p_shm->n_size) { // 读优先
       memcpy(p_shm->p_data+n_offset, p_data, n_data);
+      p_shm->n_data = n_offset + n_data;
       return n_data;
     }
     return -3;
@@ -163,12 +179,15 @@ class CShareMemory {
 
   int WriteEnd(unsigned int n_sec, unsigned int n_usec) {
     if (hdl_shm_ == HDL_NULL ||
+        p_mem_ptr_ == NULL    ||
         hdl_sem_r_ == HDL_NULL ||
         hdl_sem_w_ == HDL_NULL) {
       printf("shm or sem is invalid.");
       return -1;
     }
 
+    ((TAG_SHM*)p_mem_ptr_)->n_w_sec  = n_sec;
+    ((TAG_SHM*)p_mem_ptr_)->n_w_usec = n_usec;
     if (vzSemUnLock(hdl_sem_w_) == 0) {
       return 0;
     }
@@ -177,6 +196,8 @@ class CShareMemory {
 
  private:
   HANDLE        hdl_shm_;
+  void         *p_mem_ptr_;
+
   unsigned int  n_r_sec_;
   unsigned int  n_r_usec_;
 

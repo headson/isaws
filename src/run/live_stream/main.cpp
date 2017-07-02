@@ -46,10 +46,10 @@ int main(int argc, char** argv) {
     ServerMediaSession* sms = 
       ServerMediaSession::createNew(
       *env, s_stream_name, s_stream_name, descriptionString);
-    //sms->addSubsession(CH264LiveVideoServerMediaSubsession::createNew(
-    //  *env, reuseFirstSource, p_shm_vdo));
-    sms->addSubsession(CPCMAudioServerMediaSubsession::createNew(
-      *env, reuseFirstSource, p_shm_ado));
+    sms->addSubsession(CH264LiveVideoServerMediaSubsession::createNew(
+      *env, reuseFirstSource, p_shm_vdo));
+    //sms->addSubsession(CPCMAudioServerMediaSubsession::createNew(
+    //  *env, reuseFirstSource, p_shm_ado));
     rtspServer->addServerMediaSession(sms);
 
     announceStream(rtspServer, sms, s_stream_name);

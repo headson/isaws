@@ -265,7 +265,8 @@ EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
 
   p_tcp->RunLoop(timeout);
   if ((p_tcp->get_ret_type() == TYPE_REPLY) ||
-      (p_tcp->get_ret_type() == TYPE_SUCCEED)) {    return VZNETDP_SUCCEED;
+      (p_tcp->get_ret_type() == TYPE_SUCCEED)) {
+    return VZNETDP_SUCCEED;
   }
   LOG(L_ERROR) << p_tcp->get_ret_type();
   return VZNETDP_FAILURE;
@@ -303,8 +304,8 @@ EXPORT_DLL int DpClient_SendDpReply(const char    *method,
 }
 
 //////////////////////////////////////////////////////////////////////////
-EXPORT_DLL void *DpClient_CreatePollHandle() {
-  return (void*)DpConnAndGetSessionID();
+EXPORT_DLL DPPollHandle DpClient_CreatePollHandle() {
+  return (DPPollHandle*)DpConnAndGetSessionID();
 }
 
 EXPORT_DLL void DpClient_ReleasePollHandle(DPPollHandle p_poll_handle) {
@@ -385,9 +386,20 @@ EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
   }
 
   p_tcp->Reset(call_back, user_data);
-  n_ret = p_tcp->PollRunLoop(DEF_TIMEOUT_MSEC);
+  n_ret = p_tcp->PollRunLoop(timeout);
   return VZNETDP_SUCCEED;
 }
+
+EXPORT_DLL void * DpClient_GetEvtLoopFromPoll(const DPPollHandle p_poll_handle) {
+  CDpClient* p_tcp = (CDpClient*)p_poll_handle;
+  if (!p_tcp) {
+    LOG(L_ERROR) << "get client failed.";
+    return NULL;
+  }
+
+  return p_tcp->GetEvtLoop();
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 static char                 g_kvdb_addr[64] = {0};

@@ -27,6 +27,9 @@ class CDpClient : public vzconn::CTcpClient,
   // ÂÖÑ¯Ê¹ÓÃ
   // return 0=timeout,1=success
   int32 PollRunLoop(uint32 n_timeout);
+  vzconn::EVT_LOOP *GetEvtLoop() {
+    return &evt_loop_;
+  }
 
  public:
   void  Reset(DpClient_MessageCallback callback, void *p_usr_arg);

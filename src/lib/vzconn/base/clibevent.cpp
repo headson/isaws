@@ -30,6 +30,8 @@ int32 EVT_LOOP::Start() {
       return -1;
     }
   }
+
+  evt_timer_.Init(this, exit_callback, this);
   return 0;
 }
 
@@ -45,6 +47,7 @@ void EVT_LOOP::Stop() {
 int32 EVT_LOOP::RunLoop(uint32 n_timeout) {
   int32 n_ret = -1;
   if (p_event_) {
+    evt_timer_.Stop();
     if (n_timeout > 0 &&
         n_timeout != (uint32)-1) {
       LoopExit(n_timeout);
@@ -73,10 +76,11 @@ void EVT_LOOP::LoopExit(unsigned int n_timeout) {
       tv.tv_usec = n_timeout % 1000 * 1000;
       //LOG(L_ERROR) << "timeout "<<tv.tv_sec
       //  << "   "<<tv.tv_usec;
-      n_ret = event_base_loopexit(p_event_, &tv);
+      //n_ret = event_base_loopexit(p_event_, &tv);
+      evt_timer_.Start(n_timeout, 0);
     } else {
-      n_ret = event_base_loopexit(p_event_, NULL);
-      //n_ret = event_base_loopbreak(p_event_);
+      //n_ret = event_base_loopexit(p_event_, NULL);
+      n_ret = event_base_loopbreak(p_event_);
     }
     if (n_ret == -1) {
       LOG(L_ERROR) << "base loop exit failed.";
@@ -86,6 +90,14 @@ void EVT_LOOP::LoopExit(unsigned int n_timeout) {
 
 bool EVT_LOOP::isRuning() {
   return b_runging_;
+}
+
+int32 EVT_LOOP::exit_callback(SOCKET fd, short events, const void *p_usr_arg) {
+  EVT_LOOP *p_loop = (EVT_LOOP*)p_usr_arg;
+  if (p_loop && p_loop->p_event_) {
+    event_base_loopbreak(p_loop->p_event_);
+  }
+  return 0;
 }
 
 ///TIMER///////////////////////////////////////////////////////////////////////
@@ -116,7 +128,6 @@ int32 EVT_TIMER::Start(uint32 after_ms, uint32 repeat_ms) {
     if (repeat_ms != 0) {
       event_set(&c_evt_, -1, EV_TIMEOUT | EV_PERSIST, evt_callback, (void*)this);
     } else {
-      repeat_ms = after_ms;
       event_set(&c_evt_, -1, EV_TIMEOUT, evt_callback, (void*)this);
     }
     n_ret = event_base_set(p_base_->get_event(), &c_evt_);
@@ -128,6 +139,9 @@ int32 EVT_TIMER::Start(uint32 after_ms, uint32 repeat_ms) {
     LOG(L_INFO) << "Set event "<<after_ms<<"-"<<repeat_ms;
   }
 
+  if (repeat_ms == 0) {
+    repeat_ms = after_ms;
+  }
   struct timeval tv;
   tv.tv_sec  = repeat_ms / 1000;
   tv.tv_usec = (repeat_ms % 1000)*1000;

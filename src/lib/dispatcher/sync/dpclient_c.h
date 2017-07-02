@@ -71,22 +71,24 @@ EXPORT_DLL int DpClient_SendDpReply(const char      *method,
 
 ///Poll///////////////////////////////////////////////////////////////////
 EXPORT_DLL DPPollHandle DpClient_CreatePollHandle();
-EXPORT_DLL void  DpClient_ReleasePollHandle(DPPollHandle p_poll_handle);
+EXPORT_DLL void DpClient_ReleasePollHandle(DPPollHandle p_poll_handle);
 
-EXPORT_DLL int   DpClient_HdlAddListenMessage(const DPPollHandle p_poll_handle,
+EXPORT_DLL int  DpClient_HdlAddListenMessage(const DPPollHandle p_poll_handle,
     const char   *method_set[],
     unsigned int  set_size);
-EXPORT_DLL int   DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
+EXPORT_DLL int  DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
     const char   *method_set[],
     unsigned int  set_size);
 
 // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
 // VZNETDP_FAILURE时需要重新创建handle[重连],重发AddListenMessage
-EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle         p_poll_handle,
-                                      DpClient_MessageCallback   call_back,
-                                      void                      *user_data,
-                                      unsigned int               timeout);
+EXPORT_DLL int  DpClient_PollDpMessage(const DPPollHandle         p_poll_handle,
+                                       DpClient_MessageCallback   call_back,
+                                       void                      *user_data,
+                                       unsigned int               timeout);
 
+// 返回EVT_LOOP指针, NULL 失败
+EXPORT_DLL void *DpClient_GetEvtLoopFromPoll(const DPPollHandle p_poll_handle);
 
 //////////////////////////////////////////////////////////////////////////
 // GetKey callback function

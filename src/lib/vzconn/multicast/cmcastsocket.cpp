@@ -4,16 +4,17 @@
 /************************************************************************/
 #include "cmcastsocket.h"
 
-#include "stdafx.h"
+#include "vzbase/helper/stdafx.h"
 #include "vzconn/base/connhead.h"
+namespace vzconn {
+
+SOCKET CMCastSocket::send_socket_ = INVALID_SOCKET;
 
 CMCastSocket::CMCastSocket(vzconn::EVT_LOOP* p_loop,
                            vzconn::CClientInterface *c_cli_proc)
   : vzconn::VSocket(c_cli_proc)
   , p_evt_loop_(p_loop)
-  , c_evt_recv_()
-  , c_recv_data_()
-  , c_send_data_() {
+  , c_evt_recv_() {
 }
 
 CMCastSocket * CMCastSocket::Create(vzconn::EVT_LOOP* p_loop,
@@ -37,22 +38,51 @@ CMCastSocket::~CMCastSocket() {
   Close();
 }
 
-int32 CMCastSocket::Open(vzconn::CInetAddr *p_loca_addr, 
-                         bool b_block, 
-                         bool b_reuse) {
+int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
+
+  SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (fd <0) {
+    perror("socket failed");
+    return -1;
+  }
+  int yes = 1;
+  int ret = setsockopt(fd, SOL_SOCKET,SO_REUSEADDR, (char*)&yes, sizeof(yes));
+  if (ret < 0) {
+    perror("Reusing ADDR failed");
+    return -1;
+  }
+
+  struct sockaddr_in s_local;
+  s_local.sin_family      = AF_INET;
+  s_local.sin_addr.s_addr = INADDR_ANY;
+  s_local.sin_port        = htons(n_center_port);
+  ret = bind(fd, (struct sockaddr *)&s_local, sizeof(struct sockaddr_in));
+  if (ret < 0) {
+    perror("Bind error");
+    close(fd);
+    return -1;
+  }
+
+  struct ip_mreq mreq;
+  mreq.imr_multiaddr.s_addr = inet_addr((char*)s_center_ip);
+  mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+  ret = setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq));
+  if (ret < 0) {
+    perror("setsockopt");
+    return -1;
+  }
+  SetSocket(fd);
+
+  c_evt_recv_.Init(p_evt_loop_, EvtRecv, this);
+  ret = c_evt_recv_.Start(GetSocket(), EVT_READ | EVT_PERSIST);
+  if (ret != 0) {
+    return -1;
+  }
   return 0;
 }
 
-int32 CMCastSocket::AsyncWrite(const void *p_data, uint32 n_data, uint16 e_flag) {
-  return 0;
-}
-
-int32 CMCastSocket::AsyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
-  return 0;
-}
-
-int32 CMCastSocket::EvtRecv(SOCKET fd,
-                            short n_events,
+int32 CMCastSocket::EvtRecv(SOCKET      fd,
+                            short       n_events,
                             const void *p_usr_arg) {
   int32 n_ret = 0;
   if (p_usr_arg) {
@@ -65,79 +95,64 @@ int32 CMCastSocket::EvtRecv(SOCKET fd,
 }
 
 int32 CMCastSocket::OnRecv() {
-  int32 n_ret = 0;
-  n_ret = Recv(c_recv_data_.GetWritePtr(), c_recv_data_.FreeSize());
-  if (n_ret > 0 && cli_hdl_ptr_) {
-    c_recv_data_.MoveWritePtr(n_ret);
-
-    uint16 n_flag = 0;
-    int32 n_pkg_len = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),
-                      c_recv_data_.UsedSize(),
-                      &n_flag);
-    if (n_pkg_len > 0) {
-      n_ret = cli_hdl_ptr_->HandleRecvPacket(
-                this,
-                c_recv_data_.GetReadPtr() + cli_hdl_ptr_->NetHeadSize(),
-                c_recv_data_.UsedSize() - cli_hdl_ptr_->NetHeadSize(),
-                n_flag);
-    } else {
-      n_ret = -1;
-    }
-    c_recv_data_.Clear();
+  vzconn::CInetAddr c_remote_addr;
+  uint8 s_data[2048] = {0};
+  int32 n_data = vzconn::VSocket::Recv(s_data, 2047, c_remote_addr);
+  if (cli_hdl_ptr_) {
+    cli_hdl_ptr_->HandleRecvPacket(this, s_data, n_data, 0);
   }
 
-  if (n_ret < 0) {
+  if (n_data < 0) {
     if (cli_hdl_ptr_) {
       cli_hdl_ptr_->HandleClose(this);
     }
   }
-  return n_ret;
+  return n_data;
 }
 
-#if 0
-int BroadcastInfo::SendUdpData(char* center_ip, int port,  char* data,
-      int len, unsigned int our_ip, int our_port, int is_multicast) {
-  int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (socket_fd <0) {return -1;}
+int CMCastSocket::SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
+                              char* p_data, int n_data) {
+  if (send_socket_ == INVALID_SOCKET) {
+    send_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+    if (send_socket_ <0) {
+      perror("socket failed");
+      return -1;
+    }
 
-  struct  sockaddr_in address;
+    int yes = 1;
+    int ret = setsockopt(send_socket_, SOL_SOCKET,SO_REUSEADDR, (char*)&yes, sizeof(yes));
+    if (ret < 0) {
+      perror("Reusing ADDR failed");
+      return -1;
+    }
 
-  address.sin_family = AF_INET;
-  address.sin_addr.s_addr = inet_addr(center_ip);
-  address.sin_port = htons(port);
+    char ttl = 1;
+    ret = setsockopt(send_socket_,  IPPROTO_IP, IP_MULTICAST_TTL, (char*)&ttl, sizeof(ttl));
+    if (ret < 0) {
+      perror("Setsockopt IP_MULTICAST_TTL fall.");
+      return -1;
+    }
 
-  struct  sockaddr_in our_addr;
-  our_addr.sin_family = AF_INET;
-  our_addr.sin_addr.s_addr = our_ip;
-  our_addr.sin_port = htons(our_port);
-  if (bind(socket_fd,  (struct sockaddr *) &our_addr,
-           sizeof(struct sockaddr_in)) == -1) {
-    LOG(L_ERROR) << "Bind error";
-    close(socket_fd);
+    char loop = 0;
+    ret = setsockopt(send_socket_, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&loop, sizeof(loop));
+    if (ret < 0) {
+      perror("Setsockopt IP_MULTICAST_LOOP fall.");
+      return -1;
+    }
+  }
+
+  if (send_socket_ < 0) {
+    LOG_ERROR("socket failed");
     return -1;
   }
 
-  if (is_multicast) {
-    u_char ttl = 1;
-    int ret = setsockopt(socket_fd,  IPPROTO_IP,  IP_MULTICAST_TTL,  &ttl,
-                         sizeof(ttl));
-    if (ret < 0) {
-      LOG(L_ERROR) << "Setsockopt IP_MULTICAST_TTL fall:" << strerror(errno);
-    }
-
-    u_char loop = 0;
-    ret = setsockopt(socket_fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop,
-      sizeof(loop));
-    if (ret < 0) {
-      LOG(L_ERROR) << "Setsockopt IP_MULTICAST_LOOP fall:" << strerror(errno);
-    }
-  }
-
-  int ret = sendto(socket_fd,  data,  len,  0, (struct sockaddr*)&address,
-                   sizeof(struct sockaddr));
-  close(socket_fd);
+  struct sockaddr_in s_center;
+  s_center.sin_family = AF_INET;
+  s_center.sin_addr.s_addr = inet_addr((char*)s_center_ip);
+  s_center.sin_port = htons(n_center_port);
+  int ret = sendto(send_socket_, p_data, n_data, 0,
+                   (struct sockaddr*)&s_center, sizeof(struct sockaddr));
   return ret;
 }
-#endif
 
-
+}  // namespace vzconn

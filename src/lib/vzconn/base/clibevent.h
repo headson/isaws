@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #ifndef LIBVZCONN_CLIBEVENT_H_
 #define LIBVZCONN_CLIBEVENT_H_
@@ -39,34 +39,8 @@ typedef int32 (*EVT_FUNC)(SOCKET          fd,
 
 // 永久事件，激活执行后会重新加到队列中等待下一次激活，否则激活执行后会自动移除
 #define EVT_PERSIST       EV_PERSIST
-///LOOP////////////////////////////////////////////////////////////////////////
-class EVT_LOOP {
- public:
-  struct event_base* p_event_;
-  bool               b_runging_;   // 运行状态
 
- public:
-  EVT_LOOP();
-  virtual ~EVT_LOOP();
-
- public:
-  int32   Start();
-  void    Stop();
-
-  // n_timeout>0,超时退出
-  // n_timeout=0,永久循环,除非调用LoopExit退出
-  int32   RunLoop(uint32 n_timeout=0);
-
-  // 定时退出,0=立刻退出
-  void    LoopExit(uint32 n_timeout);
-
-  bool    isRuning();
-
-  struct event_base* get_event() const {
-    return p_event_;
-  }
-};
-
+class EVT_LOOP;
 ///TIMER///////////////////////////////////////////////////////////////////////
 class EVT_TIMER {
  private:
@@ -111,6 +85,39 @@ class EVT_IO {
   static void     evt_callback(evutil_socket_t fd, short events, void *ctx);
 };
 
+///LOOP////////////////////////////////////////////////////////////////////////
+class EVT_LOOP {
+public:
+  struct event_base* p_event_;
+  EVT_TIMER          evt_timer_;   // 退出定时器
+  bool               b_runging_;   // 运行状态
+
+public:
+  EVT_LOOP();
+  virtual ~EVT_LOOP();
+
+public:
+  int32   Start();
+  void    Stop();
+
+  // n_timeout>0,超时退出
+  // n_timeout=0,永久循环,除非调用LoopExit退出
+  int32   RunLoop(uint32 n_timeout = 0);
+
+  // 定时退出,0=立刻退出
+  void    LoopExit(uint32 n_timeout);
+
+  bool    isRuning();
+
+  struct event_base* get_event() const {
+    return p_event_;
+  }
+
+protected:
+  static int32 exit_callback(SOCKET          fd,
+                             short           events,
+                             const void      *p_usr_arg);
+};
 typedef EVT_LOOP EventService;
 
 }  // namespace vzconn

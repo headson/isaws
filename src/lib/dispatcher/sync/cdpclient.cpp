@@ -178,6 +178,7 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
                                   uint16 n_flag) {
   //LOG(L_WARNING) << "recv packet length " << n_data;
   if (!p_cli || !p_data || n_data == 0) {
+    LOG(L_ERROR) << "param is NULL";
     return -1;
   }
   DpMessage *p_msg = CDpClient::DecDpMsg(p_data, n_data);
@@ -186,7 +187,7 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   }
 
   CDpClient *p_tcp = (CDpClient*)p_cli;
-  LOG(L_INFO) << "message seq "<<p_msg->id <<"  "<<p_tcp->get_msg_id();
+  //LOG(L_INFO) << "message seq "<<p_msg->id <<"  "<<p_tcp->get_msg_id();
 
   // 在回调中,避免使用同一个socket send数据,造成递归evt loop
   if (p_tcp->callback_) {

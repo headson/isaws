@@ -34,11 +34,14 @@ CH264VideoStreamFramer* CH264VideoStreamFramer::createNew(
 void CH264VideoStreamFramer::doGetNextFrame() {
   gettimeofday(&fPresentationTime, NULL);
 
-  int n_r_size = Shm_Read(p_shm_vdo_,
-                          (char*)fTo, fMaxSize,
-                          (unsigned int*)&c_tm_capture_.tv_sec,
-                          (unsigned int*)&c_tm_capture_.tv_usec);
-  if (n_r_size <= 0) {
+  int n_r_size = 0;
+  if (p_shm_vdo_) {
+    n_r_size = Shm_Read(p_shm_vdo_,
+                        (char*)fTo, fMaxSize,
+                        (unsigned int*)&c_tm_capture_.tv_sec,
+                        (unsigned int*)&c_tm_capture_.tv_usec);
+  }
+  if (n_r_size < 0) {
     n_r_size = 0;
     printf("shm read failed.");
   }
