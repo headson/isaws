@@ -1,0 +1,197 @@
+/*基本信息*/
+
+*
+{
+	padding: 0;
+	margin: 0;
+}
+
+body
+{
+	margin:0;
+	padding:0;
+	background:  #CCC;
+	/*overflow:hidden;*/
+	font-size: 11px;
+	min-width:900px;
+}
+
+/*页面层容器*/
+#container
+{
+	width: 97%;
+	max-width:1300px;
+	margin:0;
+	margin:auto;
+	padding:0px;
+	background: #FFF;
+}
+
+
+/*页面头部*/
+#header
+{
+	background: url(img/sprites-t1.gif) 0 -615px;
+	margin:auto; /*居中*/
+	height:60px;
+}
+#middler
+{	
+	
+}
+#headershadow
+{
+	background:url(img/bottomshadow.png);
+	height:10px;
+}
+
+#logo
+{
+	float: left;
+	margin-left:25px;
+	margin-top:2px;
+	background:url(img/logo2.png) no-repeat;
+	height:57px;
+	width:200px;
+}
+
+#logout
+{	
+	text-decoration: none;
+	border:none;
+	float:right;
+	width:140px;
+	height:17px;
+	border-top:solid 1px #a2adb6;
+	background:url(img/logout.png) -197px 0;
+	color:#ffffff;
+	padding:5px 0 0 0;
+	text-align:center;
+}
+
+#logout:hover
+{
+	background:url(img/logout.png) 0 0;
+	color:#8cf9e8;
+}
+
+#pagebody
+{	
+	padding:20px 20px 0 20px;
+	/*background:url(img/mbg.jpg);
+	background-repeat:repeat-x;*/
+}
+#leftshadow
+{
+	width:10px;
+	background:url(img/leftshadow.gif) repeat-y;
+}
+#rightshadow
+{
+	width:10px;
+	background:url(img/rightshadow.gif) repeat-y;
+}
+#pagecontainer
+{
+}
+#sidebar
+{
+	float:left;
+	width: 189px; /*设定宽度*/	
+	/*overflow: hidden; /*超出宽度部分隐藏*/	
+}
+
+#sidebarframe
+{
+	background:url(img/sidebarframe.png);
+	height:27px;
+}
+
+#sidebarendframe
+{
+	background:url(img/sidebarendframe.png);
+	height:35px;
+}
+
+#sidebarrightshadow
+{
+	width:8px;
+	background:url(img/sidebarrightshadow.png);
+}
+#sidebarinside
+{
+	background:lightblue;
+	width:181px;
+	padding-bottom:1px;
+	FILTER: progid:DXImageTransform.Microsoft.Gradient(startColorStr='#646a6a', endColorStr='lightblue', gradientType='1');
+}
+
+#content
+{
+	margin-left:240px !important;
+	height:490px;
+	padding:0;
+	/*border:solid 1px #999;*/
+}
+
+#contentbar
+{
+	/*background: url(img/sprites-t1.gif) 0 -360px;
+	height:20px;*/
+	background:url(img/footer_dropshadow.png);
+	border-bottom:solid 1px #999;
+	height:20px;
+}
+
+#contentname
+{
+	padding-left:17px;
+	color:#535d60;
+	line-height:25px;
+}
+
+#mainFrame
+{
+	/*height:498px;*/
+	height:100%;
+	width:100%;
+}
+
+/*页面底部*/
+#footer
+{
+}
+
+#footbar
+{
+	height:29px;
+	background: url(img/sprites-t1.gif) 0 -629px;
+}
+
+#footshadow
+{
+}
+
+#footshadow_left
+{
+	width:18px;
+	height:14px;
+	background:url(img/leftfootshadow.gif);
+}
+#footshadow_right
+{
+	width:18px;
+	height:14px;
+	background:url(img/rightfootshadow.gif);
+}
+#footshadow_center
+{
+	height:14px;
+	background:url(img/centerfootshadow.gif);
+}
+
+#footuppershadow
+{
+	height:26px;
+	background:url(img/sprites-t1.gif) 0 -480px;
+}

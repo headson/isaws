@@ -1,25 +1,25 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-//#include <sys/time.h>
 #include <time.h>
-//#include <unistd.h>
-//#include <sys/poll.h>
-#include <curl/curl.h>
-#include <event2/event.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
 
+#include <curl/curl.h>
+//#include <event2/event.h>
+#include "vzconn/base/clibevent.h"
+
 #define MSG_OUT stdout
 
 /* Global information, common to all connections */
-typedef struct _GlobalInfo {
+class GlobalInfo {
+public:
   struct event_base *evbase;
-  struct event *timer_event;
-  CURLM        *multi;
-  int           still_running;
-} GlobalInfo;
+  struct event      *timer_event;
+  CURLM             *multi;
+  int                still_running;
+};
 
 /* Information associated with a specific easy handle */
 class ConnInfo {
@@ -35,7 +35,8 @@ public:
 };
 
 /* Information associated with a specific socket */
-typedef struct _SockInfo {
+class SockInfo {
+public:
   curl_socket_t  sockfd;
   CURL          *easy;
   int            action;
@@ -43,7 +44,7 @@ typedef struct _SockInfo {
   struct event  *ev;
   int            evset;
   GlobalInfo    *global;
-} SockInfo;
+};
 
 /* Update the event timer after curl_multi library calls */
 static int multi_timer_cb(CURLM *multi, long timeout_ms, GlobalInfo *g) {
@@ -217,11 +218,12 @@ static int sock_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp) {
 }
 
 /* CURLOPT_WRITEFUNCTION */
-static size_t write_cb(void *ptr, size_t size, size_t nmemb, void *data) {
+static size_t ret_resp_cb(void *ptr, size_t size, size_t nmemb, void *data) {
   size_t realsize = size * nmemb;
   ConnInfo *conn = (ConnInfo*) data;
   (void)ptr;
   (void)conn;
+  printf("---------------- resp %s.\n", (char*)ptr);
   return realsize;
 }
 
@@ -237,9 +239,8 @@ static int prog_cb(void *p, double dltotal, double dlnow, double ult,
   return 0;
 }
 
-
 /* Create a new easy handle, and add it to the global curl_multi */
-static void new_conn(char *url, GlobalInfo *g) {
+static void new_conn(char *url, const char *s_data, GlobalInfo *g) {
   ConnInfo *conn;
   CURLMcode rc;
 
@@ -255,7 +256,9 @@ static void new_conn(char *url, GlobalInfo *g) {
   conn->global = g;
   conn->url = strdup(url);
   curl_easy_setopt(conn->easy, CURLOPT_URL, conn->url);
-  curl_easy_setopt(conn->easy, CURLOPT_WRITEFUNCTION, write_cb);
+  curl_easy_setopt(conn->easy, CURLOPT_POST, 1);  
+  curl_easy_setopt(conn->easy, CURLOPT_POSTFIELDS, s_data);
+  curl_easy_setopt(conn->easy, CURLOPT_WRITEFUNCTION, ret_resp_cb);
   curl_easy_setopt(conn->easy, CURLOPT_WRITEDATA, conn);
   curl_easy_setopt(conn->easy, CURLOPT_VERBOSE, 1L);
   curl_easy_setopt(conn->easy, CURLOPT_ERRORBUFFER, conn->error);
@@ -292,7 +295,8 @@ int main(int argc, char **argv) {
   curl_multi_setopt(g.multi, CURLMOPT_TIMERFUNCTION, multi_timer_cb);
   curl_multi_setopt(g.multi, CURLMOPT_TIMERDATA, &g);
 
-  new_conn("http://localhost:8080/vz/hello.jsp?data=helloworlds.", &g);
+  new_conn("http://localhost:8080/vz/index.jsp", 
+    "json=helloworlds.", &g);
 
   /* we don't call any curl_multi_socket*() function yet as we have no handles
      added! */

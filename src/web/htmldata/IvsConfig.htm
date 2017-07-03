@@ -1,0 +1,1415 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>视频设置</title>
+    <script type="text/javascript" src="../js/LAB.min.js"></script>
+    <script type="text/javascript">
+        $LAB
+        .script("../js/launch.js?version=" + new Date().getTime()).wait(function () {
+            init(function () {
+                function isNotUndefinedOrNull(value) {
+                    return (value != undefined && value != null);
+                }
+                var ivsConfig = new function () {
+                    var g_cur_channel = 0;
+                    //获取预设省份
+                    function get_preinstall_province() {
+                        var cmd, len, data;
+
+                        cmd = 65538;
+
+                        data = "0";
+                        len = 0;
+                        var senddata = cmd + ":" + len + ":" + data;
+                        $.ajax({
+                            type: "POST",
+                            url: "../getivsctrl2.php",
+                            data: senddata,
+                            success: function (ajaxdata) {
+                                if (precheck(ajaxdata)) {
+                                    return false;
+                                }
+                                if ("OK" != ajaxdata.slice(0, 2)) return false;
+                                var str = ajaxdata.slice(ajaxdata.indexOf("=") + 1, ajaxdata.length - 1);
+                                str = str.split(":");
+                                str = str[2];
+                                str = Base64.decode(str, true);
+                                var cur_province = str.split("@")[0];
+                                var province_str = str.split("@")[1];
+                                var arr = province_str.split("");
+                                for (var i = 0; i < arr.length; i++) {
+                                    arr[i] = arr[i] + "-" + i;
+                                }
+                                arr.sort(function (strA, strB) {
+                                    return strA.localeCompare(strB);
+                                });
+                                var option_str = "<option value='255'>无</option>";
+                                for (var i = 0; i < arr.length; i++) {
+                                    option_str += "<option value='" + arr[i].split("-")[1] + "'>" + arr[i].split("-")[0] + "</option>";
+                                }
+                                $("#preinstall_province").html(option_str);
+                                $("#preinstall_province").selectmenu("refresh");
+                                g_province = cur_province;
+                                $("#preinstall_province").select_val(cur_province);
+                                $("#preinstall_province").on("selectmenuchange", function (event, ui) { set_preinstall_province(); });
+                            },
+                            dataType: "text"
+                        });
+                    }
+                    //设置预设省份
+                    function set_preinstall_province() {
+                        var cmd, len, data;
+
+                        cmd = 65539;
+                        var province = $("#preinstall_province").select_val();
+                        //if (g_province == province) {
+                        //    return false;
+                        //}
+
+                        len = 4;
+                        var base64 = Base64.encode(province);
+                        var senddata = cmd + ":" + len + ":" + province;
+                        $.ajax({
+                            type: "POST",
+                            url: "../ivsctrl2.php",
+                            data: senddata,
+                            success: function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                            },
+                            dataType: "text"
+                        });
+                    }
+                    //变倍自动聚焦
+                    function get_auto_focus_status() {
+                        $.get("../vb.htm?paratest=userdefinedcfg", function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            var status = ajaxdata.slice(ajaxdata.indexOf("=") + 1, ajaxdata.length - 1);
+                            if (status == "") {
+                                $.get("../vb.htm?userdefinedcfg=111", function (ajaxdata) {
+                                    get_auto_focus_status();
+                                });
+                                return false;
+                            }
+                            var s_arr = status.split("");
+                            $("#auto_focus").check_val(s_arr[2] == 1);
+                        })
+                    }
+                    function set_auto_focus_status() {
+                        var data = $("#auto_focus").check_val() ? "1" : "0";
+                        $.get("../vb.htm?userdefinedcfg3=" + data, function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                        })
+                    }
+                    function autofocusatfterzoom() {
+                        $.get("../vb.htm?autofocusatfterzoom", function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                        });
+                    }
+
+                    function get_slider_val(name, channel) {
+                        $.get("../vb.htm?paratest=ledlight." + channel,
+                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            response = ajaxdata.split("\n");
+                            var val = parse_ajax_data(response[0]);
+                            val = parseInt(val, 10);
+                            var ledlight = (val >> 16) & 0xFFFF;
+                            var g_ledmaxlevel = val & 0xFFFF;
+                            init_slider("led", g_ledmaxlevel);
+                            if (!isNaN(val)) $("#" + name + "_slider").slider('value', ledlight);
+                            else $("#" + name + "_slider").slider("option", "disabled", true);
+                        });
+                    }
+
+                    function set_slider_val(name, val, channel) {
+                        if ($("#" + name + "_slider").slider("option", "disabled")) return;
+                        $.get("../vb.htm?ledlight=" + val + "." + channel,
+                        function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                        });
+                    }
+
+                    function set_slider_val_channel(name, val) {
+                        set_slider_val(name, val, g_cur_channel);
+                    }
+                    function set_text_name(text_name,val) {
+                        val += 2;
+                        $(text_name).html(val + "米");
+                    }
+
+                    function init_slider(name,max) {
+                        var slider_name = "#" + name + "_slider";
+                        var text_name = "#" + name + "_text";
+                        $(slider_name).slider({
+                            range: "min",
+                            value: 0,
+                            min: 0,
+                            max: max,
+                            change: function (event, ui) {
+                                set_text_name(text_name,ui.value);
+                            },
+                            slide: function (event, ui) {
+                                set_text_name(text_name,ui.value);
+                            },
+                            stop: function (event, ui) {
+                                set_slider_val_channel(name, ui.value);
+                                //set_led_time();
+                            }
+                        });
+                        //set_text_name(text_name, $(slider_name).slider("value"));
+                    }
+                    //获取LED时间段
+                    function get_led_time() {
+                        $.get("../vb.htm", { paratest: "getledtime" }, function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            ajaxdata = ajaxdata.split("=")[1];
+                            var led_json = eval("(" + ajaxdata + ")");
+                            if(led_time == null){
+                                if (isNotUndefinedOrNull(led_json.LedTimeControl.timeDurEnable)) {
+                                    if (led_json.LedTimeControl.timeDurEnable == 0) {
+                                        $("#led_auto").check_val(true);
+                                    } else if (led_json.LedTimeControl.timeDurEnable == 1) {
+                                        $("#led_manual").check_val(true);
+                                    }
+                                }
+                                if (isNotUndefinedOrNull(led_json.LedTimeControl.ledDistance)) {
+                                    var distance = led_json.LedTimeControl.ledDistance;
+                                    $("#led_slider").slider('value', distance);
+                                }
+                            }
+                            led_time = led_json;
+                            load_chunk(led_json);
+                        });
+
+                        
+                    }
+                    var td_width = 20;
+                    //加载时间段
+                    function load_chunk(led_json) {
+                        $("#draw_div").empty();
+                        if (isNotUndefinedOrNull(led_json.LedTimeControl.LedTimeDurControl)) {
+                            var led_con_arr = led_json.LedTimeControl.LedTimeDurControl;
+                            for (var i = 0; i < led_con_arr.length; i++) {
+                                if (led_con_arr[i].timeEnable == 0) {
+                                    continue;
+                                }
+                                var s_hour = led_con_arr[i].startTimeHour;
+                                var s_min = led_con_arr[i].startTimeMin;
+                                var s_sec = led_con_arr[i].startTimeSec;
+                                var e_hour = led_con_arr[i].endTimeHour;
+                                var e_min = led_con_arr[i].endTimeMin;
+                                var e_sec = led_con_arr[i].endTimeSec;
+                                var start = s_hour * td_width + s_min / Math.floor(60 / td_width);
+                                var end = e_hour * td_width + e_min / Math.floor(60 / td_width);
+                                var o = document.createElement("div");
+                                $(o).attr("class", "blur_obj chunk").attr("name",start+""+end);
+                                $(o).css({ "width": end - start, "left": start, "top": "2px" });
+                                $("#draw_div").append($(o));
+                            }
+                        }
+                    }
+                    //设置时间段
+                    function set_led_time() {
+                        var led_enable = 0;
+                        if ($("#led_auto").prop('checked')) {
+                            led_enable = 0;
+                        }else if ($("#led_manual").prop('checked')) {
+                            led_enable = 1;
+                        }
+                        var distance = $("#led_slider").slider("value");
+                        if (led_time == null) {
+                            return false;
+                        }
+                        led_time.LedTimeControl.timeDurEnable = led_enable;
+                        led_time.LedTimeControl.ledDistance = distance;
+                        var jsonstr = JSON.stringify(led_time);
+                        $.get("../vb.htm?setledtime=" + jsonstr, function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                        });
+                    }
+                    function save_rec_par() {
+                        set_preinstall_province();
+                        //set_led_time();
+                    }
+                    var focal_down = false;
+                    function btn_mousedown() {
+                        focal_down = true;
+                        var value = $(this).attr("focalValue");
+                        down_value = value;
+                        $.get("../vb.htm?focusandzoom=" + value, function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                        });
+                    }
+                    function btn_mouseup() {
+                        if (!focal_down) {
+                            return;
+                        }
+                        focal_down = false;
+                        var value = $(this).attr("focalValue");
+                        var status = $("#auto_focus").check_val();
+                        $.get("../vb.htm?focusandzoom=0", function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            if ((value == 3 || value == 4) && status) {
+                                autofocusatfterzoom();
+                            }
+                        });
+
+                    }
+
+                    function fast_focus() {
+                        $.get("../vb.htm?autofocus", function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                        });
+                    }
+                    //function reset_focus() {
+                    //    $.get("../vb.htm?resetfocus");
+                    //}
+                    var led_time = null;
+                    //时间段
+                    var time_period = new function () {
+                        this.init = function () {
+                            var container = $("#draw_div");
+                            var table = $("#draw_tb");
+                            var input = $("#select_time_txt");
+                            var down = false;
+                            var click = false;
+                            var change_width = false;
+                            var click_position = 0;
+                            var draw = false;
+                            var td_height = 20;
+                            var poor = 2;
+                            var con_info = {
+                                width: container.width(),
+                                height: container.height()
+                            }
+                            var old_info = {
+                                x: 0,
+                                y: 0,
+                                width: 0,
+                                height: 0,
+                                left: 0,
+                                top: 0
+                            };
+                            var obj = {
+                                cur_obj: [],
+                                pre_obj: [],
+                                c_obj: null
+                            };
+                            var cur_info = {
+                                x: 0,
+                                y: 0
+                            }
+                            container.mousedown(function (event) {
+                                var e = event.target;
+                                var con_info_left = container.offset().left;
+                                var con_info_top = container.offset().top;
+                                old_info.x = event.pageX - con_info_left;
+                                old_info.y = event.pageY - con_info_top;
+
+                                for (var i = 0; i < obj.cur_obj.length; i++) {
+                                    obj.cur_obj[i].attr("class", "blur_obj chunk");
+                                }
+                                obj.cur_obj = [];
+                                if (e.id != container.attr("id")) {
+                                    var p = $(e).position();
+                                    var w = $(e).width();
+                                    obj.c_obj = $(e);
+                                    old_info.width = obj.c_obj.width();
+                                    old_info.left = obj.c_obj.position().left;
+                                    $(".chunk").each(function () {
+                                        if ($(this).attr("name") == obj.c_obj.attr("name")) {
+                                            $(this).attr("class", "focus_obj chunk");
+                                            obj.cur_obj.push($(this));
+                                        }
+                                    });
+                                    calculate_sel(obj.cur_obj);
+                                    if (old_info.x >= p.left && old_info.x <= p.left + poor) {
+                                        change_width = true;
+                                        click_position = 0;
+                                    } else if (old_info.x >= (p.left + w - poor) && old_info.x <= (p.left + w)) {
+                                        change_width = true;
+                                        click_position = 1;
+                                    } else {
+                                        click = true;
+                                    }
+                                } else {
+                                    obj.cur_obj = [];
+                                    calculate_sel(obj.cur_obj);
+                                    var count = container.find(".chunk").length;
+                                    if (count >= 4) {
+                                        return;
+                                    }
+                                    down = true;
+                                }
+                            })
+                            container.mousemove(function (event) {
+                                if (!down && !change_width && !click) {
+                                    return;
+                                }
+                                var con_info_left = container.offset().left;
+                                var con_info_top = container.offset().top;
+                                cur_info.x = event.pageX - con_info_left;
+                                cur_info.y = event.pageY - con_info_top;
+                                if (cur_info.y < 0) {
+                                    cur_info.y = 0;
+                                }
+                                if (cur_info.y > con_info.height) {
+                                    cur_info.y = con_info.height;
+                                }
+                                if (cur_info.x < 0) {
+                                    cur_info.x = 0;
+                                }
+                                if (cur_info.x > con_info.width) {
+                                    cur_info.x = con_info.width;
+                                }
+                                var gap_x = cur_info.x - old_info.x;
+                                var gap_y = cur_info.y - old_info.y;
+                                var top, width, left, dis;
+                                if (down) {
+                                    top = Math.floor(old_info.y / td_height) * td_height + 2;
+                                    for (var i = 0; i < obj.cur_obj.length; i++) {
+                                        obj.cur_obj[i].remove();
+                                    }
+                                    obj.cur_obj = [];
+                                    var num;
+                                    if (gap_y > 0) {
+                                        num = Math.ceil((gap_y) / td_height);
+                                    } else {
+                                        num = Math.ceil((-gap_y) / td_height);
+                                    }
+                                    if (num > 0) {
+                                        draw = true;
+                                    }
+                                    if (gap_y == 0) {
+                                        num = 1;
+                                    }
+                                    for (var i = 0; i < num; i++) {
+                                        var o = document.createElement("div");
+                                        $(o).attr("name", old_info.x + "" + old_info.y).attr("class", "focus_obj chunk");
+                                        container.get(0).appendChild(o);
+                                        obj.cur_obj.push($(o));
+                                        obj.pre_obj.push($(o));
+                                    }
+                                    for (var i = 0; i < obj.cur_obj.length; i++) {
+                                        var t;
+                                        if (gap_y > 0) {
+                                            t = top + (i * td_height);
+                                        } else {
+                                            t = top - (i * td_height);
+                                        }
+                                        obj.cur_obj[i].css({ "top": t });
+                                    }
+
+                                    if (gap_x > 0) {
+                                        width = gap_x;
+                                        left = old_info.x;
+                                        for (var i = 0; i < obj.cur_obj.length; i++) {
+                                            obj.cur_obj[i].css({ "left": parseInt(left), "width": parseInt(width) });
+                                        }
+                                    } else {
+                                        width = -gap_x;
+                                        left = cur_info.x;
+                                        for (var i = 0; i < obj.cur_obj.length; i++) {
+                                            obj.cur_obj[i].css({ "left": parseInt(left), "width": parseInt(width) });
+                                        }
+                                    }
+                                } else if (click) {
+                                    width = obj.c_obj.width();
+                                    if (gap_x < 0) {
+                                        dis = -gap_x;
+                                        left = old_info.left - dis;
+                                    } else {
+                                        dis = gap_x;
+                                        left = old_info.left + dis;
+                                    }
+                                    if ((left + width) > con_info.width) {
+                                        left = con_info.width - width;
+                                    }
+                                    if (left < 0) {
+                                        left = 0;
+                                    }
+                                    for (var i = 0; i < obj.cur_obj.length; i++) {
+                                        obj.cur_obj[i].css("left", parseInt(left));
+                                    }
+                                } else if (change_width) {
+                                    if (click_position == 0) {
+                                        left = old_info.left + gap_x;
+                                        width = old_info.width - gap_x;
+                                        var poor_value = cur_info.x - old_info.left;
+                                        if (left < 0) {
+                                            left = 0;
+                                            width = old_info.width + old_info.left;
+                                        }
+                                        if (left > old_info.width + old_info.left) {
+                                            left = old_info.width + old_info.left - 1;
+                                            width = 1;
+                                        }
+                                        for (var i = 0; i < obj.cur_obj.length; i++) {
+                                            obj.cur_obj[i].css({ "width": parseInt(width), "left": parseInt(left) });
+                                        }
+                                    } else {
+                                        width = old_info.width + gap_x;
+                                        if (width < 0) {
+                                            width = 1;
+                                        }
+                                        if (width > con_info.width - old_info.left) {
+                                            width = con_info.width - old_info.left;
+                                        }
+                                        for (var i = 0; i < obj.cur_obj.length; i++) {
+                                            obj.cur_obj[i].css({ "width": parseInt(width) });
+                                        }
+                                    }
+                                }
+                                calculate_sel(obj.cur_obj);
+                                return false;
+                            });
+                            $(".dialog").mouseup(function () {
+                                if (down) {
+                                    down = false;
+                                    draw = false;
+                                }
+                                click = false;
+                                change_width = false;
+                            });
+                            $("#delete").click(function () {
+                                if (obj.cur_obj.length > 0) {
+                                    for (var i = 0; i < obj.cur_obj.length; i++) {
+                                        obj.cur_obj[i].remove();
+                                    }
+                                    obj.cur_obj = [];
+                                    obj.pre_obj = [];
+                                }
+                                calculate_sel(obj.cur_obj);
+                            });
+                            $("#clear").click(function () {
+                                $(".chunk").each(function () {
+                                    $(this).remove();
+                                });
+                                obj.cur_obj = [];
+                                obj.pre_obj = [];
+                                calculate_sel(obj.cur_obj);
+                            });
+                            function get_hour(left, flag) {
+                                left = parseInt(left);
+                                var hour = Math.floor(left / td_width);
+                                if (flag) {
+                                    if (hour < 10) {
+                                        return "0" + hour;
+                                    }
+                                }
+                                return hour;
+                            }
+                            function get_min(left, flag) {
+                                left = parseInt(left);
+                                var min = (left % td_width) * Math.floor(60 / td_width);
+                                if(flag){
+                                    if(min < 10){
+                                        return "0" + min;
+                                    }
+                                }
+                                return min;
+                            }
+                            function calculate_sel(array) {
+                                input.val("");
+                                var str = "";
+                                var start = "";
+                                var end = "";
+                                for (var i = 0; i < array.length; i++) {
+                                    var top = array[i].position().top;
+                                    var left = array[i].position().left;
+                                    var width = array[i].width();
+                                    start = get_hour(left,true) + ":" + get_min(left,true) + ":00";
+                                    end = get_hour(left + width,true) + ":" + get_min(left + width,true) + ":00";
+                                }
+                                if (start != "") {
+                                    str = str + start + " 至 " + end;
+                                }
+                                input.val(str);
+                            }
+                            function calculate_cur(array) {
+                                var chunk_count = $(".chunk").length;
+                                var str = "";
+                                var start = "";
+                                var end = "";
+                                $(".chunk").each(function (i) {
+                                    var time = led_time.LedTimeControl.LedTimeDurControl[i];
+                                    var top = $(this).position().top;
+                                    var left = $(this).position().left;
+                                    var width = $(this).width();
+                                    time.timeEnable = 1;
+                                    time.startTimeHour = get_hour(left,false);
+                                    time.startTimeMin = get_min(left,false);
+                                    time.startTimeSec = 0;
+                                    time.endTimeHour = get_hour(left + width,false);
+                                    time.endTimeMin = get_min(left + width,false);
+                                    time.endTimeSec = 0;
+                                });
+
+                                for (var j = chunk_count; j < 5; j++) {
+                                    var time = led_time.LedTimeControl.LedTimeDurControl[j];
+                                    time.timeEnable = 0;
+                                    time.startTimeHour = 0;
+                                    time.startTimeMin = 0;
+                                    time.startTimeSec = 0;
+                                    time.endTimeHour = 0;
+                                    time.endTimeMin = 0;
+                                    time.endTimeSec = 0;
+                                }
+                            }
+                            table.mousemove(function () {
+                                return false;
+                            });
+                            $("#cancel").click(function () {
+                                $("#led_dialog").hide();
+                                $("#live").css("visibility", "visible");
+                                $("#clear").click();
+                            });
+                            $("#led_submit").click(function () {
+                                calculate_cur();
+                                $("#led_dialog").hide();
+                                $("#live").css("visibility", "visible");
+                                $("#clear").click();
+                            });
+                        }
+                    }
+
+                    
+                    this.init = function () {
+                        //init_slider("led");
+                        init_selectmenu("#preinstall_province", 92, 195);
+                        window.onresize = function () {
+                            var h = document.documentElement.clientHeight;
+                            if (h < 400) {
+                                $("#preinstall_province").selectmenu({
+                                    position: { my: "left top-194", at: "left top", collision: "flipfit" }
+                                });
+                            } else {
+                                $("#preinstall_province").selectmenu({
+                                    position: { my: "left top+24", at: "left top", collision: "flipfit" }
+                                });
+                            }
+                        }
+                        window.onresize();
+                        $("#black").attr("disabled", "disabled");
+                        $(".focallength").mousedown(btn_mousedown);
+                        $(".focallength").mouseup(btn_mouseup);
+                        $(".focallength").mouseout(btn_mouseup);
+                        $(".focallength").css("width","40px");
+                        $("#fast_focus").click(fast_focus);
+                        $("#fast_focus").hover(
+                            function () {
+                                $("#focus_hint").css("visibility","visible");
+                            },
+                            function () {
+                                $("#focus_hint").css("visibility", "hidden");
+                            }
+                        );
+                        //$("#reset_focus").click(reset_focus);
+                        $("#show_rec_dialog").click(function () {
+                            recDialog.get_rec_dialog();
+                            $("#live").css("visibility","hidden");
+                            $("#rec_dialog").show();
+                            $("#coil_config_a").click();
+                        });
+                        $("#rec_dialog_close").click(function () {
+                            $("#rec_dialog").hide();
+                            $("#live").css("visibility", "visible");
+                        });
+                        $("#coil_dialog_close").click(function () {
+                            $("#rec_dialog").hide();
+                            $("#live").css("visibility", "visible");
+                        });
+                        //$("#rec_submit").click(save_rec_par);
+                        $("#set_led_btn").click(function () {
+                            $("#live").css("visibility", "hidden");
+                            $("#led_dialog").show();
+                            get_led_time();
+                        });
+                        $("#auto_focus").change(function () {
+                            set_auto_focus_status();
+                        });
+                        get_auto_focus_status();
+                        //time_period.init();
+                        //get_led_time();
+                        get_slider_val("led",g_cur_channel);
+                        get_preinstall_province();
+                    }
+                }
+                var recDialog = new function () {
+                    var g_platefilter = null;
+                    //获取输出类型
+                    function get_platefiltermode() {
+                        var cmd, len, data;
+
+                        cmd = 4;
+                        data = "0";
+                        len = data.length;
+                        var base64 = Base64.encode(data);
+                        var senddata = cmd + ":" + len + ":" + base64;
+                        $.ajax({
+                            type: "POST",
+                            url: "../getivsctrl.php",
+                            data: senddata,
+                            success: function (ajaxdata) {
+                                if (precheck(ajaxdata)) {
+                                    return false;
+                                }
+                                if ("OK" != ajaxdata.slice(0, 2)) return false;
+                                var decode = ajaxdata.slice(ajaxdata.indexOf("=") + 1, ajaxdata.length - 1);
+                                decode = decode.split(":");
+                                decode = Base64.decode(decode[2]);
+                                decode = parseInt(decode);
+                                g_platefilter = decode;
+                                var mask = 0x1;
+
+                                var bOutStable = decode & mask;
+                                var bOutVloop = decode & (mask << 1);
+                                var bOutIo1 = decode & (mask << 4);
+                                var bOutIo2 = decode & (mask << 5);
+                                var bOutIo3 = decode & (mask << 6);
+
+                                $("#stable").check_val(bOutStable > 0);
+                                $("#vloop").check_val(bOutVloop > 0);
+                                $("#out_io1").check_val(bOutIo1 > 0);
+                                $("#out_io2").check_val(bOutIo2 > 0);
+                                $("#out_io3").check_val(bOutIo3 > 0);
+                            },
+                            dataType: "text"
+                        });
+                    }
+                    //设置输出类型
+                    function set_platefiltermode() {
+                        var cmd, len, data;
+                        cmd = 5;
+                        var bOutStable = $("#stable").check_val() ? "1" : "0";
+                        var bOutVloop = $("#vloop").check_val() ? "1" : "0";
+                        var bOutIo1 = $("#out_io1").check_val() ? "1" : "0";
+                        var bOutIo2 = $("#out_io2").check_val() ? "1" : "0";
+                        var bOutIo3 = $("#out_io3").check_val() ? "1" : "0";
+                        var platefilter = parseInt(bOutStable) | (parseInt(bOutVloop) << 1) | (parseInt(bOutIo1) << 4) | (parseInt(bOutIo2) << 5) | (parseInt(bOutIo3) << 6);
+
+                        if (g_platefilter == platefilter) {
+                            return false;
+                        }
+
+                        data = platefilter.toString();
+                        len = data.length;
+                        var base64 = Base64.encode(data);
+                        var senddata = cmd + ":" + len + ":" + base64;
+
+                        var data = cmd + ":" + len + ":" + base64;
+                        $.ajax({
+                            type: "POST",
+                            url: "../ivsctrl.php",
+                            data: senddata,
+                            success: function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                                g_platefilter = platefilter;
+                                get_platefiltermode();
+                            },
+                            dataType: "text"
+                        });
+                    }
+
+                    var g_distinguish_type = 0;
+                    //获取识别类型
+                    function get_distinguish_type() {
+                        var cmd, len, data;
+
+                        cmd = 8;
+                        data = "0";
+                        len = data.length;
+                        var base64 = Base64.encode(data);
+                        var senddata = cmd + ":" + len + ":" + base64;
+                        $.ajax({
+                            type: "POST",
+                            url: "../getivsctrl.php",
+                            data: senddata,
+                            success: function (ajaxdata) {
+                                if (precheck(ajaxdata)) {
+                                    return false;
+                                }
+                                if ("OK" != ajaxdata.slice(0, 2)) return false;
+                                var decode = ajaxdata.slice(ajaxdata.indexOf("=") + 1, ajaxdata.length - 1);
+                                decode = decode.split(":");
+                                decode = Base64.decode(decode[2]);
+                                decode = parseInt(decode);
+                                g_distinguish_type = decode;
+
+                                $("#blue").check_val((decode & (1 << 1)) > 0);
+                                $("#yellow").check_val(((decode & (1 << 3)) || (decode & (1 << 4))) > 0);
+                                $("#black").check_val((decode & (1 << 2)) > 0);
+                                $("#coach").check_val((decode & (1 << 13)) > 0);
+                                $("#police").check_val((decode & (1 << 5)) > 0);
+                                $("#armpol").check_val(((decode & (1 << 6)) || (decode & (1 << 15))) > 0);
+                                $("#army").check_val(((decode & (1 << 8)) || (decode & (1 << 9))) > 0);
+                                $("#hongkongmacao").check_val(((decode & (1 << 11)) || (decode & (1 << 14))) > 0);
+                                $("#embassy").check_val((decode & (1 << 10)) > 0);
+                                $("#ca").check_val((decode & (1 << 18)) > 0);
+                                $("#newEnergy").check_val((decode & (1 << 19)) > 0);
+                            },
+                            dataType: "text"
+                        });
+                    }
+                    //设置识别类型
+                    function set_distinguish_type() {
+                        var cmd, len, data;
+                        cmd = 7;
+                        var distinguish_type = 0;
+                        if ($("#blue").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 1);
+                        }
+                        if ($("#yellow").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 3);
+                            distinguish_type = distinguish_type | (1 << 4);
+                        }
+                        if ($("#black").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 2);
+                        }
+                        if ($("#coach").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 13);
+                        }
+                        if ($("#police").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 5);
+                        }
+                        if ($("#armpol").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 6);
+                            distinguish_type = distinguish_type | (1 << 15);
+                        }
+                        if ($("#army").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 8);
+                            distinguish_type = distinguish_type | (1 << 9);
+                        }
+                        if ($("#hongkongmacao").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 11);
+                            distinguish_type = distinguish_type | (1 << 14);
+                        }
+                        if ($("#embassy").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 10);
+                        }
+                        if ($("#ca").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 18);
+                        }
+                        if ($("#newEnergy").check_val()) {
+                            distinguish_type = distinguish_type | (1 << 19);
+                        }
+                        if (g_distinguish_type == distinguish_type) {
+                            return false;
+                        }
+
+                        data = distinguish_type.toString();
+                        len = data.length;
+                        var base64 = Base64.encode(data);
+                        var senddata = cmd + ":" + len + ":" + base64;
+
+                        var data = cmd + ":" + len + ":" + base64;
+                        $.ajax({
+                            type: "POST",
+                            url: "../ivsctrl.php",
+                            data: senddata,
+                            success: function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                                g_distinguish_type = distinguish_type;
+                                get_distinguish_type();
+                            },
+                            dataType: "text"
+                        });
+                    }
+                    ////获取外部触发延迟
+                    //function get_trigger_type() {
+                    //    $.get("../vb.htm?gettriggertype",
+                    //    function (ajaxdata) {
+                    //        if (precheck(ajaxdata)) {
+                    //            return false;
+                    //        }
+                    //        parse_config_info(ajaxdata.split("=")[1]);
+                    //    });
+                    //}
+                    ////设置外部触发延迟
+                    //function set_trigger_type() {
+                    //    var cfg = {};
+                    //    var arr = new Array();
+                    //    cfg.trigger_delay = parseInt($("#trigger_delay").val(), 10);
+                    //    if (isNaN(cfg.trigger_delay) || cfg.trigger_delay < 0 || cfg.trigger_delay > 10000) {
+                    //        cfg.trigger_delay = 0;
+                    //    }
+                    //    arr = [];
+                    //    $("[name='trigger_in']").filter(function (index) {
+                    //        if ($(this).check_val()) {
+                    //            arr.push(parseInt($(this).attr('vzio')));
+                    //        }
+                    //        return true;
+                    //    });
+                    //    cfg.trigger_in = arr;
+                    //    var jsonstr = JSON.stringify(cfg);
+
+                    //    $.get("../vb.htm?settriggertype=" + jsonstr, function (ajaxdata) {
+                    //        default_ajax_handler(ajaxdata);
+                    //        get_trigger_type();
+                    //    });
+                    //}
+                    //图片质量
+                    function getimagequality() {
+                        $.get("../vb.htm?getimagequality", function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            var imagequality = ajaxdata.slice(ajaxdata.indexOf("=") + 1, ajaxdata.length - 1);
+                            $("#centerserver_image_quality").select_val(imagequality);
+                        });
+                    }
+                    function setimagequality() {
+                        var imagequality = $("#centerserver_image_quality").val();
+                        $.get("../vb.htm?setimagequality=" + imagequality, function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                            getimagequality();
+                        });
+                    }
+                    var coil_enable = "1";
+                    var area_enable = "1";
+                    var plate_width_s;
+                    var plate_width_l;
+                    var trigger_interval_time;
+                    var direction;
+                    var trigger_delay;
+                    //获取识别参数
+                    function geteventruleexhtm() {
+                        var senddata = "0";
+                        $.ajax({
+                            type: "POST",
+                            url: "../geteventruleexhtm.php",
+                            data: senddata,
+                            success: function (ajaxdata) {
+                                if (precheck(ajaxdata)) {
+                                    return false;
+                                }
+                                if ("OK" != ajaxdata.slice(0, 2)) return false;
+                                ajaxdata = ajaxdata.split("\n")[0];
+                                ajaxdata = ajaxdata.split("=")[1];
+                                var datas = ajaxdata.split(":");
+
+                                $("#plate_width_s").val(datas[2]);
+                                $("#plate_width_l").val(datas[3]);
+                                $("#trigger_interval_time").val(datas[4]);
+                                $("#direction_sel").select_val(datas[5]);
+                            },
+                            dataType: "text"
+                        });
+                    }
+                    //设置识别参数
+                    function seteventruleexhtm() {
+                        var senddata = coil_enable + ":" + area_enable + ":" + plate_width_s + ":" + plate_width_l + ":" + trigger_interval_time + ":" + direction;
+                        $.ajax({
+                            type: "POST",
+                            url: "../seteventruleexhtm.php",
+                            data: senddata,
+                            success: function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                                geteventruleexhtm();
+                            },
+                            dataType: "text"
+                        });
+                    }
+
+                    function parse_config_info(json) {
+                        var cfg;
+                        try {
+                            cfg = jQuery.parseJSON(json);
+                        }
+                        catch (e) {
+                            //alert(e.message);
+                            return null;
+                        }
+                        //set trigger delay
+                        if (isNotUndefinedOrNull(cfg.trigger_delay)) {
+                            $("#trigger_delay").val(cfg.trigger_delay);
+                        } else {
+                            $("#trigger_delay").val(0);
+                        }
+                    }
+
+                    this.get_rec_dialog = function() {
+                        geteventruleexhtm();
+                        //get_trigger_type();
+                        get_platefiltermode();
+                        get_distinguish_type();
+                        getimagequality();
+                    }
+                    function save_rec_config() {
+                        plate_width_s = parseInt($("#plate_width_s").val());
+                        plate_width_l = parseInt($("#plate_width_l").val());
+                        trigger_interval_time = parseInt($("#trigger_interval_time").val());
+                        direction = $("#direction_sel").select_val();
+                        trigger_delay = parseInt($("#trigger_delay").val());
+                        if(coil_enable == 1){
+                            if (isNaN(plate_width_s) || isNaN(plate_width_l) || plate_width_s < 45 || plate_width_s > 600 || plate_width_l < 45 || plate_width_l > 600) {
+                                alert("车牌宽度为45-600之间的整数！");
+                                return;
+                            }
+                            if (plate_width_l < plate_width_s) {
+                                alert("车牌宽度最小值不能大于最大值！");
+                                return;
+                            }
+                            if (isNaN(trigger_interval_time) || trigger_interval_time < 0 || trigger_interval_time > 255) {
+                                alert("相同车牌触发间隔时间为0-255之间的整数");
+                                return;
+                            }
+                        }
+                        //if (isNaN(relay_time) || relay_time < 0) {
+                        //    alert("继电器持续时间为大于0的整数");
+                        //    return;
+                        //}
+                        seteventruleexhtm();
+                        set_platefiltermode();
+                        set_distinguish_type();
+                        setimagequality();
+                        $("#rec_dialog").hide();
+                        $("#live").css("visibility", "visible");
+                        //$('#installconfig a', window.parent.document).click();
+                    }
+
+                    function get_boardversion_info() {
+                        $.ajax({
+                            url: "../vb.htm?getboardversioninfo",
+                            success: function (ajaxdata) {
+                                if (precheck(ajaxdata)) {
+                                    return;
+                                }
+                                ajaxdata = ajaxdata.split("=");
+                                if (!ajaxdata[0].match(/OK/)) {
+                                    return;
+                                }
+                                var mask = 0x1;
+                                mask = mask << 24;
+
+                                var decode = parseInt(ajaxdata[1]);
+                                decode = mask | decode;
+                                decode = decode.toString(2);
+                                var d_type = decode.substring(decode.length - 24, decode.length - 12);
+                                d_type = parseInt(d_type, 2);
+
+
+                                var m_version = decode.substring(decode.length - 6);
+                                m_version = parseInt(m_version, 2);
+
+                                var s_version = decode.substring(decode.length - 12, decode.length - 6);
+                                s_version = parseInt(s_version, 2);
+
+                                var version = m_version + "." + s_version;
+                                g_hw_version = version;
+
+                                if (version == "5.8" || version == "9.0" || version == "10.0" || d_type == 2) {
+                                    $("#out_io3_td").remove();
+                                } 
+                            },
+                            async: false
+                        });
+                    }
+
+                    this.init = function () {
+                        init_selectmenu("#direction_sel", 100, 150);
+                        init_selectmenu("#centerserver_image_quality", 100, 150);
+                        $("input[type='text']").not("#select_time_txt").css("width", "40px");
+                        $("#rec_dialog_submit").click(save_rec_config);
+                        get_boardversion_info();
+                    }
+                }
+                $(function () {
+                    ivsConfig.init();
+                    recDialog.init();
+                    if(!g_use_new_ax){
+                        init_activex("#live",1,1);
+                        activex_play();
+                    }
+                    else{
+                        init_activex_new("#live",3,1,function(){
+                            activex_play_new(0, 0);
+                        });
+                    }
+
+                    if (g_style_time == "old") {
+                        $("#ivs_parameter").show();
+                    } else {
+                        $("#set_par_td").remove();
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body style="overflow:hidden;" > 
+
+    <table cellpadding="0" cellspacing="0" style="font-size:1em;">
+        <tr>
+            <td valign="top">
+                <div id="live"/>
+            </td>
+            <td style="min-width:200px;min-height:320px;" valign="top" align="right" id="set_par_td">
+                <div id="ivs_parameter" style="display:none;position:relative;">
+                    <div id="focus_container" style="height:170px;">
+                        <table class="dummy" id="focus_tb" style="font-size:12px;min-width:180px;">
+                            <tr>
+                                <td style="min-width:180px;" align="left">
+                                    <input type="checkbox" id="auto_focus" /><label for="auto_focus">变倍后自动聚焦</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="min-width:180px;" align="left">
+                                    <input type="submit" value="+" class="focallength" focalvalue="1" id="focal1" /><label style="padding:0 35px;">聚焦</label><input type="submit" class="focallength" focalvalue="2" value="-" id="focal2" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2" align="left">
+                                    <input type="submit" value="+" class="focallength" focalvalue="3" id="focal3" /><label style="padding:0 35px;">变倍</label><input type="submit" class="focallength" focalvalue="4" value="-" id="focal4" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="left">
+                                    <input type="submit" id="fast_focus" value="车牌自动变倍" style="width:100px;" />
+                                </td>
+                                <!--<td align="right">
+                <input type="submit" id="reset_focus" value="重置聚焦" />
+            </td>-->
+                            </tr>
+                            <tr>
+                                <td id="focus_hint" style="visibility:hidden">
+                                    使用条件：存在可识别的静止车牌
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="led_container" style="height:110px;position:absolute;bottom:10px;left:10px;">
+                        <table class="dummy" id="led_tb" style="font-size:12px;min-width:180px;">
+                            
+                            <!--<tr style="visibility:hidden">
+                                <td>智能补光：</td>
+                                <td colspan="2">
+                                    <ul style="list-style:none">
+                                        <li style="float:left;margin-right:10px;">
+                                            <input type="radio" id="led_auto" name="led_radio" /><label for="led_auto">自动</label>
+                                        </li>
+                                        <li style="float:left">
+                                            <input type="radio" id="led_manual" name="led_radio" /><label for="led_manual">手动</label>
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr style="visibility:hidden">
+                                <td>亮灯时间：</td>
+                                <td colspan="2">
+                                    <input type="submit" id="set_led_btn" value="设置" />
+                                </td>
+                            </tr>-->
+                            <tr>
+                                <td>预设省份：</td>
+                                <td colspan="2" align="left" class="ui-widget">
+                                    <select id="preinstall_province"></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>LED亮度：</td>
+                                <td>
+                                    <div id="led_slider" class="slider" style="width:90px;">
+                                    </div>
+                                </td>
+                                <td id="led_text" style="min-width:20px;padding-left:0;padding-right:0;" align="left"></td>
+                            </tr>
+                            <!--<tr>
+                                <td>&nbsp;</td>
+                            </tr>-->
+                            <tr>
+                                <td colspan="3" align="left">
+                                    <input type="submit" id="show_rec_dialog" value="识别参数设置" style="width:100px;" />
+                                    <!--<input type="submit" id="rec_submit" value="保存" />-->
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <div id="rec_dialog" class="dialog" style="display:none;background:#fff;">
+        <div id="rec_dialog_inner">
+            <table class="dummy">
+                <tr>
+                    <td colspan="4" class="title_td">
+                        抓拍设置
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        图片质量：
+                    </td>
+                    <td colspan="2">
+                        <select id="centerserver_image_quality">
+                            <option value="100">100%</option>
+                            <option value="90">90%</option>
+                            <option value="80">80%</option>
+                            <option value="70">70%</option>
+                            <option value="60">60%</option>
+                            <option value="50">50%</option>
+                            <option value="40">40%</option>
+                            <option value="30">30%</option>
+                            <option value="20">20%</option>
+                            <option value="10">10%</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="title_td">
+                        线圈设置
+                    </td>
+                </tr>
+                <tr>
+                    <td style="min-width:15px"></td>
+                    <td>
+                        车牌宽度限制：
+                    </td>
+                    <td colspan="2">
+                        <input type="text" id="plate_width_s" />
+                        -
+                        <input type="text" id="plate_width_l" />
+                        (45-600)
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        相同车牌触发间隔：
+                    </td>
+                    <td colspan="2">
+                        <input type="text" id="trigger_interval_time" /><label style="margin-left:10px;">秒</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        车辆通过方向：
+                    </td>
+                    <td colspan="2">
+                        <select id="direction_sel">
+                            <option value="0">双向</option>
+                            <option value="1">从上至下</option>
+                            <option value="2">从下至上</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="title_td">
+                        输出类型
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="checkbox" id="stable" />
+                        <label for="stable">稳定识别触发</label>
+                    </td>
+                    <td colspan="2">
+                        <input type="checkbox" id="vloop" />
+                        <label for="vloop">虚拟线圈触发</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="checkbox" id="out_io1" />
+                        <label for="out_io1">IO输入1触发</label>
+                    </td>
+                    <td style="min-width:130px">
+                        <input type="checkbox" id="out_io2" />
+                        <label for="out_io2">IO输入2触发</label>
+                    </td>
+                    <td style="min-width:130px" id="out_io3_td">
+                        <input type="checkbox" id="out_io3" />
+                        <label for="out_io3">IO输入3触发</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="title_td">
+                        识别类型
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="checkbox" id="blue" />
+                        <label for="blue">蓝牌</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="yellow" />
+                        <label for="yellow">黄牌</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="black" />
+                        <label for="black" style="color:#aaa;">黑牌</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="checkbox" id="coach" />
+                        <label for="coach">教练</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="police" />
+                        <label for="police">警牌</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="armpol" />
+                        <label for="armpol">武警</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="checkbox" id="army" />
+                        <label for="army">军牌</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="hongkongmacao" />
+                        <label for="hongkongmacao">港澳</label>
+                    </td>
+                    <td style="min-width:80px">
+                        <input type="checkbox" id="embassy" />
+                        <label for="embassy">使领馆</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td>
+                        <input type="checkbox" id="ca" />
+                        <label for="ca">民航</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="newEnergy" />
+                        <label for="newEnergy">新能源</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"></td>
+                    <td>
+                        <input type="submit" id="rec_dialog_submit" value="保存" />
+                    </td>
+                    <td>
+                        <input type="submit" id="rec_dialog_close" value="关闭" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div id="led_dialog" class="dialog" style="display:none">
+        <div id="led_dialog_inner">
+            <table>
+                <tr>
+                    <td></td>
+                    <td><label>当前选择时间:</label>
+                    <input id="select_time_txt" style="width:130px"/></td>
+                </tr>
+                <tr>
+                    <td style="min-width:80px">亮灯时间</td>
+                    <td>
+                        <div id="time_period_container">
+                            <table id="draw_tb">
+                                <tr>
+                                    <td colspan="24">
+                                        <ul id="hour_ul">
+                                            <li></li>
+                                            <li>01</li>
+                                            <li>02</li>
+                                            <li>03</li>
+                                            <li>04</li>
+                                            <li>05</li>
+                                            <li>06</li>
+                                            <li>07</li>
+                                            <li>08</li>
+                                            <li>09</li>
+                                            <li>10</li>
+                                            <li>11</li>
+                                            <li>12</li>
+                                            <li>13</li>
+                                            <li>14</li>
+                                            <li>15</li>
+                                            <li>16</li>
+                                            <li>17</li>
+                                            <li>18</li>
+                                            <li>19</li>
+                                            <li>20</li>
+                                            <li>21</li>
+                                            <li>22</li>
+                                            <li>23</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                            <div id="draw_div">
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>&nbsp;</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td align="right">
+                        <input type="submit" value="确定" id="led_submit" />
+                        <input type="submit" value="取消" id="cancel" />
+                        <input type="submit" value="全部删除" id="clear" />
+                        <input type="submit" value="删除" id="delete" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

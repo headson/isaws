@@ -1,0 +1,128 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>恢复出厂设置</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <script type="text/javascript" src="../js/LAB.min.js"></script>
+    <style type="text/css">
+        body {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        $LAB
+        .script("../js/launch.js?version=" + new Date().getTime()).wait(function () {
+            init(function () {
+                var check_restart_complete_timer = 0;
+                var newloc = null;
+                var all_restored = false;
+                function check_restart() {
+                    if (!all_restored) {
+                        $.get("../vb.htm?getnetip", function (ajaxdata) {
+                            if (ajaxdata.length > 0 && ajaxdata[0] == '<') {
+                                $("#warning_text").css("color", "Green");
+                                $("#warning_text").html("重置完成，返回登录界面");
+                                top.location.href = newloc;
+                                return false;
+                            }
+                        });
+                    }
+                    else {
+                        $('#warning_text').html("ip地址已改变，正在跳转...");
+                        top.location.href = newloc;
+                    }
+                }
+                function check_restart_complete() {
+                    if (check_restart_complete_timer == 0) {
+                        check_restart_complete_timer = setInterval(check_restart, 10000);
+                    }
+                }
+
+                function to_login(ajaxdata, all) {
+                    if (precheck(ajaxdata)) {
+                        return false;
+                    }
+                    ajaxdata = ajaxdata.split("=");
+                    if (!ajaxdata[0].match(/OK/)) {
+                        return false;
+                    }
+                    all_restored = all;
+                    $("#warning_text").css("color", "Green");
+                    $("#warning_text").html("参数已重置，请稍候...");
+
+                    var new_href = top.location.href;
+                    var realserver = new_href.split('/');
+                    realserver = realserver[realserver.length - 2];
+                    realserver = realserver.split(':')[0];
+                    new_href = new_href.split(realserver);
+                    if (all_restored) {
+                        newloc = new_href[0] + "192.168.1.100" + "/login.htm";
+                    }
+                    else {
+                        newloc = new_href[0] + realserver + "/login.htm";
+                    }
+                    check_restart_complete();
+                }
+
+                function all_to_login(ajaxdata) {
+                    return to_login(ajaxdata, true);
+                }
+
+                function partly_to_login(ajaxdata) {
+                    return to_login(ajaxdata, false);
+                }
+
+                function restore_all() {
+                    if (confirm("确定要完全恢复到出厂设置吗，恢复后将不能连上设备？")) {
+                        $.get("../vb.htm", { democfg: "0" }, all_to_login);
+                    }
+                }
+
+                function restore_partly() {
+                    if (confirm("确定要部分恢复到出厂设置吗？")) {
+                        $.get("../vb.htm", { democfg: "1" }, partly_to_login);
+                    }
+                }
+
+                $(function () {
+                    if (g_style_time == "sfm") {
+                        $("#restore_all").val("确定恢复");
+                        $("#restore_partly").val("确定恢复");
+                        $(".dummy").css("margin","50px");
+                    }
+                    $("#restore_all").click(restore_all);
+                    $("#restore_partly").click(restore_partly);
+                });
+            });
+        });
+    </script>
+
+</head>
+<body>
+    <table class="dummy" style="margin:auto; margin-top: 30px;" cellpadding="0" cellspacing="0">
+        <tr>
+            <td colspan="2">
+                完全恢复出厂设置（所有设置均恢复，ip地址也将恢复，可能连不上设备）
+            </td>
+            <td>
+                <input type="submit" id="restore_all" value="确定" />
+            </td>
+        </tr>
+        <tr>
+            <td></td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                部分恢复出厂设置（设备网络信息、用户名、密码、设备名称不恢复）
+            </td>
+            <td>
+                <input type="submit" id="restore_partly" value="确定" />
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" id="warning_text"></td>
+        </tr>
+    </table>
+</body>
+</html>

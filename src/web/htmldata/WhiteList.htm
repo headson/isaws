@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>语言播报</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <script type="text/javascript" src="../js/LAB.min.js"></script>
+    <style type="text/css">
+        body {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        $LAB
+        .script("../js/launch.js?version=" + new Date().getTime()).wait(function () {
+            init(function () {
+                function isNotUndefinedOrNull(value) {
+                    return (value != undefined && value != null);
+                }
+                var white_list_check_method_tab = new function () {
+                    function parse_config_info(json) {
+                        var cfg;
+                        try {
+                            cfg = jQuery.parseJSON(json);
+                        }
+                        catch (e) {
+                            //alert(e.message);
+                            return null;
+                        }
+
+                        //whitelist_enable set
+                        if (isNotUndefinedOrNull(cfg.filter_enable)) {
+                            if (cfg.filter_enable == 1) $("#whitelist_enable").check_val(true);
+                            else if (cfg.filter_enable == 2) $("#whitelist_disable").check_val(true);
+                            else $("#whitelist_auto").check_val(true);
+                        }
+                    }
+                    function get_white_list_check_method() {
+                        $.get("../vb.htm?getwlcheckstatus",
+                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            parse_config_info(ajaxdata.split("=")[1]);
+                        });
+                    }
+
+                    function set_white_list_check_method() {
+                        var cfg = {};
+
+                        if ($("#whitelist_enable").check_val()) cfg.filter_enable = 1;
+                        else if ($("#whitelist_disable").check_val()) cfg.filter_enable = 2;
+                        else cfg.filter_enable = 0;
+
+                        var jsonstr = JSON.stringify(cfg);
+
+                        $.get("../vb.htm?setwlcheckstatus=" + jsonstr, function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                            get_white_list_check_method();
+                        });
+                    }
+                    this.init = function () {
+                        $("#submit_ioconfig_tabs3").click(set_white_list_check_method);
+                        get_white_list_check_method();
+                    }
+                }
+
+                var fuzzy_query_tab = new function () {
+                    function parse_config_info(json) {
+                        var cfg;
+                        try {
+                            cfg = jQuery.parseJSON(json);
+                        }
+                        catch (e) {
+                            //alert(e.message);
+                            return null;
+                        }
+
+                        //fuzzy_query set
+                        if (isNotUndefinedOrNull(cfg.fuzzy_query_type)) {
+                            if (cfg.fuzzy_query_type == 2) {
+                                $("#fuzzy_normal_cc").check_val(true);
+                                $("#lb_algin").removeAttr("disabled");
+                            } else if (cfg.fuzzy_query_type == 1) {
+                                $("#fuzzy_similar_cc").check_val(true);
+                            } else {
+                                $("#fuzzy_accurate").check_val(true);
+                            }
+                        }
+                        else {
+                            $("#fuzzy_accurate").check_val(true);
+                        }
+                        if (isNotUndefinedOrNull(cfg.fuzzy_ignore_cc)) {
+                            if (cfg.fuzzy_ignore_cc == 1) $("#fuzzy_ignore_cc").check_val(true);
+                            else $("#fuzzy_ignore_cc").check_val(false);
+                        }
+                        if (isNotUndefinedOrNull(cfg.fuzzy_query_len)) {
+                            //$("#fuzzy_query_len").val(cfg.fuzzy_query_len);
+                            if (cfg.fuzzy_query_len == 1) {
+                                $("#fuzzy_query_len_1").check_val(true);
+                            } else if (cfg.fuzzy_query_len == 2) {
+                                $("#fuzzy_query_len_2").check_val(true);
+                            } else if (cfg.fuzzy_query_len == 3) {
+                                $("#fuzzy_query_len_3").check_val(true);
+                            } else {
+                                $("#fuzzy_query_len_0").check_val(true);
+                            }
+                        }
+                    }
+                    function get_fuzzy_query() {
+                        $.get("../vb.htm?getwlfuzzyquery",
+                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            parse_config_info(ajaxdata.split("=")[1]);
+                        });
+                    }
+
+
+                    function set_fuzzy_query() {
+                        var cfg = {};
+
+                        if ($("#fuzzy_similar_cc").prop('checked')) cfg.fuzzy_query_type = 1;
+                        else if ($("#fuzzy_normal_cc").prop('checked')) cfg.fuzzy_query_type = 2;
+                        else cfg.fuzzy_query_type = 0;
+
+                        cfg.fuzzy_query_len = 0;//("#fuzzy_query_len").val();
+                        if ($("#fuzzy_query_len_0").prop('checked')) {
+                            cfg.fuzzy_query_len = 0;
+                        } else if ($("#fuzzy_query_len_1").prop('checked')) {
+                            cfg.fuzzy_query_len = 1;
+                        } else if ($("#fuzzy_query_len_2").prop('checked')) {
+                            cfg.fuzzy_query_len = 2;
+                        } else if ($("#fuzzy_query_len_3").prop('checked')) {
+                            cfg.fuzzy_query_len = 3;
+                        }
+                        //alert(cfg.fuzzy_query_len);
+
+                        cfg.fuzzy_ignore_cc = $("#fuzzy_ignore_cc").prop('checked') ? 1 : 0;
+                        var jsonstr = JSON.stringify(cfg);
+
+                        $.get("../vb.htm?setwlfuzzyquery=" + jsonstr, function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                            get_fuzzy_query();
+                        });
+                    }
+                    this.init = function () {
+                        $("#lb_algin").attr("disabled", "disabled");
+                        $("#submit_ioconfig_tabs4").click(set_fuzzy_query);
+                        $("input[name='fuzzy_query_type']").click(function () {
+                            if ($(this).attr("id") == "fuzzy_normal_cc") {
+                                $("#lb_algin").removeAttr("disabled");
+                            } else {
+                                if (!$("#fuzzy_query_len_0").prop('checked')) {
+                                    $("#fuzzy_query_len_0").check_val(true);
+                                }
+                                $("#lb_algin").attr("disabled", "disabled");
+                            }
+
+                        });
+                        get_fuzzy_query();
+                    }
+                }
+                $(function () {
+                    init_selectmenu("select:not(.time_select,#cur_channel_1)", 130, 150);
+                    white_list_check_method_tab.init();
+                    fuzzy_query_tab.init();
+                });
+            });
+        });
+    </script>
+
+</head>
+<body>
+    <div id="tabs" style="min-width: 850px;">
+        <ul>
+            <li><a href="#tabs-1">白名单验证</a></li>
+            <li><a href="#tabs-2">白名单识别精度</a></li>
+            <!--<li><a href="#tabs-3">直接放行</a></li>-->
+        </ul>        
+        <div id="tabs-1">
+            <table>
+                <tr>
+                    <td>
+                        <table class="dummy" border="0" style="margin-top: 10px; margin-left: 50px; min-width: 200px;">
+                            <tr>
+                                <td>
+                                    <label>白名单启用条件：</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="radio" name="whitelist_en" id="whitelist_auto" /><label for="whitelist_auto">脱机自动启用</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="radio" name="whitelist_en" id="whitelist_enable" /><label for="whitelist_enable">启用</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="radio" name="whitelist_en" id="whitelist_disable" /><label for="whitelist_disable">不启用</label>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right">
+                        <input id="submit_ioconfig_tabs3" type="submit" value="确定" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="tabs-2">
+            <table>
+                <tr>
+                    <td>
+                        <table class="dummy" border="0" style="margin-top: 10px; margin-left: 50px; min-width: 400px;">
+                            <tr>
+                                <td style="min-width:300px">
+                                    <label>模糊查询方式：</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="radio" name="fuzzy_query_type" id="fuzzy_accurate" />
+                                    <label for="fuzzy_accurate">&nbsp;精确匹配&nbsp;(车牌号完全匹配)</label>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="radio" name="fuzzy_query_type" id="fuzzy_similar_cc" />
+                                    <label for="fuzzy_similar_cc">&nbsp;相似字符匹配(包括:0-D,8-B,0-Q,E-F)</label>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="radio" name="fuzzy_query_type" id="fuzzy_normal_cc" />
+                                    <label for="fuzzy_normal_cc">&nbsp;普通字符模糊匹配&nbsp;</label>
+                                </td>
+                                <td>
+                                    <ul id="lb_algin">
+                                        <li style="float: left; list-style: none;">
+                                            允许误识别长度:&nbsp;&nbsp;&nbsp;
+                                        </li>
+                                        <li style="float: left; list-style: none;display:none;">
+                                            <input type="radio" name="fuzzy_query_len" id="fuzzy_query_len_0" />
+                                            <label for="fuzzy_query_len_0"></label>
+                                        </li>
+                                        <li style="float: left; list-style: none;">
+                                            <input type="radio" name="fuzzy_query_len" id="fuzzy_query_len_1" />
+                                            <label for="fuzzy_query_len_1">1&nbsp;&nbsp;</label>
+                                        </li>
+                                        <li style="float: left; list-style: none;">
+                                            <input type="radio" name="fuzzy_query_len" id="fuzzy_query_len_2" />
+                                            <label for="fuzzy_query_len_2">2&nbsp;&nbsp;</label>
+                                        </li>
+                                        <li style="float: left; list-style: none;">
+                                            <input type="radio" name="fuzzy_query_len" id="fuzzy_query_len_3" />
+                                            <label for="fuzzy_query_len_3">3&nbsp;&nbsp;</label>
+                                        </li>
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input id="fuzzy_ignore_cc" type="checkbox" />
+                                    <label for="fuzzy_ignore_cc">忽略汉字</label>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right">
+                        <input id="submit_ioconfig_tabs4" type="submit" value="确定" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <!--<div id="tabs-3">
+            <table class="dummy" border="0" style="margin-top: 10px; margin-left: 50px; min-width: 400px;">
+                <tr>
+                    <td colspan="3">
+                        直接放行类型：
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-top: 20px">
+                        <input type="checkbox" id="blue" />
+                        <label for="blue">蓝牌</label>
+                    </td>
+                    <td style="padding-top: 20px">
+                        <input type="checkbox" id="yellow" />
+                        <label for="yellow">黄牌</label>
+                    </td>
+                    <td style="padding-top: 20px">
+                        <input type="checkbox" id="black" />
+                        <label for="black">黑牌</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="checkbox" id="coach" />
+                        <label for="coach">教练</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="police" />
+                        <label for="police">警牌</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="armpol" />
+                        <label for="armpol">武警</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="checkbox" id="army" />
+                        <label for="army">军牌</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="hongkongmacao" />
+                        <label for="hongkongmacao">港澳</label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="embassy" />
+                        <label for="embassy">使领馆</label>
+                    </td>
+                </tr>
+                <tr><td></td></tr>
+                <tr>
+                    <td align="right" colspan="4">
+                        <input id="submit" type="submit" value="确定" />
+                    </td>
+                </tr>
+            </table>
+        </div>-->
+    </div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>出入口设置</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <script type="text/javascript" src="../js/LAB.min.js"></script>
+    <style type="text/css">
+        body {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        $LAB
+        .script("../js/launch.js?version=" + new Date().getTime()).wait(function () {
+            init(function () {
+                var g_gatewaytype;
+                function get_dg_gateway() {
+                    var req = {
+                        "type": "get_cdvzid"
+                    }
+                    $.ajax({
+                        type: "POST",
+                        url: "../dgjson.php",
+                        data: JSON.stringify(req),
+                        success: function (data) {
+                            if (precheck(data)) {
+                                return false;
+                            }
+                            var json_data = JSON.parse(data);
+                            if (json_data["state"] != 200) {
+                                return false;
+                            }
+                            $("#dggateway").select_val(json_data["vzid"]["type"]);
+                        },
+                        dataType: "text"
+                    })
+                }
+
+                function set_dg_gateway() {
+                    var gatewaytype = $("#dggateway").val();
+                    var req = {
+                        "type":"enable_devicegroup",
+                        "vzid": {
+                            "type": "output"
+                        }
+                    }
+                    req["vzid"]["type"] = gatewaytype;
+                    $.ajax({
+                        type: "POST",
+                        url: "../dgjson.php",
+                        data: JSON.stringify(req),
+                        success: function (data) {
+                            if (precheck(data)) {
+                                return false;
+                            }
+                            var json_data = JSON.parse(data);
+                            if (json_data["state"] == 200) {
+                                alert("设置成功");
+                            }
+                        },
+                        dataType: "text"
+                    })
+                }
+
+                $(function () {
+                    init_selectmenu("#dggateway", 110, 150);
+                    $("#submit").click(set_dg_gateway);
+                    get_dg_gateway();
+                });
+            });
+        });
+    </script>
+
+</head>
+<body>
+    <table class="dummy" >                
+        <tr>
+            <td>
+                出入口设置
+            </td>
+            <td colspan="3">
+                <select id="dggateway">
+                    <option value="unkown">未定义</option>
+                    <option value="input">入口</option>
+                    <option value="output">出口</option>
+                </select>
+            </td>
+        </tr>                
+        <tr>
+            <td colspan="2" align="right">
+                <input id="submit" type="submit" value="确定" />
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

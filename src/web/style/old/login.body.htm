@@ -1,0 +1,22 @@
+﻿<table class="dummy" style="margin:auto; margin-top:300px;">
+    <tr><td style="width:4em"></td><td style="width:2em"></td><td style="width:4em"></td><td style="width:5em"></td></tr>
+    <tr><td>用户名</td><td colspan="3"><input id="username" type="text" size="25" style="width:13em;"/></td></tr>
+    <tr><td>密码</td><td colspan="3"><input id="usrpwd" type="password" size="25" style="width:13em;" /></td></tr>
+    <tr><td></td><td colspan="3"><input id="check2" type="checkbox" /><label for="check2">&nbsp; 记住用户名和密码</label></td>
+        <td style="width:4em"><button id="rtsp_settings" style="width:30px;font-size:12px"  title="流媒体设置"></button></td></tr>
+    <tr id="rtsp_tr">
+        <td colspan="2">流媒体端口：
+        </td>
+        <td>
+            <input type="radio" id="radio1" name="radio" value="radiobutton" />
+            <label for="radio1">默认</label>
+        </td>
+        <td>
+            <input type="radio" id="radio2" name="radio" value="radiobutton" />
+            <label for="radio2">自定义</label>
+        </td>
+        <td id="custom_rtsp"><input id="rtsp_port" type="text" style="width:3em"/>
+        </td>
+    </tr>
+    <tr><td></td><td colspan="2"><input id="submit" type="submit" value="登录" /></td></tr>
+</table>

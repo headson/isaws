@@ -1,0 +1,1140 @@
+﻿<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title></title>
+    <script type="text/javascript" src="../js/LAB.min.js"></script>
+    <style type="text/css">
+        body {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        $LAB
+        .script("../js/launch.js?version=" + new Date().getTime()).wait(function () {
+            init(function () {
+                //获取收费规则
+                function get_charge_charging_config(){
+                    var cfg = {};
+                    cfg.protocol_type = "get_charge_charging_config_request";
+                    var jsonstr = JSON.stringify(cfg);
+                    $.ajax({
+                        type: "POST",
+                        url: "../getopensdkrequest.php",
+                        data: jsonstr,
+                        success: function (ajaxdata) {
+                            if(precheck(ajaxdata))
+                            {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            ajaxdata = ajaxdata.substring(ajaxdata.indexOf(" ") + 1);
+                            var jsondata = eval("(" + ajaxdata + ")");
+                            if (jsondata.response_state == 200) {
+                                var m_cfg = jsondata.model_params;
+                                var s_car = m_cfg.charge_params_small;
+                                var b_car = m_cfg.charge_params_big;
+                                $("#id_radio").check_val(jsondata.input_tmpflag == 1);
+                                $("#od_radio").check_val(jsondata.output_tmpflag == 1);
+                                $("#basic_cfg_sel").select_val(jsondata.charge_model);
+                                $(".charge-type").hide();
+                                if(jsondata.charge_model == 1){
+                                    $("#t_div").show();
+                                    load_time_charge(jsondata);
+                                }else if(jsondata.charge_model == 2){
+                                    $("#c_div").show();
+                                    load_count_charge(jsondata);
+                                }else if(jsondata.charge_model == 3){
+                                    $("#s_div").show();
+                                    load_section_charge(jsondata);
+                                } else {
+                                    $("#w_div").show();
+                                    load_search_charge(jsondata);
+                                }
+                            }
+                        },
+                        dataType: "text"
+                    });
+                }
+                //设置按时计费
+                function set_time_charg_config(){
+                    var s_free_time_txt = parseInt($("#ts_free_time_txt").val());
+                    var s_start_time_txt = parseInt($("#ts_start_time_txt").val());
+                    var s_start_money_txt =  parseInt($("#ts_start_money_txt").val());
+                    var s_cycle_time_txt = parseInt($("#ts_cycle_time_txt").val());
+                    var s_cycle_money_txt = parseInt($("#ts_cycle_money_txt").val());
+                    var s_charge_max_txt = parseInt($("#ts_charge_max_txt").val());
+
+                    var b_free_time_txt = parseInt($("#tb_free_time_txt").val());
+                    var b_start_time_txt = parseInt($("#tb_start_time_txt").val());
+                    var b_start_money_txt =  parseInt($("#tb_start_money_txt").val());
+                    var b_cycle_time_txt = parseInt($("#tb_cycle_time_txt").val());
+                    var b_cycle_money_txt = parseInt($("#tb_cycle_money_txt").val());
+                    var b_charge_max_txt = parseInt($("#tb_charge_max_txt").val());
+                    var limit_time = parseInt($("#t_limit_time_txt").val());
+
+                    if($("#ts_car_ck").check_val()){
+                        if(isNaN(s_free_time_txt) || s_free_time_txt < 0 || isNaN(s_start_time_txt) || s_start_time_txt < 0 || isNaN(s_start_money_txt) || s_start_money_txt < 0 || isNaN(s_cycle_time_txt) || s_cycle_time_txt < 0 || isNaN(s_cycle_money_txt) || s_cycle_money_txt < 0 || isNaN(s_charge_max_txt) || s_charge_max_txt < 0){
+                            alert("请输入正整数");
+                            return;
+                        }
+                        if(s_start_money_txt > s_charge_max_txt){
+                            alert("封顶金额不能小于起步金额");
+                            return;
+                        }
+                    }
+                    if($("#tb_car_ck").check_val()){
+                        if(isNaN(b_free_time_txt) || b_free_time_txt < 0 || isNaN(b_start_time_txt) || b_start_time_txt < 0 || isNaN(b_start_money_txt) || b_start_money_txt < 0 || isNaN(b_cycle_time_txt) || b_cycle_time_txt < 0 || isNaN(b_cycle_money_txt) || b_cycle_money_txt < 0 || isNaN(b_charge_max_txt) || b_charge_max_txt < 0){
+                            alert("请输入正整数");
+                            return;
+                        }
+                        if(b_start_money_txt > b_charge_max_txt){
+                            alert("封顶金额不能小于起步金额");
+                            return;
+                        }
+                    }
+                    if(isNaN(limit_time) || limit_time < 0){
+                        alert("请输入正整数");
+                        return;
+                    }
+
+                    var cfg = {};
+                    cfg.protocol_type = "set_charge_charging_config_request";
+                    cfg.response_state = 200;
+                    cfg.charge_mode = 0;
+                    cfg.input_tmpflag = $("#id_radio").check_val() ? 1:0;
+                    cfg.output_tmpflag = $("#od_radio").check_val() ? 1:0;
+                    cfg.charge_model = parseInt($("#basic_cfg_sel").select_val());
+                    cfg.model_params = {};
+                    cfg.model_params.charge_params_small = {};
+                    cfg.model_params.charge_params_small.valid_flag = $("#ts_car_ck").check_val() ? 1:0;
+                    cfg.model_params.charge_params_small.free_time = s_free_time_txt;
+                    cfg.model_params.charge_params_small.start_time = s_start_time_txt;
+                    cfg.model_params.charge_params_small.start_money = s_start_money_txt;
+                    cfg.model_params.charge_params_small.cycle_time = s_cycle_time_txt;
+                    cfg.model_params.charge_params_small.cycle_money = s_cycle_money_txt;
+                    cfg.model_params.charge_params_small.upper_limit = s_charge_max_txt;
+                    cfg.model_params.charge_params_big = {};
+                    cfg.model_params.charge_params_big.valid_flag = $("#tb_car_ck").check_val() ? 1:0;
+                    cfg.model_params.charge_params_big.free_time = b_free_time_txt;
+                    cfg.model_params.charge_params_big.start_time = b_start_time_txt;
+                    cfg.model_params.charge_params_big.start_money = b_start_money_txt;
+                    cfg.model_params.charge_params_big.cycle_time = b_cycle_time_txt;
+                    cfg.model_params.charge_params_big.cycle_money = b_cycle_money_txt;
+                    cfg.model_params.charge_params_big.upper_limit = b_charge_max_txt;
+                    cfg.limit_time = limit_time;
+                    cfg.over_model = parseInt($("#t_billing_type_sel").select_val());
+
+                    var jsonstr = JSON.stringify(cfg);
+                    $.ajax({
+                        type: "POST",
+                        url: "../getopensdkrequest.php",
+                        data: jsonstr,
+                        success: function (ajaxdata) {
+                            if(precheck(ajaxdata))
+                            {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            ajaxdata = ajaxdata.substring(ajaxdata.indexOf(" ") + 1);
+                            var jsondata = eval("(" + ajaxdata + ")");
+                            if (jsondata.response_state == 200) {
+                                show_informer();
+                                get_charge_charging_config();
+                            }
+                        },
+                        dataType: "text"
+                    });
+                }
+                //设置按次计费
+                function set_count_charg_config(){
+                    var s_free_time_txt = parseInt($("#cs_free_time_txt").val());
+                    var s_cycle_money_txt = parseInt($("#cs_cycle_money_txt").val());
+                    var s_charge_max_txt = parseInt($("#cs_charge_max_txt").val());
+
+                    var b_free_time_txt = parseInt($("#cb_free_time_txt").val());
+                    var b_cycle_money_txt = parseInt($("#cb_cycle_money_txt").val());
+                    var b_charge_max_txt = parseInt($("#cb_charge_max_txt").val());
+
+                    if($("#cs_car_ck").check_val()){
+                        if(isNaN(s_free_time_txt) || s_free_time_txt < 0 || isNaN(s_cycle_money_txt) || s_cycle_money_txt < 0 || isNaN(s_charge_max_txt) || s_charge_max_txt < 0){
+                            alert("请输入正整数");
+                            return;
+                        }
+                    }
+                    if($("#cb_car_ck").check_val()){
+                        if(isNaN(b_free_time_txt) || b_free_time_txt < 0 || isNaN(b_cycle_money_txt) || b_cycle_money_txt < 0 || isNaN(b_charge_max_txt) || b_charge_max_txt < 0){
+                            alert("请输入正整数");
+                            return;
+                        }
+                    }
+
+                    var cfg = {};
+                    cfg.protocol_type = "set_charge_charging_config_request";
+                    cfg.response_state = 200;
+                    cfg.charge_mode = 0;
+                    cfg.input_tmpflag = $("#id_radio").check_val() ? 1:0;
+                    cfg.output_tmpflag = $("#od_radio").check_val() ? 1:0;
+                    cfg.charge_model = parseInt($("#basic_cfg_sel").select_val());
+                    cfg.model_params = {};
+                    cfg.model_params.charge_params_small = {};
+                    cfg.model_params.charge_params_small.valid_flag = $("#cs_car_ck").check_val() ? 1:0;
+                    cfg.model_params.charge_params_small.free_time = s_free_time_txt;
+                    cfg.model_params.charge_params_small.begin_time = returnTimer("cs_s_timer");
+                    cfg.model_params.charge_params_small.end_time = returnTimer("cs_e_timer");
+                    cfg.model_params.charge_params_small.cycle_money = s_cycle_money_txt;
+                    cfg.model_params.charge_params_small.upper_limit = s_charge_max_txt;
+                    cfg.model_params.charge_params_big = {};
+                    cfg.model_params.charge_params_big.valid_flag = $("#cb_car_ck").check_val() ? 1:0;
+                    cfg.model_params.charge_params_big.free_time = b_free_time_txt;
+                    cfg.model_params.charge_params_big.begin_time = returnTimer("cb_s_timer");
+                    cfg.model_params.charge_params_big.end_time = returnTimer("cb_e_timer");
+                    cfg.model_params.charge_params_big.cycle_money = b_cycle_money_txt;
+                    cfg.model_params.charge_params_big.upper_limit = b_charge_max_txt;
+
+                    var jsonstr = JSON.stringify(cfg);
+                    $.ajax({
+                        type: "POST",
+                        url: "../getopensdkrequest.php",
+                        data: jsonstr,
+                        success: function (ajaxdata) {
+                            if(precheck(ajaxdata))
+                            {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            ajaxdata = ajaxdata.substring(ajaxdata.indexOf(" ") + 1);
+                            var jsondata = eval("(" + ajaxdata + ")");
+                            if (jsondata.response_state == 200) {
+                                show_informer();
+                                get_charge_charging_config();
+                            }
+                        },
+                        dataType: "text"
+                    });
+                }
+                //设置分段计费
+                function set_section_charg_config(){
+                    var flag = false;
+                    var s_car_arr = [];
+                    var b_car_arr = [];
+                    $(".small_car_tr").each(function(i){
+                        var ss_car_ck = $(this).find(".ss_car_ck").check_val();
+                        var s_free_time_txt = parseInt($(this).find(".ss_free_time_txt").val());
+                        var s_start_time_txt = parseInt($(this).find(".ss_start_time_txt").val());
+                        var s_start_money_txt =  parseInt($(this).find(".ss_start_money_txt").val());
+                        var s_cycle_time_txt = parseInt($(this).find(".ss_cycle_time_txt").val());
+                        var s_cycle_money_txt = parseInt($(this).find(".ss_cycle_money_txt").val());
+                        var s_charge_max_txt = parseInt($(this).find(".ss_charge_max_txt").val());
+
+                        if(ss_car_ck){
+                            if(isNaN(s_free_time_txt) || s_free_time_txt < 0 || isNaN(s_start_time_txt) || s_start_time_txt < 0 || isNaN(s_start_money_txt) || s_start_money_txt < 0 || isNaN(s_cycle_time_txt) || s_cycle_time_txt < 0 || isNaN(s_cycle_money_txt) || s_cycle_money_txt < 0 || isNaN(s_charge_max_txt) || s_charge_max_txt < 0){
+                                alert("请输入正整数");
+                                flag = true;
+                                return false;
+                            }
+                            if(s_start_money_txt > s_charge_max_txt){
+                                alert("封顶金额不能小于起步金额");
+                                flag = true;
+                                return false;
+                            }
+                        }
+                        var s_time = returnTimer("s_s_timer" + i);
+                        var e_time = returnTimer("s_e_timer" + i);
+                        var json = {};
+                        json.begin_time = s_time;
+                        json.end_time = e_time;
+                        json.valid_flag = ss_car_ck ? 1:0;
+                        json.free_time = s_free_time_txt;
+                        json.start_time = s_start_time_txt;
+                        json.start_money = s_start_money_txt;
+                        json.cycle_time = s_cycle_time_txt;
+                        json.cycle_money = s_cycle_money_txt;
+                        json.upper_limit = s_charge_max_txt;
+                        s_car_arr.push(json);
+                    });
+                    if(flag){
+                        return;
+                    }
+                    $(".big_car_tr").each(function(i){
+                        var sb_car_ck = $(this).find(".sb_car_ck").check_val();
+                        var b_free_time_txt = parseInt($(this).find(".sb_free_time_txt").val());
+                        var b_start_time_txt = parseInt($(this).find(".sb_start_time_txt").val());
+                        var b_start_money_txt =  parseInt($(this).find(".sb_start_money_txt").val());
+                        var b_cycle_time_txt = parseInt($(this).find(".sb_cycle_time_txt").val());
+                        var b_cycle_money_txt = parseInt($(this).find(".sb_cycle_money_txt").val());
+                        var b_charge_max_txt = parseInt($(this).find(".sb_charge_max_txt").val());
+                        if(sb_car_ck){
+                            if(isNaN(b_free_time_txt) || b_free_time_txt < 0 || isNaN(b_start_time_txt) || b_start_time_txt < 0 || isNaN(b_start_money_txt) || b_start_money_txt < 0 || isNaN(b_cycle_time_txt) || b_cycle_time_txt < 0 || isNaN(b_cycle_money_txt) || b_cycle_money_txt < 0 || isNaN(b_charge_max_txt) || b_charge_max_txt < 0){
+                                alert("请输入正整数");
+                                flag = true;
+                                return false;
+                            }
+                            if(b_start_money_txt > b_charge_max_txt){
+                                alert("封顶金额不能小于起步金额");
+                                flag = true;
+                                return false;
+                            }
+                        }
+                        var s_time = returnTimer("b_s_timer" + i);
+                        var e_time = returnTimer("b_e_timer" + i);
+                        var json = {};
+                        json.begin_time = s_time;
+                        json.end_time = e_time;
+                        json.valid_flag = sb_car_ck ? 1:0;
+                        json.free_time = b_free_time_txt;
+                        json.start_time = b_start_time_txt;
+                        json.start_money = b_start_money_txt;
+                        json.cycle_time = b_cycle_time_txt;
+                        json.cycle_money = b_cycle_money_txt;
+                        json.upper_limit = b_charge_max_txt;
+                        b_car_arr.push(json);
+                    });
+                    if(flag){
+                        return;
+                    }
+                    var limit_time = parseInt($("#s_limit_time_txt").val());
+                    if(isNaN(limit_time) || limit_time < 0){
+                        alert("请输入正整数");
+                        return;
+                    }
+
+                    if(check_time_cross2(s_car_arr)){
+                        alert("时间段不能交叉或重复");
+                        return;
+                    }
+                    if(check_time_cross2(b_car_arr)){
+                        alert("时间段不能交叉或重复");
+                        return;
+                    }
+
+                    var cfg = {};
+                    cfg.protocol_type = "set_charge_charging_config_request";
+                    cfg.response_state = 200;
+                    cfg.charge_mode = 0;
+                    cfg.input_tmpflag = $("#id_radio").check_val() ? 1:0;
+                    cfg.output_tmpflag = $("#od_radio").check_val() ? 1:0;
+                    cfg.charge_model = parseInt($("#basic_cfg_sel").select_val());
+                    cfg.model_params = {};
+                    cfg.model_params.charge_params_small = s_car_arr;
+                    cfg.model_params.charge_params_big = b_car_arr;
+                    cfg.limit_time = limit_time;
+                    cfg.over_model = parseInt($("#s_billing_type_sel").select_val());
+
+                    var jsonstr = JSON.stringify(cfg);
+                    $.ajax({
+                        type: "POST",
+                        url: "../getopensdkrequest.php",
+                        data: jsonstr,
+                        success: function (ajaxdata) {
+                            if(precheck(ajaxdata))
+                            {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            ajaxdata = ajaxdata.substring(ajaxdata.indexOf(" ") + 1);
+                            var jsondata = eval("(" + ajaxdata + ")");
+                            if (jsondata.response_state == 200) {
+                                show_informer();
+                                get_charge_charging_config();
+                            }
+                        },
+                        dataType: "text"
+                    });
+                }
+                //设置查表计费
+                function set_search_charge() {
+                    var ft = parseInt($("#w_free_time_txt").val());
+                    var am = parseInt($("#w_all_money_txt").val());
+                    if(isNaN(am) || am < 0 || isNaN(ft) || ft < 0){
+                        alert("金额和免费分钟数为正整数");
+                        return;
+                    }
+                    var time_model = 0;
+                    if ($("#w_hour_ck").check_val()) {
+                        time_model = 1;
+                    }
+                    var arr = [];
+                    $("#w_data_tb tr .edit").each(function () {
+                        var index = parseInt($(this).attr("index"));
+                        arr[index] = parseFloat($(this).html());
+                    });
+                    var flag = false;
+                    for (var i = 0; i < arr.length; i++) {
+                        if (i != 0 && arr[i] < arr[i - 1]) {
+                            flag = true;
+                            alert("后一小时金额不能小于前一小时金额");
+                            break;
+                        }
+                    }
+                    if (flag) {
+                        return false;
+                    }
+                    var cfg = {};
+                    cfg.protocol_type = "set_charge_charging_config_request";
+                    cfg.response_state = 200;
+                    cfg.charge_mode = 0;
+                    cfg.input_tmpflag = $("#id_radio").check_val() ? 1 : 0;
+                    cfg.output_tmpflag = $("#od_radio").check_val() ? 1 : 0;
+                    cfg.charge_model = parseInt($("#basic_cfg_sel").select_val());
+                    cfg.model_params = {};
+                    cfg.model_params.free_time = ft;
+                    cfg.model_params.upper_limit = am;
+                    cfg.model_params.time_model = time_model; 
+                    cfg.model_params.params_detail = arr;
+
+                    var jsonstr = JSON.stringify(cfg);
+                    $.ajax({
+                        type: "POST",
+                        url: "../getopensdkrequest.php",
+                        data: jsonstr,
+                        success: function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            ajaxdata = ajaxdata.substring(ajaxdata.indexOf(" ") + 1);
+                            var jsondata = eval("(" + ajaxdata + ")");
+                            if (jsondata.response_state == 200) {
+                                show_informer();
+                                get_charge_charging_config();
+                            }
+                        },
+                        dataType: "text"
+                    });
+                }
+
+                //加载按时计费
+                function load_time_charge(jsondata){
+                    var m_cfg = jsondata.model_params;
+                    var s_car = m_cfg.charge_params_small;
+                    var b_car = m_cfg.charge_params_big;
+
+                    $("#ts_car_ck").check_val(s_car.valid_flag == 1);
+                    $("#ts_free_time_txt").val(s_car.free_time);
+                    $("#ts_start_time_txt").val(s_car.start_time);
+                    $("#ts_start_money_txt").val(s_car.start_money);
+                    $("#ts_cycle_time_txt").val(s_car.cycle_time);
+                    $("#ts_cycle_money_txt").val(s_car.cycle_money);
+                    $("#ts_charge_max_txt").val(s_car.upper_limit);
+
+                    $("#tb_car_ck").check_val(b_car.valid_flag == 1);
+                    $("#tb_free_time_txt").val(b_car.free_time);
+                    $("#tb_start_time_txt").val(b_car.start_time);
+                    $("#tb_start_money_txt").val(b_car.start_money);
+                    $("#tb_cycle_time_txt").val(b_car.cycle_time);
+                    $("#tb_cycle_money_txt").val(b_car.cycle_money);
+                    $("#tb_charge_max_txt").val(b_car.upper_limit);
+
+                    $("#t_limit_time_txt").val(jsondata.limit_time);
+                    $("#t_billing_type_sel").select_val(jsondata.over_model);
+                }
+                //加载分段计费
+                function load_section_charge(jsondata){
+                    var m_cfg = jsondata.model_params;
+                    var s_car = m_cfg.charge_params_small;
+                    var b_car = m_cfg.charge_params_big;
+                    $(".small_car_tr").each(function(i){
+                        SetTimer("s_s_timer" + i,s_car[i].begin_time);
+                        SetTimer("s_e_timer" + i,s_car[i].end_time);
+                        $(this).find(".ss_car_ck").check_val(s_car[i].valid_flag == 1);
+                        $(this).find(".ss_free_time_txt").val(s_car[i].free_time);
+                        $(this).find(".ss_start_time_txt").val(s_car[i].start_time);
+                        $(this).find(".ss_start_money_txt").val(s_car[i].start_money);
+                        $(this).find(".ss_cycle_time_txt").val(s_car[i].cycle_time);
+                        $(this).find(".ss_cycle_money_txt").val(s_car[i].cycle_money);
+                        $(this).find(".ss_charge_max_txt").val(s_car[i].upper_limit);
+                    });
+                    $(".big_car_tr").each(function(i){
+                        SetTimer("b_s_timer" + i,b_car[i].begin_time);
+                        SetTimer("b_e_timer" + i,b_car[i].end_time);
+                        $(this).find(".sb_car_ck").check_val(b_car[i].valid_flag == 1);
+                        $(this).find(".sb_free_time_txt").val(b_car[i].free_time);
+                        $(this).find(".sb_start_time_txt").val(b_car[i].start_time);
+                        $(this).find(".sb_start_money_txt").val(b_car[i].start_money);
+                        $(this).find(".sb_cycle_time_txt").val(b_car[i].cycle_time);
+                        $(this).find(".sb_cycle_money_txt").val(b_car[i].cycle_money);
+                        $(this).find(".sb_charge_max_txt").val(b_car[i].upper_limit);
+                    });
+                    $("#s_limit_time_txt").val(jsondata.limit_time);
+                    $("#s_billing_type_sel").select_val(jsondata.over_model);
+                }
+                //加载按次计费
+                function load_count_charge(jsondata){
+                    var m_cfg = jsondata.model_params;
+                    var s_car = m_cfg.charge_params_small;
+                    var b_car = m_cfg.charge_params_big;
+
+                    $("#cs_car_ck").check_val(s_car.valid_flag == 1);
+                    $("#cs_free_time_txt").val(s_car.free_time);
+                    SetTimer("cs_s_timer",s_car.begin_time);
+                    SetTimer("cs_e_timer",s_car.end_time);
+                    $("#cs_cycle_money_txt").val(s_car.cycle_money);
+                    $("#cs_charge_max_txt").val(s_car.upper_limit);
+
+                    $("#cb_car_ck").check_val(b_car.valid_flag == 1);
+                    $("#cb_free_time_txt").val(b_car.free_time);
+                    SetTimer("cb_s_timer",b_car.begin_time);
+                    SetTimer("cb_e_timer",b_car.end_time);
+                    $("#cb_cycle_money_txt").val(b_car.cycle_money);
+                    $("#cb_charge_max_txt").val(b_car.upper_limit);
+                }
+                var old_detail = null;
+                var old_time_model;
+                //加载查表计费
+                function load_search_charge(jsondata) {
+                    var params = jsondata.model_params;
+                    old_time_model = params.time_model;
+                    if (old_time_model == 0) {
+                        $("#w_half_hour_ck").check_val(true);
+                        load_half_hour_data();
+                    } else {
+                        $("#w_hour_ck").check_val(true);
+                        load_hour_data();
+                    }
+                    $("#w_all_money_txt").val(params.upper_limit);
+                    $("#w_free_time_txt").val(params.free_time);
+                    old_detail = params.params_detail;
+                    load_model_data(old_detail,old_time_model);
+                }
+
+                function load_model_data(detail,model) {
+                    var length = detail.length;
+                    if (model == 0 && length == 48 || model == 1 && length == 24) {
+                        $(".edit").each(function () {
+                            var index = parseInt($(this).attr("index"));
+                            $(this).html(detail[index]);
+                        });
+                    } else if (model == 0 && length == 24) {
+                        $(".edit").each(function () {
+                            var index = parseInt($(this).attr("index"));
+                            $(this).html(detail[parseInt(index / 2)]);
+                        });
+                    } else if (model == 1 && length == 48) {
+                        $(".edit").each(function () {
+                            var index = parseInt($(this).attr("index"));
+                            $(this).html(detail[index * 2 + 1]);
+                        });
+                    }
+
+                }
+
+                function load_half_hour_data() {
+                    var str = "";
+                    for (var i = 0; i < 6; i++) {
+                        str += "<tr>";
+                        for (var j = 0; j < 8; j++) {
+                            str += "<td style='color:red;'>" + ((i + 1) / 2 + (j * 3)) + "</td><td class='edit' index='" + (i + j * 6) + "'>0</td>";
+                        }
+                        str += "</tr>";
+                    }
+                    $("#w_data_tb tr:gt(0)").remove();
+                    $("#w_data_tb").append(str);
+                }
+
+                function load_hour_data() {
+                    var str = "";
+                    for (var i = 0; i < 3; i++) {
+                        str += "<tr>";
+                        for (var j = 0; j < 8; j++) {
+                            str += "<td style='color:red;'>" + ((i + 1) + (j * 3)) + "</td><td class='edit' index='" + (i + j * 3) + "'>0</td>";
+                        }
+                        str += "</tr>";
+                    }
+                    $("#w_data_tb tr:gt(0)").remove();
+                    $("#w_data_tb").append(str);
+                }
+
+                //获取屏显参数
+                function get_charge_display_config(){
+                    var cfg = {};
+                    cfg.protocol_type = "get_charge_display_config_request";
+                    var jsonstr = JSON.stringify(cfg);
+                    $.ajax({
+                        type: "POST",
+                        url: "../getopensdkrequest.php",
+                        data: jsonstr,
+                        success: function (ajaxdata) {
+                            if(precheck(ajaxdata))
+                            {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            ajaxdata = ajaxdata.substring(ajaxdata.indexOf(" ") + 1);
+                            var jsondata = eval("(" + ajaxdata + ")");
+                            if (jsondata.response_state == 200) {
+                                $("#show_time_flag_ck").check_val(jsondata.show_time_flag == 1);
+                                $("#show_ad_flag_ck").check_val(jsondata.show_ad_flag == 1);
+                                $("#ad_content").val(jsondata.ad_content);
+                            }
+                        },
+                        dataType: "text"
+                    });
+                }
+                //设置屏显参数
+                function set_charge_display_config(){
+                    var entry_type = 0;
+                    if($("#output_radio").check_val()){
+                        entry_type = 1;
+                    }
+                    var cfg = {};
+                    cfg.protocol_type = "set_charge_display_config_request";
+                    cfg.response_state = 200;
+                    cfg.show_time_flag = $("#show_time_flag_ck").check_val() ? 1 : 0;
+                    cfg.show_ad_flag = $("#show_ad_flag_ck").check_val() ? 1 : 0;
+                    cfg.ad_content = $("#ad_content").val();
+
+
+                    var jsonstr = JSON.stringify(cfg);
+                    $.ajax({
+                        type: "POST",
+                        url: "../getopensdkrequest.php",
+                        data: jsonstr,
+                        success: function (ajaxdata) {
+                            if(precheck(ajaxdata))
+                            {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            ajaxdata = ajaxdata.substring(ajaxdata.indexOf(" ") + 1);
+                            var jsondata = eval("(" + ajaxdata + ")");
+                            if (jsondata.response_state == 200) {
+                                show_informer();
+                                get_charge_display_config();
+                            }
+                        },
+                        dataType: "text"
+                    });
+                }
+
+                function check_time_cross2(arr){
+                    var all_time = [];
+                    for(var i=0;i<arr.length;i++){
+                        if(arr[i].valid_flag == 1){
+                            var bt = arr[i].begin_time;
+                            var et = arr[i].end_time;
+                            bt = parseInt(bt.split(":")[0]) * 60 + parseInt(bt.split(":")[1]);
+                            et = parseInt(et.split(":")[0]) * 60 + parseInt(et.split(":")[1]);
+                            var h = 24 * 60;
+                            if(et < bt){
+                                var json = {};
+                                json.bt = bt;
+                                json.et = h;
+                                all_time.push(json);
+                                var json1 = {};
+                                json1.bt = 0;
+                                json1.et = et;
+                                all_time.push(json1);
+                            }else{
+                                var json = {};
+                                json.bt = bt;
+                                json.et = et;
+                                all_time.push(json);
+                            }
+                        }
+                    }
+                    var flag = false;
+                    for(var m=0;m < all_time.length;m++){
+                        for(var n=0;n < all_time.length;n++){
+                            if(m != n){
+                                if(all_time[n].bt > all_time[m].bt && all_time[n].bt < all_time[m].et || all_time[n].et > all_time[m].bt && all_time[n].et < all_time[m].et){
+                                    flag = true;
+                                    break;
+                                }
+                                if(all_time[n].bt == all_time[m].bt && all_time[n].et == all_time[m].et){
+                                    flag = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if(flag){
+                            break;
+                        }
+                    }
+                    if(flag){
+                        return true;
+                    }
+                    return false;
+                }
+
+                $(function () {
+                    var old_val = 0;
+                    $("input:text:not(.custom)").width(70);
+                    init_selectmenu("select:not(#basic_cfg_sel)",110,150);
+                    init_selectmenu("#basic_cfg_sel", 110, 150, function (e, object) {
+                        var val = object.value;
+                        $(".charge-type").hide();
+                        if(val == 1){
+                            $("#t_div").show();
+                        }else if(val == 2){
+                            $("#c_div").show();
+                        }else if(val == 3){
+                            $("#s_div").show();
+                        } else {
+                            $("#w_div").show();
+                        }
+                    });
+                    $("#t_submit_charge_btn").click(set_time_charg_config);
+                    $("#c_submit_charge_btn").click(set_count_charg_config);
+                    $("#s_submit_charge_btn").click(set_section_charg_config);
+                    $("#w_submit_charge_btn").click(set_search_charge);
+                    $("#submit_display_btn").click(set_charge_display_config);
+                    $(".time").each(function(){
+                        var id = $(this).attr("id");
+                        showTimer(id);
+                    });
+                    $("input[name='unit']").change(function () {
+                        if ($("#w_half_hour_ck").check_val()) {
+                            load_half_hour_data();
+                            if (old_detail) {
+                                load_model_data(old_detail,0);
+                            }
+                        }else{
+                            load_hour_data();
+                            if (old_detail) {
+                                load_model_data(old_detail,1);
+                            }
+                        }
+                    });
+                    $("#w_data_tb tr .edit").live("click", function () {
+                        var length = $(this).find("input").length;
+                        if (length != 0) {
+                            return false;
+                        }
+                        var str = "<input class='edit_txt text' type='text' style='width:40px;' value='" + $(this).html() +"'/>";
+                        $(this).css("padding","0");
+                        $(this).html(str);
+                        $(".edit_txt").focus(function () {
+                            old_val = $(this).val();
+                        }).select();
+                    });
+                    $(".edit_txt").live("blur", function () {
+                        var index = parseInt($(this).parent().attr("index"));
+                        var value = $(this).val();
+                        if (isNaN(value)) {
+                            alert("金额为数字");
+                            $(this).parent().html(old_val);
+                            return;
+                        }
+                        var pre_index = index - 1;
+                        if (pre_index >= 0) {
+                            var pre_val = parseFloat($("#w_data_tb tr .edit[index='" + pre_index + "']").html());
+                            if (value < pre_val) {
+                                alert("后一小时金额不能小于前一小时金额");
+                                $(this).parent().html(old_val);
+                                return;
+                            }
+                        }
+
+                        $(this).parent().html(value);
+                    });
+
+                    load_half_hour_data();
+                    get_charge_charging_config();
+                    get_charge_display_config();
+                });
+            });
+        });
+
+    </script>
+</head>
+<body>
+    <div id="tabs">
+        <ul>
+            <li class="active"><a data-toggle="tab" href="#tab-1">脱机收费</a></li>
+            <li><a data-toggle="tab" href="#tab-2">屏显配置</a></li>
+        </ul>
+        <div id="tab-1">
+            <table class="dummy">
+                <tr>
+                    <td style="min-width:110px;">相机开闸配置</td>
+                    <td style="min-width:200px;">
+                        <input type="checkbox" id="id_radio"><label for="id_radio">入口临时车自动放行</label>
+                    </td>
+                    <td style="min-width:300px;">
+                        <input type="checkbox" id="od_radio"><label for="od_radio">出口临时车收费为0时自动放行</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>计费方式</td>
+                    <td colspan="2">
+                        <select id="basic_cfg_sel">
+                            <option value="1">按时计费</option>
+                            <option value="2">按次计费</option>
+                            <option value="3">分段计费</option>
+                            <option value="4">查表计费</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr><td></td></tr>
+            </table>
+            <div id="t_div" class="charge-type">
+                <table class="dummy">
+                    <tr>
+                        <td colspan="2">
+                            <h5>按时计费</h5>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="min-width:50px">车型</td>
+                        <td style="min-width:50px">启用</td>
+                        <td>免费时长(分)</td>
+                        <td>起步时长(分)</td>
+                        <td>起步金额(元)</td>
+                        <td>计费周期(分)</td>
+                        <td>周期金额(元)</td>
+                        <td>封顶金额(元)</td>
+                    </tr>
+                    <tr>
+                        <td>小车</td>
+                        <td align="center">
+                            <input type="checkbox" id="ts_car_ck">
+                        </td>
+                        <td><input type="text" class="text" value="0" id="ts_free_time_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="ts_start_time_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="ts_start_money_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="ts_cycle_time_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="ts_cycle_money_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="ts_charge_max_txt"/></td>
+                    </tr>
+                    <tr>
+                        <td>大车</td>
+                        <td align="center">
+                            <input type="checkbox" id="tb_car_ck">
+                        </td>
+                        <td><input type="text" class="text" value="0" id="tb_free_time_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="tb_start_time_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="tb_start_money_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="tb_cycle_time_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="tb_cycle_money_txt"/></td>
+                        <td><input type="text" class="text" value="0" id="tb_charge_max_txt"/></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <h5>周期计时不足处理</h5>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            周期内限定时长(分)
+                        </td>
+                        <td colspan="4">
+                            <input type="text" value="0" class="text" id="t_limit_time_txt"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            计费操作类型
+                        </td>
+                        <td colspan="4">
+                            <select id="t_billing_type_sel">
+                                <option value="1">不收费</option>
+                                <option value="2">按一个周期收费</option>
+                                <option value="3">按时长收费</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr><td></td></tr>
+                    <tr>
+                        <td colspan="8" align="right">
+                            <input type="submit"  id="t_submit_charge_btn" value="保存" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div id="c_div" style="display: none;" class="charge-type">
+                <table class="dummy">
+                    <tr>
+                        <td colspan="2">
+                            <h5>按次计费</h5>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="min-width:50px">车型</td>
+                        <td style="min-width:50px">启用</td>
+                        <td>免费时长(分)</td>
+                        <td>起始时间</td>
+                        <td>结束时间</td>
+                        <td>周期金额(元)</td>
+                        <td>封顶次数(元)</td>
+                    </tr>
+                    <tr>
+                        <td>小车</td>
+                        <td align="center">
+                            <input type="checkbox" id="cs_car_ck">
+                        </td>
+                        <td><input type="text" value="0" class="text" id="cs_free_time_txt"/></td>
+                        <td>
+                            <div class="time" id="cs_s_timer"></div>
+                        </td>
+                        <td>
+                            <div class="time" id="cs_e_timer"></div>
+                        </td>
+                        <td><input type="text" value="0" class="text" id="cs_cycle_money_txt"/></td>
+                        <td><input type="text" value="0" class="text" id="cs_charge_max_txt"/></td>
+                    </tr>
+                    <tr>
+                        <td>大车</td>
+                        <td align="center">
+                            <input type="checkbox" id="cb_car_ck">
+                        </td>
+                        <td><input type="text" value="0" class="text" id="cb_free_time_txt"/></td>
+                        <td>
+                            <div class="time" id="cb_s_timer"></div>
+                        </td>
+                        <td>
+                            <div class="time" id="cb_e_timer"></div>
+                        </td>
+                        <td><input type="text" value="0" class="text" id="cb_cycle_money_txt"/></td>
+                        <td><input type="text" value="0" class="text" id="cb_charge_max_txt"/></td>
+                    </tr>
+                    <tr><td></td></tr>
+                    <tr>
+                        <td colspan="8" align="right">
+                            <input type="submit" id="c_submit_charge_btn" value="保存">
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div id="s_div" style="display: none;" class="charge-type">
+                <table class="dummy">
+                    <tr>
+                        <td colspan="2">
+                            <h5>分段计费</h5>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="min-width:50px">车型</td>
+                        <td style="min-width:50px">启用</td>
+                        <td>起始时间</td>
+                        <td>结束时间</td>
+                        <td>免费时长(分)</td>
+                        <td>起步时长(分)</td>
+                        <td>起步金额(元)</td>
+                        <td>计费周期(分)</td>
+                        <td>周期金额(元)</td>
+                        <td>封顶金额(元)</td>
+                    </tr>
+                    <tr class="small_car_tr">
+                        <td>小车</td>
+                        <td align="center">
+                            <input type="checkbox" class="ss_car_ck">
+                        </td>
+                        <td>
+                            <div class="time" id="s_s_timer0"></div>
+                        </td>
+                        <td>
+                            <div class="time" id="s_e_timer0"></div>
+                        </td>
+                        <td><input type="text" value="0" class="text ss_free_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_start_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_start_money_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_cycle_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_cycle_money_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_charge_max_txt"/></td>
+                    </tr>
+                    <tr class="small_car_tr">
+                        <td>小车</td>
+                        <td align="center">
+                            <input type="checkbox" class="ss_car_ck">
+                        </td>
+                        <td>
+                            <div class="time" id="s_s_timer1"></div>
+                        </td>
+                        <td>
+                            <div class="time" id="s_e_timer1"></div>
+                        </td>
+                        <td><input type="text" value="0" class="text ss_free_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_start_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_start_money_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_cycle_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_cycle_money_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_charge_max_txt"/></td>
+                    </tr>
+                    <tr class="small_car_tr">
+                        <td>小车</td>
+                        <td align="center">
+                            <input type="checkbox" class="ss_car_ck">
+                        </td>
+                        <td>
+                            <div class="time" id="s_s_timer2"></div>
+                        </td>
+                        <td>
+                            <div class="time" id="s_e_timer2"></div>
+                        </td>
+                        <td><input type="text" value="0" class="text ss_free_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_start_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_start_money_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_cycle_time_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_cycle_money_txt"/></td>
+                        <td><input type="text" value="0" class="text ss_charge_max_txt"/></td>
+                    </tr>
+                    <tr class="big_car_tr">
+                        <td>大车</td>
+                        <td align="center">
+                            <input type="checkbox" class="sb_car_ck">
+                        </td>
+                        <td>
+                            <div class="time" id="b_s_timer0"></div>
+                        </td>
+                        <td>
+                            <div class="time" id="b_e_timer0"></div>
+                        </td>
+                        <td><input type="text" value="0" class="text sb_free_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_start_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_start_money_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_cycle_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_cycle_money_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_charge_max_txt"/></td>
+                    </tr>
+                    <tr class="big_car_tr">
+                        <td>大车</td>
+                        <td align="center">
+                            <input type="checkbox" class="sb_car_ck">
+                        </td>
+                        <td>
+                            <div class="time" id="b_s_timer1"></div>
+                        </td>
+                        <td>
+                            <div class="time" id="b_e_timer1"></div>
+                        </td>
+                        <td><input type="text" value="0" class="text sb_free_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_start_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_start_money_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_cycle_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_cycle_money_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_charge_max_txt"/></td>
+                    </tr>
+                    <tr class="big_car_tr">
+                        <td>大车</td>
+                        <td align="center">
+                            <input type="checkbox" class="sb_car_ck">
+                        </td>
+                        <td>
+                            <div class="time" id="b_s_timer2"></div>
+                        </td>
+                        <td>
+                            <div class="time" id="b_e_timer2"></div>
+                        </td>
+                        <td><input type="text" value="0" class="text sb_free_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_start_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_start_money_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_cycle_time_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_cycle_money_txt"/></td>
+                        <td><input type="text" value="0" class="text sb_charge_max_txt"/></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <h5>周期计时不足处理</h5>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            周期内限定时长(分)
+                        </td>
+                        <td colspan="4">
+                            <input type="text" value="0" class="text" id="s_limit_time_txt"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            计费操作类型
+                        </td>
+                        <td colspan="4">
+                            <select id="s_billing_type_sel">
+                                <option value="1">不收费</option>
+                                <option value="2">按一个周期收费</option>
+                                <option value="3">按时长收费</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr><td></td></tr>
+                    <tr>
+                        <td colspan="10" align="right">
+                            <input type="submit" id="s_submit_charge_btn" value="保存"/>
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+            <div id="w_div" style="display: none;" class="charge-type">
+                <table class="dummy">
+                    <tr>
+                        <td colspan="2">
+                            <h5>查表计费</h5>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="min-width:100px">
+                            <input type="radio" name="unit" id="w_half_hour_ck" checked="checked" /><label for="w_half_hour_ck">半小时为单位</label>
+                        </td>
+                        <td style="min-width:100px">
+                            <input type="radio" name="unit" id="w_hour_ck" /><label for="w_hour_ck">小时为单位</label>
+                        </td>
+                        <td>全天金额</td>
+                        <td><input type="text" id="w_all_money_txt" value="0" /></td>
+                        <td>免费分钟</td>
+                        <td><input type="text" id="w_free_time_txt" value="0" /></td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <table id="w_data_tb" class="realtable" style="border:1px solid #ccc;text-align:center;font-size:14px;">
+                                <tr>
+                                    <td style="min-width:40px;">小时</td>
+                                    <td style="min-width:50px;">收费</td>
+                                    <td style="min-width:40px;">小时</td>
+                                    <td style="min-width:50px;">收费</td>
+                                    <td style="min-width:40px;">小时</td>
+                                    <td style="min-width:50px;">收费</td>
+                                    <td style="min-width:40px;">小时</td>
+                                    <td style="min-width:50px;">收费</td>
+                                    <td style="min-width:40px;">小时</td>
+                                    <td style="min-width:50px;">收费</td>
+                                    <td style="min-width:40px;">小时</td>
+                                    <td style="min-width:50px;">收费</td>
+                                    <td style="min-width:40px;">小时</td>
+                                    <td style="min-width:50px;">收费</td>
+                                    <td style="min-width:40px;">小时</td>
+                                    <td style="min-width:50px;">收费</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr><td></td></tr>
+                    <tr>
+                        <td colspan="6" align="right">
+                            <input type="submit" id="w_submit_charge_btn" value="保存">
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+        </div>
+        <div id="tab-2" class="tab-pane">
+            <table class="dummy">
+                <tr>
+                    <td style="min-width:150px;">
+                        <input type="checkbox" id="show_time_flag_ck" /><label for="show_time_flag_ck">显示屏加载时间</label>
+                    </td>
+                    <td style="min-width:100px;">
+                        <input type="checkbox" id="show_ad_flag_ck" /><label for="show_ad_flag_ck">广告信息</label>
+                    </td>
+                    <td>
+                        <input type="text" class="text" id="ad_content" />
+                    </td>
+                </tr>
+                <tr><td></td></tr>
+                <tr>
+                    <td colspan="4" align="right">
+                        <input type="submit"  id="submit_display_btn" value="保存" />
+                    </td>
+                </tr>
+
+            </table>
+        </div>
+    </div>
+</body>
+</html>

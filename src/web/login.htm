@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title></title>
+    <script type="text/javascript" src="js/LAB.min.js"></script>
+    <style type="text/css">
+        body {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        $LAB
+        .script("js/launch.js?version=" + new Date().getTime()).wait(function () {
+            init(function () {
+                function get_hava_logo() {
+                    $.ajax({
+                        url: get_main_path() + "vb.htm?judgediylogo",
+                        success: function (ajaxdata) {
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            var slicestring = ajaxdata.substring(ajaxdata.indexOf("=") + 1);
+                            if (slicestring == "") {
+                                return;
+                            }
+                            $("body").append("<div id='login_outer' class='ui-state-default' style='background:none;width:600px;height:300px;border-radius:5px;font-weight:normal;'></div>");
+                            $("#login_outer").append($(".dummy"));
+                            $(".dummy").css({ "margin": "0", "color": "#000", "position": "absolute", "top": "50px", "right": "0", "width": "350px" });
+                            $("#login_outer").css({ "position": "absolute", "top": "50%", "left": "50%", "margin-top": "-150px", "margin-left": "-300px" });
+                            $("#login_outer").append("<div id='img_outer' style='width:200px;height:200px;margin:50px 0 0 30px;'></div>");
+                            $("#img_outer").append("<img id='logo_img' style='max-width:200px;max-height:200px;'/>");
+                            $("#logo_img").attr("src", "style/logo/usr/" + slicestring + "?" + Math.random());
+                            var img = new Image();
+                            img.src = $("#logo_img").attr("src");
+                            img.onload = function () {
+                                var width = img.width;
+                                var height = img.height;
+                                if (width > height) {
+                                    height = height * 200 / width;
+                                    width = 200;
+                                } else {
+                                    width = width * 200 / height;
+                                    height = 200;
+                                }
+                                $("#logo_img").width(parseInt(width));
+                                $("#logo_img").height(parseInt(height));
+                                var m_left = ($("#img_outer").width() - $("#logo_img").width()) / 2;
+                                var m_top = ($("#img_outer").height() - $("#logo_img").height()) / 2;
+                                $("#logo_img").css("margin", m_top + "px " + m_left + "px");
+                            }
+                        },
+                        async: false
+                    });
+                }
+                $(function () {
+                    init_login();
+                    if (g_hava_custom != 0) {
+                        get_hava_logo();
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+</body>
+</html>

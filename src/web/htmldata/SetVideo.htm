@@ -1,0 +1,2048 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>视频设置</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <script type="text/javascript" src="../js/LAB.min.js"></script>
+    <style type="text/css">
+        body {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        $LAB
+        .script("../js/launch.js?version=" + new Date().getTime()).wait(function () {
+            init(function () {
+
+                var g_cur_channel = 0;
+                var channel_manager = new function () {
+                    var callbacks = Array();
+                    this.load_cur_channel = function(channel) {
+                        g_cur_channel = channel;
+                        activex_play_new(parseInt(channel, 10), 0);//activex
+                        for (var i = 0; i < callbacks.length ; i++) {
+                            callbacks[i](channel);
+                        }                        
+                    }
+
+                    this.add_callback = function(callback) {
+                        callbacks.push(callback);
+                    }
+
+                    this.init = function () {
+                        var option_html = "";
+                        for (var i = 0; i < g_channelnum; i++) {
+                            var channel_name = i + 1;
+                            option_html += "<option value=\"" + i + "\">" + channel_name + "</option>";
+                        }
+                        $(".channel_selector").html(option_html);
+                        init_selectmenu(".channel_selector", 110, 150, function (e, object) {
+                            load_cur_channel(object.value);
+                        });
+                        if (g_channelnum == 1) {
+                            $(".channel_selector").parent().parent().hide();
+                        }
+                    }
+                }
+
+                var old_main_stream_video_encode_config = new function () {
+                    var g_bitrate = null;
+                    var g_frame_rate = null;
+                    var g_video_size = null;
+                    function get_video_para(channel) {
+                        var request_string;
+                        if (g_support_new_channel_api) {
+                            request_string = "../vb.htm?paratest=bitrate." + channel + "&paratest=framerate." + channel + "&paratest=videosizexy." + channel;
+                        }
+                        else {
+                            request_string = "../vb.htm?paratest=bitrate1&paratest=framerate1&paratest=videosizexy";
+                        }
+                        $.get(request_string,
+                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            response = ajaxdata.split("\n");
+                            g_bitrate = parse_ajax_data(response[0]);
+                            g_frame_rate = parse_ajax_data(response[1]);
+                            g_video_size = parse_ajax_data(response[2]);
+                            $("#o_bitrate1").val(g_bitrate);
+                            $("#o_frame_rate").select_val(g_frame_rate - 1);
+                            var size_x = g_video_size >>> 16 & 0xFFFF;
+                            var size_y = g_video_size & 0xFFFF;
+                            if (size_x == 352) {
+                                $("#o_video_size").select_val(0);
+                            }
+                            else {
+                                $("#o_video_size").select_val(1);
+                            }
+                        });
+                    }
+
+                    function set_video_para(channel) {
+                        var bitrate = parseInt($("#o_bitrate1").val());
+                        if (bitrate == NaN || bitrate < 0 || bitrate > 3000) {
+                            alert("请输入1-3000的数字！");
+                            return false;
+                        }
+                        var video_size_sel = $("#o_video_size").select_val();
+                        var size_x;
+                        var size_y;
+                        if (video_size_sel == 0) {
+                            size_x = 352;
+                            size_y = 288;
+                        }
+                        else {
+                            size_x = 704;
+                            size_y = 576;
+                        }
+                        var video_size = ((size_x << 16) & 0xFFFF0000) + (size_y & 0xFFFF);
+                        var frame_rate = parseInt($("#o_frame_rate").select_val(), 10) + 1;
+
+                        if (bitrate != g_bitrate || frame_rate != g_frame_rate || video_size != g_video_size) {
+                            var request_string;
+                            if (g_support_new_channel_api) {
+                                request_string = "../vb.htm?bitrate=" + bitrate + "." + channel
+                                    + "&framerate=" + frame_rate + "." + channel + "&videosizexy=" + video_size + "." + channel;
+                            }
+                            else {
+                                request_string = "../vb.htm?bitrate1=" + bitrate
+                                    + "&framerate1=" + frame_rate + "&videosizexy=" + video_size;
+                            }
+                            $.get(request_string, function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                                get_video_para(channel);
+                            });
+                        }
+                    }
+
+                    function set_video_para_channel() {
+                        set_video_para(g_cur_channel);
+                    }
+                    this.init = function () {
+                        get_device_type();
+                        if (g_device_type == "11" || g_device_type == "18") {
+                            $("#li_for_old_main_stream_encoder_config").remove();
+                            $("#old_main_stream_encoder_config").remove();
+                        }
+                        else {
+                            $("#o_video_submit").click(set_video_para_channel);
+                            channel_manager.add_callback(function (channel) {
+                                get_video_para(channel);
+                            });
+                        }
+                    }
+                }
+                var new_main_stream_video_encoder_config = new function () {                    
+                    var g_bitrate = null;
+                    var g_frame_rate = null;
+                    var g_video_size = null;
+                    var g_mainencodetype = null;
+                    var g_ratecontrl = null;
+                    var g_imagequlity = null;
+                    var g_encodetypesupport = Array();
+
+                    function encodetype_change(value, channel) {
+                        if (g_encodetypesupport[value] == "JPEG") {
+                            $("#rate").selectmenu('disable');
+                            $("#bitrate1").attr("disabled", true);
+                            $("#image_quality").selectmenu('enable');
+                        }
+                        else {
+                            $("#rate").selectmenu('enable');
+                            var ratecontrl = $("#rate").select_val();
+                            if (ratecontrl == 0) {
+                                $("#image_quality").selectmenu('disable');
+                                $("#bitrate1").attr("disabled", false);
+                            }
+                            else {
+								$("#image_quality").selectmenu('enable');
+                                $("#bitrate1").attr("disabled", true);
+                            }
+                        }
+                    }
+
+                    function rate_change(value, channel) {
+                        if (value == 0) {
+                            $("#image_quality").selectmenu('disable');
+                            $("#bitrate1").attr("disabled", false);
+                        }
+                        else {
+                            $("#image_quality").selectmenu('enable');
+                            $("#bitrate1").attr("disabled", true);
+                        }
+                    }
+
+                    function get_video_support(channel) {
+                        var request_string;
+                        request_string = "../vb.htm?paratest=videosizexysupport." + channel + "&paratest=encodetypesupport." + channel;
+                        $.get(request_string, function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            response = ajaxdata.split("\n");
+                            var reso = parse_ajax_data(response[0]);
+                            reso = reso.split(";");
+                            var encode = parse_ajax_data(response[1]);
+                            encode = encode.split(";");
+
+                            var option_text = "";
+                            for (var i = 0; encode[i]; i++) {
+                                var sp = encode[i].split(":");
+                                g_encodetypesupport[sp[1]] = sp[0];
+                                option_text += "<option value=\"" + sp[1] + "\">" + sp[0] + "</option>";
+                            }
+                            $("#encodetype").html(option_text);
+                            init_selectmenu("#encodetype", 110, 150, function (e, object) {
+                                encodetype_change(object.value, g_cur_channel);
+                            });
+                            init_selectmenu("#rate", 110, 150, function (e, object) {
+                                rate_change(object.value, g_cur_channel);
+                            });
+
+                            option_text = "";
+                            for (var i = 0; reso[i]; i++) {
+                                var sp = reso[i].split(":");
+                                option_text += "<option value=\"" + sp[1] + "\">" + sp[0] + "</option>";
+                            }
+                            $("#video_size").html(option_text);
+                            init_selectmenu("#video_size", 110, 150);
+                            get_video_para(channel);
+                        });                        
+                    }
+
+                    function get_video_para(channel) {
+                        var request_string;
+                        if (g_support_new_channel_api) {
+                            request_string = "../vb.htm?paratest=bitrate." + channel + "&paratest=framerate." + channel + "&paratest=videosizexy." + channel + "&paratest=mainencodetype." + channel + "&paratest=ratecontrol." + channel + "&paratest=imagequality." + channel;
+                        }
+                        else {
+                            request_string = "../vb.htm?paratest=bitrate1&paratest=framerate1&paratest=videosizexy";
+                        }
+                        $.get(request_string,
+                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            response = ajaxdata.split("\n");
+                            g_bitrate = parse_ajax_data(response[0]);
+                            g_frame_rate = parse_ajax_data(response[1]);
+                            g_video_size = parse_ajax_data(response[2]);
+                            g_mainencodetype = parse_ajax_data(response[3]);
+                            g_ratecontrl = parse_ajax_data(response[4]);
+                            g_imagequlity = parse_ajax_data(response[5]);
+
+                            //alert(g_bitrate + ":" + g_frame_rate + ":" + g_video_size + ":" + g_mainencodetype);
+                            $("#bitrate1").val(g_bitrate);
+
+                            $("#frame_rate").select_val(g_frame_rate - 1);
+                            $("#video_size").select_val(g_video_size);
+                            $("#encodetype").select_val(g_mainencodetype);
+                            $("#rate").select_val(g_ratecontrl);
+                            $("#image_quality").select_val(g_imagequlity);
+
+                            encodetype_change(g_mainencodetype, channel);
+                        });
+                    }
+
+                    function set_video_para(channel) {
+                        var video_size_sel = $("#video_size").select_val();
+                        var frame_rate = parseInt($("#frame_rate").select_val(), 10) + 1;
+                        var mainencodetype2 = $("#encodetype").select_val();
+                        var ratecontrl = $("#rate").select_val();
+                        var image = $("#image_quality").select_val();
+                        var bitrate = $("#bitrate1").val();
+                        if (d_type == 2) {
+                            if (isNaN(bitrate) || bitrate < 512 || bitrate > 5000) {
+                                alert("请输入512-5000的整数！");                                return false;
+                            }
+                        } else {
+                            if (mainencodetype2 == "0" && ratecontrl == "0") {
+                                if (isNaN(bitrate) || bitrate < 100 || bitrate > 4096) {
+                                    alert("请输入100-4096的整数！");
+                                    return false;
+                                }
+                            }
+                        }
+
+                        var request_string = "../vb.htm?";
+
+                        var hasnew = 0;
+
+                        if (bitrate != g_bitrate) {
+                            request_string += "bitrate=" + bitrate + "." + channel;
+                            hasnew = 1;
+                        }
+
+                        if (frame_rate != g_frame_rate) {
+                            if (hasnew) {
+                                request_string += "&framerate=" + frame_rate + "." + channel;
+                            }
+                            else {
+                                request_string += "framerate=" + frame_rate + "." + channel;
+                                hasnew = 1;
+                            }
+                        }
+
+                        if (video_size_sel != g_video_size) {
+                            if (hasnew) {
+                                request_string += "&videosizexy=" + video_size_sel + "." + channel;
+                            }
+                            else {
+                                request_string += "videosizexy=" + video_size_sel + "." + channel;
+                                hasnew = 1;
+                            }
+                        }
+
+                        if (mainencodetype2 != g_mainencodetype) {
+                            if (hasnew) {
+                                request_string += "&mainencodetype=" + mainencodetype2 + "." + channel;
+                            }
+                            else {
+                                request_string += "mainencodetype=" + mainencodetype2 + "." + channel;
+                                hasnew = 1;
+                            }
+                        }
+
+                        if (ratecontrl != g_ratecontrl) {
+                            if (hasnew) {
+                                request_string += "&ratecontrol=" + ratecontrl + "." + channel;
+                            }
+                            else {
+                                request_string += "ratecontrol=" + ratecontrl + "." + channel;
+                                hasnew = 1;
+                            }
+                        }
+
+                        if (image != g_imagequlity) {
+                            if (hasnew) {
+                                request_string += "&imagequality=" + image + "." + channel;
+                            }
+                            else {
+                                request_string += "imagequality=" + image + "." + channel;
+                                hasnew = 1;
+                            }
+                        }
+                        if (hasnew) {
+                            $.get(request_string, function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                                get_video_para(channel);
+                            });
+                        }
+                    }
+
+                    function set_video_para_channel() {
+                        sfm_cur_obj = $(this);
+                        set_video_para(g_cur_channel);
+                    }
+                    this.init = function () {
+                        get_device_type();
+                        if (g_device_type == "11" || g_device_type == "18") {
+                            $("#video_submit").click(set_video_para_channel);
+                            channel_manager.add_callback(function (channel) {
+                                get_video_support(channel);
+                            });
+                        }
+                        else {
+                            $("#li_for_main_stream_encoder_config").remove();
+                            $("#main_stream_encoder_config").remove();
+                        }
+                    }
+                }
+         
+                var sub_stream_video_encoder_config = new function () {
+                    var g_sub_stream_enable = null;
+                    var g_sub_bitrate = null;
+                    var g_sub_frame_rate = null;
+                    var g_sub_video_size = null;
+
+                    function get_sub_video_para(channel) {
+                        var request_string;
+                        if (g_support_new_channel_api) {
+                            request_string = "../vb.htm?paratest=substreamenable." + channel + "&paratest=subbitrate." + channel + "&paratest=subframerate." + channel + "&paratest=subvideosizexy." + channel;
+                        }
+                        else {
+                            request_string = "../vb.htm?paratest=substreamenable&paratest=bitrate2&paratest=framerate2&paratest=videosizexy2";
+                        }
+                        $.get(request_string,
+                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            response = ajaxdata.split("\n");
+                            g_sub_stream_enable = parse_ajax_data(response[0]);
+                            g_sub_bitrate = parse_ajax_data(response[1]);
+                            g_sub_frame_rate = parse_ajax_data(response[2]);
+                            g_sub_video_size = parse_ajax_data(response[3]);
+                            $("#enable_sub_stream").check_val(g_sub_stream_enable == 1);
+                            $("#sub_bitrate").val(g_sub_bitrate);
+                            $("#sub_framerate").select_val(g_sub_frame_rate - 1);
+                            var sub_size_x = g_sub_video_size >>> 16 & 0xFFFF;
+                            var sub_size_y = g_sub_video_size & 0xFFFF;
+                            if (sub_size_x == 352) {
+                                $("#sub_videosizexy").select_val(0);
+                            }
+                            else {
+                                $("#sub_videosizexy").select_val(1);
+                            }
+                        });
+                    }
+
+                    function set_sub_video_para(channel) {
+                        var sub_stream_enable = $("#enable_sub_stream").check_val() ? 1 : 0;
+                        var sub_bitrate = parseInt($("#sub_bitrate").val());
+                        if (sub_bitrate == NaN || sub_bitrate < 0 || sub_bitrate > 3000) {
+                            alert("请输入1-3000的数字！");
+                            return false;
+                        }
+                        var sub_video_size_sel = $("#sub_videosizexy").select_val();
+                        var sub_size_x;
+                        var sub_size_y;
+                        if (sub_video_size_sel == 0) {
+                            sub_size_x = 352;
+                            sub_size_y = 288;
+                        }
+                        else {
+                            sub_size_x = 704;
+                            sub_size_y = 576;
+                        }
+                        var sub_video_size = ((sub_size_x << 16) & 0xFFFF0000) + (sub_size_y & 0xFFFF);
+                        var sub_frame_rate = parseInt($("#sub_framerate").select_val(), 10) + 1;
+
+                        if (sub_stream_enable != g_sub_stream_enable || sub_bitrate != g_sub_bitrate
+                         || sub_frame_rate != g_sub_frame_rate || sub_video_size != g_sub_video_size) {
+                            var request_string;
+                            if (g_support_new_channel_api) {
+                                //注意如果换行处多写一个+号会把后面的字符串转成int
+                                request_string = "../vb.htm?substreamenable=" + sub_stream_enable + "." + channel + "&subbitrate=" + sub_bitrate + "." + channel
+                                   + "&subframerate=" + sub_frame_rate + "." + channel + "&subvideosizexy=" + sub_video_size + "." + channel;
+                            }
+                            else {
+                                request_string = "../vb.htm?substreamenable=" + sub_stream_enable + "&bitrate2=" + sub_bitrate
+                                    + "&framerate2=" + sub_frame_rate + "&videosizexy2=" + sub_video_size;
+                            }
+                            $.get(request_string, function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                                get_sub_video_para(channel);
+                            });
+                        }
+                    }
+
+                    function set_sub_video_para_channel() {
+                        set_sub_video_para(g_cur_channel);
+                    }
+
+                    var g_support_sub_stream = null;
+                    function get_sub_stream_support() {
+                        $.ajax({
+                            url: "../vb.htm?paratest=substreamsupport",
+                            success: function (ajaxdata) {
+                                if (precheck(ajaxdata)) {
+                                    return false;
+                                }
+                                response = ajaxdata.split("\n");
+                                g_support_sub_stream = parse_ajax_data(response[0]);
+                            },
+                            async: true
+                        });
+                    }
+
+                    this.init = function () {
+                        get_sub_stream_support();
+                        if (g_support_sub_stream == "0" || g_support_sub_stream == null) {
+                            $("#sub_stream_encoder_config").remove();
+                            $("#li_for_sub_stream_encoder_config").remove();
+                        }
+                        else {
+                            $("#sub_video_para_submit").click(set_sub_video_para_channel);
+                            channel_manager.add_callback(function (channel) {
+                                get_sub_video_para(channel);
+                            });
+                        }
+                    }
+                }
+            
+                var osd_config = new function() {
+                    var nLogoEnable = 0;
+                    var nLogoPosition = 0;
+                    function get_ivs_i2s(val1,val2) {
+                        var result = parseInt((val1 << 14) / val2);
+                        return result;
+                    }
+                    function get_ivs_s2i(val1, val2) {
+                        var result = parseInt((val1 * val2 + (1 << 13)) >> 14);
+                        return result;
+                    }
+                    function get_osd_parm(channel) {
+                        var request_string;
+                        if (g_support_new_channel_api) {
+                            request_string = "../vb.htm?paratest=datestampenable." + channel + "&paratest=timestampenable." + channel
+                                 + "&paratest=logoenable." + channel + "&paratest=logoposition." + channel
+                                 + "&paratest=textenable." + channel + "&paratest=textposition." + channel + "&paratest=overlaytext." + channel;
+                        }
+                        else {
+                            request_string = "../vb.htm?paratest=datestampenable1&paratest=timestampenable1"
+                                 + "&paratest=logoenable1&paratest=logoposition1"
+                                 + "&paratest=textenable1&paratest=textposition1&paratest=overlaytext1";
+                        }
+                        $.get(request_string,
+                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            ajaxdata = ajaxdata.split("\n");
+
+                            var dstampenable = ajaxdata[0].split("=")[1];
+                            var tstampenable = ajaxdata[1].split("=")[1];
+                            nLogoEnable = ajaxdata[2].split("=")[1];
+                            nLogoPosition = parseInt(ajaxdata[3].split("=")[1]);
+                            var nTextEnable = ajaxdata[4].split("=")[1];
+                            var nTextPosition = parseInt(ajaxdata[5].split("=")[1]);
+                            var textX = nTextPosition >>> 16 & 0xFFFF;
+                            var textY = nTextPosition & 0xFFFF;
+                            var real_width = 0;
+                            if (d_type == 2) {
+                                real_width = 720;
+                            } else {
+                                real_width = 704;
+                            }
+ 
+                            textX = get_ivs_s2i(get_ivs_i2s(textX, real_width), 100);
+                            textY = get_ivs_s2i(get_ivs_i2s(textY, 576), 100);
+                            var text_content = ajaxdata[6].split("=")[1];
+                            $("#date_enable").check_val(dstampenable == "1");
+                            $("#time_enable").check_val(tstampenable == "1");
+                            $("#text_enable").check_val(nTextEnable == "1");
+                            $("#text_x").val(textX);
+                            $("#text_y").val(textY);
+                            $("#text_content").val(Utf8.decode(Base64.decode(text_content)));
+                        });
+                    }
+
+                    function get_osd_datetime_parm(channel) {
+                        var request_string;
+                        if (g_support_new_channel_api) {
+                            request_string = "../vb.htm?paratest=dateformat." + channel + "&paratest=dateposition." + channel
+                                + "&paratest=tstampformat." + channel + "&paratest=timeposition." + channel;
+                        }
+                        else {
+                            request_string = "../vb.htm?paratest=dateformat&paratest=dateposition"
+                                + "&paratest=tstampformat&paratest=timeposition";
+                        }
+                        $.get(request_string, function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            ajaxdata = ajaxdata.split("\n");
+                            var dateFormat = parseInt(ajaxdata[0].split("=")[1]);
+                            var dateposition = parseInt(ajaxdata[1].split("=")[1]);
+                            var timeFormat = parseInt(ajaxdata[2].split("=")[1]);
+                            var timeposition = parseInt(ajaxdata[3].split("=")[1]);
+                            var dateX = dateposition >>> 16 & 0xFFFF;
+                            var dateY = dateposition & 0xFFFF;
+                            var timeX = timeposition >>> 16 & 0xFFFF;
+                            var timeY = timeposition & 0xFFFF;
+                            var real_width = 0;
+                            if (d_type == 2) {
+                                real_width = 720;
+                            } else {
+                                real_width = 704;
+                            }
+
+                            dateX = get_ivs_s2i(get_ivs_i2s(dateX, real_width), 100);
+                            timeX = get_ivs_s2i(get_ivs_i2s(timeX, real_width), 100);
+                            dateY = get_ivs_s2i(get_ivs_i2s(dateY, 576), 100);
+                            timeY = get_ivs_s2i(get_ivs_i2s(timeY, 576), 100);
+
+                            init_selectmenu("#date_format", 110, 150);
+                            init_selectmenu("#time_format", 110, 150);
+                            $("#date_format").select_val(dateFormat);
+                            $("#time_format").select_val(timeFormat);
+                            $("#date_x").val(dateX);
+                            $("#date_y").val(dateY);
+                            $("#time_x").val(timeX);
+                            $("#time_y").val(timeY);
+                        });
+                    }
+
+                    function set_osd(channel) {
+                        var dstampenable = $("#date_enable").check_val() ? 1 : 0;
+                        var tstampenable = $("#time_enable").check_val() ? 1 : 0;
+                        var nTextEnable = $("#text_enable").check_val() ? 1 : 0;
+                        var textX = parseInt($("#text_x").val());
+                        var textY = parseInt($("#text_y").val());
+                        var text_content = $("#text_content").val();
+
+                        var dateFormat = $("#date_format").select_val();
+                        var timeFormat = $("#time_format").select_val();
+                        var dateX = parseInt($("#date_x").val());
+                        var dateY = parseInt($("#date_y").val());
+                        var timeX = parseInt($("#time_x").val());
+                        var timeY = parseInt($("#time_y").val());
+
+                        if (isNaN(textX) || isNaN(textY) || isNaN(dateX) || isNaN(dateY) || isNaN(timeX) || isNaN(timeY)
+                           || textX < 0 || textY < 0 || dateX < 0 || dateY < 0 || timeX < 0 || timeY < 0
+                            || textX > 100 || textY > 100 || dateX > 100 || dateY > 100 || timeX > 100 || timeY > 100) {
+                            alert("坐标为0-100的正整数");
+                            return;
+                        }
+                        var real_width = 0;
+                        if (d_type == 2) {
+                            real_width = 720;
+                        } else {
+                            real_width = 704;
+                        }
+                        textX = get_ivs_s2i(get_ivs_i2s(textX, 100), real_width);
+                        dateX = get_ivs_s2i(get_ivs_i2s(dateX, 100), real_width);
+                        timeX = get_ivs_s2i(get_ivs_i2s(timeX, 100), real_width);
+                        textY = get_ivs_s2i(get_ivs_i2s(textY, 100), 576);
+                        dateY = get_ivs_s2i(get_ivs_i2s(dateY, 100), 576);
+                        timeY = get_ivs_s2i(get_ivs_i2s(timeY, 100), 576);
+
+                        var textPosition = ((textX << 16) & 0xFFFF0000) + (textY & 0xFFFF);
+                        var datePosition = ((dateX << 16) & 0xFFFF0000) + (dateY & 0xFFFF);
+                        var timePosition = ((timeX << 16) & 0xFFFF0000) + (timeY & 0xFFFF);
+
+                        var request_string;
+                        if (g_support_new_channel_api) {
+                            request_string = "../vb.htm?datestampenable=" + dstampenable + "." + channel +
+                                       "&timestampenable=" + tstampenable + "." + channel +
+                                       "&logoenable=" + nLogoEnable + "." + channel +
+                                       "&logoposition=" + nLogoPosition + "." + channel +
+                                       "&textenable=" + nTextEnable + "." + channel +
+                                       "&textposition=" + textPosition + "." + channel +
+                                       "&overlaytext=" + Base64.encode(Utf8.encode(text_content)) + "." + channel +
+                                       "&detailinfo=1" + "." + channel;
+                        }
+                        else {
+                            request_string = "../vb.htm?datestampenable1=" + dstampenable +
+                                       "&timestampenable1=" + tstampenable +
+                                       "&logoenable1=" + nLogoEnable +
+                                       "&logoposition1=" + nLogoPosition +
+                                       "&textenable1=" + nTextEnable +
+                                       "&textposition1=" + textPosition +
+                                       "&overlaytext1=" + Base64.encode(Utf8.encode(text_content)) +
+                                       "&detailinfo1=1";
+                        }
+                        $.get(request_string, function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                            get_osd_parm(channel);
+                        });
+
+                        if (g_support_new_channel_api) {
+                            request_string = "../vb.htm?dateformat=" + dateFormat + "." + channel +
+                                "&dateposition=" + datePosition + "." + channel +
+                                "&tstampformat=" + timeFormat + "." + channel +
+                                "&timeposition=" + timePosition + "." + channel;
+                        }
+                        else {
+                            request_string = "../vb.htm?dateformat=" + dateFormat +
+                                "&dateposition=" + datePosition +
+                                "&tstampformat=" + timeFormat +
+                                "&timeposition=" + timePosition;
+                        }
+                        $.get(request_string, function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                            get_osd_datetime_parm(channel);
+                        });
+
+                    }
+
+                    function set_osd_channel() {
+                        sfm_cur_obj = $(this);
+                        set_osd(g_cur_channel);
+                        if (g_style_time == "old") {
+                            set_alarm_settings(g_cur_channel);
+                        }
+                    }
+                    
+                    var g_drawtarget = null;
+                    var g_drawrule = null;
+                    var g_drawTrajectory = null;
+                    var g_camhealthalarm = null;
+                    function get_alarm_drawmode(channel) {
+                        $.get("../vb.htm?paratest=drawmode." + channel, function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            var slicestring = ajaxdata.slice(ajaxdata.indexOf("=") + 1, ajaxdata.length - 1);
+                            var decode = Base64.decode(slicestring);
+                            decode = decode.split(":");
+                            $("#drawtarget").check_val(decode[0] == 1);
+                            $("#drawrule").check_val(decode[1] == 1);
+                            $("#drawTrajectory").check_val(decode[2] == 1);
+                            g_drawtarget = decode[0];
+                            g_drawrule = decode[1];
+                            g_drawTrajectory = decode[2];
+                        });
+                    }
+
+                    function set_alarm_drawmode(channel) {
+                        var drawtarget = $("#drawtarget").check_val() ? "1" : "0";
+                        var drawrule = $("#drawrule").check_val() ? "1" : "0";
+                        var drawTrajectory = $("#drawTrajectory").check_val() ? "1" : "0";
+                        if (drawtarget != g_drawtarget || drawrule != g_drawrule || drawTrajectory != g_drawTrajectory) {
+                            var drawmodedata = drawtarget + ':' + drawrule + ':' + drawTrajectory + ':0:0';//res先置为0
+                            var base64 = Base64.encode(drawmodedata);
+                            $.get("../vb.htm?setdrawmodel1=" + base64 + "." + channel, function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                                get_alarm_drawmode();
+                            });
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    function get_camhealthenable(channel) {
+                        $.get("../vb.htm?paratest=camhealthalarmenable." + channel, function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            if ("OK" != ajaxdata.slice(0, 2)) return false;
+                            g_camhealthalarm = ajaxdata.slice(ajaxdata.indexOf("=") + 1, ajaxdata.length - 1);
+                            $("#camhealthalarm").check_val(g_camhealthalarm == 1);
+                        });
+                    }
+
+                    function set_camhealthenable(channel) {
+                        var camhealthalarm = $("#camhealthalarm").check_val() ? "1" : "0";
+                        if (camhealthalarm != g_camhealthalarm) {
+                            $.get("../vb.htm?setcamhealthalarmenable=" + camhealthalarm + "." + channel, function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                                get_camhealthenable();
+                            });
+                            return true;
+                        }
+                        return false;
+                    }
+
+                    function get_alarm_settings(channel) {
+                        get_alarm_drawmode(channel);
+                        if (g_device_type != 11) {
+                            get_camhealthenable(channel);
+                        }
+                    }
+
+                    function set_alarm_settings(channel) {
+                        set_alarm_drawmode(channel);
+                        if (g_device_type != 11) {
+                            set_camhealthenable(channel);
+                        }
+                    }
+
+                    function replace_label_text(label, text_new) {
+                        var text = $(label).html();
+                        var regex = new RegExp($(label).text(), 'g');
+                        text = text.replace(regex, text_new);
+                        $(label).html(text);
+                    }
+                    this.load_osd = function (channel) {
+                        get_osd_parm(channel);
+                        get_osd_datetime_parm(channel);
+                    }
+
+                    this.init = function () {
+                        $("#osd_submit").click(set_osd_channel);
+                        channel_manager.add_callback(function (channel) {
+                            get_osd_parm(channel);
+                            get_osd_datetime_parm(channel);
+                        });
+                        //init_alarm_osd_cfg();
+                        //init
+                        get_device_support_channels();
+
+                        if (g_device_type == 11 && (g_cur_style == "blue" || g_style_time == "old")) {
+                            $("#alarm_osd_cfg").show();
+                            $("#alarm_osd_cfg").width($("#osd_cfg_table").width());
+                            $("#alarm_show_name").text("实时显示：");
+                            replace_label_text("#drawtarget_name", "实时结果");
+                            replace_label_text("#drawrule_name", "虚拟线圈和识别区域");
+                            replace_label_text("#drawTrajectory_name", "车牌位置");
+                            $("#alarm_osd_submit").click(set_alarm_settings);
+                            if (g_style_time == "old") {
+                                $("#osd_cfg_table").prepend("<tr class='title_tr'><td colspan='9' class='title_td'>OSD配置</td></tr>");
+                                $("#osd_cfg_table").prepend("<tr></tr>");
+                                $("#osd_cfg_table").prepend("<tr id='null_tr'></tr>");
+                                $("#osd_cfg_table").prepend("<tr class='title_tr'><td colspan='9' class='title_td'>实时显示</td></tr>");
+                                $("#null_tr").append($("#drawtarget_name_td"));
+                                $("#null_tr").append($("#drawrule_name_td"));
+                                $("#drawrule_name_td").attr("colspan","3");
+                                $("#null_tr").append($("#drawTrajectory_name_td"));
+                                $("#drawTrajectory_name_td").attr("colspan", "4");
+                                $("#osd_cfg_table tr:not(.title_tr,.sfm_tr)").prepend("<td style='min-width:15px;'></td>");
+                                $("#alarm_osd_cfg").remove();
+                            }
+                        }
+                        channel_manager.add_callback(function (channel) {
+                            get_alarm_settings(channel);
+                        });
+                    }
+                }
+            
+                var video_source_config = new function() {
+                    function get_slider_val(name, channel) {
+                        $.get("../vb.htm?paratest=" + name + "." + channel,
+                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+                            response = ajaxdata.split("\n");
+                            var val = parse_ajax_data(response[0]);
+                            val = parseInt(val, 10);
+                            if (!isNaN(val)) $("#" + name + "_slider").slider('value', val);
+                            else $("#" + name + "_slider").slider("option", "disabled", true);
+                        });
+                    }
+            
+                    function set_slider_val(name,val,channel){
+                        //			alert(name + ":" + val + ":" + channel);
+                        if ($("#" + name + "_slider").slider("option", "disabled")) return;
+                        var request_string;
+                        if(g_support_new_channel_api){
+                            request_string="../vb.htm?"+name+"=" + val + "." + channel;
+                        }
+                        else{
+                            request_string="../vb.htm?"+name+"=" + val;
+                        }
+                        $.get(request_string,
+                        function(ajaxdata){
+                            default_ajax_handler(ajaxdata);
+                            get_slider_val(name,channel);
+                        });
+                    }
+            
+                    function set_slider_val_channel(name,val){
+                        set_slider_val(name,val,g_cur_channel);
+                    }
+
+                    function init_slider(name) {
+                        var max = 255;
+                        var mid = 128;
+                        if ((g_device_type == "11" || g_device_type == "18") && d_type == 0) {
+                            max = 100;
+                            mid = 50
+                        }
+                        var slider_name = "#"+name+"_slider";
+                        var text_name = "#"+name+"_text";
+                        $( slider_name ).slider({
+                            range: "min",
+                            value: mid,
+                            min: 0,
+                            max: max,
+                            change: function( event, ui ) {
+                                $( text_name ).html( ui.value );
+                            },
+                            slide: function( event, ui ) {
+                                $( text_name ).html( ui.value );
+                            },
+                            stop: function( event, ui ){
+                                return set_slider_val_channel(name,ui.value);
+                            }
+                        });
+                        $( text_name ).html( $( slider_name ).slider( "value" ) );		    
+                    }
+            
+                    function back_to_default(channel) {
+                        if (g_device_type == "11" || g_device_type == "18") {
+                            set_slider_val("brightness", 50, channel);
+                            set_slider_val("contrast", 40, channel);
+                            set_slider_val("saturation", 30, channel);
+                            set_slider_val("sharpness", 50, channel);
+                            set_slider_val("dynamicratio", 50, channel);
+                            set_slider_val("gain", 35, channel);
+                            set_slider_val("denoise", 0, channel);
+
+                            set_frequency(1, channel);
+                            set_shutter(3, channel);
+                            set_flip(0, channel);
+                            set_nightmode(0, channel);
+                            $("#frequency").select_val(1);
+                            $("#shutter").select_val(3);
+                            $("#flip").select_val(0);
+                            //$("#nightmode").select_val(0);
+                        }
+                        else {
+                            set_slider_val("brightness", 128, channel);
+                            set_slider_val("contrast", 150, channel);
+                            set_slider_val("saturation", 135, channel);
+                            set_slider_val("hue", 0, channel);
+                            set_slider_val("exposure", 160, channel);
+                            set_slider_val("sharpness", 128, channel);
+                        }                        
+                    }
+                    function back_to_default_8127(channel) {
+                        if (g_device_type == "11" || g_device_type == "18") {
+                            set_slider_val("brightness", 128, channel);                            set_slider_val("contrast", 128, channel);                            set_slider_val("saturation", 128, channel);                            set_slider_val("sharpness", 128, channel);                            set_slider_val("maxgain", 255, channel);                            set_shutter(130, channel);                            set_nftsenable(3, channel);                            set_nfstrength(0, channel);                            set_flip(0, channel);                            set_colorkiller(0, channel);                            $("#shutter").select_val(130);                            $("#nftsenable").select_val(3);                            $("#nfstrength").select_val(0);                            $("#flip").select_val(0);
+                        }                        else {
+                            set_slider_val("brightness", 128, channel);                            set_slider_val("contrast", 150, channel);                            set_slider_val("saturation", 135, channel);                            set_slider_val("hue", 0, channel);                            set_slider_val("maxexposuretime", 160, channel);                            set_slider_val("sharpness", 128, channel);
+                        }
+                    }
+            
+                    function back_to_default_channel() {
+                        sfm_cur_obj = $(this);
+                        if (d_type == 2) {
+                            back_to_default_8127(g_cur_channel);
+                        } else {
+                            back_to_default(g_cur_channel);
+                        }
+                    }
+
+                    function get_flip(channel)
+                    {
+                        $.get("../vb.htm?paratest=flip."+channel,           
+                       function(ajaxdata){
+                           if(precheck(ajaxdata))
+                           {
+                               return false;
+                           }
+                           response=ajaxdata.split("\n");
+                           var val=parse_ajax_data(response[0]);
+                           $("#flip").select_val(val);
+                       });
+                    }
+    		
+                    function set_flip(value,channel)
+                    {
+                        $.get("../vb.htm?flip="+ value +"." +channel,           
+                           function(ajaxdata){
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+    		
+                    function get_nightmode(channel)
+                    {
+                        $.get("../vb.htm?paratest=nightmode."+channel,           
+                       function(ajaxdata){
+                           if(precheck(ajaxdata))
+                           {
+                               return false;
+                           }
+                           response=ajaxdata.split("\n");
+                           var val=parse_ajax_data(response[0]);
+                           $("#nightmode").select_val(val);
+                       });
+                    }
+    		
+                    function set_nightmode(value,channel)
+                    {
+                        $.get("../vb.htm?nightmode="+ value +"." +channel,           
+                           function(ajaxdata){
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+                    //8127
+                    function get_image2a(channel) {
+                        $.get("../vb.htm?paratest=img2a." + channel,                       function (ajaxdata) {
+                           if (precheck(ajaxdata)) {
+                               return false;
+                           }                           response = ajaxdata.split("\n");                           var val = parse_ajax_data(response[0]);                           $("#aewb_vendor").select_val(val);
+                       });
+                    }
+                    function set_image2a(channel) {
+                        var val = $("#aewb_vendor").select_val();                        $.get("../vb.htm?img2a=" + val + "." + channel,                           function (ajaxdata) {
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+                    function get_image2atype(channel) {
+                        $.get("../vb.htm?paratest=img2atype." + channel,                       function (ajaxdata) {
+                           if (precheck(ajaxdata)) {
+                               return false;
+                           }                           response = ajaxdata.split("\n");                           var val = parse_ajax_data(response[0]);                           $("#ae_enable").check_val((val & 0x0001) != 0);                           $("#awb_enable").check_val((val & 0x0002) != 0);
+                       });
+                    }
+                    function set_image2atype(channel) {
+                        var v1 = ($("#ae_enable").check_val() ? 1 : 0) << 1;                        var v2 = ($("#awb_enable").check_val() ? 1 : 0);                        var val = (($("#ae_enable").check_val() ? 1 : 0) << 1) + (($("#awb_enable").check_val() ? 1 : 0));                        $.get("../vb.htm?img2atype=" + val + "." + channel,                           function (ajaxdata) {
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+                    function get_awb(channel) {
+                        $.get("../vb.htm?paratest=awb." + channel,                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }                            response = ajaxdata.split("\n");                            var val = parse_ajax_data(response[0]);                            $("#awb").select_val(val);
+                        });
+                    }
+                    function set_awb(value, channel) {
+                        $.get("../vb.htm?awb=" + value + "." + channel,                           function (ajaxdata) {
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+                    function get_hdrmode(channel) {
+                        $.get("../vb.htm?paratest=hdrmode." + channel,                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }                            response = ajaxdata.split("\n");                            var val = parse_ajax_data(response[0]);                            $("#hdrmode").select_val(val);
+                        });
+                    }
+                    function set_hdrmode(channel) {
+                        var value = $("#hdrmode").select_val();                        $.get("../vb.htm?hdrmode=" + value + "." + channel,                            function (ajaxdata) {
+                                default_ajax_handler(ajaxdata);
+                            });
+                    }
+                    function get_colorkiller(channel) {
+                        $.get("../vb.htm?paratest=colorkiller." + channel,                       function (ajaxdata) {
+                           if (precheck(ajaxdata)) {
+                               return false;
+                           }                           response = ajaxdata.split("\n");                           var val = parse_ajax_data(response[0]);                           $("#colorkiller").select_val(val);
+                       });
+                    }
+                    function set_colorkiller(value, channel) {
+                        $.get("../vb.htm?colorkiller=" + value + "." + channel,                        function (ajaxdata) {
+                            default_ajax_handler(ajaxdata);
+                        });
+                    }
+
+                    function get_frequency(channel)
+                    {
+                       $.get("../vb.htm?paratest=frquency."+channel,           
+                       function(ajaxdata){
+                           if(precheck(ajaxdata))
+                           {
+                               return false;
+                           }
+                           response=ajaxdata.split("\n");
+                           var val=parse_ajax_data(response[0]);
+                           $("#frequency").select_val(val);
+                       });
+                    }
+    		
+                    function set_frequency(value,channel)
+                    {
+                        $.get("../vb.htm?frquency="+ value +"." +channel,           
+                           function(ajaxdata){
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+    		
+                    function set_shutter(value, channel)
+                    {
+                        $.get("../vb.htm?shutter="+ value +"." +channel,           
+                           function(ajaxdata){
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+    		
+                    function get_shutter(channel)
+                    {
+                        $.get("../vb.htm?paratest=shutter."+channel,    
+                        function(ajaxdata){
+                            if(precheck(ajaxdata))
+                            {
+                                return false;
+                            }
+                            response=ajaxdata.split("\n");
+                            var val=parse_ajax_data(response[0]);
+                            $("#shutter").select_val(val);
+                        });
+                    }
+                    function set_nfmode(value, channel) {
+                        var value = $("#nf_enable").select_val();//0 nsf,2 off                        $.get("../vb.htm?nfmode=" + value + "." + channel,                           function (ajaxdata) {
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+                    function get_nfmode(channel) {
+                        $.get("../vb.htm?paratest=nfmode." + channel,                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }                            response = ajaxdata.split("\n");                            var val = parse_ajax_data(response[0]);                            $("#nf_enable").select_val(val);
+                        });
+                    }
+                    function set_nftsenable(value, channel) {
+                        $.get("../vb.htm?nftsenable=" + value + "." + channel,                           function (ajaxdata) {
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+                    function get_nftsenable(channel) {
+                        $.get("../vb.htm?paratest=nftsenable." + channel,                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }                            response = ajaxdata.split("\n");                            var val = parse_ajax_data(response[0]);                            $("#nftsenable").select_val(val);
+                        });
+                    }
+                    function set_nfstrength(value, channel) {
+                        $.get("../vb.htm?denoise=" + value + "." + channel,                           function (ajaxdata) {
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+
+                    function get_nfstrength(channel) {
+                        $.get("../vb.htm?paratest=denoise." + channel,                        function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }                            response = ajaxdata.split("\n");                            var val = parse_ajax_data(response[0]);                            $("#nfstrength").select_val(val);
+                        });
+                    }
+                    this.init = function () {
+                        get_device_type();
+                        
+                        if ((g_device_type == "11" || g_device_type == "18") && d_type == 0) {
+                            init_slider("dynamicratio");
+                            init_slider("gain");
+                            $("#hue_slider").parent().parent().remove();
+                            $("#exposure_slider").parent().parent().remove();
+                            init_slider("denoise");
+
+                            init_selectmenu("#frequency", 110, 150, function (e, object) {
+                                set_frequency(object.value, g_cur_channel);
+                            });
+                            init_selectmenu("#shutter", 110, 150, function (e, object) {
+                                set_shutter(object.value, g_cur_channel);
+                            });
+                            //init_selectmenu("#nightmode", 110, 150, function (e, object) {
+                            //    set_nightmode(object.value, g_cur_channel);
+                            //});
+                            init_selectmenu("#flip", 110, 150, function (e, object) {
+                                set_flip(object.value, g_cur_channel);
+                            });
+                        } else if ((g_device_type == "11" || g_device_type == "18") && d_type == 2) {
+                            init_slider("dynamicratio");                            init_slider("maxgain");                            $("#hue_slider").parent().parent().remove();                            $("#exposure_slider").parent().parent().remove();                            init_selectmenu("#shutter", 110, 150, function (e, object) {
+                                set_shutter(object.value, g_cur_channel);
+                            });                            init_selectmenu("#colorkiller", 110, 150, function (e, object) {
+                                set_colorkiller(object.value, g_cur_channel);
+                            });                            init_selectmenu("#flip", 110, 150, function (e, object) {
+                                set_flip(object.value, g_cur_channel);
+                            });                            init_selectmenu("#awb", 110, 150, function (e, object) {
+                                set_awb(object.value, g_cur_channel);
+                            });                            init_selectmenu("#nftsenable", 110, 150, function (e, object) {
+                                set_nftsenable(object.value, g_cur_channel);
+                            });                            init_selectmenu("#nfstrength", 110, 150, function (e, object) {
+                                set_nfstrength(object.value, g_cur_channel);
+                            });
+                        }else {
+                            $("#dynamicratio_slider").parent().parent().remove();
+                            $("#gain_slider").parent().parent().remove();
+                            
+                            init_slider("hue");
+                            init_slider("exposure");
+                            $("#denoise_slider").parent().parent().remove();
+                            $("#frequency").parent().parent().remove();
+                            $("#shutter").parent().parent().remove();
+                            $("#nightmode").parent().parent().remove();
+                            $("#flip").parent().parent().remove();
+                        }
+                        init_slider("brightness");
+                        init_slider("contrast");
+                        init_slider("saturation");
+                        init_slider("sharpness");
+         
+                        $("#back_to_default").click(back_to_default_channel);
+                        channel_manager.add_callback(function (channel) {
+                            if ((g_device_type == "11" || g_device_type == "18") && d_type == 0) {
+                                get_slider_val("dynamicratio", channel);
+                                get_slider_val("gain", channel);
+                                get_slider_val("denoise", channel);
+                                get_frequency(channel);
+                                get_shutter(channel);
+                                //get_nightmode(channel);
+                                get_flip(channel);
+                            } else if ((g_device_type == "11" || g_device_type == "18") && d_type == 2) {
+                                get_slider_val("dynamicratio", channel);                                get_slider_val("maxgain", channel);                                get_shutter(channel);                                get_colorkiller(channel);                                get_flip(channel);                                get_awb(channel);                                get_image2a(channel);                                get_image2atype(channel);                                get_nfmode(channel);                                get_hdrmode(channel);                                get_nftsenable(channel);                                get_nfstrength(channel);                            }
+                            else {
+                                get_slider_val("hue", channel);
+                                get_slider_val("exposure",channel);
+                            }
+                            get_slider_val("brightness", channel);
+                            get_slider_val("contrast", channel);
+                            get_slider_val("saturation", channel);
+                            get_slider_val("sharpness", channel);
+                            
+                        });
+                    }
+                }               
+            
+                var camara_config = new function() {
+                    function set_focusconfig(cmd, channel) {
+                        $.get("../vb.htm?focusandzoom=" + cmd + "." + channel,
+                           function (ajaxdata) {
+                               default_ajax_handler(ajaxdata);
+                           });
+                    }
+
+                    var g_ledlight = 0;
+                    var g_ledswitch = 0;
+                    var g_ledmaxlevel = 0;
+
+                    function get_ledlight(channel) {
+                        $.get("../vb.htm?paratest=ledlight." + channel, function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+
+                            response = ajaxdata.split("\n");
+                            var data = parse_ajax_data(response[0]);
+
+                            g_ledlight = (data >> 16) & 0xFFFF;
+                            g_ledmaxlevel = data & 0xFFFF;
+
+                            if (g_ledlight == 0) {
+                                $("#leddel").attr('disabled', true);
+                            }
+                            else if (g_ledlight >= g_ledmaxlevel) {
+                                $("#ledadd").attr('disabled', true);
+                            }
+                        });
+                    }
+
+                    function set_ledlight(cmd, channel) {
+                        if (cmd == 0) {
+                            g_ledlight = g_ledlight + 1;
+                        }
+                        else if (cmd == 1) {
+                            g_ledlight = g_ledlight - 1;
+                        }
+
+                        if (g_ledlight == 0) {
+                            $("#leddel").attr('disabled', true);
+                        }
+                        else if (g_ledlight >= g_ledmaxlevel) {
+                            $("#ledadd").attr('disabled', true);
+                        }
+                        else {
+                            $("#ledadd").attr('disabled', false);
+                            $("#leddel").attr('disabled', false);
+                        }
+
+
+                        $.get("../vb.htm?ledlight=" + g_ledlight + "." + channel,
+                               function (ajaxdata) {
+                                   default_ajax_handler(ajaxdata);
+                               });
+                    }
+
+                    function getledswitch(channel) {
+                        $.get("../vb.htm?paratest=ledswitch." + channel, function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return false;
+                            }
+
+                            response = ajaxdata.split("\n");
+                            g_ledswitch = parse_ajax_data(response[0]);
+
+                            var row = document.getElementById('ledoorc');
+                            if (g_ledswitch == 1) {
+                                row.style.display = "table-row";
+                                $("#ledmannel").check_val(1);
+                                $("#ledopen").check_val(1);
+                            }
+                            else if (g_ledswitch == 2) {
+                                row.style.display = "table-row";
+                                $("#ledmannel").check_val(1);
+                                $("#ledclose").check_val(1);
+                            }
+                            else {
+                                $("#ledauto").check_val(1);
+                                row.style.display = "none";
+                            }
+                        });
+                    }
+
+                    function setledswitch(channel) {
+                        var row = document.getElementById('ledoorc');
+
+                        if ($("#ledauto").check_val()) {
+                            g_ledswitch = 0;
+                            row.style.display = "none";
+                        }
+
+                        if ($("#ledmannel").check_val()) {
+                            if ($("#ledopen").check_val()) {
+                                g_ledswitch = 1;
+                            }
+                            else if ($("#ledclose").check_val()) {
+                                g_ledswitch = 2;
+                            }
+                            else {
+                                $("#ledopen").check_val(1);
+                                g_ledswitch = 1;
+                            }
+
+                            row.style.display = "table-row";
+                        }
+
+                        $.get("../vb.htm?ledswitch=" + g_ledswitch + "." + channel,
+                                function (ajaxdata) {
+                                    default_ajax_handler(ajaxdata);
+                                });
+                    }
+                    this.init = function () {
+                        if (true) {
+                            $("#li_for_camera_config").remove();
+                            $("#camera_config").remove();
+                        }
+                        else {
+                            channel_manager.add_callback(function (channel) {
+                                getledswitch(channel);
+                                get_ledlight(channel);
+                            });
+                        }
+                    }
+                }
+                var d_type;
+                function get_boardversion_info() {
+                    $.ajax({
+                        url: "../vb.htm?getboardversioninfo",
+                        success: function (ajaxdata) {
+                            if (precheck(ajaxdata)) {
+                                return;
+                            }
+                            ajaxdata = ajaxdata.split("=");
+                            if (!ajaxdata[0].match(/OK/)) {
+                                return;
+                            }
+                            var mask = 0x1;
+                            mask = mask << 24;
+                            var decode = parseInt(ajaxdata[1]);
+                            decode = mask | decode;
+                            decode = decode.toString(2);
+                            d_type = decode.substring(decode.length - 24, decode.length - 12);
+                            d_type = parseInt(d_type, 2);
+                        },
+                        async: false
+                    });
+                }
+            
+                $(function () {
+                    if (g_cur_style == "blue") {
+                        $("a[href='#osd_config']").html("OSD设置");
+                    }
+                    if (g_style_time == "sfm") {
+                        $("#IO_tab").css("width", "100%");
+                        $("#live").insertAfter("#video_tabs");
+                        $("#live").css({ "position": "absolute", "right": "0", "top": "65px" });
+                        $("#live_td").remove();
+                    }
+                    if (g_style_time == "old") {
+                        $("#main_stream_a").html("编码参数");
+                        $("#ods_a").html("OSD参数");
+                        $("#video_source_a").html("图像参数");
+                        $("#li_for_video_source_config").insertBefore("#li_for_old_main_stream_encoder_config");
+                    }
+                    get_boardversion_info();
+                    if (d_type == 2) {
+                        $(".tr_3730").remove();
+                    } else {
+                        $(".tr_8127").remove();
+                    }
+                    init_selectmenu("select:not(.channel_selector,#encodetype,#video_size,#date_format,#time_format,#frequency,\
+                        #encodetype,#rate,#frequency,#shutter,#nightmode,#colorkiller,#flip,#awb)", 110, 150);
+
+                    channel_manager.init();
+                    old_main_stream_video_encode_config.init();
+                    new_main_stream_video_encoder_config.init();
+                    osd_config.init();
+                    video_source_config.init();
+                    sub_stream_video_encoder_config.init();
+                    camara_config.init();
+                    create_tabs("#video_tabs");
+                    init_activex_new("#live", 1, 0, function () {
+                        channel_manager.load_cur_channel(0);
+                    });			        
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <table id="IO_tab" cellpadding="0" cellspacing="0" style="font-size:1em;">
+        <tr>
+            <td id="left_container" style="min-width: 480px;min-height:480px" valign="top">
+                <div id="video_tabs">
+                    <ul>
+                        <li id="li_for_old_main_stream_encoder_config"><a href="#old_main_stream_encoder_config">主码流</a></li>
+                        <li id="li_for_main_stream_encoder_config"><a id="main_stream_a" href="#main_stream_encoder_config">主码流</a></li>
+                        <li><a id="ods_a" href="#osd_config">osd</a></li>
+                        <li id="li_for_video_source_config"><a id="video_source_a" href="#video_source_config">视频源</a></li>
+                        <li id="li_for_sub_stream_encoder_config"><a href="#sub_stream_encoder_config">子码流</a></li>
+                        <li id="li_for_camera_config"><a href="#camera_config">焦距</a></li>
+                    </ul>
+                    <div id="old_main_stream_encoder_config">
+                        <table class="dummy" style="margin: 0">
+                            <tr>
+                                <td>
+                                    通道：
+                                </td>
+                                <td>
+                                    <select class="channel_selector"></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    码流控制：
+                                </td>
+                                <td>
+                                    <select>
+                                        <option value="0">定码流</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    比特率：
+                                </td>
+                                <td>
+                                    <input id="o_bitrate1" type="text" size="5" />
+                                </td>
+                                <td style="width: 5em;">
+                                    kbps
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    分辨率：
+                                </td>
+                                <td>
+                                    <select id="o_video_size">
+                                        <option value="0">CIF</option>
+                                        <option value="1">CIF4</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    帧率：
+                                </td>
+                                <td>
+                                    <select id="o_frame_rate">
+                                        <!-- 比动态加载快 -->
+                                        <option value="0">1</option>
+                                        <option value="1">2</option>
+                                        <option value="2">3</option>
+                                        <option value="3">4</option>
+                                        <option value="4">5</option>
+                                        <option value="5">6</option>
+                                        <option value="6">7</option>
+                                        <option value="7">8</option>
+                                        <option value="8">9</option>
+                                        <option value="9">10</option>
+                                        <option value="10">11</option>
+                                        <option value="11">12</option>
+                                        <option value="12">13</option>
+                                        <option value="13">14</option>
+                                        <option value="14">15</option>
+                                        <option value="15">16</option>
+                                        <option value="16">17</option>
+                                        <option value="17">18</option>
+                                        <option value="18">19</option>
+                                        <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" align="right">
+                                    <input id="o_video_submit" type="submit" value="确定" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="main_stream_encoder_config">
+                        <table class="dummy" style="margin: 0">
+                            <tr>
+                                <td>
+                                    通道：
+                                </td>
+                                <td>
+                                    <select class="channel_selector"></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    分辨率：
+                                </td>
+                                <td>
+                                    <select id="video_size"></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    帧率：
+                                </td>
+                                <td>
+                                    <select id="frame_rate">
+                                        <!-- 比动态加载快 -->
+                                        <option value="0">1</option>
+                                        <option value="1">2</option>
+                                        <option value="2">3</option>
+                                        <option value="3">4</option>
+                                        <option value="4">5</option>
+                                        <option value="5">6</option>
+                                        <option value="6">7</option>
+                                        <option value="7">8</option>
+                                        <option value="8">9</option>
+                                        <option value="9">10</option>
+                                        <option value="10">11</option>
+                                        <option value="11">12</option>
+                                        <option value="12">13</option>
+                                        <option value="13">14</option>
+                                        <option value="14">15</option>
+                                        <option value="15">16</option>
+                                        <option value="16">17</option>
+                                        <option value="17">18</option>
+                                        <option value="18">19</option>
+                                        <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    编码方式：
+                                </td>
+                                <td>
+                                    <select id="encodetype"></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    码流控制：
+                                </td>
+                                <td>
+                                    <select id="rate">
+                                        <option value="0">定码流</option>
+                                        <option value="1">变码流</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    图像质量：
+                                </td>
+                                <td>
+                                    <select id="image_quality">
+                                        <option value="0">最流畅</option>
+                                        <option value="1">较流畅</option>
+                                        <option value="2">流畅</option>
+                                        <option value="3">中等</option>
+                                        <option value="4">清晰</option>
+                                        <option value="5">较清晰</option>
+                                        <option value="6">最清晰</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    码流上限：
+                                </td>
+                                <td>
+                                    <input id="bitrate1" type="text" size="5" />
+                                </td>
+                                <td style="width: 5em;">
+                                    kbps
+                                </td>
+                            </tr>
+                            <tr><td>&nbsp;</td></tr>
+                            <tr>
+                                <td colspan="3" align="right">
+                                    <input id="video_submit" type="submit" value="确定" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td valign="middle" style="display:none;padding:20px;" colspan="3" align="right" class="sfm_info"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="osd_config">
+                            <!--<div>
+            <input id="check1" type="checkbox" />
+            <label for="check1">
+                启用OSD</label>
+        </div>-->
+                            <table id="osd_cfg_table" class="dummy" style="margin: 0">
+                                <tr>
+                                    <td>
+                                        通道：
+                                    </td>
+                                    <td>
+                                        <select class="channel_selector"></select>
+                                    </td>
+                                </tr>
+                                <tr id="date_tr">
+                                    <td style="min-width: 80px;">
+                                        <input id="date_enable" type="checkbox" />
+                                        <label for="date_enable">
+                                            日期
+                                        </label>
+                                    </td>
+                                    <td>
+                                        日期格式:
+                                    </td>
+                                    <td colspan="5">
+                                        <select id="date_format">
+                                            <option value="0">YYYY/MM/DD</option>
+                                            <option value="1">MM/DD/YYYY</option>
+                                            <option value="2">DD/MM/YYYY</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td style="min-width:70px">
+                                        坐标百分比:
+                                    </td>
+                                    <td align="right">
+                                        x:
+                                    </td>
+                                    <td>
+                                        <input id="date_x" type="text" size="2" maxlength="3"/>
+                                    </td>
+                                    <td style="padding-left:0;">%</td>
+                                    <td align="right">
+                                        y:
+                                    </td>
+                                    <td>
+                                        <input id="date_y" type="text" size="2" maxlength="3" />
+                                    </td>
+                                    <td style="padding-left:0;">%</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input id="time_enable" type="checkbox" />
+                                        <label for="time_enable">
+                                            时间
+                                        </label>
+                                    </td>
+                                    <td>
+                                        时间格式:
+                                    </td>
+                                    <td colspan="5">
+                                        <select id="time_format">
+                                            <option value="0">12hours</option>
+                                            <option value="1">24hours</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        坐标百分比:
+                                    </td>
+                                    <td align="right">
+                                        x:
+                                    </td>
+                                    <td>
+                                        <input id="time_x" type="text" size="2" maxlength="3" />
+                                    </td>
+                                    <td style="padding-left:0;">%</td>
+                                    <td align="right">
+                                        y:
+                                    </td>
+                                    <td>
+                                        <input id="time_y" type="text" size="2" maxlength="3" />
+                                    </td>
+                                    <td style="padding-left:0;">%</td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <input id="text_enable" type="checkbox" />
+                                        <label for="text_enable">
+                                            文字
+                                        </label>
+                                    </td>
+                                    <td>
+                                        内容:
+                                    </td>
+                                    <td colspan="5">
+                                        <input id="text_content" type="text" size="13" maxlength="14"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        坐标百分比:
+                                    </td>
+                                    <td align="right">
+                                        x:
+                                    </td>
+                                    <td>
+                                        <input id="text_x" type="text" size="2" maxlength="3" />
+                                    </td>
+                                    <td style="padding-left:0;">%</td>
+                                    <td align="right">
+                                        y:
+                                    </td>
+                                    <td>
+                                        <input id="text_y" type="text" size="2" maxlength="3" />
+                                    </td>
+                                    <td style="padding-left:0;">%</td>
+                                </tr>
+                                <tr><td>&nbsp;</td></tr>
+                                <tr>
+                                    <td colspan="8" align="right">
+                                        <input id="osd_submit" type="submit" value="确定" />
+                                    </td>
+                                </tr>
+                                <tr class="sfm_tr">
+                                    <td valign="middle" style="display:none;" colspan="6" align="right" class="sfm_info"></td>
+                                </tr>
+                            </table>
+                            <table id="alarm_osd_cfg" class="dummy" style="margin: 0;display:none">
+                                <tr><td></td></tr>
+                                <tr>
+                                    <td id="alarm_show_name">
+                                        报警结果显示：
+                                    </td>
+                                    <td id="drawtarget_name_td" style="min-width:80px;">
+                                        <input type="checkbox" id="drawtarget" />
+                                        <label id="drawtarget_name" for="drawtarget">报警目标</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td id="drawrule_name_td">
+                                        <input type="checkbox" id="drawrule" />
+                                        <label id="drawrule_name" for="drawrule">警戒规则</label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td id="drawTrajectory_name_td">
+                                        <input type="checkbox" id="drawTrajectory" />
+                                        <label id="drawTrajectory_name" for="drawTrajectory">目标轨迹</label>
+                                    </td>
+                                </tr>
+                                <tr><td></td></tr>
+                                <tr id="alarm_show_tr">
+                                    <td align="right" colspan="2">
+                                        <input id="alarm_osd_submit" type="submit" value="确定" />
+                                    </td>
+                                </tr>
+                            </table>
+                    </div>
+                    <div id="video_source_config">
+                        <table id="screenmode" class="dummy" style="margin: 0">
+                            <tr>
+                                <td>
+                                    通道：
+                                </td>
+                                <td colspan="2">
+                                    <select class="channel_selector"></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="min-width:90px;">
+                                    亮度：
+                                </td>
+                                <td width="20" id="brightness_text"></td>
+                                <td style="padding: 0; font-size: .6em; width: 20em">
+                                    <div id="brightness_slider">
+                                    </div>
+                                </td>                                
+                            </tr>
+                            <tr>
+                                <td>
+                                    对比度：
+                                </td>
+                                <td id="contrast_text"></td>
+                                <td style="padding: 0; font-size: .6em; width: 20em">
+                                    <div id="contrast_slider">
+                                    </div>
+                                </td>                                
+                            </tr>
+                            <tr>
+                                <td>
+                                    饱和度：
+                                </td>
+                                <td id="saturation_text"></td>
+                                <td style="padding: 0; font-size: .6em; width: 20em">
+                                    <div id="saturation_slider">
+                                    </div>
+                                </td>                                
+                            </tr>
+                            <tr>
+                                <td>
+                                    色调：
+                                </td>
+                                <td id="hue_text"></td>
+                                <td style="padding: 0; font-size: .6em; width: 20em">
+                                    <div id="hue_slider">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    曝光：
+                                </td>
+                                <td id="exposure_text"></td>
+                                <td style="padding: 0; font-size: .6em; width: 20em">
+                                    <div id="exposure_slider">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    清晰度：
+                                </td>
+                                <td id="sharpness_text"></td>
+                                <td style="padding: 0; font-size: .6em; width: 20em">
+                                    <div id="sharpness_slider">
+                                    </div>
+                                </td>                                
+                            </tr>
+                            <tr class="tr_3730">
+                                <td>
+                                    视频制式：
+                                </td>
+                                <td colspan="2">
+                                    <select id="frequency">
+                                        <option value="1">50Hz</option>
+                                        <option value="2">60Hz</option>
+                                        <option value="0">MaxOrZero</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr class="tr_3730">
+                                <td>
+                                    曝光时间：
+                                </td>
+                                <td colspan="2">
+                                    <select id="shutter">
+                                        <option value="2">0~8ms 停车场推荐</option>
+                                        <option value="3">0~4ms</option>
+                                        <option value="4">0~2ms 卡口推荐</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr class="tr_8127">
+                                <td>
+                                    曝光时间：
+                                </td>
+                                <td colspan="2">
+                                    <select id="shutter">
+                                        <option value="255">0~8ms 停车场推荐</option>
+                                        <option value="190">0~6ms</option>
+                                        <option value="130">0~4ms</option>
+                                        <option value="70">0~2ms 卡口推荐</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr class="tr_8127">
+                                <td>
+                                    降噪模式：
+                                </td>
+                                <td colspan="2" style="min-width: 80px;">
+                                    <select id="nftsenable">
+                                        <option value="0">OFF</option>
+                                        <option value="1">SNF</option>
+                                        <option value="2">TNF</option>
+                                        <option value="3">SNF+TNF</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr class="tr_8127">
+                                <td>
+                                    降噪强度：
+                                </td>
+                                <td colspan="2">
+                                    <select id="nfstrength">
+                                        <option value="0">自动</option>
+                                        <option value="1">低</option>
+                                        <option value="2">中</option>
+                                        <option value="3">高</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    图像翻转：
+                                </td>
+                                <td colspan="2">
+                                    <select id="flip">
+                                        <option value="0">原始图像</option>
+                                        <option value="1">上下翻转</option>
+                                        <option value="2">左右翻转</option>
+                                        <option value="3">中心翻转</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr><td>&nbsp;</td></tr>
+                            <tr>
+                                <td></td>
+                                <td colspan="2" align="right" style="padding-top:1em">
+                                    <input id="back_to_default" type="submit" value="恢复默认" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td valign="middle" style="display:none;padding:20px;" colspan="3" align="right" class="sfm_info"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="sub_stream_encoder_config">
+                        <table class="dummy" style="margin: 0">
+                            <tr>
+                                <td>
+                                    通道：
+                                </td>
+                                <td>
+                                    <select class="channel_selector"></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <input id="enable_sub_stream" type="checkbox" />
+                                    <label for="enable_sub_stream">
+                                        开启子码流
+                                    </label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    码流控制：
+                                </td>
+                                <td>
+                                    <select>
+                                        <option value="0">定码流</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    比特率：
+                                </td>
+                                <td>
+                                    <input id="sub_bitrate" type="text" size="5" />
+                                </td>
+                                <td style="width: 5em;">
+                                    kbps
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    分辨率：
+                                </td>
+                                <td>
+                                    <select id="sub_videosizexy">
+                                        <option value="0">CIF</option>
+                                        <option value="1">CIF4</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    帧率：
+                                </td>
+                                <td>
+                                    <select id="sub_framerate">
+                                        <option value="0">1</option>
+                                        <option value="1">2</option>
+                                        <option value="2">3</option>
+                                        <option value="3">4</option>
+                                        <option value="4">5</option>
+                                        <option value="5">6</option>
+                                        <option value="6">7</option>
+                                        <option value="7">8</option>
+                                        <option value="8">9</option>
+                                        <option value="9">10</option>
+                                        <option value="10">11</option>
+                                        <option value="11">12</option>
+                                        <option value="12">13</option>
+                                        <option value="13">14</option>
+                                        <option value="14">15</option>
+                                        <option value="15">16</option>
+                                        <option value="16">17</option>
+                                        <option value="17">18</option>
+                                        <option value="18">19</option>
+                                        <option value="19">20</option>
+                                        <option value="20">21</option>
+                                        <option value="21">22</option>
+                                        <option value="22">23</option>
+                                        <option value="23">24</option>
+                                        <option value="24">25</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3" align="right">
+                                    <input id="sub_video_para_submit" type="submit" value="确定" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="camera_config">
+                        <table class="dummy" style="margin: 0">
+                            <tr>
+                                <td>
+                                    LED开关
+                                </td>
+                                <td>
+                                    <input type="radio" id="ledauto" name="ledstatus" value="radiobutton" onclick="setledswitch(0);" />
+                                    <label for="ledauto">智能控制</label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="ledmannel" name="ledstatus" value="radiobutton" onclick="setledswitch(0);" />
+                                    <label for="ledmannel">手动控制</label>
+                                </td>
+                            </tr>
+                            <tr id="ledoorc">
+                                <td>
+                                    &nbsp
+                                </td>
+                                <td>
+                                    <input type="radio" id="ledopen" name="ledsw" value="radiobutton" onclick="setledswitch(0);" />
+                                    <label for="ledopen">开启</label>
+                                </td>
+                                <td>
+                                    <input type="radio" id="ledclose" name="ledsw" value="radiobutton" onclick="setledswitch(0);" />
+                                    <label for="ledclose">关闭</label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    LED亮度
+                                </td>
+                                <td>
+                                    <input id="ledadd" type="submit" value="+" onclick="set_ledlight(0,0);" />
+                                </td>
+                                <td>
+                                    <input id="leddel" type="submit" value="-" onclick="set_ledlight(1,0);" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Focus
+                                </td>
+                                <td>
+                                    <input type="submit" value="+" onmousedown="set_focusconfig(1,0);" onmouseup="set_focusconfig(0,0);" />
+                                </td>
+                                <td>
+                                    <input type="submit" value="-" onmousedown="set_focusconfig(2,0);" onmouseup="set_focusconfig(0,0);" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Zoom
+                                </td>
+                                <td>
+                                    <input type="submit" value="+" onmousedown="set_focusconfig(3,0);" onmouseup="set_focusconfig(0,0);" />
+                                </td>
+                                <td>
+                                    <input type="submit" value="-" onmousedown="set_focusconfig(4,0);" onmouseup="set_focusconfig(0,0);" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </td>
+            <td id="live_td" style="padding-left:40px;" valign="top">
+                <table cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td colspan="2" align="right">
+                            <!--视频播放-->
+                            <div id="live" style="margin:auto">
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

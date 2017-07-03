@@ -10,7 +10,7 @@ namespace vzconn {
 
 EVT_LOOP::EVT_LOOP()
   : p_event_(NULL)
-  , b_runging_(false) {
+  , b_runging_(0) {
 }
 
 EVT_LOOP::~EVT_LOOP() {
@@ -31,7 +31,7 @@ int32 EVT_LOOP::Start() {
     }
   }
 
-  evt_timer_.Init(this, exit_callback, this);
+  evt_exit_timer_.Init(this, exit_callback, this);
   return 0;
 }
 
@@ -47,20 +47,17 @@ void EVT_LOOP::Stop() {
 int32 EVT_LOOP::RunLoop(uint32 n_timeout) {
   int32 n_ret = -1;
   if (p_event_) {
-    evt_timer_.Stop();
+    evt_exit_timer_.Stop();
+
     if (n_timeout > 0 &&
         n_timeout != (uint32)-1) {
       LoopExit(n_timeout);
     }
-    if (false == b_runging_) {
-      b_runging_ = true;
+    if (0 == b_runging_) {
+      b_runging_ = 1;
       // 无事件也不退出
       n_ret = event_base_loop(p_event_, EVLOOP_NO_EXIT_ON_EMPTY);
-
-      //n_ret = event_base_loop(p_event_, 0);
-      //n_ret = event_base_dispatch(p_event_);
-
-      b_runging_ = false;
+      b_runging_ = 0;
       return n_ret;
     }
   }
@@ -74,12 +71,8 @@ void EVT_LOOP::LoopExit(unsigned int n_timeout) {
       struct timeval tv;
       tv.tv_sec = n_timeout / 1000;
       tv.tv_usec = n_timeout % 1000 * 1000;
-      //LOG(L_ERROR) << "timeout "<<tv.tv_sec
-      //  << "   "<<tv.tv_usec;
-      //n_ret = event_base_loopexit(p_event_, &tv);
-      evt_timer_.Start(n_timeout, 0);
+      evt_exit_timer_.Start(n_timeout, 0);
     } else {
-      //n_ret = event_base_loopexit(p_event_, NULL);
       n_ret = event_base_loopbreak(p_event_);
     }
     if (n_ret == -1) {
@@ -89,7 +82,7 @@ void EVT_LOOP::LoopExit(unsigned int n_timeout) {
 }
 
 bool EVT_LOOP::isRuning() {
-  return b_runging_;
+  return ((b_runging_==1) ? true : false);
 }
 
 int32 EVT_LOOP::exit_callback(SOCKET fd, short events, const void *p_usr_arg) {

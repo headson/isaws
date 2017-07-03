@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root xmlns="urn:schemas-upnp-org:device-1-0">
+  <specVersion>
+    <major>1</major>
+    <minor>0</minor>
+  </specVersion>
+  <device>
+    <deviceType>urn:schemas-upnp-org:device:ivs:1</deviceType>
+    <friendlyName>IVS</friendlyName>
+    <manufacturer>AT</manufacturer>
+    <manufacturerURL>/</manufacturerURL>
+    <modelDescription>IVS</modelDescription>
+    <modelName>AT2201</modelName>
+    <modelNumber>1</modelNumber>
+    <modelURL>/rtsp=8557</modelURL>
+    <serialNumber>123456789001</serialNumber>
+    <UDN>uuid:Upnp-VZ_INVS-1_0-00_0000080c827cc81</UDN>
+    <UPC>123456789</UPC>
+    <serviceList>
+      <service>
+        <serviceType>urn:schemas-upnp-org:service:tvcontrol:1</serviceType>
+        <serviceId>urn:upnp-org:serviceId:tvcontrol1</serviceId>
+        <controlURL>/upnp/control/tvcontrol1</controlURL>
+        <eventSubURL>/upnp/event/tvcontrol1</eventSubURL>
+        <SCPDURL>/tvcontrolSCPD.xml</SCPDURL>
+      </service>
+    </serviceList>
+   <presentationURL>/</presentationURL>
+</device>
+</root>

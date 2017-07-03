@@ -25,15 +25,24 @@ endforeach()
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST 
-	#${CMAKE_CURRENT_SOURCE_DIR}/ccurlmulti.h
-	#${CMAKE_CURRENT_SOURCE_DIR}/ccurlmulti.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ccurleasy.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ccurleasy.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ccurlmulti.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ccurlmulti.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/curl_event_main.cpp
 )
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-	#${CMAKE_CURRENT_SOURCE_DIR}/ccurlmulti.h
-	#${CMAKE_CURRENT_SOURCE_DIR}/ccurlmulti.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/curl_event_main.cpp  
 )
+
+SOURCE_GROUP(curl_event FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/ccurleasy.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ccurleasy.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ccurlmulti.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ccurlmulti.cpp
+)
+
 #########################################################################
 #Step 4 : Add PROJECT define 
 MESSAGE(STATUS "Step 4 : Add code source")

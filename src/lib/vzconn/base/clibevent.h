@@ -89,8 +89,8 @@ class EVT_IO {
 class EVT_LOOP {
 public:
   struct event_base* p_event_;
-  EVT_TIMER          evt_timer_;   // 退出定时器
-  bool               b_runging_;   // 运行状态
+  uint32             b_runging_;      // 运行状态
+  EVT_TIMER          evt_exit_timer_; // 退出定时器
 
 public:
   EVT_LOOP();

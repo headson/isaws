@@ -1,0 +1,160 @@
+*
+{
+	padding: 0;
+	margin: 0;
+}
+
+body
+{
+	font-family: Helvetica, Arial, sans-serif;	
+	/*line-height: 2.2em;*/
+    color:black;
+    font-size:62.5%;
+    /*overflow:hidden;*/
+}
+form
+{
+	overflow: hidden;
+	height: 1%;
+	margin: 20px 0;
+}
+
+fieldset
+{
+	border: solid 1px white;
+	padding: 10px;
+	padding-bottom:0;
+}
+
+legend
+{
+	padding:5px;
+	padding-left:0px;
+}
+input.text
+{
+	border: 1px solid #000;
+	height: 20px;
+	vertical-align: middle;
+	padding-left: 4px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	line-height: 20px;
+	font-size: 13px;
+	font-weight: inherit;
+	font-family: Arial "ÐÂËÎÌå";
+}
+table
+{
+	font-size:14px;
+}
+table.dummy
+{
+	border-collapse: collapse;
+	margin:5px;
+}
+table.dummy th, table.dummy td
+{
+	padding: 6px;
+	padding-bottom:0;
+	min-height:2em;
+}
+
+table.innertable
+{
+}
+table.innertable td
+{
+	padding-top:0;
+	padding-bottom:0;
+}
+
+table.realtable
+{
+	border-collapse: collapse;
+	font-size:12px;
+}
+table.realtable th, table.realtable td
+{
+	padding: 5px;
+	border: 1px solid #aaa;
+}
+input[type=submit]
+{
+	font-size: 12px;
+	width: 70px;
+}
+.checkdiv
+{
+	float: left;
+	padding: 2px 2px 2px 2px;
+}
+
+select
+{
+	width: 100px;
+}
+
+.slider
+{
+	font-size:62.5%;
+}
+
+.loading
+{
+	background:url(../img/loading3-2.gif) no-repeat;
+	height:32px;
+	width:130px;
+}
+
+.inform
+{
+	height:32px;
+	width:130px;
+}
+/* moved to custom-ui.js
+#tabs
+{
+	background-color:#555555;
+	background-image:none;
+}
+
+#tabs div
+{
+	font-family: Helvetica, Arial, sans-serif;
+	color:black;
+	background-color:White;
+}
+
+#tabs ul li a
+{
+	font-size: 12px;
+	padding:10px 20px 10px 20px;
+}
+
+#tabs div table input[type=submit]
+{
+	font-size: 12px;
+	width: 70px;
+}
+*/
+
+/*for test only*/
+.show_boudry
+{
+	border-style:solid;
+	border-width:1px;
+	border-color:Red;
+}
+
+.ui-tabs .ui-tabs-panel {
+    padding:20px 20px 20px 40px;
+}
+
+
+.ui-menu-item {
+    /*add this line to jquery-ui css when upate jquery-ui*/
+    /*padding:.405em 2.1em .405em 1em;*/
+    font-size:11px;
+    line-height:1.4em;
+}

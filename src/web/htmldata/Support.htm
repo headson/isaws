@@ -1,0 +1,247 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>支持</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <script type="text/javascript" src="../js/LAB.min.js"></script>
+    <style type="text/css">
+        body {
+        display: none;
+        }
+    </style>
+    <script type="text/javascript">
+        $LAB
+        .script("../js/launch.js?version=" + new Date().getTime()).wait(function () {
+            init(function () {
+
+                var g_iDevice_type = null;
+	            var DEVICE_TYPES_NAMES = [
+	                "无智能视频版本",
+	                "油田基本版",
+	                "油田全功能版",
+	                "行为分析基本版",
+	                "行为分析全功能版",
+	                "智能交通设备",
+	                "烟火识别",
+	                "视频增强器",
+	                "ATM 智能设备",
+	                "车流统计设备",
+	                "摄像机健康状况检测",
+	                "车牌识别客户端",
+	                "车牌识别服务器",
+	                "ptz跟踪器",
+	                "环境监测智能设备",
+	                "PTZ跟踪器（十所（天奥）)",
+	                "人数统计器"
+	            ];
+	    
+	            function get_device_type_name(idevice_type){
+	                $.get("../vb.htm?getdevicetypename", function(ajaxdata){
+                        if(precheck(ajaxdata))
+                        {
+                            return false;
+                        }
+                        if("OK" == ajaxdata.slice(0,2)){
+                            var response=ajaxdata.split("\n");
+                            var device_type_name = parse_ajax_data(response[0]);
+                            device_type_name = Base64.decode(device_type_name);
+                            device_type_name = Utf8.decode(device_type_name);
+                            if (g_style_time == "hrzx")
+                                $("#device_type").html(device_type_name);
+                            else
+                                $("#device_type").html(device_type_name);
+                        }
+                        else{
+                            if (idevice_type >= 0 && idevice_type < DEVICE_TYPES_NAMES.length) {
+                                if (g_style_time == "hrzx")
+                                    $("#device_type").html(DEVICE_TYPES_NAMES[idevice_type]);
+                                else
+                                    $("#device_type").html(DEVICE_TYPES_NAMES[idevice_type]);
+                            }
+                        }                
+                    });
+	            }
+
+                function get_server_mac(ajaxdata)
+                {
+                    if(precheck(ajaxdata))
+                    {
+                        return false;
+                    }
+                    var mac = parse_ajax_data(ajaxdata).toUpperCase();
+                    $("#mac_addrees").html(mac);
+                }
+                function get_serialno(ajaxdata){
+                    if(precheck(ajaxdata))
+                    {
+                        return false;
+                    }
+                    $("#serialno").html(ajaxdata.split("=")[1]);            
+                }
+                function get_softwareversion(ajaxdata){
+                    if(precheck(ajaxdata))
+                    {
+                        return false;
+                    }
+                    if (g_style_time == "hrzx")
+                        $("#version").html("HR" + ajaxdata.split("=")[1]);
+                    else
+                        $("#version").html(ajaxdata.split("=")[1]);
+                }
+                function get_systemversion(ajaxdata) {
+                    if (precheck(ajaxdata)) {
+                        return false;
+                    }
+                    if (g_style_time == "hrzx")
+                        $("#systemversion").html("HR" + ajaxdata.split("=")[1]);
+                    else
+                        $("#systemversion").html(ajaxdata.split("=")[1]);
+                }
+        
+                function get_hwinfo(ajaxdata){
+                    if(precheck(ajaxdata))
+                    {
+                        return false;
+                    }
+                    ajaxdata = ajaxdata.split("=");
+                    if(!ajaxdata[0].match(/OK/)){
+                        return false;
+                    }
+                    ajaxdata = ajaxdata[1];
+                    if(ajaxdata.match(/notwrite/)){
+                        return false;
+                    }
+                    else {
+                        ajaxdata = ajaxdata.split("^");
+                        $("#serialno").html(ajaxdata[1]);
+                        var g_iDevice_type = parseInt(ajaxdata[2],16);
+                        get_device_type_name(g_iDevice_type);
+                        if (g_iDevice_type == 11) {
+                            get_algversion();
+                            $.get("../vb.htm?paratest=systemversion", get_systemversion);
+                        }
+                        else {
+                            $("#algversion_tr").hide();
+                            $("#sys_version_tr").hide();
+                        }
+                    }
+                    return true; 
+                }
+                function get_algversion()
+		        {
+			        var cmd, len, data;
+			
+			        cmd = 6;
+			        data = "0";
+			        len = data.length;
+			        var base64 = Base64.encode(data);
+			        var senddata = cmd + ":" + len + ":" + base64;
+                    $.ajax({
+                      type: "POST",
+                      url: "../getivsctrl.php",
+                      data: senddata,
+                      success: function(ajaxdata){
+                            if(precheck(ajaxdata))
+                            {
+                                return false;
+                            }
+                            if("OK" != ajaxdata.slice(0,2)) return false;
+                            var decode = ajaxdata.slice(ajaxdata.indexOf("=")+1,ajaxdata.length-1);  
+					        decode = decode.split(":");
+					        decode = Base64.decode(decode[2]);
+
+					        if (g_style_time == "hrzx")
+					            $("#algversion").html("HR" + decode)
+					        else
+					            $("#algversion").html(decode)
+                        },
+                      dataType: "text"
+                    });
+		        }
+                $(function () {
+                    if (g_cur_style == "blue") {
+                        $("#support_info_tr").remove();
+                        $("#copyright_tr").remove();
+                    }
+                    $.get("../vb.htm",{getmac:""}, get_server_mac);
+                    $.get("../vb.htm?gethwinfo", function(ajaxdata){
+                        if(!get_hwinfo(ajaxdata)){
+                             $.get("../serialno.php", get_serialno);
+                        }
+                    });
+                    $.get("../vb.htm?paratest=softwareversion", get_softwareversion);
+                });
+            });
+        });
+    </script>
+
+</head>
+<body>
+    <table class="dummy" style="margin-top: 50px; margin-left: 100px">
+        <tr>
+            <td style="min-width:70px;">
+                <h4>
+                    设备信息
+                </h4>
+            </td>
+        </tr>
+         <tr>
+            <td>
+                设备类型
+            </td>
+            <td id="device_type">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                软件版本
+            </td>
+            <td id="version">
+            </td>
+        </tr>
+        <tr id="sys_version_tr">
+            <td>
+                系统版本
+            </td>
+            <td id="systemversion"></td>
+        </tr>
+        <tr id="algversion_tr">
+            <td>
+                算法版本
+            </td>
+            <td id="algversion"></td>
+        </tr>
+        <tr>
+            <td>
+                设备序列号
+            </td>
+            <td id="serialno">
+            </td>
+        </tr>
+        <tr>
+            <td>
+                MAC地址
+            </td>
+            <td id="mac_addrees">
+            </td>
+        </tr>        
+        <tr id="support_info_tr">
+            <td >
+                支持信息
+            </td>
+            <td >
+                <textarea id="support_info" cols="20" rows="2"></textarea>
+            </td>
+        </tr>
+        <tr id="copyright_tr">
+            <td>
+                版权
+            </td>
+            <td>
+                <textarea id="copyright" cols="20" rows="2"></textarea>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
