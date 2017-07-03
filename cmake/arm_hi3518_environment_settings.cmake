@@ -6,9 +6,13 @@ set( CMAKE_SYSTEM_PROCESSOR arm )
 SET(CMAKE_SYSTEM_VERSION 1)
 
 # specify the cross compiler
-SET(CMAKE_C_COMPILER   /opt/hisi-linux/x86-arm/arm-hisiv300-linux/bin/arm-hisiv300-linux-uclibcgnueabi-gcc)
-SET(CMAKE_CXX_COMPILER /opt/hisi-linux/x86-arm/arm-hisiv300-linux/bin/arm-hisiv300-linux-uclibcgnueabi-g++)
-SET(CMAKE_STRIP        /opt/hisi-linux/x86-arm/arm-hisiv300-linux/bin/arm-hisiv300-linux-uclibcgnueabi-strip)
+#SET(CMAKE_C_COMPILER   /opt/hisi-linux-nptl/arm-hisiv100-linux/bin/arm-hisiv100-linux-uclibcgnueabi-gcc)
+#SET(CMAKE_CXX_COMPILER /opt/hisi-linux-nptl/arm-hisiv100-linux/bin/arm-hisiv100-linux-uclibcgnueabi-g++)
+#SET(CMAKE_STRIP        /opt/hisi-linux-nptl/arm-hisiv100-linux/bin/arm-hisiv100-linux-uclibcgnueabi-strip)
+
+SET(CMAKE_C_COMPILER   /opt/hisi-linux/x86-arm/arm-hisiv300-linux/target/bin/arm-hisiv300-linux-gcc)
+SET(CMAKE_CXX_COMPILER /opt/hisi-linux/x86-arm/arm-hisiv300-linux/target/bin/arm-hisiv300-linux-g++)
+SET(CMAKE_STRIP        /opt/hisi-linux/x86-arm/arm-hisiv300-linux/target/bin/arm-hisiv300-linux-strip)
 
 # search for programs in the build host directories
 SET(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
@@ -40,7 +44,6 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
 		libevent_core.so
 		libevent_pthreads.so
 		libvzlogging.so
-        -lcrypto
         -Wl,-rpath=.
 		pthread
 		rt
@@ -58,7 +61,6 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
 		libevent_core.so
 		libevent_pthreads.so
 		libvzlogging.so
-        -lcrypto
         -Wl,-rpath=.
 		pthread
 		rt
@@ -70,6 +72,10 @@ ENDIF()
 ADD_DEFINITIONS(
     -DO3
     -D_LINUX
+	-DPOSIX
+	-mcpu=arm926ej-s
+	-mno-unaligned-access 
+	-fno-aggressive-loop-optimizations
 )
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY  "${PROJECT_SOURCE_DIR}/bin/hisiv300")

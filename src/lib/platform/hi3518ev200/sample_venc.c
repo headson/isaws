@@ -120,8 +120,8 @@ HI_VOID *SAMPLE_VENC_1080P_CLASSIC(HI_VOID *p) {
 
   SAMPLE_COMM_VI_GetSizeBySensor(&enSize[0]);
   if (PIC_HD1080 == enSize[0]) {
-    enSize[1] = PIC_D1;
-    s32ChnNum = 1;
+    enSize[1] = PIC_CIF;
+    s32ChnNum = 2;
   } else if (PIC_HD720 == enSize[0]) {
     enSize[1] = PIC_VGA;
     enSize[2] = PIC_QVGA;
@@ -148,7 +148,7 @@ HI_VOID *SAMPLE_VENC_1080P_CLASSIC(HI_VOID *p) {
     u32BlkSize = SAMPLE_COMM_SYS_CalcPicVbBlkSize(gs_enNorm,\
                  enSize[1], SAMPLE_PIXEL_FORMAT, SAMPLE_SYS_ALIGN_WIDTH);
     stVbConf.astCommPool[1].u32BlkSize = u32BlkSize;
-    stVbConf.astCommPool[1].u32BlkCnt =g_u32BlkCnt;
+    stVbConf.astCommPool[1].u32BlkCnt  = g_u32BlkCnt;
   }
   if(s32ChnNum >= 3) {
     u32BlkSize = SAMPLE_COMM_SYS_CalcPicVbBlkSize(gs_enNorm,\

@@ -44,7 +44,7 @@ ADD_SUBDIRECTORY(src/lib/system_server)
 ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/platform/imx6q)
 #ADD_SUBDIRECTORY(src/lib/platform/hi3518e)
-#ADD_SUBDIRECTORY(src/lib/platform/hi3518ev200)
+ADD_SUBDIRECTORY(src/lib/platform/hi3518ev200)
 #ADD_SUBDIRECTORY(src/lib/platform/hi3516a)
 
 ## add run
@@ -52,14 +52,14 @@ ADD_SUBDIRECTORY(src/run/web_server)
 ADD_SUBDIRECTORY(src/run/vzlogserver)
 ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/hi3516a)
-#ADD_SUBDIRECTORY(src/run/hi3518e)
+ADD_SUBDIRECTORY(src/run/hi3518e)
 #ADD_SUBDIRECTORY(src/run/imx6q)
 ADD_SUBDIRECTORY(src/run/live_stream)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_vzlogging)
-ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_client)
+#ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_client)
 #ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_worker)
 #ADD_SUBDIRECTORY(src/test/test_multicast)
-ADD_SUBDIRECTORY(src/test/test_curl/test_curl_event)
+#ADD_SUBDIRECTORY(src/test/test_curl/test_curl_event)
 

@@ -21,8 +21,6 @@ extern "C"
 
 #include "common/sample_comm.h"
 
-  extern HI_VOID *SAMPLE_VENC_1080P_CLASSIC(HI_VOID *p);
-
 #ifdef __cplusplus
 };
 #endif
@@ -36,9 +34,11 @@ class CVideoCatch {
 
  public:
   HI_S32 GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream);
+  static void* GetYUVThread(void* pArg);
 
  private:
-  pthread_t id;
+  pthread_t p_enc_id_;
+  pthread_t p_yuv_id_;
   void*     p_shm_vdo_;
 };
 

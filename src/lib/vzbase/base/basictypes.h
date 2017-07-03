@@ -94,7 +94,10 @@ typedef signed char     int8;
 typedef int             socklen_t;
 #else
 typedef int             SOCKET;
+
+#ifndef INVALID_SOCKET
 #define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 #endif
 
 const int kForever = -1;

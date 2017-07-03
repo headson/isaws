@@ -100,7 +100,7 @@ class CShareMemory {
 
     n_data = p_shm->n_data;
     memcpy(p_data, p_shm->p_data, n_data);
-    printf("read data length %d.\n", n_data);
+    //printf("read data length %d.\n", n_data);
 
     *n_sec = p_shm->n_w_sec;
     *n_usec = p_shm->n_w_usec;

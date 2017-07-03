@@ -10,7 +10,7 @@ CH264VideoStreamFramer::CH264VideoStreamFramer(UsageEnvironment& env,
     FramedSource* inputSource, void* p_shm_vdo)
   : H264VideoStreamFramer(env, inputSource, False, False)
   , p_shm_vdo_(p_shm_vdo) {
-  fFrameRate = 25.0;
+  fFrameRate = 16.0;
 }
 
 CH264VideoStreamFramer::~CH264VideoStreamFramer() {
