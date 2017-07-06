@@ -95,28 +95,16 @@ class CKvdbClient : public vzconn::CTcpClient,
     return n_cur_msg_id_;
   }
 
-  int32 get_ret_type() {
-    return n_ret_type_;
-  }
-
  protected:
   vzconn::EVT_LOOP          evt_loop_;    //
 
  protected:
-  // Get Key
-  uint8                     s_key_[MAX_KVDB_KEY_SIZE];
-  uint32                    n_key_;
-
   uint32                    n_ret_type_;  // 回执结果,也做evt loop退出标签
 
-  Kvdb_GetKeyCallback       p_callback_;  // 回调
-  void                     *p_usr_arg_;   // 回调用户参数
+  uint32                    n_cur_kvdb_msg_;
+  KvdbMessage              *p_cur_kvdb_msg_;
 
-  uint8                    *p_get_data_;  // 回调
-  int32                     n_get_data_;
-  std::string              *p_get_strm_; // 回调
-
- protected:
+protected:
   uint32                    n_message_id_;    // 包序号[32bit]
   uint32                    n_cur_msg_id_;    // 当前发送msg id
 

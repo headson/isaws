@@ -2,14 +2,14 @@
 *Author      : Sober.Peng 17-06-27
 *Description : TCP客户端
 ************************************************************************/
-#ifndef LIBVZCONN_CEVTTCPCLIENT_H_
-#define LIBVZCONN_CEVTTCPCLIENT_H_
+#ifndef LIBVZCONN_CTCPCLIENT_H_
+#define LIBVZCONN_CTCPCLIENT_H_
 
 #include "vzbase/base/basictypes.h"
 
 #include "vzconn/base/vsocket.h"
 #include "vzconn/base/clibevent.h"
-#include "vzconn/buffer/csocketbuffer.h"
+#include "vzconn/buffer/cblockbuffer.h"
 
 namespace vzconn {
 
@@ -86,23 +86,17 @@ class CTcpClient : public VSocket {
   EVT_IO& GetEvtSend() {
     return c_evt_send_;
   }
-  CSockRecvData& GetRecvData() {
-    return c_recv_data_;
-  }
-  CSockSendData& GetSendData() {
-    return c_send_data_;
-  }
 
  protected:
   const EVT_LOOP   *p_evt_loop_;    // 随进程退出而销毁,不必关心生命周期
 
  protected:
   EVT_IO            c_evt_recv_;    // 接收事件
-  CSockRecvData     c_recv_data_;   // 接收buffer
+  CBlockBuffer      c_recv_data_;   // 接收buffer
 
   EVT_IO            c_evt_send_;    // 发送事件
-  CSockSendData     c_send_data_;   // 发送buffer
+  CBlockBuffer      c_send_data_;   // 发送buffer
 };
 
 }  // namespace vzconn
-#endif  // LIBVZCONN_CEVTTCPCLIENT_H_
+#endif  // LIBVZCONN_CTCPCLIENT_H_

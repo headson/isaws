@@ -1193,9 +1193,6 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
   struct timeval TimeoutVal;
   fd_set read_fds;
   HI_S32 VencFd[VENC_MAX_CHN_NUM];
-  HI_CHAR aszFileName[VENC_MAX_CHN_NUM][64];
-  FILE *pFile[VENC_MAX_CHN_NUM];
-  char szFilePostfix[10];
   VENC_CHN_STAT_S stStat;
   VENC_STREAM_S stStream;
   int total = 0;
@@ -1232,21 +1229,6 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
       return NULL;
     }
     enPayLoadType[i] = stVencChnAttr.stVeAttr.enType;
-
-    s32Ret = SAMPLE_COMM_VENC_GetFilePostfix(enPayLoadType[i], szFilePostfix);
-    if(s32Ret != HI_SUCCESS) {
-      SAMPLE_PRT("SAMPLE_COMM_VENC_GetFilePostfix [%d] failed with %#x!\n", \
-                 stVencChnAttr.stVeAttr.enType, s32Ret);
-      return NULL;
-    }
-
-    sprintf(aszFileName[i], "stream_chn%d%s", i, szFilePostfix);
-    pFile[i] = fopen(aszFileName[i], "wb");
-    if (!pFile[i]) {
-      SAMPLE_PRT("open file[%s] failed!\n",
-                 aszFileName[i]);
-      return NULL;
-    }
 
     /* Set Venc Fd. */
     VencFd[i] = HI_MPI_VENC_GetFd(i);
@@ -1384,13 +1366,6 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
         }
       }
     }
-  }
-
-  /*******************************************************
-  * step 3 : close save-file
-  *******************************************************/
-  for (i = 0; i < s32ChnTotal; i++) {
-    fclose(pFile[i]);
   }
 
   return NULL;

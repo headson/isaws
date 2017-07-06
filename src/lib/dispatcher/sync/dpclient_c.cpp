@@ -8,6 +8,7 @@
 #include "dispatcher/base/pkghead.h"
 #include "dispatcher/sync/cdpclient.h"
 #include "dispatcher/sync/ckvdbclient.h"
+#include "dispatcher/sync/cdppollclient.h"
 
 #include "vzconn/base/clibevent.h"
 #include "vzconn/sync/ctcpclient.h"
@@ -246,6 +247,7 @@ EXPORT_DLL unsigned int DpClient_SendDpRequest(const char *method,
   p_tcp->RunLoop(timeout);
   if ((p_tcp->get_ret_type() == TYPE_REPLY) ||
       (p_tcp->get_ret_type() == TYPE_SUCCEED)) {
+    call_back(p_tcp, p_tcp->p_cur_dp_msg_, user_data);
     return VZNETDP_SUCCEED;
   }
   LOG(L_ERROR) << p_tcp->get_ret_type();
@@ -311,7 +313,7 @@ EXPORT_DLL DPPollHandle DpClient_CreatePollHandle(
     return NULL;
   }
 
-  CDpClient *p_tcp = CDpClient::Create(g_dp_addr, g_dp_port,
+  CDpPollClient *p_tcp = CDpPollClient::Create(g_dp_addr, g_dp_port,
                                        p_msg_cb, p_msg_usr_arg,
                                        p_state_cb, p_state_usr_arg,
                                        p_evt_loop);
@@ -325,14 +327,14 @@ EXPORT_DLL DPPollHandle DpClient_CreatePollHandle(
 
 EXPORT_DLL void DpClient_ReleasePollHandle(DPPollHandle p_poll_handle) {
   if (p_poll_handle) {
-    delete ((CDpClient*)p_poll_handle);
+    delete ((CDpPollClient*)p_poll_handle);
     p_poll_handle = NULL;
   }
 }
 
 EXPORT_DLL int DpClient_HdlReConnect(const DPPollHandle p_poll_handle) {
   int32 n_ret = VZNETDP_FAILURE;
-  CDpClient* p_tcp = (CDpClient*)p_poll_handle;
+  CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "client failed.";
     return VZNETDP_FAILURE;
@@ -367,7 +369,7 @@ EXPORT_DLL int DpClient_HdlAddListenMessage(const DPPollHandle p_poll_handle,
     const char *method_set[],
     unsigned int set_size) {
   int32 n_ret = VZNETDP_FAILURE;
-  CDpClient* p_tcp = (CDpClient*)p_poll_handle;
+  CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "client failed.";
     return VZNETDP_FAILURE;
@@ -395,7 +397,7 @@ EXPORT_DLL int DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
     const char *method_set[],
     unsigned int set_size) {
   int32 n_ret = VZNETDP_FAILURE;
-  CDpClient* p_tcp = (CDpClient*)p_poll_handle;
+  CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "client failed.";
     return VZNETDP_FAILURE;
@@ -422,14 +424,11 @@ EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
                                       unsigned int             timeout) {
   int32 n_ret = 0;
   // 此处判断断开不重连,目的是为了让注册method重连
-  CDpClient* p_tcp = (CDpClient*)p_poll_handle;
+  CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     // LOG(L_ERROR) << "get client failed.";
     return VZNETDP_FAILURE;
   }
-  //if (p_tcp->isClose()) {        // 断开链接
-  //  return VZNETDP_FAILURE;
-  //}
 
   n_ret = p_tcp->PollRunLoop(timeout);
   return VZNETDP_SUCCEED;
@@ -437,7 +436,7 @@ EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
 
 EXPORT_DLL vzconn::EventService *DpClient_GetEvtLoopFromPoll(
   const DPPollHandle p_poll_handle) {
-  CDpClient* p_tcp = (CDpClient*)p_poll_handle;
+  CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "get client failed.";
     return NULL;

@@ -26,11 +26,14 @@ void CTcpClient::StopEvent() {
 
 CTcpClient* CTcpClient::Create(const EVT_LOOP   *p_loop,
                                CClientInterface *cli_hdl) {
-  if (NULL == p_loop || p_loop->get_event() == NULL) {
-    LOG(L_ERROR) << "param is failed.";
-    return NULL;
-  }
-  if (NULL == cli_hdl) {
+  //EVT_LOOP *p_evt_loop = const_cast<EVT_LOOP*>(p_loop);
+  //if (NULL == p_evt_loop) {
+  //  p_evt_loop = new EVT_LOOP();
+  //  if (p_evt_loop) {
+  //    p_evt_loop->Start();
+  //  }
+  //}
+  if (NULL == cli_hdl || NULL == p_loop) {
     LOG(L_ERROR) << "param is failed.";
     return NULL;
   }
@@ -166,15 +169,27 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
 int32 CTcpClient::AsyncWrite(const void  *p_data,
                              uint32       n_data,
                              uint16       e_flag) {
-  if (isOpen()) {
-    int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this,
-                    p_data,
-                    n_data,
-                    e_flag);
-    if (n_pkg < 0) {
-      LOG(L_ERROR) << "not enough buffer to packet the data";
-      return n_pkg;
+  if (isOpen() && cli_hdl_ptr_) {
+    uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
+    if (c_send_data_.FreeSize() < (n_data+n_head)) {
+      c_send_data_.Recycle();
+      if (c_send_data_.FreeSize() < (n_data+n_head)) {
+        c_send_data_.ReallocBuffer((n_data+n_head));
+      }
     }
+    if (c_send_data_.FreeSize() < (n_data+n_head)) {
+      return false;
+    }
+
+    // 包头
+    int32 n_head_size = cli_hdl_ptr_->NetHeadPacket(
+                          c_send_data_.GetWritePtr(),
+                          c_send_data_.FreeSize(),
+                          n_data,
+                          e_flag);
+    c_send_data_.MoveWritePtr(n_head_size);
+    c_send_data_.WriteBytes((uint8_t*)p_data, n_data);
+
     // 打开事件
     if (c_send_data_.UsedSize() > 0) {
       int32 n_ret = c_evt_send_.Start(GetSocket(), EVT_WRITE | EVT_PERSIST);
@@ -182,7 +197,7 @@ int32 CTcpClient::AsyncWrite(const void  *p_data,
         c_evt_send_.ActiceEvent();
       }
     }
-    return n_pkg;
+    return (n_data+n_head);
   }
   return -1;
 }
@@ -191,14 +206,30 @@ int32 CTcpClient::AsyncWrite(struct iovec iov[],
                              uint32       n_iov,
                              uint16       e_flag) {
   if (isOpen()) {
-    int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this,
-                    iov,
-                    n_iov,
-                    e_flag);
-    if (n_pkg < 0) {
-      LOG(L_ERROR) << "not enough buffer to packet the data";
-      return n_pkg;
+    uint32 n_data = 0;
+    for (uint32 i = 0; i < n_iov; i++) {
+      n_data += iov[i].iov_len;
     }
+    uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
+    if (c_send_data_.FreeSize() < (n_data + n_head)) {
+      c_send_data_.Recycle();
+      if (c_send_data_.FreeSize() < (n_data + n_head)) {
+        c_send_data_.ReallocBuffer((n_data + n_head));
+      }
+    }
+    if (c_send_data_.FreeSize() < (n_data + n_head)) {
+      return false;
+    }
+
+    // 包头
+    int32 n_head_size = cli_hdl_ptr_->NetHeadPacket(
+                          c_send_data_.GetWritePtr(),
+                          c_send_data_.FreeSize(),
+                          n_data,
+                          e_flag);
+    c_send_data_.MoveWritePtr(n_head_size);
+    c_send_data_.WriteBytes(iov, n_iov);
+
     // 打开事件
     if (c_send_data_.UsedSize() > 0) {
       int32 n_ret = c_evt_send_.Start(GetSocket(), EVT_WRITE | EVT_PERSIST);
@@ -206,7 +237,7 @@ int32 CTcpClient::AsyncWrite(struct iovec iov[],
         c_evt_send_.ActiceEvent();
       }
     }
-    return n_pkg;
+    return (n_data + n_head);
   }
   return -1;
 }
@@ -225,17 +256,47 @@ int32 CTcpClient::EvtRecv(SOCKET      fd,
 }
 
 int32 CTcpClient::OnRecv() {
-  int32 n_ret = c_recv_data_.RecvData(this);
-  if (n_ret > 0) {
-    n_ret = c_recv_data_.ParseSplitData(this); // 通过回调反馈给用户层
+  int32_t n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
+                                 c_recv_data_.FreeSize());
+  if (n_recv > 0) {
+    c_recv_data_.MoveWritePtr(n_recv);
+
+    uint16 n_flag = 0;
+    int32_t n_pkg_size = 0;
+    do {
+      n_pkg_size = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),
+                                              c_recv_data_.UsedSize(),
+                                              &n_flag);
+      if (n_pkg_size > 0 && c_recv_data_.UsedSize() >= n_pkg_size) {
+        cli_hdl_ptr_->HandleRecvPacket(
+          this,
+          c_recv_data_.GetReadPtr() + cli_hdl_ptr_->NetHeadSize(),
+          n_pkg_size - cli_hdl_ptr_->NetHeadSize(),
+          n_flag);
+        c_recv_data_.MoveReadPtr(n_pkg_size);
+      }
+    } while (n_pkg_size > 0 && c_recv_data_.UsedSize() >= n_pkg_size);
+
+    // 空间不足,开新空间
+    if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
+      c_recv_data_.Recycle(); // 每次移动趋近于移动单位为0
+
+      if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
+        c_recv_data_.ReallocBuffer((n_pkg_size - c_recv_data_.UsedSize()));
+      }
+    }
+    if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
+      LOG(L_ERROR) << "the packet is large than "<<MAX_BUFFER_SIZE;
+      return -1;
+    }
   }
 
-  if (n_ret < 0) {
+  if (n_recv < 0) {
     if (cli_hdl_ptr_) {
       cli_hdl_ptr_->HandleClose(this);
     }
   }
-  return n_ret;
+  return n_recv;
 }
 
 int32 CTcpClient::EvtSend(SOCKET      fd,
@@ -260,8 +321,14 @@ int32 CTcpClient::OnSend() {
   }
 
   if (n_ret >= 0) {
-    // 发送数据
-    n_ret = c_send_data_.SendData(this);
+    int32 n_need_send = (c_send_data_.UsedSize() > 1024)
+                        ? 1024 : c_send_data_.UsedSize();
+    int32 n_send = VSocket::Send(c_send_data_.GetReadPtr(), n_need_send);
+    if (n_send > 0) {
+      c_send_data_.MoveReadPtr(n_send);
+      //Recycle();
+    }
+
     if (c_send_data_.UsedSize() <= 0) {
       c_evt_send_.Stop();
     }

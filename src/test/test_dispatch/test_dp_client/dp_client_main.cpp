@@ -43,7 +43,7 @@ const char* MSG_TYPES[] = {
   "TEST_MSG_TYPE_36",
 };
 
-void DpMsgallback(const DpMessage *dmp, void* p_usr_arg) {
+void DpMsgCallback(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
   printf("dp message %s %d.\n", dmp->method, dmp->type);
 }
 
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
                            112,
                            "hello worlds.",
                            13,
-                           DpMsgallback,
+                           DpMsgCallback,
                            NULL,
                            3000);
     LOG(L_ERROR) << "end.\n\n";

@@ -31,13 +31,13 @@ class CClientProcess : public vzconn::CClientInterface {
     printf("-------------------- %s[%d] %d %d.\n",
            __FUNCTION__, __LINE__, n_data, (uint32)p_head->type_flag);
 
-    p_cli->AsyncWrite(((char*)p_data + 8),
-                   n_data - sizeof(NetHead),
-                   vzconn::NetworkToHost16(p_head->type_flag));
+    p_cli->AsyncWrite(p_data,
+                      n_data,
+                      vzconn::NetworkToHost16(p_head->type_flag));
     return 0;
   }
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
-    printf("-------------------- %s[%d].\n", __FUNCTION__, __LINE__);
+    //printf("-------------------- %s[%d].\n", __FUNCTION__, __LINE__);
     return 0;
   }
   virtual void  HandleClose(vzconn::VSocket *p_cli) {
@@ -49,13 +49,15 @@ int main(int argc, char* argv[]) {
   //InitSetLogging(argc, argv);
   InitVzLogging(argc, argv);
 
+  ShowVzLoggingAlways();
+
   vzconn::EVT_LOOP c_loop;
   c_loop.Start();
 
   CServerProcess c_srv_proc;
   CClientProcess c_cli_proc;
 
-  vzconn::CInetAddr c_addr("0.0.0.0", 3730);
+  vzconn::CInetAddr c_addr("0.0.0.0", 12345);
   vzconn::CEvtTcpServer *srv_ptr = vzconn::CEvtTcpServer::Create(&c_loop,
                                    &c_cli_proc,
                                    &c_srv_proc);

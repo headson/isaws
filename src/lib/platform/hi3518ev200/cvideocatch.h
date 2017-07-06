@@ -21,6 +21,7 @@ extern "C"
 
 #include "common/sample_comm.h"
 
+extern HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p);
 #ifdef __cplusplus
 };
 #endif

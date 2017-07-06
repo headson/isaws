@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
   ShowVzLoggingAlways();
 #endif
 
-  Kvdb_Start("192.168.6.8", 5299);
+  Kvdb_Start("127.0.0.1", 5299);
 
   uint32 n_key = 0;
   char   s_key[64]   = "hello";

@@ -140,106 +140,7 @@ void CBlockBuffer::Clear() {
   write_pos_ = read_pos_ = 0;
 }
 
-bool CBlockBuffer::ReadUInt8(uint8* val) {
-  if (!val)
-    return false;
-
-  return ReadBytes(reinterpret_cast<char*>(val), 1);
-}
-
-bool CBlockBuffer::ReadUInt16(uint16* val) {
-  if (!val)
-    return false;
-
-  uint16 v;
-  if (!ReadBytes(reinterpret_cast<char*>(&v), 2)) {
-    return false;
-  }
-  *val = (VZ_ORDER_BYTE == ORDER_NETWORK) ? NetworkToHost16(v) : v;
-  return true;
-}
-
-bool CBlockBuffer::ReadUInt24(uint32* val) {
-  if (!val)
-    return false;
-
-  uint32 v = 0;
-  char* read_into = reinterpret_cast<char*>(&v);
-  if (VZ_ORDER_BYTE == ORDER_NETWORK || IsHostBigEndian()) {
-    ++read_into;
-  }
-
-  if (!ReadBytes(read_into, 3)) {
-    return false;
-  }
-
-  *val = (VZ_ORDER_BYTE == ORDER_NETWORK) ? NetworkToHost32(v) : v;
-  return true;
-}
-
-bool CBlockBuffer::ReadUInt32(uint32* val) {
-  if (!val)
-    return false;
-
-  uint32 v;
-  if (!ReadBytes(reinterpret_cast<char*>(&v), 4)) {
-    return false;
-  }
-
-  *val = (VZ_ORDER_BYTE == ORDER_NETWORK) ? NetworkToHost32(v) : v;
-  return true;
-}
-
-bool CBlockBuffer::ReadUInt64(uint64* val) {
-  if (!val) return false;
-
-  uint64 v;
-  if (!ReadBytes(reinterpret_cast<char*>(&v), 8)) {
-    return false;
-  }
-  *val = (VZ_ORDER_BYTE == ORDER_NETWORK) ? NetworkToHost64(v) : v;
-  return true;
-}
-
-bool CBlockBuffer::ReadBytes(char* val, size_t len) {
-  if (len > UsedSize()) {
-    return false;
-  }
-
-  memcpy(val, buffer_ + read_pos_, len);
-  read_pos_ += len;
-  return true;
-}
-
-bool CBlockBuffer::WriteUInt8(uint8 val) {
-  return WriteBytes(reinterpret_cast<const uint8*>(&val), 1);
-}
-
-bool CBlockBuffer::WriteUInt16(uint16 val) {
-  uint16 v = (VZ_ORDER_BYTE == ORDER_NETWORK) ? HostToNetwork16(val) : val;
-  return WriteBytes(reinterpret_cast<const uint8*>(&v), 2);
-}
-
-bool CBlockBuffer::WriteUInt24(uint32 val) {
-  uint32 v = (VZ_ORDER_BYTE == ORDER_NETWORK) ? HostToNetwork32(val) : val;
-  uint8* start = reinterpret_cast<uint8*>(&v);
-  if (VZ_ORDER_BYTE == ORDER_NETWORK || IsHostBigEndian()) {
-    ++start;
-  }
-  return WriteBytes(start, 3);
-}
-
-bool CBlockBuffer::WriteUInt32(uint32 val) {
-  uint32 v = (VZ_ORDER_BYTE == ORDER_NETWORK) ? HostToNetwork32(val) : val;
-  return WriteBytes(reinterpret_cast<const uint8*>(&v), 4);
-}
-
-bool CBlockBuffer::WriteUInt64(uint64 val) {
-  uint64 v = (VZ_ORDER_BYTE == ORDER_NETWORK) ? HostToNetwork64(val) : val;
-  return WriteBytes(reinterpret_cast<const uint8*>(&v), 8);
-}
-
-bool CBlockBuffer::WriteBytes(const uint8* val, uint32 len) {
+bool CBlockBuffer::WriteBytes(const uint8 *val, uint32 len) {
   if (FreeSize() < len) {
     Recycle();
     if (FreeSize() < len) {
@@ -252,6 +153,31 @@ bool CBlockBuffer::WriteBytes(const uint8* val, uint32 len) {
 
   memcpy(buffer_ + write_pos_, val, len);
   write_pos_ += len;
+  return true;
+}
+
+bool CBlockBuffer::WriteBytes(const struct iovec iov[], uint32 n_iov) {
+  uint32 n_data = 0;
+  for (uint32 i = 0; i < n_iov; i++) {
+    n_data += iov[i].iov_len;
+  }
+
+  if (FreeSize() < n_data) {
+    Recycle();
+    if (FreeSize() < n_data) {
+      ReallocBuffer(n_data);
+    }
+  }
+  if (FreeSize() < n_data) {
+    return false;
+  }
+
+  for (uint32 i = 0; i < n_iov; i++) {
+    n_data += iov[i].iov_len;
+    memcpy(buffer_ + write_pos_, 
+           iov[i].iov_base, iov[i].iov_len);
+    write_pos_ += iov[i].iov_len;
+  }
   return true;
 }
 

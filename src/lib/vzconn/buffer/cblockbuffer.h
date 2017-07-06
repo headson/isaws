@@ -11,6 +11,8 @@
 #include <string.h>
 
 #include "vzbase/base/basictypes.h"
+
+#include "vzconn/base/vsocket.h"
 #include "vzconn/base/byteorder.h"
 
 namespace vzconn {
@@ -41,19 +43,8 @@ class CBlockBuffer {
   void   Clear();                 // 清空数据
 
  public:
-  bool ReadUInt8(uint8* val);
-  bool ReadUInt16(uint16* val);
-  bool ReadUInt24(uint32* val);
-  bool ReadUInt32(uint32* val);
-  bool ReadUInt64(uint64* val);
-  bool ReadBytes(char* val, size_t len);
-
-  bool WriteUInt8(uint8 val);
-  bool WriteUInt16(uint16 val);
-  bool WriteUInt24(uint32 val);
-  bool WriteUInt32(uint32 val);
-  bool WriteUInt64(uint64 val);
-  bool WriteBytes(const uint8* val, uint32 len);
+  bool WriteBytes(const uint8 *val, uint32 len);
+  bool WriteBytes(const struct iovec iov[], uint32 n_iov);
 
  protected:
   void Construct(uint32 size);
@@ -66,6 +57,7 @@ class CBlockBuffer {
   uint32    read_pos_;            // 读偏移
   uint32    write_pos_;           // 写偏移
 
+ protected:
   uint32    is_out_buffer_;       // 外部buffer不能delete
 };
 

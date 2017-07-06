@@ -51,6 +51,8 @@ SET(SRC_CLI_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.cpp 
 )
@@ -79,6 +81,8 @@ SOURCE_GROUP(client FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.cpp 
 	)
