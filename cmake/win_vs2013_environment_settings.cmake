@@ -10,8 +10,10 @@ SET(INTERFACE_LIBRARY_DIR     "E:/vz/sdk/interface_8127/lib")
 SET(VZPROJECT_INCLUDE_DIR
 	${INTERFACE_INCLUDE_DIR}
 	${PROJECT_SOURCE_DIR}/src/lib
+	${PROJECT_SOURCE_DIR}/src/third_part
 	${PROJECT_SOURCE_DIR}/src/third_part/boost
-	${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2013/include
+	${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/vs2010/include
+	${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2010/include
 )
 
 MESSAGE(STATUS "       Add library path and name")
@@ -21,9 +23,11 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	SET(VZPROJECT_LIBRARY_DIR
 		${INTERFACE_LIBRARY_DIR}
 		${PROJECT_SOURCE_DIR}/lib/vs2013
-		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2013/lib
+		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/vs2010/lib
+		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2010/lib
 	)
 	SET(VZPROJECT_LINK_LIB
+		libevent_core.lib
 		libvzlogging.lib
 		ws2_32.lib
 	)
@@ -33,9 +37,11 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
 	SET(VZPROJECT_LIBRARY_DIR
 		${INTERFACE_LIBRARY_DIR}
 		${PROJECT_SOURCE_DIR}/lib/vs2013
-		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2013/lib
+		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/vs2010/lib
+		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2010/lib
 	)
 	SET(VZPROJECT_LINK_LIB
+		libevent_core.lib
 		libvzlogging.lib
 		ws2_32.lib
 	)

@@ -97,34 +97,14 @@ static char                 g_dp_addr[64];
 static unsigned short       g_dp_port;
 static CDpClient*           g_dp_client[MAX_CLIS_PER_PROC];
 
-CDpClient *DpConnAndGetSessionID() {
-  CDpClient *p_tcp = CDpClient::Create();
+CDpClient *CreateDpConnAndGetSessionID() {
+  CDpClient *p_tcp = CDpClient::Create(g_dp_addr, g_dp_port);
   if (p_tcp) {
-    vzconn::CInetAddr c_addr(g_dp_addr, g_dp_port);
-    bool b_ret = p_tcp->Connect(&c_addr, false, true, DEF_TIMEOUT_MSEC);
-    if (false == b_ret) {
-      LOG(L_ERROR) << "connect to server failed " << c_addr.ToString();
+    int32 n_ret = DpClient_HdlReConnect(p_tcp);
+    if (n_ret == VZNETDP_FAILURE) {
       delete p_tcp;
       p_tcp = NULL;
-      return NULL;
     }
-
-#if 1
-    p_tcp->SendMessage(TYPE_GET_SESSION_ID,
-                       "GET_SEESION_ID",
-                       p_tcp->new_msg_id(),
-                       "body_data",
-                       strlen("body_data"),
-                       NULL,
-                       0);
-    p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-    if (p_tcp->get_session_id() < 0) {
-      LOG(L_ERROR) << "get session id failed " << c_addr.ToString();
-      delete p_tcp;
-      p_tcp = NULL;
-      return NULL;
-    }
-#endif
   }
   return p_tcp;
 }
@@ -144,7 +124,7 @@ CDpClient* GetDpCli(bool b_can_reconn =true) {
 
   if (p_tcp == NULL && b_can_reconn) {
     // 新建
-    p_tcp = DpConnAndGetSessionID();
+    p_tcp = CreateDpConnAndGetSessionID();
     if (p_tcp) {
       g_dp_tls.SetValue(p_tcp);
     }
@@ -221,7 +201,7 @@ EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
 
   n_ret = p_tcp->SendMessage(TYPE_MESSAGE,
                              method,
-                             p_tcp->get_msg_id(),
+                             p_tcp->new_msg_id(),
                              data,
                              data_size,
                              NULL,
@@ -304,8 +284,43 @@ EXPORT_DLL int DpClient_SendDpReply(const char    *method,
 }
 
 //////////////////////////////////////////////////////////////////////////
-EXPORT_DLL DPPollHandle DpClient_CreatePollHandle() {
-  return (DPPollHandle*)DpConnAndGetSessionID();
+EXPORT_DLL DPPollHandle DpClient_CreatePollHandle(
+  DpClient_MessageCallback   p_msg_cb,
+  void                      *p_msg_usr_arg,
+  DpClient_PollStateCallback p_state_cb,
+  void                      *p_state_usr_arg,
+  vzconn::EVT_LOOP          *p_evt_loop) {
+
+  if (!p_msg_cb || !p_state_cb) {
+    LOG(L_ERROR) << "param is null";
+    return NULL;
+  }
+
+  if (p_evt_loop == NULL) {
+    p_evt_loop = new vzconn::EVT_LOOP();
+    if (p_evt_loop) {
+      if (p_evt_loop->Start() != 0) {
+        delete p_evt_loop;
+        p_evt_loop = NULL;
+      }
+    }
+  }
+
+  if (p_evt_loop == NULL) {
+    LOG(L_ERROR) << "evt loop is null.";
+    return NULL;
+  }
+
+  CDpClient *p_tcp = CDpClient::Create(g_dp_addr, g_dp_port,
+                                       p_msg_cb, p_msg_usr_arg,
+                                       p_state_cb, p_state_usr_arg,
+                                       p_evt_loop);
+  if (NULL == p_tcp) {
+    LOG(L_ERROR) << "create dp client failed.";
+  }
+
+  DpClient_HdlReConnect(p_tcp);
+  return (DPPollHandle*)p_tcp;
 }
 
 EXPORT_DLL void DpClient_ReleasePollHandle(DPPollHandle p_poll_handle) {
@@ -313,6 +328,39 @@ EXPORT_DLL void DpClient_ReleasePollHandle(DPPollHandle p_poll_handle) {
     delete ((CDpClient*)p_poll_handle);
     p_poll_handle = NULL;
   }
+}
+
+EXPORT_DLL int DpClient_HdlReConnect(const DPPollHandle p_poll_handle) {
+  int32 n_ret = VZNETDP_FAILURE;
+  CDpClient* p_tcp = (CDpClient*)p_poll_handle;
+  if (!p_tcp) {
+    LOG(L_ERROR) << "client failed.";
+    return VZNETDP_FAILURE;
+  }
+  p_tcp->Close();
+
+  vzconn::CInetAddr c_addr(g_dp_addr, g_dp_port);
+  bool b_ret = p_tcp->Connect(&c_addr, false, true, DEF_TIMEOUT_MSEC);
+  if (false == b_ret) {
+    LOG(L_ERROR) << "connect to server failed " << c_addr.ToString();
+    return VZNETDP_FAILURE;
+  }
+
+#if 1
+  p_tcp->SendMessage(TYPE_GET_SESSION_ID,
+                     "GET_SEESION_ID",
+                     p_tcp->new_msg_id(),
+                     "body_data",
+                     strlen("body_data"),
+                     NULL,
+                     0);
+  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
+  if (p_tcp->get_session_id() < 0) {
+    LOG(L_ERROR) << "get session id failed " << c_addr.ToString();
+    return VZNETDP_FAILURE;
+  }
+#endif
+  return VZNETDP_SUCCEED;
 }
 
 EXPORT_DLL int DpClient_HdlAddListenMessage(const DPPollHandle p_poll_handle,
@@ -371,8 +419,6 @@ EXPORT_DLL int DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
 }
 
 EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
-                                      DpClient_MessageCallback call_back,
-                                      void                    *user_data,
                                       unsigned int             timeout) {
   int32 n_ret = 0;
   // 此处判断断开不重连,目的是为了让注册method重连
@@ -381,16 +427,16 @@ EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
     // LOG(L_ERROR) << "get client failed.";
     return VZNETDP_FAILURE;
   }
-  if (p_tcp->isClose()) {        // 断开链接
-    return VZNETDP_FAILURE;
-  }
+  //if (p_tcp->isClose()) {        // 断开链接
+  //  return VZNETDP_FAILURE;
+  //}
 
-  p_tcp->Reset(call_back, user_data);
   n_ret = p_tcp->PollRunLoop(timeout);
   return VZNETDP_SUCCEED;
 }
 
-EXPORT_DLL void * DpClient_GetEvtLoopFromPoll(const DPPollHandle p_poll_handle) {
+EXPORT_DLL vzconn::EventService *DpClient_GetEvtLoopFromPoll(
+  const DPPollHandle p_poll_handle) {
   CDpClient* p_tcp = (CDpClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "get client failed.";
@@ -400,51 +446,14 @@ EXPORT_DLL void * DpClient_GetEvtLoopFromPoll(const DPPollHandle p_poll_handle) 
   return p_tcp->GetEvtLoop();
 }
 
-
 //////////////////////////////////////////////////////////////////////////
-static char                 g_kvdb_addr[64] = {0};
-static unsigned short       g_kvdb_port     = 0;
 static CKvdbClient         *g_kvdb_client   = NULL;
 
-CKvdbClient* GetKvdbCli(bool b_can_reconn = true) {
-  if (g_kvdb_client) {
-    if (g_kvdb_client->isClose()) {        // 断开链接
-      delete g_kvdb_client;
-      g_kvdb_client = NULL;
-    }
-  }
-
-  if (b_can_reconn && g_kvdb_client == NULL) {
-    // 新建
-    g_kvdb_client = CKvdbClient::Create();
-    if (g_kvdb_client == NULL) {
-      LOG(L_ERROR) << "create client failed.";
-      return NULL;
-    }
-
-    // 链接
-    vzconn::CInetAddr c_addr(g_kvdb_addr, g_kvdb_port);
-    bool b_ret = g_kvdb_client->Connect(&c_addr,
-                                        false,
-                                        true,
-                                        DEF_TIMEOUT_MSEC);
-    if (false == b_ret) {
-      LOG(L_ERROR) << "connect to server failed " << c_addr.ToString();
-      delete g_kvdb_client;
-      g_kvdb_client = NULL;
-      return NULL;
-    }
-  }
-  return g_kvdb_client;
-}
-
-
 EXPORT_DLL int Kvdb_Start(const char *server, unsigned short port) {
-  g_kvdb_port = port;
-
-  memset(g_kvdb_addr, 0, 63);
-  strncpy(g_kvdb_addr, server, 63);
-
+  g_kvdb_client = CKvdbClient::Create(server, port);
+  if (g_kvdb_client == NULL) {
+    return KVDB_RET_FAILURE;
+  }
   return KVDB_RET_SUCCEED;
 }
 
@@ -461,12 +470,11 @@ EXPORT_DLL int Kvdb_SetKey(const char *p_key,
                            int         n_key,
                            const char *p_value,
                            int         n_value) {
-  CKvdbClient* p_cli = GetKvdbCli();
-  if (p_cli == NULL) {
+  if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->SetKey(p_key, n_key, p_value, n_value)) {
+  if (g_kvdb_client->SetKey(p_key, n_key, p_value, n_value)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
@@ -476,12 +484,11 @@ EXPORT_DLL int Kvdb_GetKey(const char          *p_key,
                            int                  n_key,
                            Kvdb_GetKeyCallback  p_callback,
                            void                *p_usr_arg) {
-  CKvdbClient* p_cli = GetKvdbCli();
-  if (p_cli == NULL) {
+  if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->GetKey(p_key, n_key, p_callback, p_usr_arg, false)) {
+  if (g_kvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, false)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
@@ -491,12 +498,11 @@ EXPORT_DLL int Kvdb_GetKeyAbsolutely(const char           *p_key,
                                      int                   n_key,
                                      Kvdb_GetKeyCallback   p_callback,
                                      void                 *p_usr_arg) {
-  CKvdbClient* p_cli = GetKvdbCli();
-  if (p_cli == NULL) {
+  if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->GetKey(p_key, n_key, p_callback, p_usr_arg, true)) {
+  if (g_kvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, true)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
@@ -506,12 +512,11 @@ EXPORT_DLL int Kvdb_GetKeyToBuffer(const char   *p_key,
                                    int           n_key,
                                    char         *p_value,
                                    unsigned int  n_value) {
-  CKvdbClient* p_cli = GetKvdbCli();
-  if (p_cli == NULL) {
+  if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->GetKey(p_key, n_key, p_value, n_value, false)) {
+  if (g_kvdb_client->GetKey(p_key, n_key, p_value, n_value, false)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
@@ -521,97 +526,57 @@ EXPORT_DLL int Kvdb_GetKeyAbsolutelyToBuffer(const char   *p_key,
     int           n_key,
     char         *p_value,
     unsigned int  n_value) {
-  CKvdbClient* p_cli = GetKvdbCli();
-  if (p_cli == NULL) {
+  if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->GetKey(p_key, n_key, p_value, n_value, true)) {
+  if (g_kvdb_client->GetKey(p_key, n_key, p_value, n_value, true)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
 }
 
 EXPORT_DLL int Kvdb_DeleteKey(const char *p_key, int n_key) {
-  CKvdbClient* p_cli = GetKvdbCli();
-  if (p_cli == NULL) {
+  if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->Delete(p_key, n_key)) {
+  if (g_kvdb_client->Delete(p_key, n_key)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
 }
 
 EXPORT_DLL int Kvdb_BackupDatabase() {
-  CKvdbClient* p_cli = GetKvdbCli();
-  if (p_cli == NULL) {
+  if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->BackupDatabase()) {
+  if (g_kvdb_client->BackupDatabase()) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
 }
 
 EXPORT_DLL int Kvdb_RestoreDatabase() {
-  CKvdbClient* p_cli = GetKvdbCli();
-  if (p_cli == NULL) {
+  if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->RestoreDatabase()) {
+  if (g_kvdb_client->RestoreDatabase()) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
 }
 
 //////////////////////////////////////////////////////////////////////////
-static char                 g_skvdb_addr[64] = { 0 };
-static unsigned short       g_skvdb_port = 0;
 static CKvdbClient         *g_skvdb_client = NULL;
 
-CKvdbClient* GetSKvdbCli(bool b_can_reconn = true) {
-  if (g_skvdb_client) {
-    if (g_skvdb_client->isClose()) {        // 断开链接
-      delete g_skvdb_client;
-      g_skvdb_client = NULL;
-    }
-  }
-
-  if (b_can_reconn && g_skvdb_client == NULL) {
-    // 新建
-    g_skvdb_client = CKvdbClient::Create();
-    if (g_skvdb_client == NULL) {
-      LOG(L_ERROR) << "create client failed.";
-      return NULL;
-    }
-
-    // 链接
-    vzconn::CInetAddr c_addr(g_skvdb_addr, g_skvdb_port);
-    bool b_ret = g_skvdb_client->Connect(&c_addr,
-                                         false,
-                                         true,
-                                         DEF_TIMEOUT_MSEC);
-    if (false == b_ret) {
-      LOG(L_ERROR) << "connect to server failed " << c_addr.ToString();
-      delete g_skvdb_client;
-      g_skvdb_client = NULL;
-      return NULL;
-    }
-  }
-  return g_skvdb_client;
-}
-
-
 EXPORT_DLL int SKvdb_Start(const char *server, unsigned short port) {
-  g_skvdb_port = port;
-
-  memset(g_skvdb_addr, 0, 63);
-  strncpy(g_skvdb_addr, server, 63);
-
+  g_skvdb_client = CKvdbClient::Create(server, port);
+  if (g_skvdb_client == NULL) {
+    return KVDB_RET_FAILURE;
+  }
   return KVDB_RET_SUCCEED;
 }
 
@@ -628,12 +593,11 @@ EXPORT_DLL int SKvdb_SetKey(const char *p_key,
                             int         n_key,
                             const char *p_value,
                             int         n_value) {
-  CKvdbClient* p_cli = GetSKvdbCli();
-  if (p_cli == NULL) {
+  if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->SetKey(p_key, n_key, p_value, n_value)) {
+  if (g_skvdb_client->SetKey(p_key, n_key, p_value, n_value)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
@@ -643,12 +607,11 @@ EXPORT_DLL int SKvdb_GetKey(const char          *p_key,
                             int                  n_key,
                             Kvdb_GetKeyCallback  p_callback,
                             void                *p_usr_arg) {
-  CKvdbClient* p_cli = GetSKvdbCli();
-  if (p_cli == NULL) {
+  if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->GetKey(p_key, n_key, p_callback, p_usr_arg, false)) {
+  if (g_skvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, false)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
@@ -658,12 +621,11 @@ EXPORT_DLL int SKvdb_GetKeyAbsolutely(const char           *p_key,
                                       int                   n_key,
                                       Kvdb_GetKeyCallback   p_callback,
                                       void                 *p_usr_arg) {
-  CKvdbClient* p_cli = GetSKvdbCli();
-  if (p_cli == NULL) {
+  if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->GetKey(p_key, n_key, p_callback, p_usr_arg, true)) {
+  if (g_skvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, true)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
@@ -673,12 +635,11 @@ EXPORT_DLL int SKvdb_GetKeyToBuffer(const char   *p_key,
                                     int           n_key,
                                     char         *p_value,
                                     unsigned int  n_value) {
-  CKvdbClient* p_cli = GetSKvdbCli();
-  if (p_cli == NULL) {
+  if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->GetKey(p_key, n_key, p_value, n_value, false)) {
+  if (g_skvdb_client->GetKey(p_key, n_key, p_value, n_value, false)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
@@ -688,48 +649,44 @@ EXPORT_DLL int SKvdb_GetKeyAbsolutelyToBuffer(const char   *p_key,
     int           n_key,
     char         *p_value,
     unsigned int  n_value) {
-  CKvdbClient* p_cli = GetSKvdbCli();
-  if (p_cli == NULL) {
+  if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->GetKey(p_key, n_key, p_value, n_value, true)) {
+  if (g_skvdb_client->GetKey(p_key, n_key, p_value, n_value, true)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
 }
 
 EXPORT_DLL int SKvdb_DeleteKey(const char *p_key, int n_key) {
-  CKvdbClient* p_cli = GetSKvdbCli();
-  if (p_cli == NULL) {
+  if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->Delete(p_key, n_key)) {
+  if (g_skvdb_client->Delete(p_key, n_key)) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
 }
 
 EXPORT_DLL int SKvdb_BackupDatabase() {
-  CKvdbClient* p_cli = GetSKvdbCli();
-  if (p_cli == NULL) {
+  if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->BackupDatabase()) {
+  if (g_skvdb_client->BackupDatabase()) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;
 }
 
 EXPORT_DLL int SKvdb_RestoreDatabase() {
-  CKvdbClient* p_cli = GetSKvdbCli();
-  if (p_cli == NULL) {
+  if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
 
-  if (p_cli->RestoreDatabase()) {
+  if (g_skvdb_client->RestoreDatabase()) {
     return KVDB_RET_SUCCEED;
   }
   return KVDB_RET_FAILURE;

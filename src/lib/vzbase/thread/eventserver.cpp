@@ -53,4 +53,8 @@ void LibEventServer::WakeUp() {
   event_service_->LoopExit(0);
 }
 
+vzconn::EventService *LibEventServer::GetEvtService() {
+  return event_service_;
+}
+
 }  // namespace vzbase

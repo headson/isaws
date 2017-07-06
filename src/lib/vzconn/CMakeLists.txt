@@ -54,6 +54,9 @@ SET(SRC_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/multicast/cmcastsocket.h
+	${CMAKE_CURRENT_SOURCE_DIR}/multicast/cmcastsocket.cpp
 )
 
 SOURCE_GROUP(base FILES
@@ -88,6 +91,11 @@ SOURCE_GROUP(async FILES
 SOURCE_GROUP(sync FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.cpp
+)
+
+SOURCE_GROUP(multicast FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/multicast/cmcastsocket.h
+	${CMAKE_CURRENT_SOURCE_DIR}/multicast/cmcastsocket.cpp
 )
 
 #########################################################################

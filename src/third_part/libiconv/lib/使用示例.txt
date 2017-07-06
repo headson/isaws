@@ -1,0 +1,35 @@
+#include "iconv.h"
+#include <iostream.h>
+#include <stdio.h>
+#include <string.h>
+#pragma comment(lib, "iconv")
+
+int code_convert(char *from_charset,char *to_charset,const char *inbuf,unsigned int inlen,char *outbuf,unsigned int outlen)
+{
+	iconv_t cd;
+	const char **pin = &inbuf;
+	char **pout = &outbuf;
+	cd = iconv_open(to_charset,from_charset);
+	if (cd==0) return -1;
+	memset(outbuf,0,outlen);
+	if (iconv(cd,pin,&inlen,pout,&outlen)==-1) return -1;
+	iconv_close(cd);
+	return 0;
+}
+
+void main(){
+char *inbuf=new char[100];
+size_t inlen=100;
+char *outbuf=new char[100];
+size_t outlen=100;
+memset(inbuf,0,100);
+strcpy(inbuf,"¹þ¹þ¹þ¹þºÇºÇºÇºÇ°×¶«Éý");
+cout<<"Ô´×Ö·û´®£º"<<inbuf<<endl;
+code_convert("GBK","utf-8",inbuf,inlen,outbuf,outlen);
+cout<<"×ªÂëºó´®£º"<<outbuf<<endl;
+code_convert("utf-8","GBK",outbuf,inlen,inbuf,outlen);
+cout<<"Ô´×Ö·û´®£º"<<inbuf<<endl;
+}
+
+
+

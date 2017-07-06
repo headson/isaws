@@ -43,6 +43,16 @@ ENDIF()
 SET(SRC_LIST 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basictypes.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/boost_settings.hpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h
@@ -68,6 +78,16 @@ SET(SRC_LIST
 SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basictypes.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/boost_settings.hpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h

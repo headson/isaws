@@ -2,7 +2,7 @@
 
 #include "GroupsockHelper.hh"
 
-#include "systemv/vzshm_c.h"
+#include "systemv/shm/vzshm_c.h"
 //#include "vzbase/helper/stdafx.h"
 
 // CamH264VideoStreamFramer *********************************************************

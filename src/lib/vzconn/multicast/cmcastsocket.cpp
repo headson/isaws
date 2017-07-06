@@ -11,25 +11,25 @@ namespace vzconn {
 SOCKET CMCastSocket::send_socket_ = INVALID_SOCKET;
 
 CMCastSocket::CMCastSocket(vzconn::EVT_LOOP* p_loop,
-                           vzconn::CClientInterface *c_cli_proc)
-  : vzconn::VSocket(c_cli_proc)
+                           vzconn::CClientInterface *cli_hdl)
+  : vzconn::VSocket(cli_hdl)
   , p_evt_loop_(p_loop)
   , c_evt_recv_() {
 }
 
 CMCastSocket * CMCastSocket::Create(vzconn::EVT_LOOP* p_loop,
-                                    vzconn::CClientInterface *c_cli_proc) {
+                                    vzconn::CClientInterface *cli_hdl) {
   if (!p_loop || !p_loop->get_event()) {
     LOG(L_ERROR) << "evt loop error.";
     return NULL;
   }
 
-  if (c_cli_proc == NULL) {
+  if (cli_hdl == NULL) {
     LOG(L_ERROR) << "param is error.";
     return NULL;
   }
 
-  return (new CMCastSocket(p_loop, c_cli_proc));
+  return (new CMCastSocket(p_loop, cli_hdl));
 }
 
 CMCastSocket::~CMCastSocket() {

@@ -55,7 +55,19 @@ class EVT_TIMER {
  public:
   EVT_TIMER();
 
+  /************************************************************************
+  *Description :
+  *Parameters  :
+  *Return      :
+  ************************************************************************/
   void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg);
+
+  /************************************************************************
+  *Description : 启动定时器
+  *Parameters  : after_ms[IN] 延迟多少ms执行,当repeat_ms不为0时不起作用
+  *              repeat_ms[IN] 此不为0,注册为永久超时事件,延迟repeat_ms执行一次
+  *Return      : 0 成功
+  ************************************************************************/
   int32           Start(uint32 after_ms, uint32 repeat_ms);
   void            Stop();
 
@@ -76,18 +88,26 @@ class EVT_IO {
   EVT_IO();
 
   void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* p_arg);
+
+  /************************************************************************
+  *Description : 启动定时器
+  *Parameters  : v_hdl[IN] 句柄
+  *              n_evt[IN] 事件类型;EV_READ\EV_WRITE\EV_PERSIST
+  *Return      : 0 成功
+  ************************************************************************/
   int32           Start(SOCKET v_hdl, int32 nEvt, uint32 n_timeout=0);
   void            Stop();
 
-  // 用户主动关闭链接时调用此函数,用于唤醒事件处理已关闭链接
+  // 用户主动唤醒事件,调用事件回调时使用
   void            ActiceEvent();
 
+ private:
   static void     evt_callback(evutil_socket_t fd, short events, void *ctx);
 };
 
 ///LOOP////////////////////////////////////////////////////////////////////////
 class EVT_LOOP {
-public:
+private:
   struct event_base* p_event_;
   uint32             b_runging_;      // 运行状态
   EVT_TIMER          evt_exit_timer_; // 退出定时器
@@ -96,7 +116,6 @@ public:
   EVT_LOOP();
   virtual ~EVT_LOOP();
 
-public:
   int32   Start();
   void    Stop();
 
@@ -113,7 +132,7 @@ public:
     return p_event_;
   }
 
-protected:
+private:
   static int32 exit_callback(SOCKET          fd,
                              short           events,
                              const void      *p_usr_arg);

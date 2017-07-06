@@ -80,19 +80,20 @@ bool Session::ProcessDpMessage(const DpMessage *dmp,
   uint32 id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK) ?
               vzconn::NetworkToHost32(dmp->id) : dmp->id;
 
-  LOG(L_WARNING) << "type " << dmp->type
-                 << " session id " << session_id_
-                 << " msg session id " << GET_CLIENT_ID(id);
+  //LOG(L_WARNING) << "type " << dmp->type
+  //               << " session id " << session_id_
+  //               << " msg session id " << GET_CLIENT_ID(id);
   // 如果这个client_id与当前session一样，那么就直接回复这个消息
   if (session_id_ == GET_CLIENT_ID(id)) {
     if (session_interface_) {
       session_interface_->AsyncWrite(this, vz_socket_, dmp, data, size);
+      //LOG(L_INFO) << "send back";
       return true;
     }
   }
 
   if (dmp->type == TYPE_REPLY) { // TYPE_REPLY的method没改变,也会被worker捕获
-    LOG(L_INFO) << "pause";
+    //LOG(L_INFO) << "reply";
     return false;
   }
 
@@ -100,6 +101,7 @@ bool Session::ProcessDpMessage(const DpMessage *dmp,
   for (int i = 0; i < cur_pos_; i++) {
     if (strncmp(listen_messages_[i], dmp->method, MAX_METHOD_SIZE) == 0) {
       if (session_interface_) {
+        //LOG(L_INFO) << "dispatch";
         session_interface_->AsyncWrite(this, vz_socket_, dmp, data, size);
       }
       return true;
@@ -114,7 +116,7 @@ bool Session::ReplyDpMessage(const DpMessage *dmsg, uint8 type, uint8 channel) {
     dmp_.channel_id = session_id_;
     dmp_.type       = type;
     session_interface_->AsyncWrite(this, vz_socket_, &dmp_, NULL, 0);
-    LOG(L_WARNING) << "send reply message";
+    //LOG(L_WARNING) << "send reply message";
     return true;
   }
   return false;

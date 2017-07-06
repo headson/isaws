@@ -16,7 +16,7 @@ class CMCastSocket : public vzconn::VSocket {
 
  public:
   static CMCastSocket *Create(EVT_LOOP* p_loop,
-                              CClientInterface *c_cli_proc);
+                              CClientInterface *cli_hdl);
   virtual ~CMCastSocket();
 
   int32 Open(const uint8* s_center_ip, uint16 n_center_port);

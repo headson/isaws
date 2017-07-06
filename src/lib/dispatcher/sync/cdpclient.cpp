@@ -7,39 +7,82 @@
 #include "vzbase/helper/stdafx.h"
 #include "dispatcher/base/pkghead.h"
 
-CDpClient::CDpClient()
-  : vzconn::CTcpClient(&evt_loop_, this)
-  , callback_(NULL)
-  , p_usr_arg_(NULL)
+CDpClient::CDpClient(const char *server, unsigned short port,
+                     DpClient_MessageCallback   p_msg_cb,
+                     void                      *p_msg_usr_arg,
+                     DpClient_PollStateCallback p_state_cb,
+                     void                      *p_state_usr_arg,
+                     vzconn::EVT_LOOP          *p_evt_loop)
+  : p_evt_loop_(p_evt_loop)
+  , p_poll_msg_cb_(p_msg_cb)
+  , p_poll_msg_usr_arg_(p_msg_usr_arg)
+  , p_state_cb_(p_state_cb)
+  , p_state_usr_arg_(p_state_usr_arg)
+  , vzconn::CTcpClient(p_evt_loop, this)
   , n_session_id_(-1)
   , n_message_id_(1)
   , n_ret_type_((uint32)TYPE_INVALID)
-  , b_poll_enabel_(false)
+  , b_poll_enabel_(0)
   , n_recv_packet_(0) {
-  evt_loop_.Start();
+  p_msg_cb_ = NULL;
+  p_msg_usr_arg_ = NULL;
+
+  dp_port_ = port;
+  memset(dp_addr_, 0, 64);
+  strncpy(dp_addr_, server, 63);
+
+  if (p_state_cb_) {
+    b_poll_enabel_ = 1;
+
+    c_evt_timer_.Init(p_evt_loop_, evt_timer_cb, this);
+    c_evt_timer_.Start(1000, 1000);
+  }
 }
 
-CDpClient* CDpClient::Create() {
-  return (new CDpClient());
+CDpClient* CDpClient::Create(const char *server, unsigned short port,
+                             DpClient_MessageCallback   p_msg_cb,
+                             void                      *p_msg_usr_arg,
+                             DpClient_PollStateCallback p_state_cb,
+                             void                      *p_state_usr_arg,
+                             vzconn::EVT_LOOP          *p_evt_loop) {
+  if (NULL == p_evt_loop) {
+    p_evt_loop = new vzconn::EVT_LOOP();
+    if (p_evt_loop != NULL) {
+      if (p_evt_loop->Start() != 0) {
+        delete p_evt_loop;
+        p_evt_loop = NULL;
+      }
+    }
+  }
+
+  if (NULL == p_evt_loop) {
+    LOG(L_ERROR) << "evt loop is null.";
+    return NULL;
+  }
+
+  return (new CDpClient(server, port,
+                        p_msg_cb, p_msg_usr_arg,
+                        p_state_cb, p_state_usr_arg, p_evt_loop));
 }
 
 CDpClient::~CDpClient() {
+  c_evt_timer_.Stop();
+
   c_evt_recv_.Stop();
   c_evt_send_.Stop();
 
-  evt_loop_.Stop();
+  if (p_evt_loop_) {
+    p_evt_loop_->Stop();
+    p_evt_loop_ = NULL;
+  }
 }
 
 int32 CDpClient::RunLoop(uint32 n_timeout) {
   int32 n_ret = 0;
-  //for (uint32 i = 0; i < n_timeout/10; i++) {
-  //  n_ret = evt_loop_.RunLoop(10);
-  //  if (n_ret_type_ != (uint32)TYPE_INVALID) {
-  //    return 1;
-  //  }
-  //}
-
-  n_ret = evt_loop_.RunLoop(n_timeout);
+  if (NULL == p_evt_loop_) {
+    return -1;
+  }
+  n_ret = p_evt_loop_->RunLoop(n_timeout);
   if (n_ret_type_ != (uint32)TYPE_INVALID) {
     return 1;
   }
@@ -48,15 +91,12 @@ int32 CDpClient::RunLoop(uint32 n_timeout) {
 
 int32 CDpClient::PollRunLoop(uint32 n_timeout) {
   int32 n_ret = 0;
-  b_poll_enabel_ = 1;
-  //for (uint32 i = 0; i < n_timeout / 10; i++) {
-  //  n_ret = evt_loop_.RunLoop(10);
-  //  if (n_recv_packet_ > 0) {
-  //    return 1;
-  //  }
-  //}
+  if (NULL == p_evt_loop_) {
+    return -1;
+  }
 
-  n_ret = evt_loop_.RunLoop(n_timeout);
+  b_poll_enabel_ = 1;
+  n_ret = p_evt_loop_->RunLoop(n_timeout);
   if (n_recv_packet_ > 0) {
     return 1;
   }
@@ -65,11 +105,15 @@ int32 CDpClient::PollRunLoop(uint32 n_timeout) {
 
 void CDpClient::Reset(DpClient_MessageCallback callback,
                       void *p_usr_arg) {
-  callback_ = callback;
-  p_usr_arg_ = p_usr_arg;
+  if (NULL == p_evt_loop_) {
+    return;
+  }
+
+  p_msg_cb_ = callback;
+  p_msg_usr_arg_ = p_usr_arg;
 
   // loop 没在运行,清空标记
-  if (!evt_loop_.isRuning()) {
+  if (!p_evt_loop_->isRuning()) {
     n_ret_type_ = (uint32)TYPE_INVALID;
     n_recv_packet_ = 0;
 
@@ -77,8 +121,22 @@ void CDpClient::Reset(DpClient_MessageCallback callback,
     //c_send_data_.Clear();
 
     //c_evt_recv_.Stop();
-    c_evt_send_.Stop();
+    //c_evt_send_.Stop();
   }
+}
+
+bool CDpClient::CheckAndConnected() {
+  if (isClose()) {
+    Close();
+
+    vzconn::CInetAddr c_remote_addr(dp_addr_, dp_port_);
+    bool b_ret = Connect(&c_remote_addr, false, true, DEF_TIMEOUT_MSEC);
+    if (b_ret == false) {
+      LOG(L_ERROR) << "can't connect kvdb server.";
+      return b_ret;
+    }
+  }
+  return true;
 }
 
 int32 CDpClient::ListenMessage(uint8        e_type,
@@ -103,7 +161,7 @@ int32 CDpClient::ListenMessage(uint8        e_type,
     n_data += MAX_METHOD_SIZE;
   }
 
-  // 
+  //
   n_cur_msg_id_ = new_msg_id();
   // dp message
   DpMessage c_dp_msg;
@@ -162,7 +220,6 @@ int32 CDpClient::SendMessage(unsigned char             n_type,
   iov[0].iov_len  = n_dp_msg;
   iov[1].iov_base = (void*)p_data;
   iov[1].iov_len  = n_data;
-
   Reset(call_back, user_data);
   int32 n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
   if (n_ret <= 0) {
@@ -175,7 +232,7 @@ int32 CDpClient::SendMessage(unsigned char             n_type,
 int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
                                   const uint8     *p_data,
                                   uint32           n_data,
-                                  uint16 n_flag) {
+                                  uint16           n_flag) {
   //LOG(L_WARNING) << "recv packet length " << n_data;
   if (!p_cli || !p_data || n_data == 0) {
     LOG(L_ERROR) << "param is NULL";
@@ -186,31 +243,50 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
     return -2;
   }
 
-  CDpClient *p_tcp = (CDpClient*)p_cli;
-  //LOG(L_INFO) << "message seq "<<p_msg->id <<"  "<<p_tcp->get_msg_id();
+  LOG(L_INFO) << "message seq "<<p_msg->method <<"  "<<get_msg_id();
 
+  if (p_msg_cb_) {
+    p_msg_cb_(this, p_msg, p_msg_usr_arg_);
+    p_msg_cb_ = NULL; p_msg_usr_arg_ = NULL;
+  }
   // 在回调中,避免使用同一个socket send数据,造成递归evt loop
-  if (p_tcp->callback_) {
-    p_tcp->callback_(p_msg, p_tcp->p_usr_arg_);
+  if (p_poll_msg_cb_) {
+    p_poll_msg_cb_(this, p_msg, p_poll_msg_usr_arg_);
   }
 
-  if (p_msg->id == p_tcp->get_msg_id()) {  // 接收到正确的包
-    evt_loop_.LoopExit(0);
-
-    p_tcp->n_ret_type_ = static_cast<uint32>(p_msg->type);
+  if (p_msg->id == get_msg_id()) {  // 接收到正确的包
+    if (NULL != p_evt_loop_) {
+      p_evt_loop_->LoopExit(0);
+    }
+    n_ret_type_ = static_cast<uint32>(p_msg->type);
   }
 
   if (n_flag == FLAG_GET_CLIENT_ID
       || p_msg->type == TYPE_GET_SESSION_ID) {
-    p_tcp->n_session_id_ = (p_msg->channel_id << 24);
+    n_session_id_ = (p_msg->channel_id << 24);
     LOG(L_WARNING) << "get session id " << p_msg->channel_id;
   }
 
-  p_tcp->n_recv_packet_++;  // 收包计数
+  n_recv_packet_++;  // 收包计数
   // 如果是轮询,接收到一个包就退出event的run_loop
   if (b_poll_enabel_ > 0) {
-    evt_loop_.LoopExit(0);
+    if (NULL != p_evt_loop_) {
+      p_evt_loop_->LoopExit(0);
+    }
+
     b_poll_enabel_ = 0;
+  }
+  return 0;
+}
+
+void CDpClient::HandleClose(vzconn::VSocket *p_cli) {
+}
+
+int32 CDpClient::OnEvtTimer() {
+  if (isClose()) {
+    if (p_state_cb_) {
+      p_state_cb_(this, DP_CLIENT_DISCONNECT, p_state_usr_arg_);
+    }
   }
   return 0;
 }

@@ -80,8 +80,6 @@ int32 CListenMessage::RunLoop() {
   mg_mgr_poll(&c_web_srv_, 10);
 
   int32 n_ret = DpClient_PollDpMessage(p_dp_cli_,
-                                       msg_handler,
-                                       this,
                                        10);
   if (n_ret == VZNETDP_SUCCEED) {
     return VZNETDP_SUCCEED;

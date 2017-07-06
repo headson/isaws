@@ -5,7 +5,7 @@
 #include "liveMedia.hh"
 #include "BasicUsageEnvironment.hh"
 
-#include "systemv/vzshm_c.h"
+#include "systemv/shm/vzshm_c.h"
 
 #include "ch264streamframer.h"
 #include "ch264servermediasubsession.h"

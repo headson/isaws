@@ -31,9 +31,9 @@ namespace vzconn {
   const ByteOrder VZ_ORDER_BYTE       = ORDER_NETWORK;
 
   // 包默认大小
-  static const uint32 DEF_BUFFER_SIZE = 4096;
+  #define DEF_BUFFER_SIZE (4096)
   // 最大包尺寸
-  static const uint32 MAX_BUFFER_SIZE = 256 * 1024;
+  #define MAX_BUFFER_SIZE (2 * 1024 * 1024)
 }  // namespace vzconn
 
 #endif  // LIBVZCONN_PKGHEAD_H_

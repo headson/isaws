@@ -186,14 +186,18 @@ int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 n_timeout) {
     return n_ret;
   }
 
-  if (0 == b_init_ || c_evt_.ev_events != nEvt) {
+  if (0 == b_init_ || 
+      c_evt_.ev_fd != vHdl ||
+      c_evt_.ev_events != nEvt) {
     event_set(&c_evt_, vHdl, nEvt, evt_callback, this);
     n_ret = event_base_set(p_base_->get_event(), &c_evt_);
     if (n_ret != 0) {
       LOG(L_ERROR) << "event base set failed.";
       return n_ret;
     }
-    b_init_ = 1;
+    b_init_  = 1;
+
+    Stop();
     //LOG(L_INFO) << "Set "<<vHdl<<" event "<<nEvt<<"-"<<c_evt_.ev_events;
   }
 

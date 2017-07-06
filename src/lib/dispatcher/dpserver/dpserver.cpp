@@ -67,14 +67,16 @@ int32 DpServer::HandleRecvPacket(vzconn::VSocket *p_cli,
   const DpMessage *dmsg = (const DpMessage *)(p_data);
 
   Session *session = FindSessionBySocket(p_cli);
+  if (session == NULL) {
+    LOG(L_ERROR) << "No session Handle";
+    return -1;
+  }
   LOG(L_INFO) << "recv packet length " << n_data
               << " type " << dmsg->type
               << " id " << vzconn::NetworkToHost32(dmsg->id)
               << " session connection " << (uint32)session->vz_socket_
-              << " connection " << (uint32)p_cli;
-  if (session == NULL) {
-    LOG(L_ERROR) << "No session Handle";
-  }
+              << " connection " << (uint32)p_cli
+              << " session id " << session->session_id_;
   //if (dmsg->type == TYPE_MESSAGE
   //    || dmsg->type == TYPE_REQUEST
   //    || dmsg->type == TYPE_REPLY) {
@@ -130,6 +132,10 @@ uint32 DpServer::DispatcherSession(Session *session,
         if (dmsg->type != TYPE_MESSAGE) {
           return handler_size;
         }
+      }
+    } else {
+      if (session_socket_map_[i].session != NULL) {
+        LOG(L_ERROR) << "the same session id "<<i;
       }
     }
   }

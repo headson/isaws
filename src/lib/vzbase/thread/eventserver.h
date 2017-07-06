@@ -60,6 +60,8 @@ class SocketServer {
 
   // Causes the current wait (if one is in progress) to wake up.
   virtual void WakeUp() = 0;
+
+  virtual vzconn::EventService *GetEvtService() = 0;
 };
 
 class LibEventServer : public SocketServer {
@@ -71,6 +73,9 @@ class LibEventServer : public SocketServer {
 
   // Causes the current wait (if one is in progress) to wake up.
   virtual void WakeUp();
+
+  virtual vzconn::EventService *GetEvtService();
+
  private:
    vzconn::EventService *event_service_;
 };

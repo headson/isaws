@@ -12,16 +12,21 @@
 #endif
 
 #include "dispatcher/base/pkghead.h"
+#include "vzconn/base/clibevent.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// 在回调中,避免使用同一个socket send\recv,造成递归evt loop
-typedef void(*DpClient_MessageCallback)(const DpMessage *dmp, void* p_usr_arg);
+typedef void* DPPollHandle;
 
-typedef void * DPPollHandle;
-typedef void * DPPollEvtLoop;
+// 在回调中,避免使用同一个socket send\recv,造成递归evt loop
+typedef void(*DpClient_MessageCallback)(
+  DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
+
+#define DP_CLIENT_DISCONNECT  101   // 断开链接,需要重连
+typedef void(*DpClient_PollStateCallback)(
+  DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg);
 
 #define DP_POLL_HANDLE_NULL NULL
 
@@ -71,37 +76,86 @@ EXPORT_DLL int DpClient_SendDpReply(const char      *method,
                                     int              data_size);
 
 ///Poll///////////////////////////////////////////////////////////////////
-EXPORT_DLL DPPollHandle DpClient_CreatePollHandle();
+/************************************************************************
+*Description : 创建轮询句柄
+*Parameters  : p_msg_cb[IN] 消息回调
+*              p_msg_usr_arg[IN] 消息回调参数
+*              p_state_cb[IN] 状态回调:断网,重连,重注册监听消息
+*              p_msg_usr_arg[IN] 状态回调参数
+*              p_evt_loop[IN] EVT_LOOP指针
+*Return      : NULL 失败, !=NULL成功
+************************************************************************/
+EXPORT_DLL DPPollHandle DpClient_CreatePollHandle(
+  DpClient_MessageCallback   p_msg_cb,
+  void                      *p_msg_usr_arg,
+  DpClient_PollStateCallback p_state_cb,
+  void                      *p_state_usr_arg,
+  vzconn::EVT_LOOP          *p_evt_loop = NULL);
+
+/************************************************************************
+*Description : 销毁轮询句柄,此时会把EVT_LOOP一起销毁,注意其他使用此EVT_LOOP的地方
+*Parameters  :
+*Return      :
+************************************************************************/
 EXPORT_DLL void  DpClient_ReleasePollHandle(DPPollHandle p_poll_handle);
 
+/************************************************************************
+*Description : 轮询重连;当DpClient_PollDpMessage返回错误时,调用此函数重连服务器
+*Parameters  : p_poll_handle[IN] 轮询句柄
+*Return      : VZNETDP_FAILURE失败 VZNETDP_SUCCEED成功
+************************************************************************/
+EXPORT_DLL int DpClient_HdlReConnect(const DPPollHandle p_poll_handle);
+
+/************************************************************************
+*Description : 轮询注册监听消息
+*Parameters  : p_poll_handle[IN]
+*              a_method_set[IN] 消息数组,每一个消息32Byte
+*              n_method_set_cnt[IN] 消息个数
+*Return      : VZNETDP_FAILURE失败 VZNETDP_SUCCEED成功
+************************************************************************/
 EXPORT_DLL int   DpClient_HdlAddListenMessage(
   const DPPollHandle p_poll_handle,
-  const char   *method_set[],
-  unsigned int  set_size);
+  const char        *a_method_set[],
+  unsigned int       n_method_set_cnt);
+/************************************************************************
+*Description : 轮询取消监听消息
+*Parameters  : p_poll_handle[IN]
+*              a_method_set[IN] 消息数组,每一个消息32Byte
+*              n_method_set_cnt[IN] 消息个数
+*Return      : VZNETDP_FAILURE失败 VZNETDP_SUCCEED成功
+************************************************************************/
 EXPORT_DLL int   DpClient_HdlRemoveListenMessage(
   const DPPollHandle p_poll_handle,
-  const char   *method_set[],
-  unsigned int  set_size);
+  const char        *a_method_set[],
+  unsigned int       n_method_set_cnt);
 
-// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-// VZNETDP_FAILURE时需要重新创建handle[重连],重发AddListenMessage
+// 当使用vzbase::Thread设置轮询的EVT_LOOP时,可不调用此函数分发
+/************************************************************************
+*Description : 轮询,等待接收消息,通过回调返回给应用层
+*              VZNETDP_FAILURE时需要重新创建handle[重连],重发AddListenMessage
+*Parameters  : p_poll_handle[IN]
+*              n_timeout[IN] 轮询超时时间
+*Return      : VZNETDP_FAILURE失败 VZNETDP_SUCCEED成功
+************************************************************************/
 EXPORT_DLL int DpClient_PollDpMessage(
   const DPPollHandle         p_poll_handle,
-  DpClient_MessageCallback   call_back,
-  void                      *user_data,
-  unsigned int               timeout);
+  unsigned int               n_timeout);
 
-// 从poll中获取EVT_LOOP指针
-EXPORT_DLL DPPollEvtLoop DpClient_GetEvtLoopFromPoll(
+/************************************************************************
+*Description : 从轮询中获取EVT_LOOP指针
+*Parameters  : p_poll_handle[IN]
+*Return      : NULL 失败, !=NULL成功
+************************************************************************/
+EXPORT_DLL vzconn::EventService *DpClient_GetEvtLoopFromPoll(
   const DPPollHandle p_poll_handle);
 
 //////////////////////////////////////////////////////////////////////////
 // GetKey callback function
-typedef void(*Kvdb_GetKeyCallback)(const char *key,
-                                   int         key_size,
-                                   const char *value,
-                                   int         value_size,
-                                   void       *user_data);
+typedef void(*Kvdb_GetKeyCallback)(const char *p_key,
+                                   int         n_key,
+                                   const char *p_value,
+                                   int         n_value,
+                                   void       *p_user_data);
 
 // Return of Key Value database Interface
 #define KVDB_RET_SUCCEED                     0

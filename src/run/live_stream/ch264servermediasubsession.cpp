@@ -4,7 +4,7 @@
 
 #include "ch264streamframer.h"
 
-#include "systemv/vz_shm.h"
+#include "systemv/shm/vzshm_c.h"
 #include "vzbase/helper/stdafx.h"
 
 CH264LiveVideoServerMediaSubsession *CH264LiveVideoServerMediaSubsession::createNew(

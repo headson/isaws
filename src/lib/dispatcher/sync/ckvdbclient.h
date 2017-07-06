@@ -14,11 +14,11 @@
 class CKvdbClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
-  CKvdbClient();
+  CKvdbClient(const char *server, unsigned short port);
   virtual void  Remove() { }
 
  public:
-  static CKvdbClient* Create();
+  static CKvdbClient* Create(const char *server, unsigned short port);
   virtual ~CKvdbClient();
 
  public:
@@ -38,6 +38,12 @@ class CKvdbClient : public vzconn::CTcpClient,
              void                *p_user_arg,
              uint8               *p_get_data,
              uint32               n_get_data);
+  void Reset(Kvdb_GetKeyCallback  p_callback,
+             void                *p_user_arg,
+             std::string         *p_get_data);
+
+  bool CheckAndConnected();
+
  public:
   bool SetKey(const char *p_key,
               uint8       n_key,
@@ -49,6 +55,15 @@ class CKvdbClient : public vzconn::CTcpClient,
               void       *p_value,
               uint32      n_value,
               bool        absolute = false);
+
+  bool GetKey(const char    *p_key,
+              uint8          n_key,
+              std::string   *p_value,
+              bool           absolute = false);
+
+  bool GetKey(const std::string  s_key,
+              std::string       *p_value,
+              bool               absolute = false);
 
   bool GetKey(const char          *p_key,
               uint8                n_key,
@@ -99,10 +114,15 @@ class CKvdbClient : public vzconn::CTcpClient,
 
   uint8                    *p_get_data_;  // 回调
   int32                     n_get_data_;
+  std::string              *p_get_strm_; // 回调
 
  protected:
   uint32                    n_message_id_;    // 包序号[32bit]
   uint32                    n_cur_msg_id_;    // 当前发送msg id
+
+ protected:
+  char                      kvdb_addr_[64];
+  unsigned short            kvdb_port_;
 
  public:
   int EncKvdbMsg(KvdbMessage    *p_msg,

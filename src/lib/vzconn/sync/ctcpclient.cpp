@@ -98,6 +98,12 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
     return false;
   }
 
+  c_evt_recv_.Stop();
+  c_recv_data_.Clear();
+
+  c_evt_send_.Stop();
+  c_send_data_.Clear();
+
   SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (INVALID_SOCKET == s) {
     LOG(L_ERROR) << "socket open failed.";

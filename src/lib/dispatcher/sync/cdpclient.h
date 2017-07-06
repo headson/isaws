@@ -13,11 +13,21 @@
 class CDpClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
-  CDpClient();
+  CDpClient(const char *server, unsigned short port,
+            DpClient_MessageCallback   p_msg_cb,
+            void                      *p_msg_usr_arg,
+            DpClient_PollStateCallback p_state_cb,
+            void                      *p_state_usr_arg,
+            vzconn::EVT_LOOP          *p_evt_loop);
   virtual void  Remove() { }
 
  public:
-  static CDpClient* Create();
+  static CDpClient* Create(const char *server, unsigned short port,
+                           DpClient_MessageCallback   p_msg_cb=NULL,
+                           void                      *p_msg_usr_arg=NULL,
+                           DpClient_PollStateCallback p_state_cb=NULL,
+                           void                      *p_state_usr_arg=NULL,
+                           vzconn::EVT_LOOP          *p_evt_loop = NULL);
   virtual ~CDpClient();
 
  public:
@@ -27,12 +37,15 @@ class CDpClient : public vzconn::CTcpClient,
   // 轮询使用
   // return 0=timeout,1=success
   int32 PollRunLoop(uint32 n_timeout);
+
   vzconn::EVT_LOOP *GetEvtLoop() {
-    return &evt_loop_;
+    return p_evt_loop_;
   }
 
  public:
   void  Reset(DpClient_MessageCallback callback, void *p_usr_arg);
+
+  bool  CheckAndConnected();
 
  public:
   /* method;add\remove */
@@ -57,8 +70,18 @@ class CDpClient : public vzconn::CTcpClient,
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
     return 0;
   }
-  virtual void  HandleClose(vzconn::VSocket *p_cli) {
+  virtual void  HandleClose(vzconn::VSocket *p_cli);
+
+  static int32 evt_timer_cb(SOCKET          fd,
+                            short           events,
+                            const void      *p_usr_arg) {
+    if (p_usr_arg) {
+      ((CDpClient*)p_usr_arg)->OnEvtTimer();
+    }
+    return 0;
   }
+
+  int32 OnEvtTimer();
 
  public:
   uint32 get_session_id() {
@@ -81,11 +104,18 @@ class CDpClient : public vzconn::CTcpClient,
   }
 
  protected:
-  vzconn::EVT_LOOP          evt_loop_;    //
+  vzconn::EVT_LOOP         *p_evt_loop_;    //
+  vzconn::EVT_TIMER         c_evt_timer_;   // 检查断网
 
  protected:
-  DpClient_MessageCallback  callback_;    // 回调
-  void                     *p_usr_arg_;   // 回调用户参数
+  DpClient_MessageCallback     p_msg_cb_;    // 消息回调
+  void                        *p_msg_usr_arg_;   // 回调用户参数
+
+  DpClient_MessageCallback     p_poll_msg_cb_;    // 消息回调
+  void                        *p_poll_msg_usr_arg_;   // 回调用户参数
+
+  DpClient_PollStateCallback   p_state_cb_;  // 状态回调
+  void                        *p_state_usr_arg_;   // 回调用户参数
 
  protected:
   int32                     n_session_id_;    // SESSION ID
@@ -101,6 +131,10 @@ class CDpClient : public vzconn::CTcpClient,
   uint32                    n_recv_packet_;   // poll loop退出标签
 
   static const uint32       MAX_MESSAGE_ID = 0X00FFFFFF;
+
+ protected:
+  char                      dp_addr_[64];
+  unsigned short            dp_port_;
 
  public:
   static int EncDpMsg(DpMessage      *p_msg,

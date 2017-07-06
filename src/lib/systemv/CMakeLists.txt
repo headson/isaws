@@ -23,17 +23,27 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/vzshm_c.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vzshm_c.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vz_shm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vz_shm.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/flv.h
+	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/cflvmux.h
+	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/cflvmux.cpp
+
+    ${CMAKE_CURRENT_SOURCE_DIR}/shm/vzshm_c.h
+	${CMAKE_CURRENT_SOURCE_DIR}/shm/vzshm_c.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/shm/vz_shm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/shm/vz_shm.cpp
+)
+
+SOURCE_GROUP(flvmux FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/flv.h
+	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/cflvmux.h
+	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/cflvmux.cpp
 )
 
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/vzshm_c.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vzshm_c.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/vz_shm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/vz_shm.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/shm/vzshm_c.h
+	${CMAKE_CURRENT_SOURCE_DIR}/shm/vzshm_c.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/shm/vz_shm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/shm/vz_shm.cpp
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
