@@ -15,7 +15,6 @@ class CDpClient : public vzconn::CTcpClient,
  protected:
   CDpClient(const char *server, unsigned short port,
             vzconn::EVT_LOOP          *p_evt_loop);
-  virtual void  Remove() { }
 
  public:
   static CDpClient* Create(const char *server, unsigned short port,
@@ -27,6 +26,7 @@ class CDpClient : public vzconn::CTcpClient,
   int32 RunLoop(uint32 n_timeout);
 
  public:
+  void  Reset();
   bool  CheckAndConnected();
 
  public:

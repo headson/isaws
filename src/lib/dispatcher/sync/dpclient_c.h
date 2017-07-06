@@ -44,14 +44,6 @@ EXPORT_DLL int  DpClient_Start(int new_thread);
 EXPORT_DLL void DpClient_Stop();
 
 // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-EXPORT_DLL int  DpClient_AddListenMessage(const char *methodset[],
-    unsigned int set_size);
-
-// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-EXPORT_DLL int  DpClient_RemoveListenMessage(const char  *methodset[],
-    unsigned int set_size);
-
-// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
 EXPORT_DLL int  DpClient_SendDpMessage(const char    *method,
                                        unsigned char  channel_id,
                                        const char    *data,

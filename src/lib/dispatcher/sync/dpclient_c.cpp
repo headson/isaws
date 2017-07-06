@@ -163,32 +163,6 @@ EXPORT_DLL void DpClient_Stop() {
   }
 }
 
-EXPORT_DLL int DpClient_AddListenMessage(const char *method_set[],
-    unsigned int  set_size) {
-  int32 n_ret = VZNETDP_FAILURE;
-  CDpClient* p_tcp = GetDpCli();
-  if (!p_tcp) {
-    LOG(L_ERROR) << "get tls client failed.";
-    return VZNETDP_FAILURE;
-  }
-
-  n_ret = DpClient_HdlAddListenMessage(p_tcp, method_set, set_size);
-  return n_ret;
-}
-
-EXPORT_DLL int DpClient_RemoveListenMessage(const char* method_set[],
-    unsigned int set_size) {
-  int32 n_ret = 0;
-  CDpClient* p_tcp = GetDpCli();
-  if (!p_tcp) {
-    LOG(L_ERROR) << "get tls client failed.";
-    return VZNETDP_FAILURE;
-  }
-
-  n_ret = DpClient_HdlRemoveListenMessage(p_tcp, method_set, set_size);
-  return n_ret;
-}
-
 EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
                                       unsigned char  channel_id,
                                       const char    *data,
@@ -314,9 +288,9 @@ EXPORT_DLL DPPollHandle DpClient_CreatePollHandle(
   }
 
   CDpPollClient *p_tcp = CDpPollClient::Create(g_dp_addr, g_dp_port,
-                                       p_msg_cb, p_msg_usr_arg,
-                                       p_state_cb, p_state_usr_arg,
-                                       p_evt_loop);
+                         p_msg_cb, p_msg_usr_arg,
+                         p_state_cb, p_state_usr_arg,
+                         p_evt_loop);
   if (NULL == p_tcp) {
     LOG(L_ERROR) << "create dp client failed.";
   }
@@ -383,14 +357,9 @@ EXPORT_DLL int DpClient_HdlAddListenMessage(const DPPollHandle p_poll_handle,
     LOG(L_ERROR) << "add message failed " << n_ret;
     return n_ret;
   }
-  // LOG(L_WARNING) << "add listen message " << n_ret;
 
-  p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  if (p_tcp->get_ret_type() == TYPE_SUCCEED) {
-    return VZNETDP_SUCCEED;
-  }
-  LOG(L_ERROR) << p_tcp->get_ret_type();
-  return VZNETDP_FAILURE;
+  // LOG(L_WARNING) << "add listen message " << n_ret;
+  return VZNETDP_SUCCEED;
 }
 
 EXPORT_DLL int DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
@@ -413,11 +382,7 @@ EXPORT_DLL int DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
   }
 
   p_tcp->RunLoop(DEF_TIMEOUT_MSEC);
-  if (p_tcp->get_ret_type() == TYPE_SUCCEED) {
-    return VZNETDP_SUCCEED;
-  }
-  LOG(L_ERROR) << p_tcp->get_ret_type();
-  return VZNETDP_FAILURE;
+  return VZNETDP_SUCCEED;
 }
 
 EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,

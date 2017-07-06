@@ -61,10 +61,17 @@ int32 CDpClient::RunLoop(uint32 n_timeout) {
   return 0;
 }
 
+void CDpClient::Reset() {
+  p_cur_dp_msg_ = NULL;
+  n_ret_type_ = (uint32)TYPE_INVALID;
+}
+
 bool CDpClient::CheckAndConnected() {
   if (isClose()) {
     Close();
 
+    n_session_id_ = -1;
+    n_ret_type_   = (uint32)TYPE_INVALID;
     vzconn::CInetAddr c_remote_addr(dp_addr_, dp_port_);
     bool b_ret = Connect(&c_remote_addr, false, true, DEF_TIMEOUT_MSEC);
     if (b_ret == false) {
@@ -119,7 +126,7 @@ int32 CDpClient::ListenMessage(uint8        e_type,
   iov[1].iov_base = (void*)s_data;
   iov[1].iov_len  = n_data;
 
-  n_ret_type_ = (uint32)TYPE_INVALID;
+  Reset();
   int32 n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "async write failed " << n_dp_msg + n_data;
@@ -157,7 +164,7 @@ int32 CDpClient::SendMessage(unsigned char             n_type,
   iov[1].iov_base = (void*)p_data;
   iov[1].iov_len  = n_data;
 
-  n_ret_type_ = (uint32)TYPE_INVALID;
+  Reset();
   int32 n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "async write failed " << n_dp_msg + n_data;
@@ -181,7 +188,7 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   }
 
   LOG(L_INFO) << "message seq "<<p_cur_dp_msg_->method <<"  "<<get_msg_id();
-  
+
   if (p_cur_dp_msg_->id == get_msg_id()) {  // 接收到正确的包
     if (NULL != p_evt_loop_) {
       p_evt_loop_->LoopExit(0);
@@ -213,7 +220,7 @@ int CDpClient::EncDpMsg(DpMessage      *p_msg,
 
   p_msg->type       = (unsigned char)n_type;
   p_msg->channel_id = (unsigned char)n_session_id;
-  p_msg->reserved   = (unsigned char)0;
+  p_msg->reply_type = (unsigned char)0;
   if (method != NULL) {
     p_msg->method_size = (unsigned char)strlen(method);
     strncpy(p_msg->method, method, 31);
@@ -240,3 +247,5 @@ DpMessage *CDpClient::DecDpMsg(const void *p_data, uint32 n_data) {
                      ? vzconn::NetworkToHost32(p_msg->data_size) : p_msg->data_size;
   return p_msg;
 }
+
+

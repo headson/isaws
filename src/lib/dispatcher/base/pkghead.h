@@ -42,7 +42,7 @@ enum {
 typedef struct _TagDpMsg {
   unsigned char type;                     // 消息类型[8bits]
   unsigned char channel_id;               // 一般是0[* bits]
-  unsigned char reserved;                 // [8bits]
+  unsigned char reply_type;               // 返回时存type[8bits]
   unsigned char method_size;              // 消息的类型的长度[8 bits]
   char          method[MAX_METHOD_SIZE];  // 消息类型[32*8bits]
   unsigned int  id;                       // [消息序号]32 bits;8+24

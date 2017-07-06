@@ -260,6 +260,7 @@ int32 CTcpClient::OnRecv() {
                                  c_recv_data_.FreeSize());
   if (n_recv > 0) {
     c_recv_data_.MoveWritePtr(n_recv);
+    LOG(L_ERROR) << "recv length "<<n_recv;
 
     uint16 n_flag = 0;
     int32_t n_pkg_size = 0;

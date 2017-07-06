@@ -114,6 +114,7 @@ bool Session::ReplyDpMessage(const DpMessage *dmsg, uint8 type, uint8 channel) {
   if (session_interface_) {
     memcpy(&dmp_, dmsg, sizeof(DpMessage));
     dmp_.channel_id = session_id_;
+    dmp_.reply_type = dmp_.type;
     dmp_.type       = type;
     session_interface_->AsyncWrite(this, vz_socket_, &dmp_, NULL, 0);
     //LOG(L_WARNING) << "send reply message";
