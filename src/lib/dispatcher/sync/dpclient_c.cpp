@@ -265,13 +265,14 @@ EXPORT_DLL DPPollHandle DpClient_CreatePollHandle(
   void                      *p_msg_usr_arg,
   DpClient_PollStateCallback p_state_cb,
   void                      *p_state_usr_arg,
-  vzconn::EVT_LOOP          *p_evt_loop) {
+  DpEvtService               p_evt_service) {
 
   if (!p_msg_cb || !p_state_cb) {
     LOG(L_ERROR) << "param is null";
     return NULL;
   }
 
+  vzconn::EVT_LOOP *p_evt_loop = (vzconn::EVT_LOOP*)p_evt_service;
   if (p_evt_loop == NULL) {
     p_evt_loop = new vzconn::EVT_LOOP();
     if (p_evt_loop) {
@@ -399,7 +400,7 @@ EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
   return VZNETDP_SUCCEED;
 }
 
-EXPORT_DLL vzconn::EventService *DpClient_GetEvtLoopFromPoll(
+EXPORT_DLL DpEvtService DpClient_GetEvtLoopFromPoll(
   const DPPollHandle p_poll_handle) {
   CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {

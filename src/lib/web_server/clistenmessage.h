@@ -33,7 +33,10 @@ class CListenMessage : public vzbase::Runnable{
   void OnState(DPPollHandle p_hdl, uint32 n_state);
 
   //////////////////////////////////////////////////////////////////////////
+  bool StartWebServer(const uint8 *s_http_port, const uint8 *s_http_path);
+  bool StartDpClientPoll(const uint8 *s_dp_ip, uint16 n_dp_port);
   virtual void Run(vzbase::Thread* thread);
+
   /************************************************************************/
   /* Description : Ä¬ÈÏrequest´¦Àí
   /* Parameters  :

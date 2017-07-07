@@ -16,31 +16,31 @@ extern "C" {
 #endif
 
 // Get Cahced File callback function
-typedef void(*Cached_GetFileCallback)(const char *path,
-                                      int         path_size,
-                                      const char *data,
-                                      int         data_size,
-                                      void       *user_data);
+typedef void(*Cached_GetFileCallback)(const char *s_path,
+                                      int         n_path,
+                                      const char *p_data,
+                                      int         n_data,
+                                      void       *p_usr_arg);
 
 // Return of Cached File Server Interface
 #define CACHED_RET_SUCCEED 0
 #define CACHED_RET_FAILURE 1
 
-EXPORT_DLL int Cached_Start(const char *server, unsigned short port);
+EXPORT_DLL int Cached_Start(const char *s_srv_ip, unsigned short n_srv_port);
 EXPORT_DLL int Cached_Stop();
 
 // SetKey, if the path not exist, then create the path
 // Return CACHED_RET_SUCCEED, CACHED_RET_FAILURE
-EXPORT_DLL int Cached_SaveFile(const char *path, int path_size,
-                               const char *data, int data_size);
+EXPORT_DLL int Cached_SaveFile(const char *s_path, int n_path,
+                               const char *p_data, int n_data);
 // Get the file
 // Return CACHED_RET_SUCCEED, CACHED_RET_FAILURE
-EXPORT_DLL int Cached_GetFile(const char *path, int path_size,
-                              Cached_GetFileCallback call_back,
-                              void *user_data);
+EXPORT_DLL int Cached_GetFile(const char *s_path, int n_path,
+                              Cached_GetFileCallback p_callback,
+                              void *p_usr_arg);
 // Delete the file
 // Return CACHED_RET_SUCCEED, CACHED_RET_FAILURE
-EXPORT_DLL int Cached_DeleteFile(const char *path, int path_size);
+EXPORT_DLL int Cached_DeleteFile(const char *s_path, int n_path);
 
 #ifdef __cplusplus
 }

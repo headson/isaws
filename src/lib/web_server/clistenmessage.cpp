@@ -45,30 +45,14 @@ static void register_http_endpoint(struct mg_connection *nc) {
   mg_register_http_endpoint(nc, "/http_login", uri_hdl_login);
 }
 
-static struct mg_serve_http_opts s_web_opts_;
+static struct mg_serve_http_opts s_web_def_opts_;
 
 bool CListenMessage::Start(const uint8 *s_dp_ip,
                            uint16       n_dp_port,
                            const uint8 *s_http_port,
                            const uint8 *s_http_path) {
-  int32 n_ret = VZNETDP_SUCCEED;
-
   // web server
-  mg_mgr_init(&c_web_srv_, this);
-  p_web_conn_ = mg_bind(&c_web_srv_,
-    (char*)s_http_port,
-    ev_handler);
-  if (p_web_conn_ == NULL) {
-    LOG(L_ERROR) << "mg bind failed.";
-    return -1;
-  }
-
-  register_http_endpoint(p_web_conn_);
-  // Set up HTTP server parameters
-  mg_set_protocol_http_websocket(p_web_conn_);
-
-  s_web_opts_.document_root = (char*)s_http_path;
-  s_web_opts_.enable_directory_listing = "yes";
+  StartWebServer(s_http_port, s_http_path);
 
   p_web_thread_ = new vzbase::Thread();
   if (p_web_thread_ == NULL) {
@@ -78,6 +62,33 @@ bool CListenMessage::Start(const uint8 *s_dp_ip,
   p_web_thread_->Start(this);
 
   // dp client poll
+  bool b_ret = StartDpClientPoll(s_dp_ip, n_dp_port);
+  return b_ret;
+}
+
+bool CListenMessage::StartWebServer(const uint8 *s_http_port,
+                                    const uint8 *s_http_path) {
+  mg_mgr_init(&c_web_srv_, this);
+  p_web_conn_ = mg_bind(&c_web_srv_,
+                        (char*)s_http_port,
+                        ev_handler);
+  if (p_web_conn_ == NULL) {
+    LOG(L_ERROR) << "mg bind failed.";
+    return false;
+  }
+
+  register_http_endpoint(p_web_conn_);
+  // Set up HTTP server parameters
+  mg_set_protocol_http_websocket(p_web_conn_);
+
+  s_web_def_opts_.document_root = (char*)s_http_path;
+  s_web_def_opts_.enable_directory_listing = "yes";
+  return true;
+}
+
+bool CListenMessage::StartDpClientPoll(const uint8 *s_dp_ip,
+                                       uint16       n_dp_port) {
+  int32 n_ret = VZNETDP_SUCCEED;
   DpClient_Init((char*)s_dp_ip, n_dp_port);
   n_ret = DpClient_Start(0);
   if (n_ret == VZNETDP_FAILURE) {
@@ -88,25 +99,31 @@ bool CListenMessage::Start(const uint8 *s_dp_ip,
   if (p_dp_cli_ == NULL) {
     p_dp_cli_ = DpClient_CreatePollHandle(msg_handler, this,
                                           state_handler, this,
-                                         vzbase::Thread::Current()->socketserver()->GetEvtService());
+                                          vzbase::Thread::Current()->socketserver()->GetEvtService());
     if (p_dp_cli_ == NULL) {
       LOG(L_ERROR) << "dp client create poll handle failed.";
       return false;
     }
-    
-    //DpClient_HdlAddListenMessage(p_dp_cli_, METHOD_SET, METHOD_SET_SIZE);
+
+    DpClient_HdlAddListenMessage(p_dp_cli_, METHOD_SET, METHOD_SET_SIZE);
   }
-  return (n_ret == VZNETDP_SUCCEED);
+  return true;
 }
 
 int32 CListenMessage::RunLoop() {
   vzbase::Thread::Current()->Run();
-  int32 n_ret = DpClient_PollDpMessage(p_dp_cli_,
-                                       10);
+
+  int32 n_ret = DpClient_PollDpMessage(p_dp_cli_, DEF_TIMEOUT_MSEC);
   if (n_ret == VZNETDP_SUCCEED) {
     return VZNETDP_SUCCEED;
   }
   return VZNETDP_SUCCEED;
+}
+
+void CListenMessage::Run(vzbase::Thread* thread) {
+  while (p_dp_cli_) {
+    mg_mgr_poll(&c_web_srv_, 1000);
+  }
 }
 
 void CListenMessage::broadcast(const void* p_data, uint32 n_data) {
@@ -154,14 +171,8 @@ void CListenMessage::ev_handler(struct mg_connection *nc,
 void CListenMessage::OnEvHdl(struct mg_connection *nc, int ev, void *ev_data) {
   switch (ev) {
   case MG_EV_HTTP_REQUEST:
-    mg_serve_http(nc, (struct http_message *) ev_data, s_web_opts_);
+    mg_serve_http(nc, (struct http_message *) ev_data, s_web_def_opts_);
     break;
-  }
-}
-
-void CListenMessage::Run(vzbase::Thread* thread) {
-  while (p_dp_cli_) {
-    mg_mgr_poll(&c_web_srv_, 1000);
   }
 }
 

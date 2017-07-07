@@ -1,6 +1,5 @@
 #include "vzbase/helper/stdafx.h"
 
-#include "dispatcher/base/pkghead.h"
 #include "dispatcher/sync/dpclient_c.h"
 
 const int MAX_TYPES_SIZE = 36;
@@ -70,6 +69,7 @@ int main(int argc, char* argv[]) {
                            NULL,
                            3000);
     LOG(L_ERROR) << "end.\n\n";
+    getchar();
   }
   getchar();
 

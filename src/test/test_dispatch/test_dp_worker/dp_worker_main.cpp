@@ -1,5 +1,6 @@
 #include "vzbase/helper/stdafx.h"
 
+#include "vzconn/base/clibevent.h"
 #include "dispatcher/sync/dpclient_c.h"
 
 #ifdef WIN32

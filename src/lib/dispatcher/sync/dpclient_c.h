@@ -12,12 +12,12 @@
 #endif
 
 #include "dispatcher/base/pkghead.h"
-#include "vzconn/base/clibevent.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+typedef void* DpEvtService;
 typedef void* DPPollHandle;
 
 // 在回调中,避免使用同一个socket send\recv,造成递归evt loop
@@ -82,7 +82,7 @@ EXPORT_DLL DPPollHandle DpClient_CreatePollHandle(
   void                      *p_msg_usr_arg,
   DpClient_PollStateCallback p_state_cb,
   void                      *p_state_usr_arg,
-  vzconn::EVT_LOOP          *p_evt_loop = NULL);
+  DpEvtService               p_evt_service = NULL);
 
 /************************************************************************
 *Description : 销毁轮询句柄,此时会把EVT_LOOP一起销毁,注意其他使用此EVT_LOOP的地方
@@ -138,7 +138,7 @@ EXPORT_DLL int DpClient_PollDpMessage(
 *Parameters  : p_poll_handle[IN]
 *Return      : NULL 失败, !=NULL成功
 ************************************************************************/
-EXPORT_DLL vzconn::EventService *DpClient_GetEvtLoopFromPoll(
+EXPORT_DLL DpEvtService DpClient_GetEvtLoopFromPoll(
   const DPPollHandle p_poll_handle);
 
 //////////////////////////////////////////////////////////////////////////
