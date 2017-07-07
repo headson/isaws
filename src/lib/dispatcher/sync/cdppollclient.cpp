@@ -50,7 +50,7 @@ CDpPollClient* CDpPollClient::Create(const char *server, unsigned short port,
 }
 
 CDpPollClient::~CDpPollClient() {
-  CDpClient::~CDpClient();
+  //CDpClient::~CDpClient();
   c_evt_timer_.Stop();
 }
 
@@ -81,22 +81,21 @@ int32 CDpPollClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   LOG(L_INFO) << "message seq "<<p_cur_dp_msg_->method <<"  "<<get_msg_id();
 
   // 在回调中,避免使用同一个socket send数据,造成递归evt loop
-  if (p_poll_msg_cb_) {
-    p_poll_msg_cb_(this, p_cur_dp_msg_, p_poll_msg_usr_arg_);
+  if (n_flag != FLAG_GET_CLIENT_ID
+      && p_cur_dp_msg_->type == TYPE_GET_SESSION_ID) {  // 获取ID不回调
+    if (p_poll_msg_cb_) {
+      p_poll_msg_cb_(this, p_cur_dp_msg_, p_poll_msg_usr_arg_);
+    }
+  } else if (n_flag == FLAG_GET_CLIENT_ID
+             || p_cur_dp_msg_->type == TYPE_GET_SESSION_ID) {  // 获取ID不回调
+    n_session_id_ = (p_cur_dp_msg_->channel_id << 24);
+    LOG(L_WARNING) << "get session id " << p_cur_dp_msg_->channel_id;
   }
 
   // 注册消息成功
   if (p_cur_dp_msg_->reply_type == TYPE_ADD_MESSAGE) {
     SetResMsgFlag(1);
   }
-
-  // 获取session id
-  if (n_flag == FLAG_GET_CLIENT_ID
-      || p_cur_dp_msg_->type == TYPE_GET_SESSION_ID) {
-    n_session_id_ = (p_cur_dp_msg_->channel_id << 24);
-    LOG(L_WARNING) << "get session id " << p_cur_dp_msg_->channel_id;
-  }
-
   // 如果是轮询,接收到一个包就退出event的run_loop
   if (NULL != p_evt_loop_) {
     p_evt_loop_->LoopExit(0);

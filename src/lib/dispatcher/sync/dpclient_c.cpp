@@ -402,6 +402,7 @@ EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
 
 EXPORT_DLL DpEvtService DpClient_GetEvtLoopFromPoll(
   const DPPollHandle p_poll_handle) {
+
   CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "get client failed.";

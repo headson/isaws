@@ -111,7 +111,7 @@ int32 CMCastSocket::OnRecv() {
 }
 
 int CMCastSocket::SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
-                              char* p_data, int n_data) {
+                              const uint8* p_data, uint32 n_data) {
   if (send_socket_ == INVALID_SOCKET) {
     send_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
     if (send_socket_ <0) {
@@ -150,7 +150,7 @@ int CMCastSocket::SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
   s_center.sin_family = AF_INET;
   s_center.sin_addr.s_addr = inet_addr((char*)s_center_ip);
   s_center.sin_port = htons(n_center_port);
-  int ret = sendto(send_socket_, p_data, n_data, 0,
+  int ret = sendto(send_socket_, (const char*)p_data, n_data, 0,
                    (struct sockaddr*)&s_center, sizeof(struct sockaddr));
   return ret;
 }

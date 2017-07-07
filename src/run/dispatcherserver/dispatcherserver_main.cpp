@@ -16,7 +16,6 @@ int main(int argc, char *argv[]) {
   kvdb::KvdbServer kvdb_server(event_service);
   kvdb_server.StartKvdbServer("0.0.0.0", 5299, "./kvdb.db", "./kvdb_backup.db");
 
-
   while (1) {
     event_service.RunLoop();
   }

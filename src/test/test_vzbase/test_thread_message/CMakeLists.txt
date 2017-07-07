@@ -50,7 +50,8 @@ set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_TES
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libvzbases
+		libdpclient
+		libvzbase
 		libvzconn
 		${VZPROJECT_LINK_LIB}
 		winmm.lib
