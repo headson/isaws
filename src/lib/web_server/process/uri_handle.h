@@ -11,7 +11,7 @@
 
 typedef int32 (*URI_HANDLE_METHOD)(struct mg_connection *nc,
                                    const void           *p_data,
-                                   uint32                n_data);
+                                   unsigned int                n_data);
 
 #ifdef __cplusplus
 extern "C" {

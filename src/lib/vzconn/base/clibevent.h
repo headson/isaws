@@ -50,7 +50,7 @@ class EVT_TIMER {
   EVT_FUNC        p_callback_;  // 消息回调
   void*           p_usr_args_;  // 回调参数
 
-  uint32          b_init_, b_start_;
+  unsigned int          b_init_, b_start_;
 
  public:
   EVT_TIMER();
@@ -68,7 +68,7 @@ class EVT_TIMER {
   *              repeat_ms[IN] 此不为0,注册为永久超时事件,延迟repeat_ms执行一次
   *Return      : 0 成功
   ************************************************************************/
-  int32           Start(uint32 after_ms, uint32 repeat_ms);
+  int32           Start(unsigned int after_ms, unsigned int repeat_ms);
   void            Stop();
 
   static void     evt_callback(evutil_socket_t fd, short event, void *ctx);
@@ -82,7 +82,7 @@ class EVT_IO {
 
   EVT_FUNC        p_callback_;  // 消息回调
   void*           p_usr_args_;  // 回调参数
-  uint32          b_init_, b_start_;
+  unsigned int          b_init_, b_start_;
 
  public:
   EVT_IO();
@@ -95,7 +95,7 @@ class EVT_IO {
   *              n_evt[IN] 事件类型;EV_READ\EV_WRITE\EV_PERSIST
   *Return      : 0 成功
   ************************************************************************/
-  int32           Start(SOCKET v_hdl, int32 nEvt, uint32 n_timeout=0);
+  int32           Start(SOCKET v_hdl, int32 nEvt, unsigned int n_timeout=0);
   void            Stop();
 
   // 用户主动唤醒事件,调用事件回调时使用
@@ -109,7 +109,7 @@ class EVT_IO {
 class EVT_LOOP {
 private:
   struct event_base* p_event_;
-  uint32             b_runging_;      // 运行状态
+  unsigned int             b_runging_;      // 运行状态
   EVT_TIMER          evt_exit_timer_; // 退出定时器
 
 public:
@@ -121,10 +121,10 @@ public:
 
   // n_timeout>0,超时退出
   // n_timeout=0,永久循环,除非调用LoopExit退出
-  int32   RunLoop(uint32 n_timeout = 0);
+  int32   RunLoop(unsigned int n_timeout = 0);
 
   // 定时退出,0=立刻退出
-  void    LoopExit(uint32 n_timeout);
+  void    LoopExit(unsigned int n_timeout);
 
   bool    isRuning();
 

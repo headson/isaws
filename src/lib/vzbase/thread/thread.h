@@ -227,24 +227,24 @@ class Thread : public MessageQueue {
   bool WrapCurrentWithThreadManager(ThreadManager* thread_manager);
 
   std::list<_SendMessage> sendlist_;
-  std::string name_;
-  ThreadPriority priority_;
-  bool started_;
-  bool has_sends_;
+  std::string             name_;
+  ThreadPriority          priority_;
+  bool                    started_;
+  bool                    has_sends_;
 
 #ifdef POSIX
-  pthread_t thread_;
+  pthread_t               thread_;
 #endif
 
 #ifdef WIN32
-  HANDLE thread_;
-  DWORD thread_id_;
+  HANDLE                  thread_;
+  DWORD                   thread_id_;
 #endif
 
-  bool owned_;
-  bool delete_self_when_complete_;
+  bool                    owned_;
+  bool                    delete_self_when_complete_;
 
-  friend class ThreadManager;
+  friend class            ThreadManager;
 
   DISALLOW_COPY_AND_ASSIGN(Thread);
 };

@@ -28,7 +28,7 @@ bool Session::StopSession() {
 }
 
 bool Session::HandleSessionMessage(const DpMessage *dmp,
-                                   const uint8 *data,
+                                   const char *data,
                                    int size,
                                    int flag) {
   bool b_ret = false;
@@ -53,7 +53,7 @@ bool Session::ProcessGetSessionIdMessage(const DpMessage *dmp) {
 }
 
 bool Session::ProcessAddListenMessage(const DpMessage *dmp,
-                                      const uint8 *data,
+                                      const char *data,
                                       int size) {
   for (int i = 0; i < size; i+= MAX_METHOD_SIZE) {
     AddListenMessage((const char *)data + i);
@@ -62,7 +62,7 @@ bool Session::ProcessAddListenMessage(const DpMessage *dmp,
 }
 
 bool Session::ProcessRemoveListenMessage(const DpMessage *dmp,
-    const uint8 *data,
+    const char *data,
     int size) {
   for (int i = 0; i < size; i+= MAX_METHOD_SIZE) {
     RemoveListenMessage((const char *)data + i);
@@ -71,13 +71,13 @@ bool Session::ProcessRemoveListenMessage(const DpMessage *dmp,
 }
 
 bool Session::ProcessDpMessage(const DpMessage *dmp,
-                               const uint8 *data,
+                               const char *data,
                                int size) {
   if (session_interface_ == NULL) {
     return false;
   }
   // 回执类型的消息,通过session id去查找对应session
-  uint32 id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK) ?
+  unsigned int id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK) ?
               vzconn::NetworkToHost32(dmp->id) : dmp->id;
 
   //LOG(L_WARNING) << "type " << dmp->type
@@ -110,7 +110,7 @@ bool Session::ProcessDpMessage(const DpMessage *dmp,
   return false;
 }
 
-bool Session::ReplyDpMessage(const DpMessage *dmsg, uint8 type, uint8 channel) {
+bool Session::ReplyDpMessage(const DpMessage *dmsg, unsigned char type, unsigned char channel) {
   if (session_interface_) {
     memcpy(&dmp_, dmsg, sizeof(DpMessage));
     dmp_.channel_id = session_id_;

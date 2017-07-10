@@ -1,15 +1,9 @@
 /** ===========================================================================
 * @file net_config.c
-*
 * @path $(IPNCPATH)\sys_adm\system_server
-*
-* @desc
-* .
 * Copyright (c) Appro Photoelectron Inc.  2008
-*
 * Use of this software is controlled by the terms and conditions found
 * in the license agreement under which this software has been supplied
-*
 * =========================================================================== */
 #include <stdio.h>
 #include <string.h>
@@ -32,9 +26,9 @@
 //#define NET_CONFIG_DEBUG
 
 #ifdef NET_CONFIG_DEBUG
-#define DBG_ERR(x...)		perror(x)
-#define DBG_NET(x...)		printf(x)
-#define DBG(x...)			printf(x)
+#define DBG_ERR(x...)     perror(x)
+#define DBG_NET(x...)     printf(x)
+#define DBG(x...)         printf(x)
 #else
 #define DBG_ERR(x...)
 #define DBG_NET(x...)
@@ -47,9 +41,8 @@
 static struct sockaddr_in sa = {
 sin_family:
   PF_INET,
-  sin_port:	0
+  sin_port: 0
 };
-
 
 /**
  * @brief	Set a certain interface flag.
@@ -777,7 +770,6 @@ in_addr_t net_search_gateway_byname(char *ifname) {
   fclose(fp);
   return (INADDR_ANY);
 }
-
 
 /**
  * @brief	get net info

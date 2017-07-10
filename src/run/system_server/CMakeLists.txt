@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 #########################################################################
 
 # Basic environment setting
-SET(BUILD_PROJECT_NAME "systemserver")
+SET(BUILD_PROJECT_NAME "systemserverapp")
 
 #########################################################################
 #INCLUDE_DIRECTORIES(${LIBVZNET_INCLUDE_DIR})
@@ -49,7 +49,8 @@ ENDIF()
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
-	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
+		libjsoncpp
 		libsystemserver
 		libdpclient
 		libvzconn
@@ -59,6 +60,7 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
+		jsoncpp
 		systemserver
 		dpclient
 		vzconn

@@ -18,24 +18,24 @@ class Session {
   bool StartSession();
   bool StopSession();
   bool HandleSessionMessage(const DpMessage *dmp,
-                            const uint8 *data,
+                            const char *data,
                             int size,
                             int flag);
   vzconn::VSocket* GetSocket() {
     return vz_socket_;
   }
-  bool ReplyDpMessage(const DpMessage *dmsg, uint8 type, uint8 channel);
+  bool ReplyDpMessage(const DpMessage *dmsg, unsigned char type, unsigned char channel);
  private:
   bool ProcessGetSessionIdMessage(const DpMessage *dmp);
   bool ProcessAddListenMessage(const DpMessage *dmp,
-                               const uint8 *data,
+                               const char *data,
                                int size);
   bool ProcessRemoveListenMessage(const DpMessage *dmp,
-                                  const uint8 *data,
+                                  const char *data,
                                   int size);
 
   bool ProcessDpMessage(const DpMessage *dmp,
-                        const uint8 *data,
+                        const char *data,
                         int size);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -57,7 +57,7 @@ class SessionInterface {
   virtual bool AsyncWrite(Session *session,
                           vzconn::VSocket *vz_socket,
                           const DpMessage *dmp,
-                          const uint8 *data, int size) = 0;
+                          const char *data, int size) = 0;
 
   virtual void OnSessionError(Session *session, vzconn::VSocket *vz_socket) = 0;
   // virtual void OnPushMessage(Session *session,

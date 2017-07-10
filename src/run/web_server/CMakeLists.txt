@@ -50,7 +50,7 @@ MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		libwebsrv
+		libwebserver
 		libdpclient
 		libvzbase
 		libvzconn
@@ -58,7 +58,7 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		websrv
+		webserver
 		dpclient
 		vzbase
 		vzconn

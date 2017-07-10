@@ -7,20 +7,21 @@
 #include "vzbase/helper/stdafx.h"
 #include "dispatcher/base/pkghead.h"
 
-CDpClient::CDpClient(const char *server, unsigned short port,
-                     vzconn::EVT_LOOP          *p_evt_loop)
+CDpClient::CDpClient(const char       *s_srv_ip,
+                     unsigned short    n_srv_port,
+                     vzconn::EVT_LOOP *p_evt_loop)
   : p_evt_loop_(p_evt_loop)
   , vzconn::CTcpClient(p_evt_loop, this)
   , n_session_id_(-1)
   , n_message_id_(1)
-  , n_ret_type_((uint32)TYPE_INVALID) {
-  dp_port_ = port;
+  , n_ret_type_((unsigned int)TYPE_INVALID) {
+  dp_port_ = n_srv_port;
   memset(dp_addr_, 0, 64);
-  strncpy(dp_addr_, server, 63);
+  strncpy(dp_addr_, s_srv_ip, 63);
 }
 
-CDpClient* CDpClient::Create(const char *server, unsigned short port,
-                             vzconn::EVT_LOOP          *p_evt_loop) {
+CDpClient* CDpClient::Create(const char *s_dp_ip, unsigned short n_dp_port) {
+  vzconn::EVT_LOOP *p_evt_loop = NULL;
   if (NULL == p_evt_loop) {
     p_evt_loop = new vzconn::EVT_LOOP();
     if (p_evt_loop != NULL) {
@@ -36,7 +37,7 @@ CDpClient* CDpClient::Create(const char *server, unsigned short port,
     return NULL;
   }
 
-  return (new CDpClient(server, port, p_evt_loop));
+  return (new CDpClient(s_dp_ip, n_dp_port, p_evt_loop));
 }
 
 CDpClient::~CDpClient() {
@@ -45,17 +46,18 @@ CDpClient::~CDpClient() {
 
   if (p_evt_loop_) {
     p_evt_loop_->Stop();
+    delete p_evt_loop_;
     p_evt_loop_ = NULL;
   }
 }
 
-int32 CDpClient::RunLoop(uint32 n_timeout) {
-  int32 n_ret = 0;
+int CDpClient::RunLoop(unsigned int n_timeout) {
+  int n_ret = 0;
   if (NULL == p_evt_loop_) {
     return -1;
   }
   n_ret = p_evt_loop_->RunLoop(n_timeout);
-  if (n_ret_type_ != (uint32)TYPE_INVALID) {
+  if (n_ret_type_ != (unsigned int)TYPE_INVALID) {
     return 1;
   }
   return 0;
@@ -63,7 +65,7 @@ int32 CDpClient::RunLoop(uint32 n_timeout) {
 
 void CDpClient::Reset() {
   p_cur_dp_msg_ = NULL;
-  n_ret_type_ = (uint32)TYPE_INVALID;
+  n_ret_type_ = (unsigned int)TYPE_INVALID;
 }
 
 bool CDpClient::CheckAndConnected() {
@@ -71,7 +73,7 @@ bool CDpClient::CheckAndConnected() {
     Close();
 
     n_session_id_ = -1;
-    n_ret_type_   = (uint32)TYPE_INVALID;
+    n_ret_type_   = (unsigned int)TYPE_INVALID;
     vzconn::CInetAddr c_remote_addr(dp_addr_, dp_port_);
     bool b_ret = Connect(&c_remote_addr, false, true, DEF_TIMEOUT_MSEC);
     if (b_ret == false) {
@@ -82,75 +84,20 @@ bool CDpClient::CheckAndConnected() {
   return true;
 }
 
-int32 CDpClient::ListenMessage(uint8        e_type,
-                               const char  *method_set[],
-                               unsigned int set_size,
-                               uint16       n_flag) {
-  // ×émethod°ü
-  uint32 n_data = 0;
-  char   s_data[MAX_METHOD_COUNT*MAX_METHOD_SIZE] = {0};
-  for (uint32 i = 0; i < set_size; i++) {
-    if (method_set[i] == NULL) {
-      continue;
-    }
-    if (method_set[i][0] == '\0') {
-      continue;
-    }
-    uint32 n_method = strlen(method_set[i]) + 1;
-    if (n_method >= MAX_METHOD_SIZE) {
-      continue;
-    }
-    memcpy(s_data+n_data, method_set[i], n_method);
-    n_data += MAX_METHOD_SIZE;
-  }
-
-  //
-  n_cur_msg_id_ = new_msg_id();
-  // dp message
-  DpMessage c_dp_msg;
-  int32 n_dp_msg = CDpClient::EncDpMsg(&c_dp_msg,
-                                       e_type,
-                                       get_session_id(),
-                                       NULL,
-                                       n_cur_msg_id_,
-                                       n_data);
-  if (n_dp_msg < 0) {
-    LOG(L_ERROR) << "create dp msg head failed." << n_dp_msg;
-    return VZNETDP_FAILURE;
-  }
-
-  // body
-  iovec iov[2];
-  iov[0].iov_base = &c_dp_msg;
-  iov[0].iov_len  = sizeof(c_dp_msg);
-  iov[1].iov_base = (void*)s_data;
-  iov[1].iov_len  = n_data;
-
-  Reset();
-  int32 n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
-  if (n_ret <= 0) {
-    LOG(L_ERROR) << "async write failed " << n_dp_msg + n_data;
-    return n_ret;
-  }
-  return n_ret;
-}
-
-int32 CDpClient::SendMessage(unsigned char             n_type,
-                             const char               *p_method,
-                             unsigned int              n_msg_id,
-                             const char               *p_data,
-                             int                       n_data,
-                             DpClient_MessageCallback  call_back,
-                             void                     *user_data) {
+int CDpClient::SendMessage(unsigned char             n_type,
+                           const char               *p_method,
+                           unsigned int              n_msg_id,
+                           const char               *p_data,
+                           unsigned int              n_data) {
   n_cur_msg_id_ = n_msg_id;
   // dp head
   DpMessage c_dp_msg;
-  int32 n_dp_msg = CDpClient::EncDpMsg(&c_dp_msg,
-                                       n_type,
-                                       get_session_id(),
-                                       p_method,
-                                       n_cur_msg_id_,
-                                       n_data);
+  int n_dp_msg = CDpClient::EncDpMsg(&c_dp_msg,
+                                     n_type,
+                                     get_session_id(),
+                                     p_method,
+                                     n_cur_msg_id_,
+                                     n_data);
   if (n_dp_msg < 0) {
     LOG(L_ERROR) << "create dp msg head failed." << n_dp_msg;
     return VZNETDP_FAILURE;
@@ -165,7 +112,7 @@ int32 CDpClient::SendMessage(unsigned char             n_type,
   iov[1].iov_len  = n_data;
 
   Reset();
-  int32 n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
+  int n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "async write failed " << n_dp_msg + n_data;
     return n_ret;
@@ -173,10 +120,10 @@ int32 CDpClient::SendMessage(unsigned char             n_type,
   return n_ret;
 }
 
-int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
-                                  const uint8     *p_data,
-                                  uint32           n_data,
-                                  uint16           n_flag) {
+int CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
+                                const char      *p_data,
+                                unsigned int     n_data,
+                                unsigned short   n_flag) {
   //LOG(L_WARNING) << "recv packet length " << n_data;
   if (!p_cli || !p_data || n_data == 0) {
     LOG(L_ERROR) << "param is NULL";
@@ -193,7 +140,7 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
     if (NULL != p_evt_loop_) {
       p_evt_loop_->LoopExit(0);
     }
-    n_ret_type_ = static_cast<uint32>(p_cur_dp_msg_->type);
+    n_ret_type_ = static_cast<unsigned int>(p_cur_dp_msg_->type);
   }
 
   if (n_flag == FLAG_GET_CLIENT_ID
@@ -235,7 +182,7 @@ int CDpClient::EncDpMsg(DpMessage      *p_msg,
   return sizeof(DpMessage);
 }
 
-DpMessage *CDpClient::DecDpMsg(const void *p_data, uint32 n_data) {
+DpMessage *CDpClient::DecDpMsg(const void *p_data, unsigned int n_data) {
   if (!p_data || n_data < sizeof(DpMessage)) {
     return NULL;
   }
@@ -248,4 +195,94 @@ DpMessage *CDpClient::DecDpMsg(const void *p_data, uint32 n_data) {
   return p_msg;
 }
 
+int CDpClient::GetSessionIDFromServer() {
+  int n_ret = 0;
+  n_ret = SendMessage(TYPE_GET_SESSION_ID,
+                      "GET_SEESION_ID",
+                      new_msg_id(),
+                      "body_data",
+                      strlen("body_data"));
+  if (n_ret <= 0) {
+    return VZNETDP_FAILURE;
+  }
+
+  RunLoop(DEF_TIMEOUT_MSEC);
+  if (get_session_id() < 0) {
+    LOG(L_ERROR) << "get session id failed ";
+    return VZNETDP_FAILURE;
+  }
+  return VZNETDP_SUCCEED;
+}
+
+int CDpClient::SendDpMessage(const char *p_method,
+                             unsigned char n_session_id,
+                             const char *p_data,
+                             unsigned int n_data) {
+  int n_ret = 0;
+  n_ret = SendMessage(TYPE_MESSAGE,
+                      p_method,
+                      new_msg_id(),
+                      p_data,
+                      n_data);
+  if (n_ret <= 0) {
+    return VZNETDP_FAILURE;
+  }
+
+  RunLoop(DEF_TIMEOUT_MSEC);
+  if (get_ret_type() == TYPE_SUCCEED) {
+    return VZNETDP_SUCCEED;
+  }
+  LOG(L_ERROR) << get_ret_type();
+  return VZNETDP_FAILURE;
+}
+
+int CDpClient::SendDpRequest(const char                *p_method,
+                             unsigned char              n_chn_id,
+                             const char                *p_data,
+                             unsigned int               n_data,
+                             DpClient_MessageCallback   p_callback,
+                             void                      *p_user_arg,
+                             unsigned int               n_timeout) {
+  int n_ret = 0;
+  n_ret = SendMessage(TYPE_REQUEST,
+                      p_method,
+                      new_msg_id(),
+                      p_data,
+                      n_data);
+  if (n_ret <= 0) {
+    return VZNETDP_FAILURE;
+  }
+
+  RunLoop(n_timeout);
+  if ((get_ret_type() == TYPE_REPLY) ||
+      (get_ret_type() == TYPE_SUCCEED)) {
+    p_callback(this, p_cur_dp_msg_, p_user_arg);
+    return VZNETDP_SUCCEED;
+  }
+  LOG(L_ERROR) << get_ret_type();
+  return VZNETDP_FAILURE;
+}
+
+int CDpClient::SendDpReply(const char   *p_method,
+                           unsigned char n_chn_id,
+                           unsigned int  n_msg_id,
+                           const char   *p_data,
+                           unsigned int  n_data) {
+  int n_ret = 0;
+  n_ret = SendMessage(TYPE_REPLY,
+                      p_method,
+                      n_msg_id,
+                      p_data,
+                      n_data);
+  if (n_ret <= 0) {
+    return VZNETDP_FAILURE;
+  }
+
+  RunLoop(DEF_TIMEOUT_MSEC);
+  if (get_ret_type() == TYPE_SUCCEED) {
+    return VZNETDP_SUCCEED;
+  }
+  LOG(L_ERROR) << get_ret_type();
+  return VZNETDP_FAILURE;
+}
 

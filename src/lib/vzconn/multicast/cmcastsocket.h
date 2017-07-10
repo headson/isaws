@@ -19,10 +19,10 @@ class CMCastSocket : public vzconn::VSocket {
                               CClientInterface *cli_hdl);
   virtual ~CMCastSocket();
 
-  int32 Open(const uint8* s_center_ip, uint16 n_center_port);
+  bool Open(const unsigned char* s_center_ip, unsigned short n_center_port);
 
-  static int SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
-                         const uint8* p_data, uint32 n_data);
+  static int32 SendUdpData(const char* s_center_ip, unsigned short n_center_port,
+                           const char* p_data, unsigned int n_data);
 
  protected:
   // 接收事件

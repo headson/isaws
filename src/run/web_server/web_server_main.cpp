@@ -1,19 +1,31 @@
+#include <signal.h>
+
 #include "vzbase/helper/stdafx.h"
 
 #include "web_server/clistenmessage.h"
 
+void SignalHandle(int n_sig) {
+  CListenMessage::Instance()->Stop();
+
+  ExitVzLogging();
+  LOG(L_ERROR) << "applet terminal.";
+}
+
 int main(int argc, char *argv[]) {
+  signal(SIGINT,  SignalHandle);
+  signal(SIGTERM, SignalHandle);
+  //signal(SIGKILL, SignalHandle);
+
   InitVzLogging(argc, argv);
 #ifdef _WIN32
   ShowVzLoggingAlways();
 #endif
 
-  CListenMessage c_listen;
-  bool b_ret = c_listen.Start(
-                 (uint8*)"127.0.0.1", 5291,
-                 (uint8*)"8000", (uint8*)"C:/tools/web");
+  bool b_ret = CListenMessage::Instance()->Start(
+                 (uint8*)DEF_DP_SRV_IP, DEF_DP_SRV_PORT,
+                 (uint8*)DEF_WEB_SRV_PORT, (uint8*)DEF_WEB_SRV_PATH);
   while (b_ret) {
-    c_listen.RunLoop();
+    CListenMessage::Instance()->RunLoop();
   }
 
   return 0;

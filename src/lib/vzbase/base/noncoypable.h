@@ -2,6 +2,7 @@
 #define VZBASE_BASE_NONCOPYABLE_H_
 
 namespace vzbase { // protection from unintended ADL
+
 class noncopyable {
  protected:
 //#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS) && !defined(BOOST_NO_CXX11_NON_PUBLIC_DEFAULTED_FUNCTIONS)
@@ -20,6 +21,7 @@ class noncopyable {
   noncopyable& operator=( const noncopyable& );
 // #endif
 };
-}
+
+}  // namespace vzbase
 
 #endif  // VZBASE_BASE_NONCOPYABLE_H_

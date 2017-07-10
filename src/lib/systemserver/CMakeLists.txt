@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 if(WIN32)
-    SET(BUILD_PROJECT_NAME "libsyssrv")
+    SET(BUILD_PROJECT_NAME "libsystemserver")
 elseif(UNIX)
-    SET(BUILD_PROJECT_NAME "syssrv")
+    SET(BUILD_PROJECT_NAME "systemserver")
 endif()
 
 #########################################################################

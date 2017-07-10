@@ -59,9 +59,9 @@ void KvdbServer::HandleServerClose(vzconn::VSocket *p_srv) {
 
 // 客户端回调函数
 int32 KvdbServer::HandleRecvPacket(vzconn::VSocket *p_cli,
-                                   const uint8   *p_data,
-                                   uint32         n_data,
-                                   uint16         n_flag) {
+                                   const char   *p_data,
+                                   unsigned int         n_data,
+                                   unsigned short         n_flag) {
 
   const KvdbMessage *kvdb_msg = (const KvdbMessage *)(p_data);
   memcpy(&kvdb_message_, kvdb_msg, sizeof(KvdbMessage));
@@ -90,8 +90,8 @@ int32 KvdbServer::HandleRecvPacket(vzconn::VSocket *p_cli,
 
 
 bool KvdbServer::ProcessKvdbService(const KvdbMessage *kvdb_msg,
-                                    const uint8 *data,
-                                    uint32 size) {
+                                    const char *data,
+                                    unsigned int size) {
   if (kvdb_msg->type == KVDB_REPLACE) {
     return kvdb_sqlite_->ReplaceKeyValue(kvdb_msg->key,
                                          strnlen(kvdb_msg->key, MAX_KVDB_KEY_SIZE),
@@ -107,15 +107,15 @@ bool KvdbServer::ProcessKvdbService(const KvdbMessage *kvdb_msg,
   return false;
 }
 
-bool KvdbServer::ResponseKvdb(vzconn::VSocket *p_cli, uint32 type) {
+bool KvdbServer::ResponseKvdb(vzconn::VSocket *p_cli, unsigned int type) {
   kvdb_message_.type = type;
   p_cli->AsyncWrite(&kvdb_message_, sizeof(KvdbMessage), 0);
   return true;
 }
 
 bool KvdbServer::ProcessSelect(const KvdbMessage *kvdb_msg,
-                               const uint8 *data,
-                               uint32 size,
+                               const char *data,
+                               unsigned int size,
                                vzconn::VSocket *p_cli) {
   static std::vector<char> buffer;
   if (kvdb_msg->type != KVDB_SELECT) {

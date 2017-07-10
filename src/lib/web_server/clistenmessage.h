@@ -6,51 +6,38 @@
 #define _CLISTENMESSAGE_H
 
 #include "vzbase/base/basictypes.h"
-#include "vzbase/thread/thread.h"
 
-#include "web_server/base/mongoose.h"
+#include "vzbase/base/noncoypable.h"
+
 #include "dispatcher/sync/dpclient_c.h"
 
-class CListenMessage : public vzbase::Runnable{
- public:
+#include "web_server/cwebserver.h"
+
+class CListenMessage : public vzbase::noncopyable {
+ protected:
   CListenMessage();
   virtual ~CListenMessage();
 
-  bool  Start(const uint8 *s_dp_ip, uint16 n_dp_port,
-              const uint8 *s_http_port,
-              const uint8 *s_http_path);
+public:
+  static CListenMessage *Instance();
 
-  int32 RunLoop();
+  bool  Start(const unsigned char *s_dp_ip, unsigned short n_dp_port,
+              const unsigned char *s_http_port, const unsigned char *s_http_path);
+  void  Stop();
 
-  // 广播消息(WebSocket)
-  void broadcast(const void* p_data, uint32 n_data);
+  void  RunLoop();
 
  protected:
-  static void msg_handler(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
-  void OnMessage(DPPollHandle p_hdl, const DpMessage *dmp);
+  static void dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
+  void OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp);
 
-  static void state_handler(DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg);
-  void OnState(DPPollHandle p_hdl, uint32 n_state);
-
-  //////////////////////////////////////////////////////////////////////////
-  bool StartWebServer(const uint8 *s_http_port, const uint8 *s_http_path);
-  bool StartDpClientPoll(const uint8 *s_dp_ip, uint16 n_dp_port);
-  virtual void Run(vzbase::Thread* thread);
-
-  /************************************************************************/
-  /* Description : 默认request处理
-  /* Parameters  :
-  /* Return      :
-  /************************************************************************/
-  static void ev_handler(struct mg_connection *nc, int ev, void *ev_data);
-  void OnEvHdl(struct mg_connection *nc, int ev, void *ev_data);
+  static void dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg);
+  void OnDpCliState(DPPollHandle p_hdl, unsigned int n_state);
 
  private:
   DPPollHandle               p_dp_cli_;
 
-  struct mg_mgr              c_web_srv_;
-  struct mg_connection      *p_web_conn_;
-  vzbase::Thread            *p_web_thread_;
+  CWebServer                 c_web_srv_;
 };
 
 #endif  // _CLISTENMESSAGE_H

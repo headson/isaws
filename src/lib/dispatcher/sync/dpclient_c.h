@@ -26,7 +26,7 @@ typedef void(*DpClient_MessageCallback)(
 
 #define DP_CLIENT_DISCONNECT  101   // 断开链接,需要重连
 typedef void(*DpClient_PollStateCallback)(
-  DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg);
+  DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg);
 
 #define DP_POLL_HANDLE_NULL NULL
 
@@ -44,28 +44,27 @@ EXPORT_DLL int  DpClient_Start(int new_thread);
 EXPORT_DLL void DpClient_Stop();
 
 // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-EXPORT_DLL int  DpClient_SendDpMessage(const char    *method,
-                                       unsigned char  channel_id,
-                                       const char    *data,
-                                       int            data_size);
+EXPORT_DLL int  DpClient_SendDpMessage(const char    *p_method,
+                                       unsigned char  n_chn_id,
+                                       const char    *p_data,
+                                       unsigned int   n_data);
 
 // return VZNETDP_FAILURE, ERROR
 // return > 0, request id
-EXPORT_DLL unsigned int DpClient_SendDpRequest(
-  const char                *method,
-  unsigned char              channel_id,
-  const char                *data,
-  int                        data_size,
-  DpClient_MessageCallback   call_back,
-  void                      *user_data,
-  unsigned int               timeout);
+EXPORT_DLL int DpClient_SendDpRequest(const char                *p_method,
+                                      unsigned char              n_chn_id,
+                                      const char                *p_data,
+                                      unsigned int               n_data,
+                                      DpClient_MessageCallback   p_callback,
+                                      void                      *p_user_arg,
+                                      unsigned int               n_timeout);
 
 // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-EXPORT_DLL int DpClient_SendDpReply(const char      *method,
-                                    unsigned char    channel_id,
-                                    unsigned int     id,
-                                    const char      *data,
-                                    int              data_size);
+EXPORT_DLL int DpClient_SendDpReply(const char    *p_method,
+                                    unsigned char  n_chn_id,
+                                    unsigned int   n_msg_id,
+                                    const char    *p_data,
+                                    unsigned int   n_data);
 
 ///Poll///////////////////////////////////////////////////////////////////
 /************************************************************************

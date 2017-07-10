@@ -3,12 +3,13 @@
 #include "vzconn/base/connhead.h"
 #include "vzconn/sync/ctcpclient.h"
 //#include "vzconn/async/cevtipcclient.h"
+using namespace vzconn;
 
 static int i = 0;
 class CSocketProcess : public vzconn::CClientInterface {
  public:
    virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
-                                  const uint8      *p_data,
+                                  const char       *p_data,
                                   uint32            n_data,
                                   uint16            n_flag) {
     NetHead* p_head = (NetHead*)p_data;

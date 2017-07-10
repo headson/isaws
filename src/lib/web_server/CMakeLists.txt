@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 if(WIN32)
-    SET(BUILD_PROJECT_NAME "libwebsrv")
+    SET(BUILD_PROJECT_NAME "libwebserver")
 elseif(UNIX)
-    SET(BUILD_PROJECT_NAME "websrv")
+    SET(BUILD_PROJECT_NAME "webserver")
 endif()
 
 #########################################################################
@@ -23,6 +23,8 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
+	${CMAKE_CURRENT_SOURCE_DIR}/cwebserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cwebserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 	
@@ -48,6 +50,8 @@ SOURCE_GROUP(process FILES
 )
 
 SOURCE_GROUP(listen_message FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/cwebserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cwebserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )

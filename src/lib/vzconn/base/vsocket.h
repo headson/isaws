@@ -36,8 +36,8 @@ class CInetAddr {
   CInetAddr();
   CInetAddr(const CInetAddr& addr);
   CInetAddr(const struct sockaddr_in& addr);
-  CInetAddr(uint32 ip, uint16 port);
-  CInetAddr(const char *hostname, uint16 port);
+  CInetAddr(unsigned int ip, unsigned short port);
+  CInetAddr(const char *hostname, unsigned short port);
 
   virtual ~CInetAddr();
 
@@ -48,19 +48,19 @@ class CInetAddr {
   CInetAddr&          operator=(const struct sockaddr_in& addr);
   CInetAddr&          operator=(const std::string& addr_str); // ip:port
 
-  void                SetIP(uint32 ip);
+  void                SetIP(unsigned int ip);
   void                SetIP(const char* hostname);
-  void                SetPort(uint16 port);
+  void                SetPort(unsigned short port);
 
-  uint32              GetIP() const;
-  uint16              GetPort() const;
-  const struct sockaddr_in&  IPAddr() const;
-  struct sockaddr_in*        GetAddr();
-  const struct sockaddr_in*  GetAddr() const;
+  unsigned int              GetIP() const;
+  unsigned short            GetPort() const;
+  const struct sockaddr_in& IPAddr() const;
+  struct sockaddr_in*       GetAddr();
+  const struct sockaddr_in* GetAddr() const;
   const std::string         ToString() const;
   const std::string         IP2String() const;
 
-  int32 ToIpcAddr(char *p_addr, uint32 n_addr) const;
+  int32 ToIpcAddr(char *p_addr, unsigned int n_addr) const;
 
   bool                operator==(const CInetAddr& addr) const;
   bool                operator!=(const CInetAddr& addr) const;
@@ -87,7 +87,7 @@ class CClientInterface {
   *Parameters  :
   *Return      :
   ***********************************************************************/
-  virtual uint32 NetHeadSize();
+  virtual unsigned int NetHeadSize();
 
   /***********************************************************************
   *Description : 回调解析网络头部
@@ -95,9 +95,9 @@ class CClientInterface {
   *              n_data[IN] 数据长度
   *Return      : 0=未找到包头,>0一整包长度(head+body),<0(脏数据)未找到包头
   ***********************************************************************/
-  virtual int32 NetHeadParse(const uint8 *p_data,
-                             uint32       n_data,
-                             uint16      *n_flag);
+  virtual int32 NetHeadParse(const char     *p_data,
+                             unsigned int    n_data,
+                             unsigned short *n_flag);
   /***********************************************************************
   *Description : 回调网络头部打包
   *Parameters  : p_data[OUT] 数据
@@ -106,15 +106,15 @@ class CClientInterface {
   *              n_flag[IN]  VZ包头的flag
   *Return      : >0包头占用数据长度
   ***********************************************************************/
-  virtual int32 NetHeadPacket(uint8  *p_data,
-                              uint32  n_data,
-                              uint32  n_body,
-                              uint16  n_flag);
+  virtual int32 NetHeadPacket(char          *p_data,
+                              unsigned int   n_data,
+                              unsigned int   n_body,
+                              unsigned short n_flag);
  public:
   virtual int32 HandleRecvPacket(VSocket       *p_cli,
-                                 const uint8   *p_data,
-                                 uint32         n_data,
-                                 uint16         n_flag) = 0;
+                                 const char    *p_data,
+                                 unsigned int   n_data,
+                                 unsigned short n_flag) = 0;
   virtual int32 HandleSendPacket(VSocket *p_cli) = 0;
   virtual void  HandleClose(VSocket *p_cli) = 0;
 };
@@ -140,23 +140,23 @@ class VSocket {
   *Description : 发送一包数据;缓存到发送cache中
   *Parameters  : p_data[IN] 数据(body区)
   *              n_data[IN] 数据长度
-  *              e_flag[IN] VZ为包头的flag[uint16]
+  *              e_flag[IN] VZ为包头的flag[unsigned short]
   *Return      : >0 缓存数据长度,<=0 发送失败
   ************************************************************************/
-  virtual int32 AsyncWrite(const void  *p_data,
-                           uint32       n_data,
-                           uint16       e_flag);
+  virtual int32 AsyncWrite(const void       *p_data,
+                           unsigned int      n_data,
+                           unsigned short    e_flag);
 
   /************************************************************************
   *Description : 发送一包数据;缓存到发送cache中
   *Parameters  : iov[IN]    数据(body区)
   *              n_iov[IN]  iov个数
-  *              e_flag[IN] VZ为包头的flag[uint16]
+  *              e_flag[IN] VZ为包头的flag[unsigned short]
   *Return      : >0 缓存数据长度,<=0 发送失败
   ***********************************************************************/
-  virtual int32 AsyncWrite(struct iovec iov[],
-                           uint32       n_iov,
-                           uint16       e_flag);
+  virtual int32 AsyncWrite(struct iovec     a_iov[],
+                           unsigned int     n_iov,
+                           unsigned short   e_flag);
 
   /***************************************************************************
   *Author        : Sober.Peng 28:12:2016
@@ -164,8 +164,8 @@ class VSocket {
   *Param         : pData[OUT] 接收数据，nData[IN] 缓存大小
   *Return        : >0 数据长度，0 没收到数据，-1 断网
   ***************************************************************************/
-  virtual int32 Recv(void *pData, uint32 nData);
-  virtual int32 Recv(void *pData, uint32 nData, CInetAddr& cRemoteAddr);
+  virtual int32 Recv(void *pData, unsigned int nData);
+  virtual int32 Recv(void *pData, unsigned int nData, CInetAddr& cRemoteAddr);
 
   /***************************************************************************
   *Author        : Sober.Peng 28:12:2016
@@ -173,9 +173,9 @@ class VSocket {
   *Param         : pData[IN] 发送数据，nData[IN] 缓存大小
   *Return        : >0 数据长度，0 没发送数据，-1 断网
   ****************************************************************************/
-  virtual int32 Send(const void* pData, uint32 nData);
+  virtual int32 Send(const void* pData, unsigned int nData);
   virtual int32 Send(const void*      pData,
-                     uint32           nData,
+                     unsigned int           nData,
                      const CInetAddr  &cRemoteAddr);
 
   friend class CSockRecvData;

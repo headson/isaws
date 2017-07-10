@@ -13,7 +13,7 @@ namespace vzconn {
 class CSockRecvData : public CBlockBuffer {
  public:
   CSockRecvData();
-  CSockRecvData(uint8 *p_data, uint32 n_data);
+  CSockRecvData(char *p_data, unsigned int n_data);
   virtual ~CSockRecvData();
 
   // 网络接收数据
@@ -35,13 +35,13 @@ class CSockSendData : public CBlockBuffer {
   // 数据缓存到发送buffer中
   int32 DataCacheToSendBuffer(VSocket    *p_sock,
                               const void *p_data,
-                              uint32      n_data,
-                              uint16      e_flag);
+                              unsigned int      n_data,
+                              unsigned short      e_flag);
 
   int32 DataCacheToSendBuffer(VSocket      *p_sock,
                               struct iovec  iov[],
-                              uint32        n_iov,
-                              uint16        e_flag);
+                              unsigned int        n_iov,
+                              unsigned short        e_flag);
 };
 
 }  // namespace vzconn

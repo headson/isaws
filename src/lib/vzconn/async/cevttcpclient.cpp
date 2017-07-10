@@ -16,7 +16,7 @@ CEvtTcpClient::CEvtTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl)
   , c_recv_data_()
   , c_evt_send_()
   , c_send_data_() {
-  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (unsigned int)this);
 }
 
 CEvtTcpClient* CEvtTcpClient::Create(const EVT_LOOP   *p_loop,
@@ -39,7 +39,7 @@ CEvtTcpClient::~CEvtTcpClient() {
 
   Close();
 
-  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (unsigned int)this);
 }
 
 void CEvtTcpClient::Remove() {
@@ -92,7 +92,7 @@ bool CEvtTcpClient::Open(SOCKET s, bool b_block) {
 bool CEvtTcpClient::Connect(const CInetAddr *p_remote_addr,
                             bool             b_block,
                             bool             b_reuse,
-                            uint32           n_timeout) {
+                            unsigned int           n_timeout) {
   if (NULL == p_evt_loop_) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
@@ -162,8 +162,8 @@ bool CEvtTcpClient::Connect(const CInetAddr *p_remote_addr,
 }
 
 int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
-                                uint32       n_data,
-                                uint16       e_flag) {
+                                unsigned int       n_data,
+                                unsigned short       e_flag) {
   if (isOpen()) {
     int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this, 
                                                        p_data, 
@@ -186,8 +186,8 @@ int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
 }
 
 int32 CEvtTcpClient::AsyncWrite(struct iovec iov[], 
-                                uint32       n_iov,
-                                uint16       e_flag) {
+                                unsigned int       n_iov,
+                                unsigned short       e_flag) {
   if (isOpen()) {
     int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this, 
                                                        iov,

@@ -6,27 +6,31 @@
 #define _CLISTENMESSAGE_H
 
 #include "vzbase/base/basictypes.h"
-
+#include "vzbase/base/noncoypable.h"
 #include "dispatcher/sync/dpclient_c.h"
 
-#include "vzlogging/logging/vzwatchdog.h"
-#include "vzlogging/logging/vzloggingcpp.h"
-
-class CListenMessage {
- public:
+class CListenMessage : public vzbase::noncopyable {
+ protected:
   CListenMessage();
   virtual ~CListenMessage();
 
-  bool  Start(const uint8 *s_dp_ip, uint16 n_dp_port);
+public:
+  static CListenMessage *Instance();
 
-  int32 RunLoop();
-  
+  bool  Start(const uint8 *s_dp_ip, uint16 n_dp_port);
+  void  Stop();
+
+  void  RunLoop();
+
  protected:
-  static void msg_handler(const DpMessage *dmp, void* p_usr_arg);
-  void OnMessage(const DpMessage *dmp);
-  
+  static void dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
+  void OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp);
+
+  static void dpcli_poll_state_cb(DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg);
+  void OnDpCliState(DPPollHandle p_hdl, uint32 n_state);
+
  private:
-  DPPollHandle       p_dp_cli_;
+  DPPollHandle               p_dp_cli_;
 };
 
 #endif  // _CLISTENMESSAGE_H

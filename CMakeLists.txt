@@ -30,7 +30,7 @@ LINK_DIRECTORIES(${VZPROJECT_LIBRARY_DIR})
 ADD_SUBDIRECTORY(cmake)
 
 ## add third sdk
-#ADD_SUBDIRECTORY(src/third_part/json)
+ADD_SUBDIRECTORY(src/third_part/json)
 #ADD_SUBDIRECTORY(src/third_part/live555)
 ADD_SUBDIRECTORY(src/third_part/sqlite3)
 
@@ -39,17 +39,19 @@ ADD_SUBDIRECTORY(src/lib/vzlogging)
 ADD_SUBDIRECTORY(src/lib/web_server)
 ADD_SUBDIRECTORY(src/lib/vzconn)
 ADD_SUBDIRECTORY(src/lib/systemv)
-#ADD_SUBDIRECTORY(src/lib/systemserver)
+ADD_SUBDIRECTORY(src/lib/systemserver)
 ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/platform/hi3518ev200)
 
 ## add run
 ADD_SUBDIRECTORY(src/run/web_server)
 ADD_SUBDIRECTORY(src/run/vzlogserver)
-#ADD_SUBDIRECTORY(src/run/system_server)
+ADD_SUBDIRECTORY(src/run/system_server)
 ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/hi3518e)
 #ADD_SUBDIRECTORY(src/run/live_stream)
+
+ADD_SUBDIRECTORY(src/run/pc_client)
 
 ## add test
 ADD_SUBDIRECTORY(src/test/test_systemv)

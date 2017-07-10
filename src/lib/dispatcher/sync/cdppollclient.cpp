@@ -29,16 +29,10 @@ CDpPollClient* CDpPollClient::Create(const char *server, unsigned short port,
                                      DpClient_PollStateCallback p_state_cb,
                                      void                      *p_state_usr_arg,
                                      vzconn::EVT_LOOP          *p_evt_loop) {
-  if (NULL == p_evt_loop) {
-    p_evt_loop = new vzconn::EVT_LOOP();
-    if (p_evt_loop != NULL) {
-      if (p_evt_loop->Start() != 0) {
-        delete p_evt_loop;
-        p_evt_loop = NULL;
-      }
-    }
+  if (!p_msg_cb || !p_state_cb) {
+    LOG(L_ERROR) << "param is null.";
+    return NULL;
   }
-
   if (NULL == p_evt_loop) {
     LOG(L_ERROR) << "evt loop is null.";
     return NULL;
@@ -50,12 +44,70 @@ CDpPollClient* CDpPollClient::Create(const char *server, unsigned short port,
 }
 
 CDpPollClient::~CDpPollClient() {
-  //CDpClient::~CDpClient();
   c_evt_timer_.Stop();
+  c_evt_recv_.Stop();
+  c_evt_send_.Stop();
+
+  if (p_evt_loop_) {
+    p_evt_loop_ = NULL;
+  }
 }
 
-int32 CDpPollClient::PollRunLoop(uint32 n_timeout) {
-  int32 n_ret = 0;
+int CDpPollClient::ListenMessage(unsigned char     e_type,
+                                 const char       *p_method[],
+                                 unsigned int      n_method_cnt,
+                                 unsigned short    n_flag) {
+  // ×émethod°ü
+  unsigned int n_data = 0;
+  char   s_data[MAX_METHOD_COUNT*MAX_METHOD_SIZE] = {0};
+  for (unsigned int i = 0; i < n_method_cnt; i++) {
+    if (p_method[i] == NULL) {
+      continue;
+    }
+    if (p_method[i][0] == '\0') {
+      continue;
+    }
+    unsigned int n_method = strlen(p_method[i]) + 1;
+    if (n_method >= MAX_METHOD_SIZE) {
+      continue;
+    }
+    memcpy(s_data+n_data, p_method[i], n_method);
+    n_data += MAX_METHOD_SIZE;
+  }
+
+  //
+  n_cur_msg_id_ = new_msg_id();
+  // dp message
+  DpMessage c_dp_msg;
+  int n_dp_msg = CDpClient::EncDpMsg(&c_dp_msg,
+                                     e_type,
+                                     get_session_id(),
+                                     NULL,
+                                     n_cur_msg_id_,
+                                     n_data);
+  if (n_dp_msg < 0) {
+    LOG(L_ERROR) << "create dp msg head failed." << n_dp_msg;
+    return VZNETDP_FAILURE;
+  }
+
+  // body
+  iovec iov[2];
+  iov[0].iov_base = &c_dp_msg;
+  iov[0].iov_len  = sizeof(c_dp_msg);
+  iov[1].iov_base = (void*)s_data;
+  iov[1].iov_len  = n_data;
+
+  Reset();
+  int n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
+  if (n_ret <= 0) {
+    LOG(L_ERROR) << "async write failed " << n_dp_msg + n_data;
+    return n_ret;
+  }
+  return n_ret;
+}
+
+int CDpPollClient::RunLoop(unsigned int n_timeout) {
+  int n_ret = 0;
   if (NULL == p_evt_loop_) {
     return -1;
   }
@@ -64,10 +116,10 @@ int32 CDpPollClient::PollRunLoop(uint32 n_timeout) {
   return 0;
 }
 
-int32 CDpPollClient::HandleRecvPacket(vzconn::VSocket *p_cli,
-                                      const uint8     *p_data,
-                                      uint32           n_data,
-                                      uint16           n_flag) {
+int CDpPollClient::HandleRecvPacket(vzconn::VSocket *p_cli,
+                                    const unsigned char     *p_data,
+                                    unsigned int           n_data,
+                                    unsigned short           n_flag) {
   //LOG(L_WARNING) << "recv packet length " << n_data;
   if (!p_cli || !p_data || n_data == 0) {
     LOG(L_ERROR) << "param is NULL";
@@ -103,7 +155,7 @@ int32 CDpPollClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   return 0;
 }
 
-int32 CDpPollClient::OnEvtTimer() {
+int CDpPollClient::OnEvtTimer() {
   if (isClose() || had_reg_msg_ == 0) {
     n_session_id_ = -1;
     had_reg_msg_  = 0;

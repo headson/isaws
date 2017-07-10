@@ -27,7 +27,7 @@ class CEvtIpcClient : public CEvtTcpClient {
   virtual bool Connect(const CInetAddr *p_remote_addr,
                        bool             b_block,
                        bool             b_reuse,
-                       uint32           n_timeout=5000);
+                       unsigned int           n_timeout=5000);
 
 };
 

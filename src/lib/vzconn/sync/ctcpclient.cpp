@@ -16,7 +16,7 @@ CTcpClient::CTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl)
   , c_recv_data_()
   , c_evt_send_()
   , c_send_data_() {
-  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (unsigned int)this);
 }
 
 void CTcpClient::StopEvent() {
@@ -47,7 +47,7 @@ CTcpClient::~CTcpClient() {
 
   Close();
 
-  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (unsigned int)this);
 }
 
 bool CTcpClient::Open(SOCKET s, bool b_block) {
@@ -91,7 +91,7 @@ bool CTcpClient::Open(SOCKET s, bool b_block) {
 bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
                          bool             b_block,
                          bool             b_reuse,
-                         uint32           n_timeout) {
+                         unsigned int           n_timeout) {
   if (NULL == p_evt_loop_) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
@@ -167,8 +167,8 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
 }
 
 int32 CTcpClient::AsyncWrite(const void  *p_data,
-                             uint32       n_data,
-                             uint16       e_flag) {
+                             unsigned int       n_data,
+                             unsigned short       e_flag) {
   if (isOpen() && cli_hdl_ptr_) {
     uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
     if (c_send_data_.FreeSize() < (n_data+n_head)) {
@@ -203,11 +203,11 @@ int32 CTcpClient::AsyncWrite(const void  *p_data,
 }
 
 int32 CTcpClient::AsyncWrite(struct iovec iov[],
-                             uint32       n_iov,
-                             uint16       e_flag) {
+                             unsigned int       n_iov,
+                             unsigned short       e_flag) {
   if (isOpen()) {
-    uint32 n_data = 0;
-    for (uint32 i = 0; i < n_iov; i++) {
+    unsigned int n_data = 0;
+    for (unsigned int i = 0; i < n_iov; i++) {
       n_data += iov[i].iov_len;
     }
     uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
@@ -262,7 +262,7 @@ int32 CTcpClient::OnRecv() {
     c_recv_data_.MoveWritePtr(n_recv);
     LOG(L_ERROR) << "recv length "<<n_recv;
 
-    uint16 n_flag = 0;
+    unsigned short n_flag = 0;
     int32_t n_pkg_size = 0;
     do {
       n_pkg_size = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),

@@ -11,11 +11,11 @@ namespace vzconn {
 CEvtIpcClient::CEvtIpcClient(const EVT_LOOP *p_loop,
                              CClientInterface *cli_hdl)
   : CEvtTcpClient(p_loop, cli_hdl) {
-  LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (unsigned int)this);
 }
 
 CEvtIpcClient::~CEvtIpcClient() {
-  LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (unsigned int)this);
 }
 
 CEvtIpcClient* CEvtIpcClient::Create(const EVT_LOOP *p_loop,
@@ -35,7 +35,7 @@ CEvtIpcClient* CEvtIpcClient::Create(const EVT_LOOP *p_loop,
 bool CEvtIpcClient::Connect(const CInetAddr *p_remote_addr,
                              bool             b_block,
                              bool             b_reuse,
-                             uint32           n_timeout/*=5000*/) {
+                             unsigned int           n_timeout/*=5000*/) {
   if (NULL == p_evt_loop_) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;

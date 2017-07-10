@@ -6,10 +6,26 @@
 #define VMESSAGE_H
 
 #define DEF_SHM_VIDEO_0       "/dev/shm/video_0"
-#define DEF_SHM_VIDEO_0_SIZE  ((352*288*3)/2)
+#define DEF_SHM_VIDEO_0_SIZE  ((352*288*3)/2 + 1024)
 
 #define DEF_SHM_AUDIO_0       "/dev/shm/audio_0"
-#define DEF_SHM_AUDIO_0_SIZE  1024
+#define DEF_SHM_AUDIO_0_SIZE  (1024)
+
+// DpClient_InitÉèÖÃdispatcher_server dpµØÖ·
+#define DEF_DP_SRV_IP         "127.0.0.1"
+#define DEF_DP_SRV_PORT       5291
+
+// KvdbClient_InitÉèÖÃdispatcher_server kvdbµØÖ·
+#define DEF_KVDB_SRV_IP       "127.0.0.1"
+#define DEF_KVDB_SRV_PORT     5299
+
+// WEB Server ¼àÌı¶Ë¿ÚºÍÍøÒ³´æ´¢Â·¾¶
+#define DEF_WEB_SRV_PORT      "8000"
+#define DEF_WEB_SRV_PATH      "c:/tools/web"
+
+#define DEF_MCAST_IP          "228.5.6.2"
+#define DEF_MCAST_DEV_PORT    20003     // Éè±¸¼àÌı¶Ë¿Ú,ĞŞ¸ÄIPµØÖ·
+#define DEF_MCAST_CLI_PORT    20004     // ¿Í»§¶Ë¼àÌı¶Ë¿Ú,»ñÈ¡Éè±¸ĞÅÏ¢
 
 //////////////////////////////////////////////////////////////////////////
 /*
@@ -38,11 +54,29 @@ err_msg:ÔÚstateµÄÖµ²»Îª200µÄÇé¿öÏÂ£¬Ó¦¸Ã½«error_msgµÄÖµ¸³Öµ£¬ÒÔ±ãÓÃ»§ÄÜ¹»¸üºÃµÄÃ
 
 ×¢Òâ:ËùÓĞ×Ö¶Î¶¼ÎªĞ¡Ğ´
 */
-#define MSG_SYS_PARAM         "msg_sys_param"     // ÏµÍ³²ÎÊı
+#define MSG_TYPE              "type"
+#define MSG_STATE             "state"
+#define MSG_ERR_MSG           "err_msg"
+#define MSG_BODY              "body"
 
-#define MSG_IVA_PARAM         "msg_iva_param"     // Ëã·¨²ÎÊı
-#define MSG_IVA_EVENT         "msg_iva_event"     // Ëã·¨ÊÂ¼ş
+#define MSG_TYPE_MAX          32
 
+//////////////////////////////////////////////////////////////////////////
 
+#define DP_SYS_CONFIG         "dp_sys_config"   // ÏµÍ³²ÎÊı
 
+#define MSG_SYSC_GET_DEVINFO  "get_devinfo"     // »ñÈ¡Éè±¸ĞÅÏ¢
+#define MSG_SYSC_SET_DEVINFO  "set_devinfo"     // ÉèÖÃÉè±¸ĞÅÏ¢
+
+#define MSG_SYSC_SET_HWCLOCK  "set_hwclock"     // ÉèÖÃÓ²¼şÊ±¼ä
+
+#define DP_NET_MODIFY         "dp_net_modify"   // ÍøÂçĞŞ¸ÄÏûÏ¢
+
+//////////////////////////////////////////////////////////////////////////
+#define DP_IVA_CONFIG         "dp_iva_config"   // Ëã·¨²ÎÊı
+
+#define DP_IVA_EVENT          "dp_iva_event"    // Ëã·¨ÊÂ¼ş
+
+//////////////////////////////////////////////////////////////////////////
+#define KVDB_
 #endif  // VMESSAGE_H

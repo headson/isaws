@@ -100,8 +100,8 @@ void DpStateCallback(DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg) {
 }
 
 static int32 evt_timer_cb(SOCKET          fd,
-                        short           events,
-                        const void      *p_usr_arg) {
+                          short           events,
+                          const void      *p_usr_arg) {
   return 0;
 }
 
@@ -118,8 +118,8 @@ int main(int argc, char* argv[]) {
   vzconn::EVT_TIMER evt_timer;
 
   // 创建句柄
-  void *p_hdl = DpClient_CreatePollHandle(DpMsgCallback, NULL, 
-                                          DpStateCallback, NULL, 
+  void *p_hdl = DpClient_CreatePollHandle(DpMsgCallback, NULL,
+                                          DpStateCallback, NULL,
                                           NULL);
   if (NULL == p_hdl) {
     LOG(L_ERROR) << "memory empty.";
@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
   DpClient_HdlAddListenMessage(p_hdl, MSG_TYPES, MAX_TYPES_SIZE);
 
   // 一个定时器例子
-  vzconn::EVT_LOOP *p_evt_loop = 
+  vzconn::EVT_LOOP *p_evt_loop =
     (vzconn::EVT_LOOP *)DpClient_GetEvtLoopFromPoll(p_hdl);
   evt_timer.Init(p_evt_loop, evt_timer_cb, NULL);
   evt_timer.Start(1000, 1000);

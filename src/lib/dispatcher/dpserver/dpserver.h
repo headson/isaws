@@ -27,31 +27,32 @@ class DpServer : public vzbase::noncopyable,
   virtual void  HandleServerClose(vzconn::VSocket *p_srv);
   // 客户端回调函数
   virtual int32 HandleRecvPacket(vzconn::VSocket *p_cli,
-                                 const uint8   *p_data,
-                                 uint32         n_data,
-                                 uint16         n_flag);
+                                 const char      *p_data,
+                                 unsigned int     n_data,
+                                 unsigned short   n_flag);
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli);
   virtual void  HandleClose(vzconn::VSocket *p_cli);
   // Session回调
   virtual bool AsyncWrite(Session *session,
                           vzconn::VSocket *vz_socket,
                           const DpMessage *dmp,
-                          const uint8 *data, int size);
+                          const char *data, 
+                          int size);
   virtual void OnSessionError(Session *session, vzconn::VSocket *vz_socket);
 
  private:
-  uint8 GetNewSessionId();
-  bool AddSession(uint8 n_idx, Session *session, vzconn::VSocket *socket);
+  unsigned char GetNewSessionId();
+  bool AddSession(unsigned char n_idx, Session *session, vzconn::VSocket *socket);
   bool RemoveBySession(Session *session);
   bool RemoveBySocket(vzconn::VSocket *socket);
   Session *FindSessionBySocket(vzconn::VSocket *socket);
   vzconn::VSocket *FindSocketBySession(Session *session);
 
  private:
-  uint32 DispatcherSession(Session *session,
+  unsigned int DispatcherSession(Session *session,
                            const DpMessage *dmsg,
-                           const uint8 *data,
-                           uint32 data_size);
+                           const char *data,
+                           unsigned int data_size);
  private:
   struct SessionSocketPair {
     Session *session;
