@@ -1,16 +1,20 @@
 #ifndef CMAINDIALOG_H
 #define CMAINDIALOG_H
 
-#include <QtWidgets/QMainWindow>
+#include <QDialog>
+#include "common/cmydialog.h"
+
 #include "ui_cmaindialog.h"
 
-class CMainDialog : public QMainWindow
+class CMainDialog : public CMyDialog
 {
     Q_OBJECT
 
 public:
-    CMainDialog(QWidget *parent = 0);
+    CMainDialog(QDialog *parent = 0);
     ~CMainDialog();
+
+    bool CheckLogin();
 
 private:
     Ui::CMainDialogClass ui;

@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.8.0)
 #########################################################################
-project(isaw_project)
+project(pc_manage)
 
 SET(CMAKE_PREFIX_PATH $ENV{QT5_HOME})
 
 # Basic environment setting
-SET(BUILD_PROJECT_NAME "pc_client") 
+SET(BUILD_PROJECT_NAME "pc_manage")
 
 # Find includes in corresponding build directories
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -45,24 +45,51 @@ ADD_DEFINITIONS (${QT_DEFINITIONS})
 #########################################################################
 #Step 3 : Add code source
 qt5_add_resources(QRC_FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/cmaindialog.qrc
+	${CMAKE_CURRENT_SOURCE_DIR}/resource/resource.qrc
 )
 
 qt5_wrap_ui(UI_FILES 
-	${CMAKE_CURRENT_SOURCE_DIR}/cmaindialog.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/cmaindialog.ui
 )
 
 SET(SRC_LIST 
-	${CMAKE_CURRENT_SOURCE_DIR}/cmaindialog.h
-	${CMAKE_CURRENT_SOURCE_DIR}/cmaindialog.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/common/cmydialog.h
+	${CMAKE_CURRENT_SOURCE_DIR}/common/cmydialog.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.h
+	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.cpp
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.h
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/cmaindialog.h
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/cmaindialog.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/appinc.h
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
+SOURCE_GROUP(common FILES 
+	${CMAKE_CURRENT_SOURCE_DIR}/common/cmydialog.h
+	${CMAKE_CURRENT_SOURCE_DIR}/common/cmydialog.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.h
+	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.cpp
+)
+
 SOURCE_GROUP(maindialog FILES 
-	${CMAKE_CURRENT_SOURCE_DIR}/cmaindialog.ui
-	${CMAKE_CURRENT_SOURCE_DIR}/cmaindialog.h
-	${CMAKE_CURRENT_SOURCE_DIR}/cmaindialog.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.h
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/cmaindialog.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/cmaindialog.h
+	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/cmaindialog.cpp
+)
+
+SOURCE_GROUP(main FILES 
+	${CMAKE_CURRENT_SOURCE_DIR}/appinc.h
+	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/resource/resource.qrc
 )
 
 # Use the Widgets module from Qt 5.

@@ -1,0 +1,157 @@
+*{font-family:Microsoft YaHei;}
+
+QDialog
+{
+    border-radius:2px;
+    border:1px solid rgb(128, 128, 128);
+}
+
+/*注册账号*/
+QPushButton#pRegUserBtn
+{
+    color:rgb(38, 133, 227);
+    background-color:transparent;
+}
+
+QPushButton#pRegUserBtn:hover
+{
+    color:rgb(97, 179, 246);
+}
+
+QPushButton#pRegUserBtn:pressed
+{
+    color:rgb(0, 109, 176);
+}
+
+/*忘记密码*/
+QPushButton#pFgtPwdBtn
+{
+    color:rgb(38, 133, 227);
+    background-color:transparent;
+}
+
+QPushButton#pFgtPwdBtn:hover
+{
+    color:rgb(97, 179, 246);
+}
+
+QPushButton#pFgtPwdBtn:pressed
+{
+    color:rgb(0, 109, 176);
+}
+
+/*用户名*/
+QComboBox
+{
+    background:white;
+    padding-left:5px;
+    border-top-left-radius:3px;
+    border-top-right-radius:3px;
+    border: 1px solid rgb(209, 209, 209);
+}
+QComboBox:hover
+{
+    border: 1px solid rgb(21, 131, 221);
+}
+QComboBox QAbstractItemView::item
+{
+    height:40px;
+}
+
+/*下拉列表框*/
+QComboBox
+{
+    background:white;
+    padding-left:5px;
+    border-top-left-radius:3px;
+    border-top-right-radius:3px;
+    border: 1px solid rgb(209, 209, 209);
+}
+QComboBox:hover
+{
+    border: 1px solid rgb(21, 131, 221);
+}
+QComboBox QAbstractItemView::item
+{
+    height:40px;
+}
+QComboBox::down-arrow
+{
+    border-image:url(:/resource/icon/drop_down_Button.png) 0 34 0 0;
+}
+QComboBox::down-arrow:hover
+{
+    border-image:url(:/resource/icon/drop_down_Button.png) 0 17 0 17;
+}
+QComboBox::down-arrow:on
+{
+    border-image:url(:/resource/icon/drop_down_Button.png) 0 0 0 34;
+}
+QComboBox::drop-down
+{
+    width:20px;
+    background:transparent; /*不加此句下拉箭头背景色为灰色与整体样式不一致，也可设置 border:0px; border-radius:0px; background:white; border-left:0px; 即设置为无边框*/
+    padding-right:5px;
+}
+
+/*用户密码*/
+QLineEdit#pPwdEdit
+{
+    background:white;
+    padding-left:5px;
+    padding-top:1px;
+    border: 1px solid rgb(209, 209, 209);
+    border-top:transparent;
+}
+QLineEdit#pPwdEdit:hover
+{
+    padding-top:0px;
+    border: 1px solid rgb(21, 131, 221);
+}
+
+/*记住密码and自动登录*/
+QCheckBox
+{
+    color:rgb(101, 101, 101);
+}
+
+QCheckBox::indicator:unchecked
+{
+    border-image:url(:/resource/icon/checkbox.png) 0 39 0 0;
+}
+QCheckBox::indicator:hover
+{
+    border-image:url(:/resource/icon/checkbox.png) 0 26 0 13;
+}
+QCheckBox::indicator:pressed
+{
+    border-image:url(:/resource/icon/checkbox.png) 0 13 0 26;
+}
+QCheckBox::indicator:checked
+{
+    border-image:url(:/resource/icon/checkbox.png) 0 0 0 39;
+}
+
+/*登陆按钮*/
+QPushButton#pLoginButton
+{
+    color:white;
+    background-color:rgb(14, 150, 254);
+    border-radius:5px;
+}
+
+QPushButton#pLoginButton:hover
+{
+    color:white;
+    background-color:rgb(44, 137, 255);
+}
+
+QPushButton#pLoginButton:pressed
+{
+    color:white;
+    background-color:rgb(14, 135, 228);
+    padding-left:3px;
+    padding-top:3px;
+}
+
+
