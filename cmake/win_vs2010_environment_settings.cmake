@@ -1,8 +1,6 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(CMAKE_PREFIX_PATH $ENV{QT5_HOME})
-
 ##########################################################
 ## Step 1 
 SET(INTERFACE_INCLUDE_DIR     "E:/vz/sdk/interface_8127/inc")

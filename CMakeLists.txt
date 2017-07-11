@@ -1,4 +1,4 @@
-# cmake ../.. -G "Visual Studio 10 2010"7
+# cmake ../.. -G "Visual Studio 10 2010"
 # cmake ../.. -G "Visual Studio 12 2013"
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3516 -DCMAKE_BUILD_TYPE=Release
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=IMX6Q -DCMAKE_BUILD_TYPE=Release
@@ -51,7 +51,7 @@ ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/hi3518e)
 #ADD_SUBDIRECTORY(src/run/live_stream)
 
-#ADD_SUBDIRECTORY(src/run/pc_client)
+ADD_SUBDIRECTORY(src/run/pc_client)
 
 ## add test
 ADD_SUBDIRECTORY(src/test/test_systemv)

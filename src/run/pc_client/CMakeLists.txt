@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.8.0)
 #########################################################################
+project(isaw_project)
+
+SET(CMAKE_PREFIX_PATH $ENV{QT5_HOME})
 
 # Basic environment setting
 SET(BUILD_PROJECT_NAME "pc_client") 
