@@ -39,8 +39,8 @@
 #define NOMINMAX
 #endif
 
-#include <winsock2.h>
 #include <windows.h>
+#include <winsock2.h>
 
 #ifndef SECURITY_MANDATORY_LABEL_AUTHORITY
 // Add defines that we use if we are compiling against older sdks

@@ -31,7 +31,7 @@ static void register_http_endpoint(struct mg_connection *nc) {
   mg_register_http_endpoint(nc, "/http_login", uri_hdl_login);
 }
 
-bool CWebServer::Start(const unsigned char *s_http_path, const unsigned char *s_http_port) {
+bool CWebServer::Start(const char *s_http_path, const char *s_http_port) {
   mg_mgr_init(&c_web_srv_, this);
   p_web_conn_ = mg_bind(&c_web_srv_, (char*)s_http_port, web_ev_handler);
   if (p_web_conn_ == NULL) {

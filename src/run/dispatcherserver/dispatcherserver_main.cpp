@@ -1,7 +1,7 @@
 #include <signal.h>
 
 #include "vzbase/helper/stdafx.h"
-
+#include "vzbase/helper/vmessage.h"
 #include "dispatcher/dpserver/dpserver.h"
 #include "dispatcher/kvdbserver/kvdbserver.h"
 

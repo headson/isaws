@@ -6,36 +6,30 @@
 #ifndef LIBVZCONN_CBLOCKBUFFER_H_
 #define LIBVZCONN_CBLOCKBUFFER_H_
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "vzbase/base/basictypes.h"
 
 #include "vzconn/base/vsocket.h"
-#include "vzconn/base/byteorder.h"
 
 namespace vzconn {
 
 class CBlockBuffer {
  public:
   CBlockBuffer();
-  CBlockBuffer(char *p_data, unsigned int n_data);
   virtual ~CBlockBuffer();
 
  public:
-  bool   ReallocBuffer(unsigned int size);
+  bool   ReallocBuffer(uint32 size);
 
-  char* GetReadPtr();            // 获取读位置
-  void   MoveReadPtr(unsigned int n);   // 移动读位置
+  uint8* GetReadPtr();            // 获取读位置
+  void   MoveReadPtr(uint32 n);   // 移动读位置
 
-  char* GetWritePtr();           // 获取写位置
-  void   MoveWritePtr(unsigned int n);  // 移动写位置
+  uint8* GetWritePtr();           // 获取写位置
+  void   MoveWritePtr(uint32 n);  // 移动写位置
 
-  unsigned int Length() const;          // BUFFER缓冲区大小
+  uint32 Length() const;          // BUFFER缓冲区大小
 
-  unsigned int UsedSize();              // 已写数据长度
-  unsigned int FreeSize() const;        // 剩余缓冲区长度
+  uint32 UsedSize();              // 已写数据长度
+  uint32 FreeSize() const;        // 剩余缓冲区长度
 
   bool   isFull() const;          // 数据区是否已满
   void   Recycle();               // 回收已读数据;移动已写数据到pos=0
@@ -43,22 +37,15 @@ class CBlockBuffer {
   void   Clear();                 // 清空数据
 
  public:
-  bool WriteBytes(const unsigned char *val, unsigned int len);
-  bool WriteBytes(const struct iovec iov[], unsigned int n_iov);
+  bool WriteBytes(const uint8 *val, uint32 len);
+  bool WriteBytes(const struct iovec iov[], uint32 n_iov);
 
  protected:
-  void Construct(unsigned int size);
-  void Construct(char *p_data, unsigned int size);
+  uint8*    buffer_;              // 存储buffer
+  uint32    buffer_size_;         // buffer长度
 
- protected:
-  char*    buffer_;              // 存储buffer
-  unsigned int    buffer_size_;         // buffer长度
-
-  unsigned int    read_pos_;            // 读偏移
-  unsigned int    write_pos_;           // 写偏移
-
- protected:
-  unsigned int    is_out_buffer_;       // 外部buffer不能delete
+  uint32    read_pos_;            // 读偏移
+  uint32    write_pos_;           // 写偏移
 };
 
 }  // namespace vzconn

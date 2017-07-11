@@ -14,10 +14,6 @@ CSockRecvData::CSockRecvData()
   n_wait_len_ = 0;
 }
 
-CSockRecvData::CSockRecvData(char *p_data, unsigned int n_data)
-  : CBlockBuffer(p_data, n_data) {
-}
-
 CSockRecvData::~CSockRecvData() {
 }
 
@@ -55,8 +51,8 @@ int32 CSockRecvData::ParseSplitData(VSocket* p_sock) {
 
   if (n_wait_len_ <= static_cast<int32>(UsedSize())) {
     // 解析包头,获取整包数据长度
-    unsigned short n_flag = 0;
-    unsigned int n_offset = 0;  // 解析时,发现起始数据无包头,矫正包头的偏移
+    uint16 n_flag = 0;
+    uint32 n_offset = 0;  // 解析时,发现起始数据无包头,矫正包头的偏移
     int32 n_pkg_size = 0;  // 一整包数据长度;head+body
     n_pkg_size = p_sock->cli_hdl_ptr_->NetHeadParse(GetReadPtr(),
                  UsedSize(),
@@ -87,7 +83,7 @@ int32 CSockRecvData::ParseSplitData(VSocket* p_sock) {
         n_wait_len_ = p_sock->cli_hdl_ptr_->NetHeadSize();
       }
     } else if (n_pkg_size < 0) {
-      LOG(L_ERROR) << "error packet." << (unsigned int)buffer_;
+      LOG(L_ERROR) << "error packet." << (uint32)buffer_;
       n_ret = -1;
     }
   }
@@ -120,8 +116,8 @@ int32 CSockSendData::SendData(VSocket* p_sock) {
 
 int32 CSockSendData::DataCacheToSendBuffer(VSocket     *p_sock,
     const void  *p_data,
-    unsigned int       n_data,
-    unsigned short       e_flag) {
+    uint32       n_data,
+    uint16       e_flag) {
   if (!p_sock && !p_sock->cli_hdl_ptr_) {
     return -1;
   }
@@ -153,15 +149,15 @@ int32 CSockSendData::DataCacheToSendBuffer(VSocket     *p_sock,
 
 int32 CSockSendData::DataCacheToSendBuffer(VSocket      *p_sock,
     struct iovec  iov[],
-    unsigned int        n_iov,
-    unsigned short        e_flag) {
+    uint32        n_iov,
+    uint16        e_flag) {
   if (!p_sock && !p_sock->cli_hdl_ptr_) {
     return -1;
   }
 
   int32 n_head = p_sock->cli_hdl_ptr_->NetHeadSize();
-  unsigned int n_data = 0;
-  for (unsigned int i = 0; i < n_iov; i++) {
+  uint32 n_data = 0;
+  for (uint32 i = 0; i < n_iov; i++) {
     n_data += iov[i].iov_len;
   }
 
@@ -185,7 +181,7 @@ int32 CSockSendData::DataCacheToSendBuffer(VSocket      *p_sock,
 
   // body
   n_data = 0;
-  for (unsigned int i = 0; i < n_iov; i++) {
+  for (uint32 i = 0; i < n_iov; i++) {
     memcpy(GetWritePtr(), iov[i].iov_base, iov[i].iov_len);
     MoveWritePtr(iov[i].iov_len);
     n_data += iov[i].iov_len;

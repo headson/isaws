@@ -64,10 +64,8 @@ SET(SRC_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
-	${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.c
-	${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.h
-	${CMAKE_CURRENT_SOURCE_DIR}/helper/verror.h
-	${CMAKE_CURRENT_SOURCE_DIR}/helper/vmessage.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.c
+	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.h
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/thread/thread.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/thread/thread.h
@@ -105,10 +103,8 @@ SOURCE_GROUP(base FILES
 SOURCE_GROUP(helper FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
-	${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.c
-	${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.h
-	${CMAKE_CURRENT_SOURCE_DIR}/helper/verror.h
-	${CMAKE_CURRENT_SOURCE_DIR}/helper/vmessage.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.c
+	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.h
 )
 
 SOURCE_GROUP(thread FILES

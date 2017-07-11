@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 2.8)
 
 # Basic environment setting
 if(WIN32)
-	ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
 	SET(BUILD_PROJECT_NAME_LOGGING		"libvzlogging")
 	SET(BUILD_PROJECT_NAME_LOGSERVER	"libvzlogserver")
 elseif(UNIX)

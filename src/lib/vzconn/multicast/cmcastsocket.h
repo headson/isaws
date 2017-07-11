@@ -1,9 +1,9 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-22
-/* Description :
-/************************************************************************/
-#ifndef LIBVZCONN_CMCASTSOCKET_H
-#define LIBVZCONN_CMCASTSOCKET_H
+/************************************************************************
+*Author      : Sober.Peng 17-07-10
+*Description : 
+************************************************************************/
+#ifndef LIBVZCONN_CMCASTSOCKET_H_
+#define LIBVZCONN_CMCASTSOCKET_H_
 
 #include "vzconn/base/vsocket.h"
 #include "vzconn/base/clibevent.h"
@@ -19,10 +19,10 @@ class CMCastSocket : public vzconn::VSocket {
                               CClientInterface *cli_hdl);
   virtual ~CMCastSocket();
 
-  bool Open(const unsigned char* s_center_ip, unsigned short n_center_port);
+  int32 Open(const uint8* s_center_ip, uint16 n_center_port);
 
-  static int32 SendUdpData(const char* s_center_ip, unsigned short n_center_port,
-                           const char* p_data, unsigned int n_data);
+  static int SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
+                         const uint8* p_data, uint32 n_data);
 
  protected:
   // 接收事件
@@ -39,4 +39,4 @@ class CMCastSocket : public vzconn::VSocket {
 };
 
 }  // namespace vzconn
-#endif  // LIBVZCONN_CMCASTSOCKET_H
+#endif  // LIBVZCONN_CMCASTSOCKET_H_

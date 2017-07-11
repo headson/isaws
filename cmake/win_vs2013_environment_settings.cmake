@@ -30,6 +30,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 		libevent_core.lib
 		libvzlogging.lib
 		ws2_32.lib
+		winmm.lib
 	)
 elseif(CMAKE_BUILD_TYPE MATCHES Release)
 	MESSAGE(STATUS "       Release Mode")
@@ -44,6 +45,7 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
 		libevent_core.lib
 		libvzlogging.lib
 		ws2_32.lib
+		winmm.lib
 	)
 endif()
 

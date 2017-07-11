@@ -1,6 +1,7 @@
 #include <signal.h>
 
 #include "vzbase/helper/stdafx.h"
+#include "vzbase/helper/vmessage.h"
 
 #include "web_server/clistenmessage.h"
 
@@ -22,8 +23,8 @@ int main(int argc, char *argv[]) {
 #endif
 
   bool b_ret = CListenMessage::Instance()->Start(
-                 (uint8*)DEF_DP_SRV_IP, DEF_DP_SRV_PORT,
-                 (uint8*)DEF_WEB_SRV_PORT, (uint8*)DEF_WEB_SRV_PATH);
+                 DEF_DP_SRV_IP, DEF_DP_SRV_PORT,
+                 DEF_WEB_SRV_PORT, DEF_WEB_SRV_PATH);
   while (b_ret) {
     CListenMessage::Instance()->RunLoop();
   }

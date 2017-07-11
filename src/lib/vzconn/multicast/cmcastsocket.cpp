@@ -1,7 +1,7 @@
-/************************************************************************/
-/* Author      : Sober.Peng 17-06-22
-/* Description :
-/************************************************************************/
+/************************************************************************
+*Author      : Sober.Peng 17-07-10
+*Description :
+************************************************************************/
 #include "cmcastsocket.h"
 
 #include "vzbase/helper/stdafx.h"
@@ -38,17 +38,18 @@ CMCastSocket::~CMCastSocket() {
   Close();
 }
 
-bool CMCastSocket::Open(const unsigned char* s_center_ip, unsigned short n_center_port) {
+int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
+
   SOCKET fd = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd <0) {
     perror("socket failed");
-    return false;
+    return -1;
   }
   int yes = 1;
   int ret = setsockopt(fd, SOL_SOCKET,SO_REUSEADDR, (char*)&yes, sizeof(yes));
   if (ret < 0) {
     perror("Reusing ADDR failed");
-    return false;
+    return -1;
   }
 
   struct sockaddr_in s_local;
@@ -58,8 +59,8 @@ bool CMCastSocket::Open(const unsigned char* s_center_ip, unsigned short n_cente
   ret = bind(fd, (struct sockaddr *)&s_local, sizeof(struct sockaddr_in));
   if (ret < 0) {
     perror("Bind error");
-    close(fd);
-    return false;
+    closesocket(fd);
+    return -1;
   }
 
   struct ip_mreq mreq;
@@ -68,16 +69,16 @@ bool CMCastSocket::Open(const unsigned char* s_center_ip, unsigned short n_cente
   ret = setsockopt(fd,IPPROTO_IP,IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq));
   if (ret < 0) {
     perror("setsockopt");
-    return false;
+    return -1;
   }
   SetSocket(fd);
 
   c_evt_recv_.Init(p_evt_loop_, EvtRecv, this);
   ret = c_evt_recv_.Start(GetSocket(), EVT_READ | EVT_PERSIST);
   if (ret != 0) {
-    return false;
+    return -1;
   }
-  return true;
+  return 0;
 }
 
 int32 CMCastSocket::EvtRecv(SOCKET      fd,
@@ -95,7 +96,7 @@ int32 CMCastSocket::EvtRecv(SOCKET      fd,
 
 int32 CMCastSocket::OnRecv() {
   vzconn::CInetAddr c_remote_addr;
-  char s_data[2048] = {0};
+  uint8 s_data[2048] = {0};
   int32 n_data = vzconn::VSocket::Recv(s_data, 2047, c_remote_addr);
   if (cli_hdl_ptr_) {
     cli_hdl_ptr_->HandleRecvPacket(this, s_data, n_data, 0);
@@ -109,8 +110,8 @@ int32 CMCastSocket::OnRecv() {
   return n_data;
 }
 
-int32 CMCastSocket::SendUdpData(const char* s_center_ip, unsigned short n_center_port,
-                                const char* p_data, unsigned int n_data) {
+int CMCastSocket::SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
+                              const uint8* p_data, uint32 n_data) {
   if (send_socket_ == INVALID_SOCKET) {
     send_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
     if (send_socket_ <0) {
@@ -149,9 +150,9 @@ int32 CMCastSocket::SendUdpData(const char* s_center_ip, unsigned short n_center
   s_center.sin_family = AF_INET;
   s_center.sin_addr.s_addr = inet_addr((char*)s_center_ip);
   s_center.sin_port = htons(n_center_port);
-  int n_ret = sendto(send_socket_, p_data, n_data, 0,
-                     (struct sockaddr*)&s_center, sizeof(struct sockaddr));
-  return n_ret;
+  int ret = sendto(send_socket_, (const char*)p_data, n_data, 0,
+                   (struct sockaddr*)&s_center, sizeof(struct sockaddr));
+  return ret;
 }
 
 }  // namespace vzconn

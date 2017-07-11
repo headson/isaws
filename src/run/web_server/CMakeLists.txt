@@ -48,7 +48,6 @@ set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_RUN
 #Step 6 : link with other library
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
-	ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		libwebserver
 		libdpclient

@@ -262,7 +262,7 @@ bool EncodeConvert(
     // _DBG("ICONV OPEN ERROR %s TO %s \n", from_charset, to_charset);
     return false;
   }
-  if (iconv(cd, (const char**)pin,&inlen,pout,outlen)==-1) {
+  if (iconv(cd, (char**)pin,&inlen,pout,outlen)==(size_t)-1) {
     //_DBG("THE FORMAT ERROR %s to %s [%s %d] [%s %d]\n", from_charset, to_charset,
     //     inbuf, inlen, outbuf, *outlen);
     iconv_close(cd);
@@ -280,7 +280,7 @@ int Gb2312ToUtf8(const char *src,
                  std::size_t des_buffer_size) {
 
   char in_buf[255] = { 0 };
-  char out_buffer[255] = { 0 };
+  //char out_buffer[255] = { 0 };
   size_t out_size = des_buffer_size;
   size_t in_size = src_size;
 

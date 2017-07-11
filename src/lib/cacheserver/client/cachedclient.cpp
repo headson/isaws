@@ -8,15 +8,25 @@
 
 namespace cached {
 
-CachedClient::CachedClient()
+CachedClient::CachedClient(const char *server, unsigned short port)
   : vzconn::CTcpClient(&evt_loop_, this)
-  , p_callback_(NULL)
-  , p_usr_arg_(NULL) {
+  , n_cur_msg_(0)
+  , p_cur_msg_(NULL) {
   evt_loop_.Start();
+
+  n_port_ = port;
+
+  memset(s_addr_, 0, 64);
+  strncpy(s_addr_, server, 63);
 }
 
-CachedClient* CachedClient::Create() {
-  return (new CachedClient());
+CachedClient* CachedClient::Create(const char *server, unsigned short port) {
+  if (NULL == server || port <= 0) {
+    LOG(L_ERROR) << "param is error.";
+    return NULL;
+  }
+
+  return (new CachedClient(server, port));
 }
 
 CachedClient::~CachedClient() {
@@ -28,43 +38,45 @@ CachedClient::~CachedClient() {
 
 int32 CachedClient::RunLoop(uint32 n_timeout) {
   int32 n_ret = 0;
-  for (uint32 i = 0; i < n_timeout / 10; i++) {
-    n_ret = evt_loop_.RunLoop(10);
-    if (n_ret_type_ != (uint32)-1) {
-      return 1;
-    }
+  if (NULL == p_evt_loop_) {
+    return -1;
+  }
+  n_ret = evt_loop_.RunLoop(n_timeout);
+  if (n_ret_type_ != CACHED_INVALID) {
+    return 1;
   }
   return 0;
 }
 
-void CachedClient::Reset(Cached_GetFileCallback  callback,
-                         void                   *p_usr_arg) {
-  n_ret_type_ = (uint32)-1;
+bool CachedClient::CheckAndConnected() {
+  if (isClose()) {
+    Close();
 
-  p_callback_ = callback;
-  p_usr_arg_  = p_usr_arg;
-
-  // loop 没在运行,清空标记
-  if (!evt_loop_.isRuning()) {
-    //c_recv_data_.Clear();
-    //c_send_data_.Clear();
-
-    //c_evt_recv_.Stop();
-    c_evt_send_.Stop();
+    vzconn::CInetAddr c_remote_addr(s_addr_, n_port_);
+    bool b_ret = Connect(&c_remote_addr, false, true, DEF_TIMEOUT_MSEC);
+    if (b_ret == false) {
+      LOG(L_ERROR) << "can't connect kvdb server.";
+      return b_ret;
+    }
   }
+  return true;
 }
 
 bool CachedClient::SaveCachedFile(const char *p_path, int n_path,
                                   const char *p_pata, int n_data) {
   try {
+    if (CheckAndConnected() == false) {
+      return false;
+    }
+
     // Write Requestion
     int32 n_ret = 0;
     CacheMessage c_head;
     EncCacheMsg(&c_head,
-                        CACHED_REPLACE,
-                        p_path,
-                        n_path,
-                        n_data);
+                CACHED_REPLACE,
+                p_path,
+                n_path,
+                n_data);
 
     iovec iov[2];
     iov[0].iov_base = &c_head;
@@ -72,7 +84,6 @@ bool CachedClient::SaveCachedFile(const char *p_path, int n_path,
     iov[1].iov_base = (void*)p_pata;
     iov[1].iov_len = (size_t)n_data;
 
-    Reset(NULL, NULL);
     n_ret = AsyncWrite(iov, 2, 0);
     if (n_ret < 0) {
       LOG(L_ERROR) << "async write failed";
@@ -99,16 +110,16 @@ bool CachedClient::GetCachedFile(const char *p_path, int n_path,
       LOG(L_ERROR) << "key is length than "<<MAX_CACHED_PATH_SIZE;
       return false;
     }
-    strncpy((char*)s_path_, p_path, n_path);
-    s_path_[n_path] = '\0';
-    n_path_ = n_path;
+
+    if (CheckAndConnected() == false) {
+      return false;
+    }
 
     // Write Requestion
     int32 n_ret = 0;
     CacheMessage c_head;
     EncCacheMsg(&c_head, CACHED_SELECT, p_path, n_path, 0);
 
-    Reset(call_back, user_data);
     n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
     if (n_ret < 0) {
       LOG(L_ERROR) << "async write failed.";
@@ -120,7 +131,13 @@ bool CachedClient::GetCachedFile(const char *p_path, int n_path,
       LOG(L_ERROR) << "get cache time out";
       return false;
     }
-    return (n_ret_type_ == CACHED_SUCCEED);
+    if (n_ret_type_ == CACHED_SUCCEED) {
+      call_back(p_path, n_path, 
+                p_cur_msg_->data,
+                n_cur_msg_ - sizeof(CacheMessage),
+                user_data);
+      return true;
+    }
   } catch (std::exception &e) {
     LOG(L_ERROR) << e.what();
   }
@@ -130,12 +147,16 @@ bool CachedClient::GetCachedFile(const char *p_path, int n_path,
 bool CachedClient::DeleteCachedFile(const char *p_path, int n_path) {
   static std::string result;
   try {
+    if (CheckAndConnected() == false) {
+      return false;
+    }
+
     // Write Requestion
     int32 n_ret = 0;
     CacheMessage c_head;
     EncCacheMsg(&c_head, CACHED_DELETE, p_path, n_path, 0);
 
-    Reset(NULL, NULL);
+    n_ret_type_ = CACHED_INVALID;
     n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
     if (n_ret < 0) {
       LOG(L_ERROR) << "async write failed " << p_path;
@@ -164,21 +185,15 @@ int32 CachedClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   }
 
   if (n_data >= sizeof(CacheMessage)) {
-    
-    CacheMessage *p_msg = DecCacheMsg(p_data, n_data);
-    if (p_msg->id != get_msg_id()) {
+    n_cur_msg_ = n_data;
+    p_cur_msg_ = DecCacheMsg(p_data, n_data);
+    if (p_cur_msg_->id != get_msg_id()) {
       LOG(L_WARNING) << "id is not current message id.";
       return 0;
     }
 
     evt_loop_.LoopExit(0);
-    n_ret_type_ = (uint32)p_msg->type;
-
-    int32 n_length = n_data - sizeof(CacheMessage);
-    if (p_callback_) {
-      p_callback_((char*)s_path_, n_path_,
-                  (char*)p_msg->data, n_length, p_usr_arg_);
-    }
+    n_ret_type_ = (uint32)p_cur_msg_->type;
   } else {
     n_ret_type_ = CACHED_FAILURE;
     LOG(L_ERROR) << "unkown the response.";

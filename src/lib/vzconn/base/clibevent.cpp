@@ -44,13 +44,13 @@ void EVT_LOOP::Stop() {
   }
 }
 
-int32 EVT_LOOP::RunLoop(unsigned int n_timeout) {
+int32 EVT_LOOP::RunLoop(uint32 n_timeout) {
   int32 n_ret = -1;
   if (p_event_) {
     evt_exit_timer_.Stop();
 
     if (n_timeout > 0 &&
-        n_timeout != (unsigned int)-1) {
+        n_timeout != (uint32)-1) {
       LoopExit(n_timeout);
     }
     if (0 == b_runging_) {
@@ -110,7 +110,7 @@ void EVT_TIMER::Init(const EVT_LOOP* loop, EVT_FUNC fn_cb, void* p_arg) {
   p_usr_args_ = p_arg;
 }
 
-int32 EVT_TIMER::Start(unsigned int after_ms, unsigned int repeat_ms) {
+int32 EVT_TIMER::Start(uint32 after_ms, uint32 repeat_ms) {
   int32 n_ret = -1;
   if (!p_base_ || !p_base_->get_event()) {
     LOG(L_ERROR)<<"param error.";
@@ -179,7 +179,7 @@ void EVT_IO::Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg) {
   p_usr_args_ = pArg;
 }
 
-int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, unsigned int n_timeout) {
+int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 n_timeout) {
   int32 n_ret = -1;
   if (!p_base_ || !p_base_->get_event()) {
     LOG(L_ERROR)<<"param error.";

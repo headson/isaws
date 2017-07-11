@@ -9,14 +9,14 @@
 
 CKvdbClient::CKvdbClient(const char *server, unsigned short port)
   : vzconn::CTcpClient(&evt_loop_, this)
-  , n_ret_type_((unsigned int)-1) {
+  , n_ret_type_((uint32)-1) {
   n_message_id_ = 0;
   evt_loop_.Start();
 
-  kvdb_port_ = port;
+  n_port_ = port;
 
-  memset(kvdb_addr_, 0, 64);
-  strncpy(kvdb_addr_, server, 63);
+  memset(s_addr_, 0, 64);
+  strncpy(s_addr_, server, 63);
 }
 
 CKvdbClient* CKvdbClient::Create(const char *server, unsigned short port) {
@@ -35,13 +35,14 @@ CKvdbClient::~CKvdbClient() {
   evt_loop_.Stop();
 }
 
-int CKvdbClient::RunLoop(unsigned int n_timeout) {
-  int n_ret = 0;
-  for (unsigned int i = 0; i < n_timeout / 10; i++) {
-    n_ret = evt_loop_.RunLoop(10);
-    if (n_ret_type_ != (unsigned int)-1) {
-      return 1;
-    }
+int32 CKvdbClient::RunLoop(uint32 n_timeout) {
+  int32 n_ret = 0;
+  if (NULL == p_evt_loop_) {
+    return -1;
+  }
+  n_ret = evt_loop_.RunLoop(n_timeout);
+  if (n_ret_type_ != (uint32)TYPE_INVALID) {
+    return 1;
   }
   return 0;
 }
@@ -50,7 +51,7 @@ bool CKvdbClient::CheckAndConnected() {
   if (isClose()) {
     Close();
 
-    vzconn::CInetAddr c_remote_addr(kvdb_addr_, kvdb_port_);
+    vzconn::CInetAddr c_remote_addr(s_addr_, n_port_);
     bool b_ret = Connect(&c_remote_addr, false, true, DEF_TIMEOUT_MSEC);
     if (b_ret == false) {
       LOG(L_ERROR) << "can't connect kvdb server.";
@@ -61,14 +62,14 @@ bool CKvdbClient::CheckAndConnected() {
 }
 
 bool CKvdbClient::SetKey(const char *p_key,
-                         unsigned char       n_key,
+                         uint8       n_key,
                          const char *p_value,
-                         unsigned int      n_value) {
+                         uint32      n_value) {
   if (CheckAndConnected() == false) {
     return false;
   }
 
-  int n_ret = 0;
+  int32 n_ret = 0;
   KvdbMessage c_head;
   n_ret = EncKvdbMsg(&c_head,
                      KVDB_REPLACE,
@@ -85,7 +86,7 @@ bool CKvdbClient::SetKey(const char *p_key,
   iov[1].iov_base = (void*)p_value;
   iov[1].iov_len  = (size_t)n_value;
 
-  n_ret_type_ = (unsigned int)KVDB_INVALID;
+  n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(iov, 2, 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed "<<p_key;
@@ -100,15 +101,15 @@ bool CKvdbClient::SetKey(const char *p_key,
 }
 
 bool CKvdbClient::GetKey(const char *p_key,
-                         unsigned char       n_key,
+                         uint8       n_key,
                          void       *p_value,
-                         unsigned int      n_value,
+                         uint32      n_value,
                          bool        absolute) {
   if (CheckAndConnected() == false) {
     return false;
   }
 
-  int n_ret = 0;
+  int32 n_ret = 0;
   KvdbMessage c_head;
   n_ret = EncKvdbMsg(&c_head,
                      KVDB_SELECT,
@@ -119,7 +120,7 @@ bool CKvdbClient::GetKey(const char *p_key,
     return false;
   }
 
-  n_ret_type_ = (unsigned int)KVDB_INVALID;
+  n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
@@ -133,8 +134,8 @@ bool CKvdbClient::GetKey(const char *p_key,
   }
 
   if ((n_ret_type_ == KVDB_SUCCEED)) {
-    if (n_value > (n_cur_kvdb_msg_-sizeof(KvdbMessage))) {
-      memcpy(p_value, p_cur_kvdb_msg_->value, n_cur_kvdb_msg_-sizeof(KvdbMessage));
+    if (n_value > (n_cur_msg_-sizeof(KvdbMessage))) {
+      memcpy(p_value, p_cur_msg_->value, n_cur_msg_-sizeof(KvdbMessage));
       return true;
     }
     LOG(L_ERROR) << "return value is small than kvdb's value.";
@@ -143,7 +144,7 @@ bool CKvdbClient::GetKey(const char *p_key,
 }
 
 bool CKvdbClient::GetKey(const char          *p_key,
-                         unsigned char                n_key,
+                         uint8                n_key,
                          Kvdb_GetKeyCallback  p_callback,
                          void                *p_usr_arg,
                          bool                 absolute /*= false*/) {
@@ -156,7 +157,7 @@ bool CKvdbClient::GetKey(const char          *p_key,
     return false;
   }
 
-  int n_ret = 0;
+  int32 n_ret = 0;
   KvdbMessage c_head;
   n_ret = EncKvdbMsg(&c_head,
                      KVDB_SELECT,
@@ -168,7 +169,7 @@ bool CKvdbClient::GetKey(const char          *p_key,
     return false;
   }
 
-  n_ret_type_ = (unsigned int)KVDB_INVALID;
+  n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
@@ -182,8 +183,8 @@ bool CKvdbClient::GetKey(const char          *p_key,
   }
   if (n_ret_type_ == KVDB_SUCCEED) {
     p_callback(p_key, n_key,
-               p_cur_kvdb_msg_->value,
-               n_cur_kvdb_msg_-sizeof(KvdbMessage),
+               p_cur_msg_->value,
+               n_cur_msg_-sizeof(KvdbMessage),
                p_usr_arg);
     return true;
   }
@@ -191,14 +192,14 @@ bool CKvdbClient::GetKey(const char          *p_key,
 }
 
 bool CKvdbClient::GetKey(const char  *p_key,
-                         unsigned char        n_key,
+                         uint8        n_key,
                          std::string *p_value,
                          bool         absolute /*= false*/) {
   if (CheckAndConnected() == false) {
     return false;
   }
 
-  int n_ret = 0;
+  int32 n_ret = 0;
   KvdbMessage c_head;
   n_ret = EncKvdbMsg(&c_head,
                      KVDB_SELECT,
@@ -209,7 +210,7 @@ bool CKvdbClient::GetKey(const char  *p_key,
     return false;
   }
 
-  n_ret_type_ = (unsigned int)KVDB_INVALID;
+  n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
@@ -223,8 +224,8 @@ bool CKvdbClient::GetKey(const char  *p_key,
   }
 
   if ((n_ret_type_ == KVDB_SUCCEED)) {
-    p_value->append(p_cur_kvdb_msg_->value,
-                    (n_cur_kvdb_msg_ - sizeof(KvdbMessage)));
+    p_value->append(p_cur_msg_->value,
+                    (n_cur_msg_ - sizeof(KvdbMessage)));
     return true;
   }
   return false;
@@ -236,12 +237,12 @@ bool CKvdbClient::GetKey(const std::string s_key,
   return GetKey(s_key.c_str(), s_key.size(), p_value, absolute);
 }
 
-bool CKvdbClient::Delete(const char *p_key, unsigned char n_key) {
+bool CKvdbClient::Delete(const char *p_key, uint8 n_key) {
   if (CheckAndConnected() == false) {
     return false;
   }
 
-  int n_ret = 0;
+  int32 n_ret = 0;
   KvdbMessage c_head;
   n_ret = EncKvdbMsg(&c_head,
                      KVDB_DELETE,
@@ -252,7 +253,7 @@ bool CKvdbClient::Delete(const char *p_key, unsigned char n_key) {
     return false;
   }
 
-  n_ret_type_ = (unsigned int)KVDB_INVALID;
+  n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
@@ -272,7 +273,7 @@ bool CKvdbClient::BackupDatabase() {
     return false;
   }
 
-  int n_ret = 0;
+  int32 n_ret = 0;
   KvdbMessage c_head;
   n_ret = EncKvdbMsg(&c_head,
                      KVDB_BACKUP,
@@ -283,7 +284,7 @@ bool CKvdbClient::BackupDatabase() {
     return false;
   }
 
-  n_ret_type_ = (unsigned int)KVDB_INVALID;
+  n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed ";
@@ -303,7 +304,7 @@ bool CKvdbClient::RestoreDatabase() {
     return false;
   }
 
-  int n_ret = 0;
+  int32 n_ret = 0;
   KvdbMessage c_head;
   n_ret = EncKvdbMsg(&c_head,
                      KVDB_RESTORE,
@@ -314,7 +315,7 @@ bool CKvdbClient::RestoreDatabase() {
     return false;
   }
 
-  n_ret_type_ = (unsigned int)KVDB_INVALID;
+  n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed ";
@@ -329,23 +330,23 @@ bool CKvdbClient::RestoreDatabase() {
   return (n_ret_type_ == KVDB_SUCCEED);
 }
 
-int CKvdbClient::HandleRecvPacket(vzconn::VSocket *p_cli,
-                                    const char      *p_data,
-                                    unsigned int     n_data,
-                                    unsigned short   n_flag) {
+int32 CKvdbClient::HandleRecvPacket(vzconn::VSocket *p_cli,
+                                    const uint8     *p_data,
+                                    uint32           n_data,
+                                    uint16           n_flag) {
   //LOG(L_WARNING) << "recv packet length " << n_data;
   if (!p_cli || !p_data || n_data == 0) {
     return -1;
   }
 
   if (n_data >= sizeof(KvdbMessage)) {
-    n_cur_kvdb_msg_ = n_data;
-    p_cur_kvdb_msg_ = DecKvdbMsg(p_data, n_data);
-    if (p_cur_kvdb_msg_->id != get_msg_id()) {
+    n_cur_msg_ = n_data;
+    p_cur_msg_ = DecKvdbMsg(p_data, n_data);
+    if (p_cur_msg_->id != get_msg_id()) {
       LOG(L_WARNING) << "id is not current message id.";
       return 0;
     }
-    n_ret_type_ = (unsigned int)p_cur_kvdb_msg_->type;
+    n_ret_type_ = (uint32)p_cur_msg_->type;
 
     evt_loop_.LoopExit(0);
   } else {
@@ -356,10 +357,10 @@ int CKvdbClient::HandleRecvPacket(vzconn::VSocket *p_cli,
 }
 
 int CKvdbClient::EncKvdbMsg(KvdbMessage   *p_msg,
-                            unsigned char          n_type,
+                            uint8          n_type,
                             const char    *p_key,
-                            unsigned char          n_key,
-                            unsigned int         n_value) {
+                            uint8          n_key,
+                            uint32         n_value) {
   memset(p_msg, 0, sizeof(KvdbMessage));
 
   p_msg->type   = n_type;
@@ -371,8 +372,8 @@ int CKvdbClient::EncKvdbMsg(KvdbMessage   *p_msg,
   return sizeof(KvdbMessage);
 }
 
-KvdbMessage *CKvdbClient::DecKvdbMsg(const char   *p_data,
-                                     unsigned int  n_data) {
+KvdbMessage *CKvdbClient::DecKvdbMsg(const uint8 *p_data,
+                                     uint32       n_data) {
   KvdbMessage *p_msg = (KvdbMessage*)p_data;
 
   return p_msg;

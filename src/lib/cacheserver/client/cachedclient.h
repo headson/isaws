@@ -19,20 +19,20 @@ namespace cached {
 class CachedClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
-  CachedClient();
+  CachedClient(const char *server, unsigned short port);
   virtual void  Remove() {}
 
  public:
-  static CachedClient* Create();
+  static CachedClient* Create(const char *server, unsigned short port);
   virtual ~CachedClient();
 
  public:
   int32 RunLoop(uint32 n_timeout);
 
- public:
-  void Reset(Cached_GetFileCallback  callback,
-             void                   *p_usr_arg);
+ protected:
+  bool CheckAndConnected();
 
+ public:
   bool SaveCachedFile(const char *path, int path_size,
                       const char *data, int data_size);
 
@@ -53,7 +53,7 @@ class CachedClient : public vzconn::CTcpClient,
   virtual void  HandleClose(vzconn::VSocket *p_cli) {
   }
 
-public:
+ public:
   uint32 new_msg_id() {
     n_message_id_++;
     return n_message_id_;
@@ -70,18 +70,18 @@ public:
   vzconn::EVT_LOOP          evt_loop_;    //
 
  protected:
-  // Get Key
-  uint8                     s_path_[MAX_CACHED_PATH_SIZE];
-  uint32                    n_path_;
+  int32                     n_ret_type_;  // 回执结果,也做evt loop退出标签
 
-  uint32                    n_ret_type_;  // 回执结果,也做evt loop退出标签
-
-  Cached_GetFileCallback    p_callback_;  // 回调
-  void                     *p_usr_arg_;   // 回调用户参数
+  uint32                    n_cur_msg_;
+  CacheMessage             *p_cur_msg_;
 
  protected:
   uint32                    n_message_id_;    // 包序号[32bit]
   uint32                    n_cur_msg_id_;    // 当前发送msg id
+
+ protected:
+  char                      s_addr_[64];
+  unsigned short            n_port_;
 
  public:
   int EncCacheMsg(CacheMessage   *p_msg,

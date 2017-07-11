@@ -77,9 +77,9 @@ inline void Unused(const void*) {}
 // Assertions
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef ENABLE_DEBUG
-#define ENABLE_DEBUG _DEBUG
-#endif  // !defined(ENABLE_DEBUG)
+//#ifndef ENABLE_DEBUG
+//#define ENABLE_DEBUG _DEBUG
+//#endif  // !defined(ENABLE_DEBUG)
 
 // Even for release builds, allow for the override of LogAssert. Though no
 // macro is provided, this can still be used for explicit runtime asserts

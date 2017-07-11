@@ -19,6 +19,7 @@ extern "C" {
 
 typedef void* DpEvtService;
 typedef void* DPPollHandle;
+#define DP_POLL_HANDLE_NULL NULL
 
 // 在回调中,避免使用同一个socket send\recv,造成递归evt loop
 typedef void(*DpClient_MessageCallback)(
@@ -26,45 +27,77 @@ typedef void(*DpClient_MessageCallback)(
 
 #define DP_CLIENT_DISCONNECT  101   // 断开链接,需要重连
 typedef void(*DpClient_PollStateCallback)(
-  DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg);
+  DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg);
 
-#define DP_POLL_HANDLE_NULL NULL
 
-// Not thread safe
+typedef void* EventSignal;   // 信号量
+// libevent监听signal事件
+typedef int (*Event_SignalCallback)(int         n_signal,
+                                    short       events,
+                                    const void *p_usr_arg);
+
+/************************************************************************
+*Description : 初始化Dispatcher的服务器[地址:端口]
+*Parameters  :
+*Return      :
+************************************************************************/
 EXPORT_DLL void DpClient_Init(const char* ip_addr, unsigned short port);
 
-// 暂时不支持多线程
-// Only Call once
-// new_thread = 1, create a new thread to run the dp client
-// net_thread = 0, used this current thread to run the dp client
-// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
 EXPORT_DLL int  DpClient_Start(int new_thread);
 
-// Only call once
+/************************************************************************
+*Description : 销毁Dispatcher客户端
+*Parameters  :
+*Return      :
+************************************************************************/
 EXPORT_DLL void DpClient_Stop();
 
-// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
+/************************************************************************
+*Description : DpClient发送消息
+*Parameters  : p_method[IN] 消息方法
+*              n_session_id[IN]
+*              p_data[IN] 发送数据
+*              n_data[IN] 发送数据大小
+*Return      : VZNETDP_FAILURE 失败; VZNETDP_SUCCEED 成功
+************************************************************************/
 EXPORT_DLL int  DpClient_SendDpMessage(const char    *p_method,
-                                       unsigned char  n_chn_id,
+                                       unsigned char  n_session_id,
                                        const char    *p_data,
-                                       unsigned int   n_data);
+                                       int            n_data);
 
-// return VZNETDP_FAILURE, ERROR
-// return > 0, request id
+/************************************************************************
+*Description : DpClient发送请求
+*Parameters  : p_method[IN] 请求方法
+*              n_session_id[IN]
+*              p_data[IN] 发送数据
+*              n_data[IN] 发送数据大小
+*              p_callback[IN] 请求回执回调
+*              p_user_arg[IN] 请求回执回调参数
+*              n_timeout[IN] 函数调用超时时间
+*Return      : VZNETDP_FAILURE 失败; VZNETDP_SUCCEED 成功
+************************************************************************/
 EXPORT_DLL int DpClient_SendDpRequest(const char                *p_method,
-                                      unsigned char              n_chn_id,
+                                      unsigned char              n_session_id,
                                       const char                *p_data,
-                                      unsigned int               n_data,
+                                      int                        n_data,
                                       DpClient_MessageCallback   p_callback,
                                       void                      *p_user_arg,
                                       unsigned int               n_timeout);
 
-// return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-EXPORT_DLL int DpClient_SendDpReply(const char    *p_method,
-                                    unsigned char  n_chn_id,
-                                    unsigned int   n_msg_id,
-                                    const char    *p_data,
-                                    unsigned int   n_data);
+/************************************************************************
+*Description : DpClient发送回执
+*Parameters  : p_method[IN] 回执消息方法
+*              n_session_id[IN] DpMessage->channel_id
+*              n_message_id[IN] DpMessage->id
+*              p_data[IN] 发送数据
+*              n_data[IN] 发送数据大小
+*Return      : VZNETDP_FAILURE 失败; VZNETDP_SUCCEED 成功
+************************************************************************/
+EXPORT_DLL int DpClient_SendDpReply(const char      *p_method,
+                                    unsigned char    n_session_id,
+                                    unsigned int     n_message_id,
+                                    const char      *p_data,
+                                    int              n_data);
 
 ///Poll///////////////////////////////////////////////////////////////////
 /************************************************************************
@@ -108,6 +141,7 @@ EXPORT_DLL int   DpClient_HdlAddListenMessage(
   const DPPollHandle p_poll_handle,
   const char        *a_method_set[],
   unsigned int       n_method_set_cnt);
+
 /************************************************************************
 *Description : 轮询取消监听消息
 *Parameters  : p_poll_handle[IN]
@@ -121,9 +155,10 @@ EXPORT_DLL int   DpClient_HdlRemoveListenMessage(
   unsigned int       n_method_set_cnt);
 
 // 当使用vzbase::Thread设置轮询的EVT_LOOP时,可不调用此函数分发
+// 请尽量使用vzbase::Thread::Current()->Run()来替换此函数,
+// 因为线程可投递消息来实现定时器
 /************************************************************************
-*Description : 轮询,等待接收消息,通过回调返回给应用层
-*              VZNETDP_FAILURE时需要重新创建handle[重连],重发AddListenMessage
+*Description : 轮询,消息分发
 *Parameters  : p_poll_handle[IN]
 *              n_timeout[IN] 轮询超时时间
 *Return      : VZNETDP_FAILURE失败 VZNETDP_SUCCEED成功
@@ -139,6 +174,28 @@ EXPORT_DLL int DpClient_PollDpMessage(
 ************************************************************************/
 EXPORT_DLL DpEvtService DpClient_GetEvtLoopFromPoll(
   const DPPollHandle p_poll_handle);
+
+///SIGNAL/////////////////////////////////////////////////////////////////
+/************************************************************************
+*Description : 创建信号监听
+*Parameters  : p_evt_service[IN] 事件分发器指针
+*              n_signal_no[IN] 信号 SIGINT\SIGTERM\SIGKILL
+*              p_callback[IN] 信号触发时回调函数
+*              p_user_arg[IN] 信号触发函数回调传出用户指针
+*Return      : !=NULL 成功, ==NULL失败
+************************************************************************/
+EXPORT_DLL EventSignal Event_CreateSignalHandle(
+  const DpEvtService   p_evt_service,
+  int                  n_signal_no,
+  Event_SignalCallback p_callback,
+  void                *p_user_arg);
+
+/************************************************************************
+*Description : 释放信号监听
+*Parameters  : p_evt_sig[IN] 信号监听句柄
+*Return      : 
+************************************************************************/
+EXPORT_DLL void Event_ReleaseSignalHandle(EventSignal p_evt_sig);
 
 //////////////////////////////////////////////////////////////////////////
 // GetKey callback function

@@ -5,6 +5,8 @@
 #include "cnetctrl.h"
 
 #include "vzbase/helper/stdafx.h"
+#include "vzbase/helper/vmessage.h"
+
 #include "systemserver/clistenmessage.h"
 
 CNetCtrl::CNetCtrl(vzbase::Thread *p_thread)
@@ -59,10 +61,10 @@ void CNetCtrl::OnMessage(vzbase::Message* msg) {
 
 }
 
-int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket *p_cli,
-                                 const char      *p_data,
-                                 unsigned int     n_data,
-                                 unsigned short   n_flag) {
+int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
+                                 const uint8      *p_data,
+                                 uint32            n_data,
+                                 uint16            n_flag) {
   std::string s_json((char*)p_data, n_data);
 
   Json::Value  j_req;
@@ -89,8 +91,8 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket *p_cli,
     Json::FastWriter j_writer;
     s_json = j_writer.write(j_resp);
 
-    p_mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                               s_json.c_str(), s_json.size());
+    p_mcast_sock_->SendUdpData((uint8*)DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
+                               (uint8*)s_json.c_str(), s_json.size());
   } else if (strncmp(s_type.c_str(), MSG_SYSC_SET_DEVINFO, MSG_TYPE_MAX) == 0) {
     // 设置设备信息
     Json::Value j_resp;
@@ -108,8 +110,8 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket *p_cli,
     Json::FastWriter j_writer;
     s_json = j_writer.write(j_resp);
 
-    p_mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                               s_json.c_str(), s_json.size());
+    p_mcast_sock_->SendUdpData((uint8*)DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
+                               (uint8*)s_json.c_str(), s_json.size());
   } else {
     LOG(L_ERROR) << "this message type is no function to process." << s_type;
   }

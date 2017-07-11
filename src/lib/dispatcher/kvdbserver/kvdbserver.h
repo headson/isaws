@@ -29,20 +29,20 @@ class KvdbServer : public vzbase::noncopyable,
   virtual void HandleServerClose(vzconn::VSocket *p_srv);
   // 客户端回调函数
   virtual int32 HandleRecvPacket(vzconn::VSocket *p_cli,
-                                 const char   *p_data,
-                                 unsigned int         n_data,
-                                 unsigned short         n_flag);
+                                 const uint8   *p_data,
+                                 uint32         n_data,
+                                 uint16         n_flag);
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli);
   virtual void  HandleClose(vzconn::VSocket *p_cli);
  private:
   bool ProcessKvdbService(const KvdbMessage *kvdb_msg,
-                          const char *data,
-                          unsigned int size);
+                          const uint8 *data,
+                          uint32 size);
   bool ProcessSelect(const KvdbMessage *kvdb_msg,
-                     const char *data,
-                     unsigned int size,
+                     const uint8 *data,
+                     uint32 size,
                      vzconn::VSocket *p_cli);
-  bool ResponseKvdb(vzconn::VSocket *p_cli, unsigned int type);
+  bool ResponseKvdb(vzconn::VSocket *p_cli, uint32 type);
  private:
   vzconn::EventService  &event_service_;
   vzconn::CEvtTcpServer *tcp_server_;

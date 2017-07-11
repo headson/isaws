@@ -98,34 +98,12 @@ static char                 g_dp_addr[64];
 static unsigned short       g_dp_port;
 static CDpClient*           g_dp_client[MAX_CLIS_PER_PROC];
 
-CDpClient *CreateDpConnAndGetSessionID() {
-  CDpClient *p_tcp = CDpClient::Create(g_dp_addr, g_dp_port);
-  if (p_tcp) {
-    int n_ret = DpClient_HdlReConnect(p_tcp);
-    if (n_ret == VZNETDP_FAILURE) {
-      delete p_tcp;
-      p_tcp = NULL;
-    }
-  }
-  return p_tcp;
-}
-
 // b_can_reconn 断网时允许重连; poll不允许重连
 CDpClient* GetDpCli(bool b_can_reconn =true) {
   CDpClient* p_tcp = NULL;
   p_tcp = (CDpClient*)g_dp_tls.GetValue();
-  if (p_tcp) {
-    if (p_tcp->isClose()) {        // 断开链接
-      g_dp_tls.SetValue(NULL);
-
-      delete p_tcp;
-      p_tcp = NULL;
-    }
-  }
-
-  if (p_tcp == NULL && b_can_reconn) {
-    // 新建
-    p_tcp = CreateDpConnAndGetSessionID();
+  if (p_tcp == NULL) {
+    p_tcp = CDpClient::Create(g_dp_addr, g_dp_port);
     if (p_tcp) {
       g_dp_tls.SetValue(p_tcp);
     }
@@ -139,23 +117,22 @@ EXPORT_DLL void DpClient_Init(const char* ip_addr, unsigned short port) {
   memset(g_dp_addr, 0, 63);
   strncpy(g_dp_addr, ip_addr, 63);
 
-  for (int i = 0; i < MAX_CLIS_PER_PROC; i++) {
+  for (int32 i = 0; i < MAX_CLIS_PER_PROC; i++) {
     g_dp_client[i] = NULL;
+  }
+
+  TlsKey tk = g_dp_tls.KeyAlloc();
+  if (tk == TLS_NULL) {
+    LOG(L_ERROR) << "alloc tls key failed.";
   }
 }
 
 EXPORT_DLL int DpClient_Start(int new_thread) {
-  TlsKey tk = g_dp_tls.KeyAlloc();
-  if (tk == TLS_NULL) {
-    LOG(L_ERROR) << "alloc tls key failed.";
-    return VZNETDP_FAILURE;
-  }
-
   return VZNETDP_SUCCEED;
 }
 
 EXPORT_DLL void DpClient_Stop() {
-  for (int i = 0; i < MAX_CLIS_PER_PROC; i++) {
+  for (int32 i = 0; i < MAX_CLIS_PER_PROC; i++) {
     if (g_dp_client[i] != NULL) {
       delete g_dp_client[i];
     }
@@ -163,51 +140,72 @@ EXPORT_DLL void DpClient_Stop() {
   }
 }
 
-EXPORT_DLL int DpClient_SendDpMessage(const char    *p_method,
-                                      unsigned char  n_chn_id,
-                                      const char    *p_data,
-                                      unsigned int   n_data) {
-  int n_ret = 0;
+EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
+                                      unsigned char  channel_id,
+                                      const char    *data,
+                                      int            data_size) {
+  LOG(L_INFO) << "send dp message "<<method;
+
+  int32 n_ret = 0;
   CDpClient* p_tcp = GetDpCli();
   if (!p_tcp) {
     LOG(L_ERROR) << "get tls client failed.";
     return VZNETDP_FAILURE;
   }
 
-  return p_tcp->SendDpMessage(p_method, n_chn_id, p_data, n_data);
+  n_ret = p_tcp->SendDpMessage(method,
+                               channel_id,
+                               data,
+                               data_size);
+  return n_ret;
 }
 
-EXPORT_DLL int DpClient_SendDpRequest(const char                *p_method,
-                                      unsigned char              n_chn_id,
-                                      const char                *p_data,
-                                      unsigned int               n_data,
-                                      DpClient_MessageCallback   p_callback,
-                                      void                      *p_user_arg,
-                                      unsigned int               n_timeout) {
-  int n_ret = 0;
+EXPORT_DLL int DpClient_SendDpRequest(const char *method,
+                                      unsigned char             channel_id,
+                                      const char               *data,
+                                      int                       data_size,
+                                      DpClient_MessageCallback  call_back,
+                                      void                     *user_data,
+                                      unsigned int              timeout) {
+  LOG(L_INFO) << "send dp request "<<method;
+
+  int32 n_ret = 0;
   CDpClient* p_tcp = GetDpCli();
   if (!p_tcp) {
     LOG(L_ERROR) << "get tls client failed.";
     return VZNETDP_FAILURE;
   }
 
-  return p_tcp->SendDpRequest(p_method, n_chn_id, p_data, n_data,
-                              p_callback, p_user_arg, n_timeout);
+  n_ret = p_tcp->SendDpRequest(method,
+                               channel_id,
+                               method,
+                               data_size,
+                               call_back,
+                               user_data,
+                               timeout);
+  return n_ret;
 }
 
-EXPORT_DLL int DpClient_SendDpReply(const char    *p_method,
-                                    unsigned char  n_chn_id,
-                                    unsigned int   n_msg_id,
-                                    const char    *p_data,
-                                    unsigned int   n_data) {
-  int n_ret = 0;
+EXPORT_DLL int DpClient_SendDpReply(const char    *method,
+                                    unsigned char  channel_id,
+                                    unsigned int   id,
+                                    const char    *data,
+                                    int            data_size) {
+  LOG(L_INFO) << "send dp reply "<<method;
+
+  int32 n_ret = 0;
   CDpClient* p_tcp = GetDpCli();
   if (!p_tcp) {
     LOG(L_ERROR) << "get tls client failed.";
     return VZNETDP_FAILURE;
   }
 
-  return p_tcp->SendDpReply(p_method, n_chn_id, n_msg_id, p_data, n_data);
+  n_ret = p_tcp->SendDpReply(method,
+                             channel_id,
+                             id,
+                             data,
+                             data_size);
+  return n_ret;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -259,34 +257,23 @@ EXPORT_DLL void DpClient_ReleasePollHandle(DPPollHandle p_poll_handle) {
 }
 
 EXPORT_DLL int DpClient_HdlReConnect(const DPPollHandle p_poll_handle) {
-  int n_ret = VZNETDP_FAILURE;
   CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "client failed.";
     return VZNETDP_FAILURE;
   }
-  p_tcp->Close();
 
-  vzconn::CInetAddr c_addr(g_dp_addr, g_dp_port);
-  bool b_ret = p_tcp->Connect(&c_addr, false, true, DEF_TIMEOUT_MSEC);
-  if (false == b_ret) {
-    LOG(L_ERROR) << "connect to server failed " << c_addr.ToString();
-    return VZNETDP_FAILURE;
+  bool b_ret = p_tcp->CheckAndConnected();
+  if (b_ret) {
+    return VZNETDP_SUCCEED;
   }
-
-#if 1
-  n_ret = p_tcp->GetSessionIDFromServer();
-  if (n_ret == VZNETDP_FAILURE) {
-    return VZNETDP_FAILURE;
-  }
-#endif
-  return VZNETDP_SUCCEED;
+  return VZNETDP_FAILURE;
 }
 
 EXPORT_DLL int DpClient_HdlAddListenMessage(const DPPollHandle p_poll_handle,
     const char *method_set[],
     unsigned int set_size) {
-  int n_ret = VZNETDP_FAILURE;
+  int32 n_ret = VZNETDP_FAILURE;
   CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "client failed.";
@@ -309,7 +296,7 @@ EXPORT_DLL int DpClient_HdlAddListenMessage(const DPPollHandle p_poll_handle,
 EXPORT_DLL int DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
     const char *method_set[],
     unsigned int set_size) {
-  int n_ret = VZNETDP_FAILURE;
+  int32 n_ret = VZNETDP_FAILURE;
   CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
     LOG(L_ERROR) << "client failed.";
@@ -331,7 +318,7 @@ EXPORT_DLL int DpClient_HdlRemoveListenMessage(const DPPollHandle p_poll_handle,
 
 EXPORT_DLL int DpClient_PollDpMessage(const DPPollHandle       p_poll_handle,
                                       unsigned int             timeout) {
-  int n_ret = 0;
+  int32 n_ret = 0;
   // 此处判断断开不重连,目的是为了让注册method重连
   CDpPollClient* p_tcp = (CDpPollClient*)p_poll_handle;
   if (!p_tcp) {
@@ -353,6 +340,43 @@ EXPORT_DLL DpEvtService DpClient_GetEvtLoopFromPoll(
   }
 
   return p_tcp->GetEvtLoop();
+}
+
+///SIGNAL/////////////////////////////////////////////////////////////////
+EXPORT_DLL EventSignal Event_CreateSignalHandle(
+  const DpEvtService   p_evt_service,
+  int                  n_signal_no,
+  Event_SignalCallback p_callback,
+  void                *p_user_arg) {
+  vzconn::EVT_IO *p_evt_io = new vzconn::EVT_IO();
+  if (NULL == p_evt_io) {
+    LOG(L_ERROR) << "new evt_io failed.";
+    return NULL;
+  }
+
+  p_evt_io->Init((vzconn::EVT_LOOP*)p_evt_service, 
+                 (vzconn::EVT_FUNC)p_callback, p_user_arg);
+  int32 n_ret = p_evt_io->Start(n_signal_no, EV_SIGNAL | EVT_PERSIST);
+  if (n_ret != 0) {
+    LOG(L_ERROR) << "listening signal failed.";
+
+    delete p_evt_io;
+    p_evt_io = NULL;
+  }
+  return p_evt_io;
+}
+
+EXPORT_DLL void Event_ReleaseSignalHandle(EventSignal p_evt_handle) {
+  vzconn::EVT_IO *p_evt_io = (vzconn::EVT_IO*)p_evt_handle;
+  if (p_evt_io == NULL) {
+    LOG(L_ERROR) << "param is null.";
+    return;
+  }
+
+  p_evt_io->Stop();
+
+  delete p_evt_io;
+  p_evt_io = NULL;
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -3,7 +3,6 @@
 #include "vzconn/base/connhead.h"
 #include "vzconn/async/cevtipcclient.h"
 #include "vzconn/async/cevtipcserver.h"
-using namespace vzconn;
 
 class CServerProcess : public vzconn::CTcpServerInterface {
  public:
@@ -21,10 +20,10 @@ class CServerProcess : public vzconn::CTcpServerInterface {
 class CClientProcess : public vzconn::CClientInterface {
  public:
   virtual int32 HandleRecvPacket(vzconn::VSocket *p_cli,
-                                 const char      *p_data,
-                                 unsigned int     n_data,
-                                 unsigned short   n_flag) {
-    NetHead* p_head = (NetHead*)p_data;
+                                 const uint8     *p_data,
+                                 uint32           n_data,
+                                 uint16           n_flag) {
+    vzconn::NetHead* p_head = (vzconn::NetHead*)p_data;
     ((char*)p_data)[n_data] = '\0';
     //printf("-------------------- %s[%d] %d %s.\n",
     //       __FUNCTION__, __LINE__, p_head->type_flag, ((char*)p_data + 8));

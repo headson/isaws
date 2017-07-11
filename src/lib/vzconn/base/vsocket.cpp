@@ -23,7 +23,7 @@ CInetAddr::CInetAddr(const sockaddr_in& addr) {
   memcpy(&c_sock_addr_, &addr, sizeof(struct sockaddr_in));
 }
 
-CInetAddr::CInetAddr(unsigned int ip, unsigned short port) {
+CInetAddr::CInetAddr(uint32 ip, uint16 port) {
   memset(&c_sock_addr_, 0, sizeof(struct sockaddr_in));
 
   SetIP(ip);
@@ -36,7 +36,7 @@ CInetAddr::CInetAddr(const CInetAddr &addr) {
   c_sock_addr_ = addr.c_sock_addr_;
 }
 
-CInetAddr::CInetAddr(const char* hostname, unsigned short port) {
+CInetAddr::CInetAddr(const char* hostname, uint16 port) {
   memset(&c_sock_addr_, 0, sizeof(struct sockaddr_in));
 
   SetIP(hostname);
@@ -98,34 +98,34 @@ CInetAddr& CInetAddr::operator =(const std::string &addr_str) {
     return *this;
   }
 
-  SetPort(static_cast<unsigned short>(strtoul(addr_str.substr(pos + 1).c_str(), NULL, 10)));
+  SetPort(static_cast<uint16>(strtoul(addr_str.substr(pos + 1).c_str(), NULL, 10)));
   SetIP(addr_str.substr(0, pos).c_str());
 
   return *this;
 }
 
-void CInetAddr::SetIP(unsigned int ip) {
+void CInetAddr::SetIP(uint32 ip) {
   c_sock_addr_.sin_addr.s_addr = htonl(ip);
 }
 
 void CInetAddr::SetIP(const char* hostname) {
   c_sock_addr_.sin_addr.s_addr = inet_addr(hostname);
-  if (c_sock_addr_.sin_addr.s_addr == (unsigned int)-1) { //地址为0.0.0.0，无效地址
+  if (c_sock_addr_.sin_addr.s_addr == (uint32)-1) { //地址为0.0.0.0，无效地址
     if (hostent * pHost = gethostbyname(hostname)) {
-      c_sock_addr_.sin_addr.s_addr = (*reinterpret_cast<unsigned int *>(pHost->h_addr_list[0]));
+      c_sock_addr_.sin_addr.s_addr = (*reinterpret_cast<uint32 *>(pHost->h_addr_list[0]));
     }
   }
 }
 
-void CInetAddr::SetPort(unsigned short port) {
+void CInetAddr::SetPort(uint16 port) {
   c_sock_addr_.sin_port = htons(port);
 }
 
-unsigned int CInetAddr::GetIP() const {
+uint32 CInetAddr::GetIP() const {
   return ntohl(c_sock_addr_.sin_addr.s_addr);
 }
 
-unsigned short CInetAddr::GetPort() const {
+uint16 CInetAddr::GetPort() const {
   return ntohs(c_sock_addr_.sin_port);
 }
 
@@ -171,7 +171,7 @@ const std::string CInetAddr::IP2String() const {
   return ip_str;
 }
 
-int32 CInetAddr::ToIpcAddr(char *p_addr, unsigned int n_addr) const {
+int32 CInetAddr::ToIpcAddr(char *p_addr, uint32 n_addr) const {
   memset(p_addr, 0, n_addr);
   int32 n = snprintf(p_addr, n_addr-1,
                      "/tmp/_%d.sock", GetPort());
@@ -267,16 +267,16 @@ static bool IsSocketClosed(SOCKET s) {
     return true;
   }
 
-  char buff[32];
-  int recvBytes = recv(s, buff, sizeof(buff), MSG_PEEK);
+  char buff[8];
+  int cnt = recv(s, buff, sizeof(buff), MSG_PEEK|MSG_DONTWAIT);
 
-  int sockErr = errno;
-  if (recvBytes > 0)  // Get data
+  if (cnt > 0)                  // Get data
     return false;
 
-  if ((recvBytes == -1) &&
-      (sockErr == EWOULDBLOCK)) // No receive data
+  if ((cnt == -1) &&
+      (error_no() == EWOULDBLOCK)) { // No receive data
     return false;
+  }
 
   return true;
 }
@@ -298,12 +298,12 @@ int32 VSocket::GetOption(int level, int option, void *optval, int *optlen) const
 #endif
 }
 
-int32 VSocket::AsyncWrite(const void *p_data, unsigned int n_data, unsigned short e_flag) {
+int32 VSocket::AsyncWrite(const void *p_data, uint32 n_data, uint16 e_flag) {
   LOG(L_ERROR) << "you need overload this function.";
   return -1;
 }
 
-int32 VSocket::AsyncWrite(struct iovec iov[], unsigned int n_iov, unsigned short e_flag) {
+int32 VSocket::AsyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
   LOG(L_ERROR) << "you need overload this function.";
   return -1;
 }
@@ -314,7 +314,7 @@ int32 VSocket::AsyncWrite(struct iovec iov[], unsigned int n_iov, unsigned short
 *Param         : pData[OUT] 接收数据，nData[IN] 缓存大小
 *Return        : >0 数据长度，0 没收到数据，-1 断网
 *****************************************************************************/
-int32 VSocket::Recv(void *pData, unsigned int nData) {
+int32 VSocket::Recv(void *pData, uint32 nData) {
   int32 nRet = -1;
   if(!isOpen()) {
     return nRet;
@@ -338,7 +338,7 @@ int32 VSocket::Recv(void *pData, unsigned int nData) {
 *Param         : pData[OUT] 接收数据，nData[IN] 缓存大小
 *Return        : >0 数据长度，0 没收到数据，-1 断网
 *****************************************************************************/
-int32 VSocket::Recv(void* pData, unsigned int nData, CInetAddr& cRemoteAddr) {
+int32 VSocket::Recv(void* pData, uint32 nData, CInetAddr& cRemoteAddr) {
   int32 nRet = -1;
   if(!isOpen()) {
     return nRet;
@@ -347,7 +347,7 @@ int32 VSocket::Recv(void* pData, unsigned int nData, CInetAddr& cRemoteAddr) {
 #ifdef WIN32
   int32 from_size = sizeof(struct sockaddr_in);
 #else
-  unsigned int from_size = sizeof(struct sockaddr_in);
+  uint32 from_size = sizeof(struct sockaddr_in);
 #endif
 
   nRet = ::recvfrom(GetSocket(), (char *)pData, nData,
@@ -369,7 +369,7 @@ int32 VSocket::Recv(void* pData, unsigned int nData, CInetAddr& cRemoteAddr) {
 *Param         : pData[IN] 发送数据，nData[IN] 缓存大小
 *Return        : >0 数据长度，0 没发送数据，-1 断网
 *****************************************************************************/
-int32 VSocket::Send(const void *buf, unsigned int buf_size) {
+int32 VSocket::Send(const void *buf, uint32 buf_size) {
   int32 nRet = -1;
   if(!isOpen()) {
     return nRet;
@@ -392,7 +392,7 @@ int32 VSocket::Send(const void *buf, unsigned int buf_size) {
 *Param         : pData[IN] 发送数据，nData[IN] 缓存大小
 *Return        : >0 数据长度，0 没发送数据，-1 断网
 *****************************************************************************/
-int32 VSocket::Send(const void* buf, unsigned int buf_size, const CInetAddr& remote_addr) {
+int32 VSocket::Send(const void* buf, uint32 buf_size, const CInetAddr& remote_addr) {
   int32 nRet = -1;
   if(!isOpen()) {
     return nRet;
@@ -412,19 +412,19 @@ int32 VSocket::Send(const void* buf, unsigned int buf_size, const CInetAddr& rem
 }
 
 //////////////////////////////////////////////////////////////////////////
-unsigned int CClientInterface::NetHeadSize() {
+uint32 CClientInterface::NetHeadSize() {
   return sizeof(NetHead);
 }
 
-int32 CClientInterface::NetHeadParse(const char *p_data,
-                                     unsigned int       n_data,
-                                     unsigned short      *n_flag) {
-  if (n_data < (unsigned int)NetHeadSize()) {
+int32 CClientInterface::NetHeadParse(const uint8 *p_data,
+                                     uint32       n_data,
+                                     uint16      *n_flag) {
+  if (n_data < (uint32)NetHeadSize()) {
     return 0;
   }
 
   int32 n_len = 0;
-  if ((((unsigned int)p_data) % sizeof(unsigned int)) == 0) {
+  if ((((uint32)p_data) % sizeof(uint32)) == 0) {
     // 对齐解析
     NetHead* p_head = (NetHead*)p_data;
     if (p_head->mark[0] == NET_MARK_0
@@ -456,11 +456,11 @@ int32 CClientInterface::NetHeadParse(const char *p_data,
   return n_len;
 }
 
-int32 CClientInterface::NetHeadPacket(char *p_data,
-                                      unsigned int n_data,
-                                      unsigned int n_body,
-                                      unsigned short n_flag) {
-  if (p_data == NULL || n_data < (unsigned int)NetHeadSize()) {
+int32 CClientInterface::NetHeadPacket(uint8 *p_data,
+                                      uint32 n_data,
+                                      uint32 n_body,
+                                      uint16 n_flag) {
+  if (p_data == NULL || n_data < (uint32)NetHeadSize()) {
     return -1;
   }
   NetHead c_head;

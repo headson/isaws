@@ -15,7 +15,7 @@ class CWebServer : public vzbase::Runnable {
   CWebServer();
   virtual ~CWebServer();
 
-  bool Start(const unsigned char *s_http_path, const unsigned char *s_http_port);
+  bool Start(const char *s_http_path, const char *s_http_port);
   void Stop();
 
   void Broadcast(const void* p_data, unsigned int n_data);

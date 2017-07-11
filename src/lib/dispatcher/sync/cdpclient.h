@@ -13,68 +13,65 @@
 class CDpClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
-  CDpClient(const char *s_dp_ip, unsigned short n_dp_port,
+  CDpClient(const char *server, unsigned short port,
             vzconn::EVT_LOOP          *p_evt_loop);
 
  public:
-  static CDpClient* Create(const char *s_dp_ip, unsigned short n_dp_port);
+  static CDpClient* Create(const char *server, unsigned short port,
+                           vzconn::EVT_LOOP          *p_evt_loop = NULL);
   ~CDpClient();
 
  public:
   // return 0=timeout,1=success
-  virtual int RunLoop(unsigned int n_timeout);
+  int32 RunLoop(uint32 n_timeout);
 
- public:
-  void  Reset();
-  bool  CheckAndConnected();
-
- public:
-  int GetSessionIDFromServer();
-
+  // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
   int SendDpMessage(const char    *p_method,
                     unsigned char  n_session_id,
                     const char    *p_data,
-                    unsigned int   n_data);
+                    int            n_data);
 
   // return VZNETDP_FAILURE, ERROR
   // return > 0, request id
   int SendDpRequest(const char                *p_method,
-                    unsigned char              n_chn_id,
+                    unsigned char              n_session_id,
                     const char                *p_data,
-                    unsigned int               n_data,
+                    int                        n_data,
                     DpClient_MessageCallback   p_callback,
                     void                      *p_user_arg,
                     unsigned int               n_timeout);
 
   // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
-  int SendDpReply(const char    *p_method,
-                  unsigned char  n_chn_id,
-                  unsigned int   n_msg_id,
-                  const char    *p_data,
-                  unsigned int   n_data);
+  int SendDpReply(const char      *p_method,
+                  unsigned char    n_session_id,
+                  unsigned int     n_message_id,
+                  const char      *p_data,
+                  int              n_data);
+
+  virtual bool  CheckAndConnected();
 
  protected:
-  int SendMessage(unsigned char             n_type,
-                  const char               *p_method,
-                  unsigned int              n_message_id,
-                  const char               *p_data,
-                  unsigned int              n_data);
+  int32 SendMessage(unsigned char             n_type,
+                    const char               *p_method,
+                    unsigned int              n_method,
+                    const char               *p_data,
+                    int                       n_data);
 
  protected:
-  virtual int HandleRecvPacket(vzconn::VSocket  *p_cli,
-                               const char       *p_data,
-                               unsigned int      n_data,
-                               unsigned short    n_flag);
-  virtual int HandleSendPacket(vzconn::VSocket *p_cli) {
+  virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
+                                 const uint8      *p_data,
+                                 uint32            n_data,
+                                 uint16            n_flag);
+  virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
     return 0;
   }
   virtual void  HandleClose(vzconn::VSocket *p_cli);
 
  public:
-  unsigned int get_session_id() {
+  int32 get_session_id() {
     return n_session_id_;
   }
-  unsigned int new_msg_id() {
+  uint32 new_msg_id() {
     if (n_message_id_ >= MAX_MESSAGE_ID) {
       n_message_id_ = 1;
     }
@@ -82,11 +79,11 @@ class CDpClient : public vzconn::CTcpClient,
     n_message_id_++;
     return n_session_id_ + n_message_id_;
   }
-  unsigned int get_msg_id() {
+  uint32 get_msg_id() {
     return n_cur_msg_id_;
   }
 
-  int get_ret_type() {
+  int32 get_ret_type() {
     return n_ret_type_;
   }
 
@@ -94,16 +91,16 @@ class CDpClient : public vzconn::CTcpClient,
   vzconn::EVT_LOOP         *p_evt_loop_;    //
 
  public:
-  unsigned int              n_ret_type_;    // 回执结果,也做evt loop退出标签
+  uint32                    n_ret_type_;      // 回执结果,也做evt loop退出标签
   DpMessage                *p_cur_dp_msg_;  //
 
  protected:
-  int                     n_session_id_;  // SESSION ID
-  unsigned int              n_message_id_;  // ID[8bit] + 包序号[24bit]
+  int32                     n_session_id_;    // SESSION ID
+  uint32                    n_message_id_;    // ID[8bit] + 包序号[24bit]
 
-  unsigned int              n_cur_msg_id_;  // 当前发送msg id
+  uint32                    n_cur_msg_id_;    // 当前发送msg id
 
-  static const unsigned int MAX_MESSAGE_ID = 0X00FFFFFF;
+  static const uint32       MAX_MESSAGE_ID = 0X00FFFFFF;
 
  protected:
   char                      dp_addr_[64];
@@ -115,10 +112,10 @@ class CDpClient : public vzconn::CTcpClient,
                       unsigned char   n_session_id,
                       const char     *method,
                       unsigned int    n_message_id,
-                      int             n_data_size);
+                      int             data_size);
 
-  static DpMessage *DecDpMsg(const void   *p_data,
-                             unsigned int  n_data);
+  static DpMessage *DecDpMsg(const void *p_data,
+                             uint32      n_data);
 };
 
 #endif  // LIBDISPATCH_CDPCLIENT_H_

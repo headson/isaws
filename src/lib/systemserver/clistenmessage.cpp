@@ -4,6 +4,7 @@
 /************************************************************************/
 #include "clistenmessage.h"
 #include "vzbase/helper/stdafx.h"
+#include "vzbase/helper/vmessage.h"
 
 #include "json/json.h"
 

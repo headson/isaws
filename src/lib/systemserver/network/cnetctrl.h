@@ -28,9 +28,9 @@ class CNetCtrl : public vzbase::MessageHandler,
   virtual void OnMessage(vzbase::Message* msg);
 
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
-                                 const char       *p_data,
-                                 unsigned int      n_data,
-                                 unsigned short    n_flag);
+                                 const uint8      *p_data,
+                                 uint32            n_data,
+                                 uint16            n_flag);
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
     return 0;
   }

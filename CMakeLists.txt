@@ -51,7 +51,7 @@ ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/hi3518e)
 #ADD_SUBDIRECTORY(src/run/live_stream)
 
-ADD_SUBDIRECTORY(src/run/pc_client)
+#ADD_SUBDIRECTORY(src/run/pc_client)
 
 ## add test
 ADD_SUBDIRECTORY(src/test/test_systemv)

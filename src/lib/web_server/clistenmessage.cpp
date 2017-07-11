@@ -28,10 +28,10 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start(const unsigned char *s_dp_ip,
-                           unsigned short       n_dp_port,
-                           const unsigned char *s_http_port,
-                           const unsigned char *s_http_path) {
+bool CListenMessage::Start(const char     *s_dp_ip,
+                           unsigned short  n_dp_port,
+                           const char     *s_http_port,
+                           const char     *s_http_path) {
 
   bool b_ret = false;
   b_ret = c_web_srv_.Start(s_http_path, s_http_port);
