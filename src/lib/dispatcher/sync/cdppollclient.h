@@ -23,10 +23,10 @@ class CDpPollClient : public CDpClient {
 
  public:
   static CDpPollClient* Create(const char *server, unsigned short port,
-                               DpClient_MessageCallback   p_msg_cb=NULL,
-                               void                      *p_msg_usr_arg=NULL,
-                               DpClient_PollStateCallback p_state_cb=NULL,
-                               void                      *p_state_usr_arg=NULL,
+                               DpClient_MessageCallback   p_msg_cb,
+                               void                      *p_msg_usr_arg,
+                               DpClient_PollStateCallback p_state_cb,
+                               void                      *p_state_usr_arg,
                                vzconn::EVT_LOOP          *p_evt_loop = NULL);
   virtual ~CDpPollClient();
 

@@ -1,15 +1,17 @@
 // Vision Zenith System Communication Protocol (Project)
 
 #include "vzbase/base/helper.h"
+#include "vzbase/base/timeutils.h"
 #include <sstream>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdio.h>
 #include "md5.h"
+#include <stdlib.h>
 
 #ifdef WIN32
 #include <Windows.h>
-#include <winsock2.h>
 #else
 #include <unistd.h>
 #include <sys/time.h>
@@ -63,46 +65,32 @@ bool IsFileExist(const char *file_path) {
   return false;
 }
 
-#ifdef WIN32
-int gettimeofday(struct timeval *tp, void *tzp) {
-  time_t clock;
-  struct tm tm;
-  SYSTEMTIME wtm;
-  GetLocalTime(&wtm);
-  tm.tm_year     = wtm.wYear - 1900;
-  tm.tm_mon     = wtm.wMonth - 1;
-  tm.tm_mday     = wtm.wDay;
-  tm.tm_hour     = wtm.wHour;
-  tm.tm_min     = wtm.wMinute;
-  tm.tm_sec     = wtm.wSecond;
-  tm.tm_isdst    = -1;
-  clock = mktime(&tm);
-  tp->tv_sec = (unsigned long)clock;
-  tp->tv_usec = wtm.wMilliseconds * 1000;
-  return (0);
-}
-#endif
+//#ifdef WIN32
+//int gettimeofday(timeval *tp, void *tzp) {
+//  time_t clock;
+//  struct tm tm;
+//  SYSTEMTIME wtm;
+//  GetLocalTime(&wtm);
+//  tm.tm_year     = wtm.wYear - 1900;
+//  tm.tm_mon     = wtm.wMonth - 1;
+//  tm.tm_mday     = wtm.wDay;
+//  tm.tm_hour     = wtm.wHour;
+//  tm.tm_min     = wtm.wMinute;
+//  tm.tm_sec     = wtm.wSecond;
+//  tm.tm_isdst    = -1;
+//  clock = mktime(&tm);
+//  tp->tv_sec = (unsigned long)clock;
+//  tp->tv_usec = wtm.wMilliseconds * 1000;
+//  return (0);
+//}
+//#endif
 
 uint64 GetVzTime() {
-  static struct timeval tv;
-#ifndef WIN32
-  static struct timezone tz;
-  gettimeofday(&tv, &tz);
-#else
-  gettimeofday(&tv, NULL);
-#endif
-  return ((uint64)tv.tv_sec) * 1000000 + ((uint64)tv.tv_usec);
+  return vzbase::TimeNanos();
 }
 
 uint32 GetVzTimeSec() {
-  static struct timeval current_time;
-#ifndef WIN32
-  static struct timezone tz;
-  gettimeofday(&current_time, &tz);
-#else
-  gettimeofday(&current_time, NULL);
-#endif
-  return ((uint64)current_time.tv_sec);
+  return vzbase::Time();
 }
 
 // 0	京	13	赣	26	陕
@@ -262,7 +250,7 @@ bool EncodeConvert(
     // _DBG("ICONV OPEN ERROR %s TO %s \n", from_charset, to_charset);
     return false;
   }
-  if (iconv(cd, (char**)pin,&inlen,pout,outlen)==(size_t)-1) {
+  if (iconv(cd, (const char**)pin, &inlen, pout, outlen)==(size_t)-1) {
     //_DBG("THE FORMAT ERROR %s to %s [%s %d] [%s %d]\n", from_charset, to_charset,
     //     inbuf, inlen, outbuf, *outlen);
     iconv_close(cd);
@@ -324,6 +312,95 @@ const std::string Md5DigestToString(unsigned char digest[16]) {
   for (int i = 0; i < 16; i++) {
     sprintf(temp, "%02x", digest[i]);
     result.append(temp, 2);
+  }
+  return result;
+}
+
+
+const int  MAX_CHAR                   =    8;
+const int  MAX_NUM_STR                =    32;
+const char NAGATIVE_STR[MAX_CHAR]     =    "负";
+const char DIGIT_INDEX[][MAX_CHAR]    =    {"","十","百","千","万","十","百","千"};
+// const char NUMBER_INDEX[][MAX_CHAR]=    {"零","壹","贰","叁","肆","伍","陆","柒","捌","玖"};
+const char NUMBER_INDEX[][MAX_CHAR]   =    {"0","壹","2","3","4","5","6","7","8","9"};
+
+int IsAllZero(char Str[],int i) {
+  int len = strlen(Str);
+  for(int j = i; j < len; j++)
+    if(Str[j] != '0')
+      return 0;
+  return 1;
+}
+
+int IsBigAllZero(char Str[],int i) {
+  int len = strlen(Str);
+  for(int j = i; j < len - 4; j++)
+    if(Str[j] != '0')
+      return 0;
+  return 1;
+}
+
+const std::string NumberToVoiceString(int n) {
+  std::string result;
+  if(n < 0) {
+    n = -n;
+    result += NAGATIVE_STR;
+  }
+  char num_str[MAX_NUM_STR];
+
+  sprintf(num_str,"%d",n);
+
+  int num_str_size = strlen(num_str);
+
+  if(n == 0) {
+    result += NUMBER_INDEX[0];
+    return result;
+  }
+
+  if(num_str_size == 5 && (n % 10000) == 0) {
+    result += NUMBER_INDEX[num_str[0] - '0'];
+    result += "万";
+    return result;
+  }
+
+
+  int Last = 1;
+
+  for(int i = 0 ; i < num_str_size; i++) {
+    //判断后面的所有数是否全部为零，如果是，处理一下 结束
+    if(IsAllZero(num_str,i)) {
+      if((num_str_size - i) > 3) {
+        result += "万";
+      }
+      break;
+    }
+    //如果这一个数等于零，且上一个数不等于零，则输入零
+    if(num_str[i] == '0' && Last != 0) {
+      //如果这一个数是万级别的数，且万级别剩下的都是零，将万级别的数处理一下，更新i值 从千级别走
+      if(num_str_size - i > 4 && IsBigAllZero(num_str,i)) {
+        result += "万零";
+        i = num_str_size - 5;
+        Last = 0;
+        continue;
+      }
+      result += NUMBER_INDEX[num_str[i] - '0'];
+      Last = 0;
+    }
+    if(num_str[i]  != '0') {
+      Last = 1;
+      result += NUMBER_INDEX[num_str[i] - '0'];
+      result += DIGIT_INDEX[num_str_size - i - 1];
+    }
+  }
+  return result;
+}
+
+const char RANDOM_KEY[] = "abcdefghijkrmnopqlstuvwxyzABCDEFGHIJKRMNOPQLSTUVWXYZ0123456789";
+const int MAX_RANDOM_KEY_SIZE = 62;
+const std::string GetRandomString(std::size_t size) {
+  std::string result;
+  for(std::size_t i = 0; i < size; i++) {
+    result.push_back(RANDOM_KEY[rand() % MAX_RANDOM_KEY_SIZE]);
   }
   return result;
 }

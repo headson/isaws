@@ -4,7 +4,9 @@
 int main(int argc, char *argv[]) {
 
   InitVzLogging(argc, argv);
+#ifdef _WIN32
   ShowVzLoggingAlways();
+#endif
 
   vzconn::EventService event_service;
   event_service.Start();

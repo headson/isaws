@@ -5,11 +5,9 @@
 #ifndef LIBDPCLIENT_CKVDBCLIENT_H_
 #define LIBDPCLIENT_CKVDBCLIENT_H_
 
-#include "vzbase/base/basictypes.h"
-#include "dpclient_c.h"
-
-#include "dispatcher/base/pkghead.h"
 #include "vzconn/sync/ctcpclient.h"
+#include "dpclient_c.h"
+#include "vzbase/base/basictypes.h"
 
 class CKvdbClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
@@ -34,11 +32,20 @@ class CKvdbClient : public vzconn::CTcpClient,
               const char *p_value,
               uint32      n_value);
 
+  bool SetKey(const std::string  s_key,
+              const char *p_value,
+              uint32      n_value);
+
   bool GetKey(const char *p_key,
               uint8       n_key,
               void       *p_value,
               uint32      n_value,
               bool        absolute = false);
+
+  bool GetKey(const std::string  s_key,
+              void       *p_value,
+              uint32      n_value,
+              bool           absolute = false);
 
   bool GetKey(const char    *p_key,
               uint8          n_key,

@@ -100,6 +100,13 @@ bool CKvdbClient::SetKey(const char *p_key,
   return (n_ret_type_ == KVDB_SUCCEED);
 }
 
+
+bool CKvdbClient::SetKey(const std::string  s_key,
+                         const char *p_value,
+                         uint32      n_value) {
+  return SetKey(s_key.c_str(), s_key.size(), p_value, n_value);
+}
+
 bool CKvdbClient::GetKey(const char *p_key,
                          uint8       n_key,
                          void       *p_value,
@@ -134,8 +141,9 @@ bool CKvdbClient::GetKey(const char *p_key,
   }
 
   if ((n_ret_type_ == KVDB_SUCCEED)) {
-    if (n_value > (n_cur_msg_-sizeof(KvdbMessage))) {
-      memcpy(p_value, p_cur_msg_->value, n_cur_msg_-sizeof(KvdbMessage));
+    int n_val_len = n_cur_msg_-sizeof(KvdbMessage);
+    if (n_value >= n_val_len) {
+      memcpy(p_value, p_cur_msg_->value, n_val_len);
       return true;
     }
     LOG(L_ERROR) << "return value is small than kvdb's value.";
@@ -235,6 +243,13 @@ bool CKvdbClient::GetKey(const std::string s_key,
                          std::string      *p_value,
                          bool              absolute /*= false*/) {
   return GetKey(s_key.c_str(), s_key.size(), p_value, absolute);
+}
+
+bool CKvdbClient::GetKey(const std::string  s_key,
+                         void       *p_value,
+                         uint32      n_value,
+                         bool           absolute) {
+  return GetKey(s_key.c_str(), s_key.size(), p_value, n_value, absolute);
 }
 
 bool CKvdbClient::Delete(const char *p_key, uint8 n_key) {

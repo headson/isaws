@@ -52,13 +52,6 @@ CDpPollClient* CDpPollClient::Create(const char *server, unsigned short port,
 
 CDpPollClient::~CDpPollClient() {
   c_evt_timer_.Stop();
-  c_evt_recv_.Stop();
-  c_evt_send_.Stop();
-
-  /*if (p_evt_loop_) {
-    p_evt_loop_->Stop();
-    p_evt_loop_ = NULL;
-    }*/
 }
 
 int32 CDpPollClient::ListenMessage(uint8        e_type,
@@ -81,6 +74,10 @@ int32 CDpPollClient::ListenMessage(uint8        e_type,
     }
     memcpy(s_data + n_data, method_set[i], n_method);
     n_data += MAX_METHOD_SIZE;
+  }
+  if (n_data <= 0) {
+    LOG(L_ERROR) << "method is empty.";
+    return VZNETDP_FAILURE;
   }
 
   //

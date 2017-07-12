@@ -39,6 +39,9 @@ bool IsUtf8String(const char *pText, int nLen);
 
 const std::string CalculationsFileMd5(const std::string &file_name);
 const std::string Md5DigestToString(unsigned char digest[16]);
+const std::string NumberToVoiceString(int n);
+
+const std::string GetRandomString(std::size_t size);
 }; // namespace
 
 #endif

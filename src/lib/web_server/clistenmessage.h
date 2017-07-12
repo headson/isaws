@@ -13,7 +13,10 @@
 
 #include "web_server/cwebserver.h"
 
-class CListenMessage : public vzbase::noncopyable {
+namespace web {
+
+class CListenMessage : public vzbase::noncopyable,
+  public vzbase::MessageHandler {
  protected:
   CListenMessage();
   virtual ~CListenMessage();
@@ -22,11 +25,13 @@ public:
   static CListenMessage *Instance();
 
   bool  Start(const char *s_dp_ip, unsigned short n_dp_port,
-              const char *s_http_port, const char *s_http_path);
+              unsigned short n_http_port, const char *s_http_path);
   void  Stop();
 
   void  RunLoop();
 
+  vzbase::Thread  *MainThread();
+  DPPollHandle     GetDpPollHdl();
  protected:
   static void dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
   void OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp);
@@ -34,10 +39,14 @@ public:
   static void dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg);
   void OnDpCliState(DPPollHandle p_hdl, unsigned int n_state);
 
+  // 线程消息Post,处理函数
+  void OnMessage(vzbase::Message* msg);
+
  private:
   DPPollHandle               p_dp_cli_;
 
   CWebServer                 c_web_srv_;
 };
 
+}  // namespace web 
 #endif  // _CLISTENMESSAGE_H

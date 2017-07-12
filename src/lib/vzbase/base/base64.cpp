@@ -15,12 +15,11 @@
 //*********************************************************************
 
 #include "vzbase/base/base64.h"
+#include "vzbase/base/common.h"
 #include <string.h>
 #include <string>
 #include <vector>
-
-#include "common.h"
-
+// #include "vzbase/base/boostsettings.h"
 using std::vector;
 
 namespace vzbase {
@@ -99,7 +98,6 @@ bool Base64::IsBase64Encoded(const std::string& str) {
 void Base64::EncodeFromArray(const void* data, size_t len,
                              std::string* result) {
   ASSERT(NULL != result);
-
   result->clear();
   result->resize(((len + 2) / 3) * 4);
   const unsigned char* byte_data = static_cast<const unsigned char*>(data);

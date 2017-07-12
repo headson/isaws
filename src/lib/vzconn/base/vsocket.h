@@ -126,6 +126,10 @@ class VSocket {
   VSocket(CClientInterface *cli_hdl);
   virtual ~VSocket();
 
+  void SetSocketObserver(CClientInterface *cli_hdl) {
+    cli_hdl_ptr_ = cli_hdl;
+  }
+
   SOCKET          GetSocket() const;
   virtual void    SetSocket(SOCKET handle);
 

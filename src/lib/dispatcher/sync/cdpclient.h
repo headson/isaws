@@ -18,8 +18,8 @@ class CDpClient : public vzconn::CTcpClient,
 
  public:
   static CDpClient* Create(const char *server, unsigned short port,
-                           vzconn::EVT_LOOP          *p_evt_loop = NULL);
-  ~CDpClient();
+                           vzconn::EVT_LOOP *p_evt_loop = NULL);
+  virtual ~CDpClient();
 
  public:
   // return 0=timeout,1=success

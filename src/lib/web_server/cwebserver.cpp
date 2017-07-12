@@ -8,6 +8,8 @@
 
 #include "web_server/process/uri_handle.h"
 
+namespace web {
+
 static struct mg_serve_http_opts s_web_def_opts_;
 
 CWebServer::CWebServer()
@@ -89,4 +91,5 @@ void CWebServer::OnWebEvHdl(struct mg_connection *nc, int ev, void *ev_data) {
   }
 }
 
+} //  namespace web
 

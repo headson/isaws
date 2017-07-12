@@ -22,18 +22,13 @@ typedef struct _NetHead {
 } NetHead;
 #pragma pack(pop)     // 作用：恢复对齐状态
 
-//// 包类型标签
-//const uint16 FLAG_DISPATCHER_MESSAGE    = 0;
-//const uint16 FLAG_ADDLISTEN_MESSAGE     = 1;
-//const uint16 FLAG_REMOVELISTEN_MESSAGE  = 2;
-//const uint16 FLAG_GET_CLIENT_ID         = 3;
-  // 默认字符顺序[大端]
-  const ByteOrder VZ_ORDER_BYTE       = ORDER_NETWORK;
+// 默认字符顺序[大端]
+const ByteOrder VZ_ORDER_BYTE       = ORDER_NETWORK;
 
-  // 包默认大小
-  #define DEF_BUFFER_SIZE (4096)
-  // 最大包尺寸
-  #define MAX_BUFFER_SIZE (2 * 1024 * 1024)
+// 包默认大小
+#define DEF_BUFFER_SIZE (4096)
+// 最大包尺寸
+#define MAX_BUFFER_SIZE (2 * 1024 * 1024)
 }  // namespace vzconn
 
 #endif  // LIBVZCONN_PKGHEAD_H_

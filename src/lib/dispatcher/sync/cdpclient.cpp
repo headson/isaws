@@ -46,10 +46,11 @@ CDpClient::~CDpClient() {
   c_evt_recv_.Stop();
   c_evt_send_.Stop();
 
-  if (p_evt_loop_) {
-    p_evt_loop_->Stop();
-    p_evt_loop_ = NULL;
-  }
+  // 此处未释放p_evt_loop,需要解决
+  //if (p_evt_loop_) {
+  //  p_evt_loop_->Stop();
+  //  p_evt_loop_ = NULL;
+  //}
 }
 
 int32 CDpClient::RunLoop(uint32 n_timeout) {

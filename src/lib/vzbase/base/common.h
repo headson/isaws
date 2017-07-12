@@ -108,6 +108,10 @@ void SetCustomAssertLogger(AssertLogger logger);
 }  // namespace vzbase
 
 
+#define RETURN_FALSE_CEHCK(A, B) if ((A) != B) {\
+          LOG(L_ERROR) << "Failure to call methed"; \
+          return false;}
+
 #if ENABLE_DEBUG
 
 namespace vzbase {
@@ -145,7 +149,9 @@ inline bool Assert(bool result, const char* function, const char* file,
 
 namespace vzbase {
 
-inline bool ImplicitCastToBool(bool result) { return result; }
+inline bool ImplicitCastToBool(bool result) {
+  return result;
+}
 
 }  // namespace vzbase
 

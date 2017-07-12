@@ -10,6 +10,8 @@
 #include "vzbase/thread/thread.h"
 #include "web_server/base/mongoose.h"
 
+namespace web { 
+
 class CWebServer : public vzbase::Runnable {
  public:
   CWebServer();
@@ -38,5 +40,7 @@ class CWebServer : public vzbase::Runnable {
   bool                       b_runing_;
   vzbase::Thread            *p_web_thread_;
 };
+
+}  // namespace web
 
 #endif  // LIBWEBSRV_CWEBSERVER_H

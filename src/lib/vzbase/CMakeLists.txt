@@ -43,11 +43,15 @@ ENDIF()
 SET(SRC_LIST 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basictypes.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/boost_settings.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/loggingsettings.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/loggingsettings.h
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
@@ -61,6 +65,18 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
 	${WIN32_LOAD_FILE}
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.h
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
@@ -80,11 +96,15 @@ SET(SRC_LIST
 SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basictypes.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/boost_settings.hpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/loggingsettings.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/loggingsettings.h
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
@@ -98,6 +118,18 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
 	${WIN32_LOAD_FILE}
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.h
 )
 
 SOURCE_GROUP(helper FILES

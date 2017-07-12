@@ -7,6 +7,8 @@
 
 #include "json/json.h"
 
+namespace web {
+
 static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
   "TEST_MSG_TYPE_01",
@@ -30,11 +32,13 @@ CListenMessage *CListenMessage::Instance() {
 
 bool CListenMessage::Start(const char     *s_dp_ip,
                            unsigned short  n_dp_port,
-                           const char     *s_http_port,
+                           unsigned short  n_http_port,
                            const char     *s_http_path) {
 
   bool b_ret = false;
-  b_ret = c_web_srv_.Start(s_http_path, s_http_port);
+  char s_port[9] = {0};
+  snprintf(s_port, 8, "%d", n_http_port);
+  b_ret = c_web_srv_.Start(s_http_path, s_port);
   if (b_ret == false) {
     LOG(L_ERROR) << "start web server failed.";
     exit(EXIT_FAILURE);
@@ -85,6 +89,9 @@ void CListenMessage::RunLoop() {
   vzbase::Thread::Current()->Run();
 }
 
+vzbase::Thread *CListenMessage::MainThread() {
+  return vzbase::Thread::Current();
+}
 void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
   if (p_usr_arg) {
     ((CListenMessage*)p_usr_arg)->OnDpCliMsg(p_hdl, dmp);
@@ -111,3 +118,14 @@ void CListenMessage::OnDpCliState(DPPollHandle p_hdl, unsigned int n_state) {
     }
   }
 }
+
+void CListenMessage::OnMessage(vzbase::Message* p_msg) {
+  //if (p_msg->message_id == THREAD_MSG_SET_DEV_ADDR) {
+  /*vzbase::TypedMessageData<std::string>::Ptr msg_ptr =
+    boost::static_pointer_cast<vzbase::TypedMessageData< std::string >> (p_msg->pdata);*/
+
+  //Restart("127.0.0.1", 5291);
+  //vzbase::Thread::Current()->PostDelayed(2*1000, this, THREAD_MSG_SET_DEV_ADDR);
+  //}
+}
+}  // namespace web

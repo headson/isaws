@@ -34,7 +34,8 @@ SET(PROJECT_SOURCE_LIST
 	#${CMAKE_CURRENT_SOURCE_DIR}/base/v7.c
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_handle.h
-	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_login.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_handle.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_user.cpp
 )
 
 SOURCE_GROUP(base FILES
@@ -46,7 +47,8 @@ SOURCE_GROUP(base FILES
 
 SOURCE_GROUP(process FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_handle.h
-	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_login.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_handle.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_user.cpp
 )
 
 SOURCE_GROUP(listen_message FILES
