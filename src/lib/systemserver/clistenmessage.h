@@ -9,8 +9,15 @@
 
 #include "json/json.h"
 #include "vzbase/thread/thread.h"
+
+#include "network/cnetctrl.h"
+
 #include "vzbase/base/noncoypable.h"
 #include "dispatcher/sync/dpclient_c.h"
+
+#include "systemserver/base/pkghead.h"
+
+namespace sys {
 
 class CListenMessage : public vzbase::noncopyable {
  protected:
@@ -20,7 +27,7 @@ class CListenMessage : public vzbase::noncopyable {
  public:
   static CListenMessage *Instance();
 
-  bool  Start(const unsigned char *s_dp_ip, unsigned short n_dp_port);
+  bool  Start(const char *s_dp_ip, unsigned short n_dp_port);
   void  Stop();
 
   void  RunLoop();
@@ -39,7 +46,14 @@ class CListenMessage : public vzbase::noncopyable {
   bool SetDevInfo(const Json::Value &j_body); // 设置设备信息
 
  private:
-  DPPollHandle               p_dp_cli_;
+  TAG_SYS_INFO    sys_info_;    // 系统信息
+
+  DPPollHandle    dp_cli_;
+  CNetCtrl       *net_ctrl_;    // 网络控制
+
+  vzbase::Thread *thread_slow_; // 耗时线程
 };
+
+}  // namespace sys
 
 #endif  // _CLISTENMESSAGE_H

@@ -75,6 +75,10 @@ inline int gettimeofday(struct timeval *tp, void *tzp) {
   return (0);
 }
 
+inline unsigned int get_sys_sec() {
+  return (unsigned int)(GetTickCount() / 1000);
+}
+
 #define F_OK            0
 #define X_OK            1
 #define W_OK            2
@@ -118,7 +122,17 @@ inline int closesocket(SOCKET socket) {
   return close(socket);
 }
 
+inline unsigned int GetTickCount() {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (ts.tv_sec * 1000 + ts.tv_nsec / 1000)
+         ;
+}
+
 #endif  // WIN32
+
+#include "verror.h"
+#include "vmessage.h"
 
 #include "vzlogging/logging/vzlogging.h"
 #include "vzlogging/logging/vzwatchdog.h"
@@ -131,8 +145,8 @@ extern "C" {
 #if 0
 /***********************************************************************
 *Description : 初始化日志系统;其中包含了WSAStartup
-*Parameters  : 
-*Return      : 
+*Parameters  :
+*Return      :
 ***********************************************************************/
 inline void InitSetLogging(int argc, char* argv[]) {
   InitVzLogging(argc, argv);

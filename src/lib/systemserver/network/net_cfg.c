@@ -204,7 +204,7 @@ int net_set_ifaddr(const char *ifname, in_addr_t addr) {
   struct ifreq ifr;
   int skfd;
 
-  if ( (skfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+  if ((skfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
     DBG_ERR("socket error");
     return -1;
   }

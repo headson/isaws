@@ -48,10 +48,10 @@ ADD_SUBDIRECTORY(src/run/web_server)
 ADD_SUBDIRECTORY(src/run/vzlogserver)
 ADD_SUBDIRECTORY(src/run/system_server)
 ADD_SUBDIRECTORY(src/run/dispatcherserver)
-#ADD_SUBDIRECTORY(src/run/hi3518e)
+#ADD_SUBDIRECTORY(src/run/hi3518ev200)
 #ADD_SUBDIRECTORY(src/run/live_stream)
 
-#ADD_SUBDIRECTORY(src/run/pc_manage)
+ADD_SUBDIRECTORY(src/run/pc_manage)
 
 ## add test
 ADD_SUBDIRECTORY(src/test/test_systemv)

@@ -23,6 +23,8 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
+	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.h
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.c
     ${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
@@ -30,6 +32,10 @@ SET(PROJECT_SOURCE_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
+)
+
+SOURCE_GROUP(base FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.h
 )
 
 SOURCE_GROUP(network FILES

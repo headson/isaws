@@ -11,6 +11,8 @@
 #include "vzbase/thread/thread.h"
 #include "vzconn/multicast/cmcastsocket.h"
 
+namespace sys {
+
 class CNetCtrl : public vzbase::MessageHandler,
   public vzconn::CClientInterface {
  protected:
@@ -23,6 +25,10 @@ class CNetCtrl : public vzbase::MessageHandler,
 
   bool Start();
   void Stop();
+
+  vzbase::Thread *GetThread() {
+    return p_thread_;
+  }
 
  protected:
   virtual void OnMessage(vzbase::Message* msg);
@@ -37,9 +43,24 @@ class CNetCtrl : public vzbase::MessageHandler,
   virtual void  HandleClose(vzconn::VSocket *p_cli) {
   }
 
+ protected:
+   void SetNet(in_addr_t   ip,
+               in_addr_t   netmask,
+               in_addr_t   gateway,
+               in_addr_t   dns);
+
  private:
-  vzbase::Thread        *p_thread_;
-  vzconn::CMCastSocket  *p_mcast_sock_;
+  vzbase::Thread       *p_thread_;
+  vzconn::CMCastSocket *p_mcast_sock_;
+
+ public:
+  struct in_addr    ip_;          // inet_addr() inet_ntoa
+  struct in_addr    netmask_;     //
+  struct in_addr    gateway_;     //
+  struct in_addr    dns_;         //
+  std::string       mac_;         // 12:23:34:45:56:67
 };
+
+}  // namespace sys
 
 #endif  // LIBSYSTEMSERVER_CNETCTRL_H

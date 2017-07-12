@@ -92,6 +92,7 @@ typedef signed char     int8;
 
 #ifdef WIN32
 typedef int             socklen_t;
+typedef uint32          in_addr_t;
 #else
 typedef int             SOCKET;
 
