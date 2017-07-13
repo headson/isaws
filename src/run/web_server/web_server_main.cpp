@@ -1,7 +1,7 @@
 #include <signal.h>
 
 #include "vzbase/helper/stdafx.h"
-
+#include "vzbase/helper/vmessage.h"
 #include "web_server/clistenmessage.h"
 
 void SignalHandle(int n_sig) {

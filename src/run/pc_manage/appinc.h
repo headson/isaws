@@ -5,11 +5,22 @@
 #ifndef _APPINC_H
 #define _APPINC_H
 
+#include <QFile>
+#include <QDebug>
+#include <QDateTime>
+
+#include <QPixmap>
+
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QWidget>
 #include <QtWidgets/QApplication>
 
+#include "vzbase/base/basictypes.h"
+
 #include "common/cmydialog.h"
+#include "database/cdevinfo.h"
+
+#include "devtree/cdevicedetect.h"
 
 #pragma execution_character_set("utf-8")
 

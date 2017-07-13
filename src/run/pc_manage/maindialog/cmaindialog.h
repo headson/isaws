@@ -1,8 +1,7 @@
 #ifndef CMAINDIALOG_H
 #define CMAINDIALOG_H
 
-#include <QDialog>
-#include "common/cmydialog.h"
+#include "appinc.h"
 
 #include "ui_cmaindialog.h"
 
@@ -17,7 +16,7 @@ public:
     bool CheckLogin();
 
 private:
-    Ui::CMainDialogClass ui;
+    Ui::CMainDialog ui;
 };
 
 #endif // CMAINDIALOG_H

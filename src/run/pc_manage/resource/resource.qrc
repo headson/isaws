@@ -3,6 +3,7 @@
         <file>icon/options.png</file>
         <file>icon/checkbox.png</file>
         <file>icon/drop_down_Button.png</file>
+		
         <file>mytitle.css</file>
         <file>mytitle/arrowback.png</file>
         <file>mytitle/close.png</file>
@@ -10,7 +11,11 @@
         <file>mytitle/max.png</file>
         <file>mytitle/min.png</file>
         <file>mytitle/restore.png</file>
+		
         <file>logindialog.css</file>
         <file>logindialog/backgroud.png</file>
+		
+		<file>devlistitem.css</file>
+		<file>devlistwidget.css</file>
     </qresource>
 </RCC>

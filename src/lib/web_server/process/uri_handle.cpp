@@ -36,11 +36,11 @@ bool parse_request(std::string &s_msg,
   return true;
 }
 
-void web::send_response(struct mg_connection  *nc,
-                        const std::string     &s_msg,
-                        int                    n_id,
-                        int                    n_state,
-                        const Json::Value     &j_body) {
+void send_response(struct mg_connection *nc,
+                   const std::string    &s_msg,
+                   int                   n_id,
+                   int                   n_state,
+                   const Json::Value    &j_body) {
   static const char K_HTTP_CONTENT_TYPE[] =
     "Content-Type: application/Json; charset=utf-8";
 

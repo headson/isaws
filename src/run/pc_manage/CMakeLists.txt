@@ -49,15 +49,31 @@ qt5_add_resources(QRC_FILES
 )
 
 qt5_wrap_ui(UI_FILES 
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.ui
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.ui
 	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/cmaindialog.ui
 )
 
 SET(SRC_LIST 
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cdatabase.h
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cdatabase.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cusrinfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cdevinfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cdevinfo.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmydialog.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmydialog.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.h
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevicedetect.h
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevicedetect.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.h
 	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.cpp
@@ -68,11 +84,32 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
 )
 
+SOURCE_GROUP(database FILES 
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cdatabase.h
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cdatabase.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cusrinfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cdevinfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/database/cdevinfo.cpp
+)
+
 SOURCE_GROUP(common FILES 
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmydialog.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmydialog.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.cpp
+)
+
+SOURCE_GROUP(devtree FILES 
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.h
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevicedetect.h
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevicedetect.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.cpp
 )
 
 SOURCE_GROUP(maindialog FILES 
@@ -107,4 +144,8 @@ TARGET_LINK_LIBRARIES (${BUILD_PROJECT_NAME}
 	Qt5::Gui
 	Qt5::Sql
 	Qt5::Multimedia
+	
+	libvzconn
+	libjsoncpp
+	${VZPROJECT_LINK_LIB}
 )

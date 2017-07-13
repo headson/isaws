@@ -54,11 +54,11 @@ class CNetCtrl : public vzbase::MessageHandler,
   vzconn::CMCastSocket *p_mcast_sock_;
 
  public:
-  struct in_addr    ip_;          // inet_addr() inet_ntoa
-  struct in_addr    netmask_;     //
-  struct in_addr    gateway_;     //
-  struct in_addr    dns_;         //
-  std::string       mac_;         // 12:23:34:45:56:67
+  in_addr_t    ip_;          // inet_addr() inet_ntoa
+  in_addr_t    netmask_;     //
+  in_addr_t    gateway_;     //
+  in_addr_t    dns_;         //
+  std::string  mac_;         // 12:23:34:45:56:67
 };
 
 }  // namespace sys

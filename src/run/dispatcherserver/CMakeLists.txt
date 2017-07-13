@@ -57,13 +57,13 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		business
 		dispatch
 		vzconn
 		vzlogging
 		sqlite3
 		libevent_core.so
 		libevent_pthreads.so
+		pthread
         -Wl,-rpath=.
 	)
 endif()

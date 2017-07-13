@@ -118,6 +118,13 @@ inline int closesocket(SOCKET socket) {
   return close(socket);
 }
 
+inline unsigned int GetTickCount() {
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (unsigned int)ts.tv_sec*1000 +
+         (unsigned int)ts.tv_nsec/1000;
+}
+
 #endif  // WIN32
 
 #include "vzlogging/logging/vzlogging.h"
@@ -131,8 +138,8 @@ extern "C" {
 #if 0
 /***********************************************************************
 *Description : 初始化日志系统;其中包含了WSAStartup
-*Parameters  : 
-*Return      : 
+*Parameters  :
+*Return      :
 ***********************************************************************/
 inline void InitSetLogging(int argc, char* argv[]) {
   InitVzLogging(argc, argv);

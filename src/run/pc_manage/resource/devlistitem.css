@@ -1,0 +1,26 @@
+*{font-family:Microsoft YaHei;background-color:rgb(238, 238, 238);}
+
+QGroupBox#pBorderGBox
+{
+    border-radius:2px;
+    border:1px solid rgb(128, 128, 128);
+}
+
+QPushButton#pMenuButton:menu-indicator{ image:none; }
+
+/*MENU°´Å¥*/
+QPushButton#pMenuButton
+{
+    border-image:url(:/Resources/icon/options.png) 0 60 0 0;
+}
+
+QPushButton#pMenuButton:hover
+{
+    border-image:url(:/Resources/icon/options.png) 0 30 0 30;
+}
+
+QPushButton#pMenuButton:pressed
+{
+    border-image:url(:/Resources/icon/options.png) 0 0 0 60;
+}
+

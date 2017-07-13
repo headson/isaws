@@ -4,8 +4,10 @@
 /************************************************************************/
 #include "cnetctrl.h"
 
-#include "vzbase/helper/stdafx.h"
+#include "net_cfg.h"
 
+#include "vzbase/helper/stdafx.h"
+#include "vzbase/helper/vmessage.h"
 #include "systemserver/clistenmessage.h"
 
 namespace sys {
@@ -47,14 +49,14 @@ bool CNetCtrl::Start() {
     return false;
   }
 
-  bool b_ret = p_mcast_sock_->Open((unsigned char*)DEF_MCAST_IP,
+  int ret = p_mcast_sock_->Open((unsigned char*)DEF_MCAST_IP,
                                    DEF_MCAST_DEV_PORT);
-  if (b_ret == false) {
+  if (ret != false) {
     LOG(L_ERROR) << "multi socket open failed.";
   }
 
   p_thread_->PostDelayed(GET_IP_TIMEOUT, this, DEF_GET_IP_ADDR);
-  return b_ret;
+  return (ret == 0);
 }
 
 void CNetCtrl::Stop() {
@@ -75,7 +77,7 @@ void CNetCtrl::OnMessage(vzbase::Message* msg) {
         LOG(L_INFO) << "set default address.";
         net_set_ifaddr(PHY_IF_NAME, inet_addr("192.168.254.254"));
         net_set_netmask(PHY_IF_NAME, inet_addr("255.255.0.0"));
-        net_set_gateway(PHY_IF_NAME, inet_addr("192.168.254.1"));
+        net_set_gateway(inet_addr("192.168.254.1"));
       }
     } else {
       static unsigned int i = 0;
@@ -89,7 +91,6 @@ void CNetCtrl::OnMessage(vzbase::Message* msg) {
         }
       }
     }
-  }
 #endif
   }
 }
@@ -99,6 +100,7 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
                                  uint32            n_data,
                                  uint16            n_flag) {
   std::string s_json((char*)p_data, n_data);
+  LOG(L_INFO) << s_json.c_str();
 
   Json::Value  j_req;
   Json::Reader j_parse;
@@ -156,41 +158,45 @@ void CNetCtrl::SetNet(in_addr_t   ip,
                       in_addr_t   netmask,
                       in_addr_t   gateway,
                       in_addr_t   dns) {
-  if (ip_.S_un.S_addr != ip) {
-    ip_.S_un.S_addr = ip;
+  if (ip_ != ip) {
+    ip_ = ip;
 #ifdef _WIN32
-    LOG(L_WARNING) << "set ip addr " << inet_ntoa(ip_);
+    LOG(L_WARNING) << "set ip addr "
+                   << inet_ntoa(*((struct in_addr*)&ip_));
 #else
     net_set_ifaddr(PHY_IF_NAME, ip);
 #endif
   }
 
-  if (netmask_.S_un.S_addr != netmask) {
-    netmask_.S_un.S_addr = netmask;
+  if (netmask_ != netmask) {
+    netmask_ = netmask;
 #ifdef _WIN32
-    LOG(L_WARNING) << "set netmask " << inet_ntoa(netmask_);
+    LOG(L_WARNING) << "set netmask "
+                   << inet_ntoa(*((struct in_addr*)&netmask_));
 #else
 
     net_set_netmask(PHY_IF_NAME, netmask);
 #endif
   }
 
-  if (gateway_.S_un.S_addr != gateway) {
-    gateway_.S_un.S_addr = gateway;
+  if (gateway_ != gateway) {
+    gateway_ = gateway;
 #ifdef _WIN32
-    LOG(L_WARNING) << "set gateway " << inet_ntoa(gateway_);
+    LOG(L_WARNING) << "set gateway "
+                   << inet_ntoa(*((struct in_addr*)&gateway_));
 #else
     net_clean_gateway();
-    net_set_gateway(PHY_IF_NAME, gateway);
+    net_set_gateway(gateway);
 #endif
   }
 
-  if (dns_.S_un.S_addr != dns) {
-    dns_.S_un.S_addr = dns;
+  if (dns_ != dns) {
+    dns_ = dns;
 #ifdef _WIN32
-    LOG(L_WARNING) << "set dns_1 " << inet_ntoa(dns_);
+    LOG(L_WARNING) << "set dns_1 "
+                   << inet_ntoa(*((struct in_addr*)&dns_));
 #else
-    net_set_dns(inet_ntoa(dns_));
+    net_set_dns(inet_ntoa(*((struct in_addr*)&dns_)));
 #endif
   }
 }

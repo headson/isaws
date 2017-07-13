@@ -1,0 +1,89 @@
+*{font-family:Microsoft YaHei;}
+
+QWidget#pDevListWidget,
+QGroupBox#pDevLiveGBox,
+QGroupBox#pPCntGroup
+{
+    border: 1px solid rgb(200, 200, 200);
+}
+
+/*按钮*/
+QPushButton
+{
+    color:rgb(0, 0, 0);
+    background-color:rgb(238, 238, 238);
+    border-radius:0px;
+}
+
+QPushButton:hover
+{
+    color:rgb(50, 150, 220);
+    background-color:rgb(220, 220, 220);
+}
+
+QPushButton:pressed
+{
+    color:rgb(50, 150, 220);
+    background-color:rgb(220, 220, 220);
+    padding-left:3px;
+    padding-top:3px;
+}
+
+/*下拉列表框*/
+QComboBox
+{
+    background:white;
+    padding-left:5px ;
+    border-top-left-radius:3px;
+    border-top-right-radius:3px;
+    border: 1px solid rgb(209 , 209 , 209);
+}
+QComboBox:hover
+{
+    border: 1px solid rgb(21 , 131 , 221);
+}
+QComboBox QAbstractItemView::item
+{
+    height:40px;
+}
+QComboBox::down-arrow
+{
+    border-image:url(:/Resources/icon/drop_down_Button.png) 0 34 0 0 ;
+}
+QComboBox::down-arrow:hover
+{
+    border-image:url(:/Resources/icon/drop_down_Button.png) 0 17 0 17 ;
+}
+QComboBox::down-arrow:on
+{
+    border-image:url(:/Resources/icon/drop_down_Button.png) 0 0 0 34 ;
+}
+QComboBox::drop-down
+{
+    width:20px;
+    background:transparent; /*不加此句下拉箭头背景色为灰色与整体样式不一致，也可设置 border:0px; border-radius:0px; background:white; border-left:0px ; 即设置为无边框*/
+    padding-right:5px;
+}
+
+/*是否只显示在线*/
+QCheckBox
+{
+    color:rgb(0, 0, 0);
+}
+
+QCheckBox::indicator:unchecked
+{
+    border-image:url(:/Resources/icon/checkbox.png) 0 39 0 0;
+}
+QCheckBox::indicator:hover
+{
+    border-image:url(:/Resources/icon/checkbox.png) 0 26 0 13;
+}
+QCheckBox::indicator:pressed
+{
+    border-image:url(:/Resources/icon/checkbox.png) 0 13 0 26;
+}
+QCheckBox::indicator:checked
+{
+    border-image:url(:/Resources/icon/checkbox.png) 0 0 0 39;
+}

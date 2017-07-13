@@ -4,6 +4,7 @@
 /************************************************************************/
 #include "clistenmessage.h"
 #include "vzbase/helper/stdafx.h"
+#include "vzbase/helper/vmessage.h"
 
 #include "json/json.h"
 
@@ -156,10 +157,10 @@ bool CListenMessage::GetDevInfo(Json::Value &j_body) {
   j_body["sw_ver"]    = sys_info_.sw_ver;
   j_body["hw_ver"]    = sys_info_.hw_ver;
   j_body["iva_ver"]   = sys_info_.iva_ver;
-  j_body["ip_addr"]   = inet_ntoa(net_ctrl_->ip_);
-  j_body["netmask"]   = inet_ntoa(net_ctrl_->netmask_);
-  j_body["gateway"]   = inet_ntoa(net_ctrl_->gateway_);
-  j_body["dns"]     = inet_ntoa(net_ctrl_->dns_);
+  j_body["ip_addr"]   = inet_ntoa(*((struct in_addr*)&net_ctrl_->ip_));
+  j_body["netmask"]   = inet_ntoa(*((struct in_addr*)&net_ctrl_->netmask_));
+  j_body["gateway"]   = inet_ntoa(*((struct in_addr*)&net_ctrl_->gateway_));
+  j_body["dns"]       = inet_ntoa(*((struct in_addr*)&net_ctrl_->dns_));
   j_body["mac"]       = net_ctrl_->mac_;
   j_body["web_port"]  = sys_info_.web_port;
   j_body["rtsp_port"] = sys_info_.rtsp_port;

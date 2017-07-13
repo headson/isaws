@@ -401,7 +401,11 @@ long long strtoll(const char *, char **, int);
 #endif
 
 typedef int sock_t;
+
+#ifndef INVALID_SOCKET
 #define INVALID_SOCKET (-1)
+#endif
+
 #define SIZE_T_FMT "zu"
 typedef struct stat cs_stat_t;
 #define DIRSEP '/'
