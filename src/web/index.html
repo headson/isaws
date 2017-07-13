@@ -8,6 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <title></title>
     <link rel="stylesheet" href="css/all.css"/>
+    <link rel="stylesheet" href="css/animate.css"/>
     <style>
         *{
             margin: 0;
@@ -31,11 +32,13 @@
         #container{
             width: 1000px;
             height: 700px;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.4);
             border: 1px solid #fff;
             border-radius: 20px;
             padding: 20px;
             position: absolute;
+            transition: all 0.2s;
+            box-shadow: 0 0 20px 1px #fff;
         }
         .center{
             position: absolute;
@@ -57,10 +60,6 @@
             padding: 0;
             box-sizing: border-box;
             border-radius: 5px;
-        }
-        #container.center:hover{
-            box-shadow: 0 0 20px 1px #fff;
-            margin-top: -371px;
         }
         .div1 > div{
             border: 1px solid #fff;
@@ -223,6 +222,10 @@
             height: 140px;
             border: 1px solid #fff;
             overflow-y: auto;
+            overflow-x:hidden;
+        }
+        #log_container p{
+            padding: 2px 5px;
         }
         #msg_name,#msg_id{
             width: 150px;
@@ -383,23 +386,33 @@
             cfg.body.data = val;
 
             var jsonstr = JSON.stringify(cfg);
+
+            var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsonstr +"</p>";
+            $("#log_container").prepend(str_p);
             $.ajax({
                 type:"POST",
                 url:"/send_request",
                 dataType:"text",
                 data:jsonstr,
                 success:function(ajaxdata){
+                    var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ ajaxdata +"</p>";
+                    $("#log_container").prepend(str_p);
                     var jsondata = eval("(" + ajaxdata + ")");
-                    if(jsondata.state == 0){
+//                    if(jsondata.state == 0){
                         var id = jsondata.id;
                         var state = jsondata.state;
-                        var method = jsondata.body.method;
-                        var time = jsondata.body.time;
-                        var data = Base64.decode(jsondata.body.data,true);
+                        var method = jsondata.cmd;
+                        var time = get_time();
+                        var data;
+                        try{
+                            data = Base64.decode(jsondata.body.data,true);
+                        }catch(e){
+                            data = "";
+                        }
                         var str = "<tr data='"+ data +"'><td style='width: 30px;'>R</td><td style='width: 150px;' class='time'>"+time+"</td><td style='width: 250px' class='method'>"+method+"</td><td style='133px;' class='id'>"+ id +"</td></tr>";
                         $("#rep_msg_tb tbody").append(str);
                         scroll_bt($("#rep_msg_tb tbody"));
-                    }
+//                    }
                 }
             });
         }
@@ -430,6 +443,8 @@
             cfg.body.data = val;
 
             var jsonstr = JSON.stringify(cfg);
+            var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsonstr +"</p>";
+            $("#log_container").prepend(str_p);
             $.ajax({
                 type:"POST",
                 url:"/send_reply",
@@ -467,6 +482,8 @@
             cfg.body.data = val;
 
             var jsonstr = JSON.stringify(cfg);
+            var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsonstr +"</p>";
+            $("#log_container").prepend(str_p);
             $.ajax({
                 type:"POST",
                 url:"/send_message",
@@ -487,7 +504,7 @@
             cfg.id = 2;
             cfg.body = {};
             cfg.body.method = msg;
-
+            $("#reg_msg_tb tbody tr").eq(g_cfg_table_cur_index).remove();
             var jsonstr = JSON.stringify(cfg);
             $.ajax({
                 type:"POST",
@@ -539,10 +556,10 @@
                         var str = "<tr><td>"+ msg +"</td></tr>";
                         $("#reg_msg_tb tbody").append(str);
                         scroll_bt($("#reg_msg_tb tbody"));
-                        str_p = "<p>[info] "+ get_time() +" Register Message : "+ msg +"</p>";
+                        str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" Register Message : "+ msg +"</p>";
                     }else{
                         alert("注册消息失败");
-                        str_p = "<p>[ERROR] "+ get_time() +" Register Get Error</p>";
+                        str_p = "<p class='animated bounceInLeft'> [ERROR] "+ get_time() +" Register Get Error</p>";
                     }
                     $("#log_container").prepend(str_p);
                 }
@@ -576,9 +593,9 @@
                     var jsondata = eval("(" + ajaxdata + ")");
                     var str_p;
                     if(jsondata.state == 0){
-                        str_p = "<p>[info] "+ get_time() +" Connect Server Success</p>";
+                        str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" Connect Server Success</p>";
                     }else{
-                        str_p = "<p>[ERROR] "+ get_time() +" Connect Server Error</p>";
+                        str_p = "<p class='animated bounceInLeft'> [ERROR] "+ get_time() +" Connect Server Error</p>";
                     }
                     $("#log_container").prepend(str_p);
                 }
@@ -619,12 +636,18 @@
                 data:jsonstr,
                 success:function(ajaxdata){
                     var jsondata = eval("(" + ajaxdata + ")");
-                    var jsondata = jsondata.body;
+                    try{
+                        var jsondata = jsondata.body;
+                    }catch(e){
+                        return;
+                    }
                     var str = "";
                     for(var i = 0;i < jsondata.length;i++){
+                        var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsondata[i] +"</p>";
+                        $("#log_container").prepend(str_p);
                         var id = jsondata[i].id;
                         var method = jsondata[i].method;
-                        var time = jsondata[i].time;
+                        var time = get_time();
                         var data = Base64.decode(jsondata[i].data,true);
                         str += "<tr data='"+ data +"'><td style='width: 30px;'>R</td><td style='width: 150px;' class='time'>"+time+"</td><td style='width: 250px' class='method'>"+method+"</td><td style='133px;' class='id'>"+ id +"</td></tr>";
                     }
@@ -684,6 +707,7 @@
             },3000);
             $(document).dblclick(function(){
                 $("canvas").slideToggle();
+                return false;
             });
             $("#connect_btn").click(function(){
                 $("#reg_msg_tb tbody tr").remove();

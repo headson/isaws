@@ -25,20 +25,11 @@ class CDevListWidget : public QWidget {
  public slots:
   void    resizeEvent(QResizeEvent* pEvt);
 
-  QString FindFilter();
-  void    OnFindSlot();                       // 查找设备
-
+  void    OnDetectSlot();                     // 发送探测信息
   void    OnDevListSlot();                    // 下载设备列表
-  void    OnDevPrePageSlot();                 // 显示上一页
-  void    OnDevNextPageSlot();                // 显示下一页
 
  private:
   Ui::CDevListWidget* ui;
-
- private:
-  int   page_size_;        // 一页设备显示数
-  int   page_count_;       // 设备总数
-  int   page_index_;       // 当前显示页索引
 };
 
 #endif  // PC_MANAGE_CDEVLISTWIDGET_H

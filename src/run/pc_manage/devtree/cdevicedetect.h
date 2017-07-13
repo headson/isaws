@@ -11,6 +11,8 @@
 #include <QThread>
 #include <QMutexLocker>
 
+#include "json/json.h"
+
 #include "vzconn/multicast/cmcastsocket.h"
 
 class CDeviceDetect : public QThread,
@@ -27,9 +29,13 @@ class CDeviceDetect : public QThread,
   bool Start();
   bool Detect();
 
+ signals:
+  void UpdateDevice();
+
  protected:
   void run();
 
+ protected:
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
                                  const uint8      *p_data,
                                  uint32            n_data,
@@ -42,14 +48,17 @@ class CDeviceDetect : public QThread,
   }
 
  protected:
+  void OnGetDevInfo(Json::Value &jroot);
+
+ protected:
   bool                   running_;
 
  protected:
-  QMutex                 mutex_;
-  QList<CDevInfo*>       devs_info_;
+  QMutex                        mutex_;
+  QMap<std::string, CDevInfo*>  devs_info_; // dev_id dev_info
 
  protected:
-  vzconn::CMCastSocket  *mcast_sock_;
+  vzconn::CMCastSocket         *mcast_sock_;
 };
 
 

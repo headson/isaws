@@ -4,19 +4,25 @@
 #include "appinc.h"
 
 #include "ui_cmaindialog.h"
+#include "devtree/cdevlistwidget.h"
 
-class CMainDialog : public CMyDialog
-{
-    Q_OBJECT
+class CMainDialog : public CMyDialog {
+  Q_OBJECT
 
-public:
-    CMainDialog(QDialog *parent = 0);
-    ~CMainDialog();
+ public:
+  CMainDialog(QDialog *parent = 0);
+  ~CMainDialog();
 
-    bool CheckLogin();
+  bool InitWindow();
 
-private:
-    Ui::CMainDialog ui;
+  bool CheckLogin();
+
+ private:
+  Ui::CMainDialog ui;
+
+ private:
+   CDevListWidget *dev_list_;
+
 };
 
 #endif // CMAINDIALOG_H

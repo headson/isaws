@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>923</width>
-    <height>598</height>
+    <width>800</width>
+    <height>439</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -31,38 +31,27 @@
    </property>
    <item row="1" column="0">
     <widget class="QGroupBox" name="dev_list_grp_">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="minimumSize">
       <size>
-       <width>160</width>
+       <width>0</width>
        <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
-       <width>160</width>
+       <width>16777215</width>
        <height>16777215</height>
       </size>
      </property>
      <property name="title">
       <string/>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
-       <number>0</number>
-      </property>
-      <property name="spacing">
-       <number>3</number>
-      </property>
-     </layout>
     </widget>
    </item>
    <item row="1" column="1">

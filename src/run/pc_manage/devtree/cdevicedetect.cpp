@@ -68,8 +68,28 @@ int32 CDeviceDetect::HandleRecvPacket(vzconn::VSocket *p_cli,
                                       const uint8 *p_data,
                                       uint32 n_data,
                                       uint16 n_flag) {
-  std::string s_json((char*)p_data, n_data);
-  LOG(L_INFO) << s_json.c_str();
+  std::string json_((char*)p_data, n_data);
+  LOG(L_INFO) << json_.c_str();
+
+  Json::Value  jroot;
+  Json::Reader jreader;
+  if (!jreader.parse(json_, jroot)) {
+    LOG(L_ERROR) << jreader.getFormatedErrorMessages();
+    return -1;
+  }
+
+  std::string cmd_ = jroot[MSG_CMD].asString();
+  if (cmd_.compare(MSG_SYSC_GET_DEVINFO)) {     // 获取设备信息
+    OnGetDevInfo(jroot);
+  } else if (cmd_.compare(MSG_SYSC_SET_DEVINFO)) {
+
+  }
   return 0;
+}
+
+void CDeviceDetect::OnGetDevInfo(Json::Value &jroot) {
+
+
+  emit UpdateDevice();
 }
 
