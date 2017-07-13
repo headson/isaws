@@ -57,6 +57,17 @@ class CTcpClient : public VSocket {
                            uint32       n_iov,
                            uint16       e_flag);
 
+  virtual int32 SyncWrite(const void  *p_data,
+                          uint32       n_data,
+                          uint16       e_flag);
+
+  virtual int32 SyncWrite(struct iovec iov[],
+                          uint32       n_iov,
+                          uint16       e_flag);
+
+ protected:
+  int32 SendN(const uint8 *p_data, uint32 n_data);
+
  protected:
   friend class CEvtTcpServer;
 
@@ -96,6 +107,9 @@ class CTcpClient : public VSocket {
 
   EVT_IO            c_evt_send_;    // 发送事件
   CBlockBuffer      c_send_data_;   // 发送buffer
+
+ protected:
+  uint8            *head_data_;
 };
 
 }  // namespace vzconn

@@ -107,14 +107,14 @@ bool CurlServices::InitCurlServices() {
     return false;
   }
 
+  c_evt_timer_.Init(p_evt_loop_, timer_cb, this);
+
   CURLMcode ret;
   /* setup the generic multi interface options we want */
   ret = curl_multi_setopt(p_curl_multi_, CURLMOPT_SOCKETFUNCTION, multi_sock_cb);
   ret = curl_multi_setopt(p_curl_multi_, CURLMOPT_SOCKETDATA, this);
   ret = curl_multi_setopt(p_curl_multi_, CURLMOPT_TIMERFUNCTION, multi_timer_cb);
   ret = curl_multi_setopt(p_curl_multi_, CURLMOPT_TIMERDATA, this);
-
-  c_evt_timer_.Init(p_evt_loop_, timer_cb, this);
   return true;
 }
 
@@ -213,8 +213,11 @@ bool CurlServices::PostDevRegData(HttpConn *p_conn, DeviceRegData &regdata) {
   }
 
   CURLMcode rc;
-  curl_easy_setopt(p_conn->GetEasy(), CURLOPT_URL,  p_conn->GetUrl().c_str());
-  curl_easy_setopt(p_conn->GetEasy(), CURLOPT_PORT, p_conn->GetUrlPort());
+  //curl_easy_setopt(p_conn->GetEasy(), CURLOPT_URL,  p_conn->GetUrl().c_str());
+  //curl_easy_setopt(p_conn->GetEasy(), CURLOPT_PORT, p_conn->GetUrlPort());
+
+  curl_easy_setopt(p_conn->GetEasy(), CURLOPT_URL,  "http://192.168.6.8/vz/hello.jsp");
+  curl_easy_setopt(p_conn->GetEasy(), CURLOPT_PORT, 8080);
 
   curl_easy_setopt(p_conn->GetEasy(), CURLOPT_POST, 1);
 
@@ -391,7 +394,8 @@ int CurlServices::multi_sock_cb(CURL *e, curl_socket_t s, int what, void *cbp, v
     }
     break;
   default:
-    abort();
+    //abort();
+    break;
   }
   return 0;
 }
@@ -401,8 +405,8 @@ int CurlServices::multi_timer_cb(CURLM *multi, long timeout_ms, CurlServices *g)
   struct timeval timeout;
   (void)multi; /* unused */
 
-  timeout.tv_sec = timeout_ms/1000;
-  timeout.tv_usec = (timeout_ms%1000)*1000;
+  timeout.tv_sec = timeout_ms / 1000;
+  timeout.tv_usec = (timeout_ms % 1000) * 1000;
   fprintf(MSG_OUT, "multi_timer_cb: Setting timeout to %ld ms\n", timeout_ms);
 
   /* TODO

@@ -15,7 +15,8 @@ CTcpClient::CTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl)
   , c_evt_recv_()
   , c_recv_data_()
   , c_evt_send_()
-  , c_send_data_() {
+  , c_send_data_()
+  , head_data_(NULL) {
   //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
@@ -47,6 +48,10 @@ CTcpClient::~CTcpClient() {
 
   Close();
 
+  if (head_data_) {
+    delete[] head_data_;
+    head_data_ = NULL;
+  }
   //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
@@ -242,6 +247,105 @@ int32 CTcpClient::AsyncWrite(struct iovec iov[],
   return -1;
 }
 
+
+int32 CTcpClient::SyncWrite(const void *p_data, uint32 n_data, uint16 e_flag) {
+  set_socket_blocking(GetSocket());
+
+  if (NULL == head_data_) {
+    head_data_ = new uint8[cli_hdl_ptr_->NetHeadSize() + 1];
+  }
+
+  int32 ret = 0;
+  int32 head_size = 0;
+  if (head_data_) {
+    head_size = cli_hdl_ptr_->NetHeadPacket(
+                  head_data_,
+                  cli_hdl_ptr_->NetHeadSize(),
+                  n_data,
+                  e_flag);
+  }
+  if (head_size > 0) {
+    ret = SendN(head_data_, head_size);
+    if (ret <= 0) {
+      LOG(L_ERROR) << "send head failed.";
+      set_socket_nonblocking(GetSocket());
+      return ret;
+    }
+  }
+
+  ret = SendN((uint8*)p_data, n_data);
+  if (ret < 0) {
+    LOG(L_ERROR) << "send head failed.";
+    set_socket_nonblocking(GetSocket());
+    return ret;
+  }
+
+  set_socket_nonblocking(GetSocket());
+  return (head_size + n_data);
+}
+
+int32 CTcpClient::SyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
+  uint32 n_data = 0;
+  for (uint32 i = 0; i < n_iov; i++) {
+    n_data += iov[i].iov_len;
+  }
+
+  set_socket_blocking(GetSocket());
+
+  if (NULL == head_data_) {
+    head_data_ = new uint8[cli_hdl_ptr_->NetHeadSize() + 1];
+  }
+
+  int32 ret = 0;
+  int32 head_size = 0;
+  if (head_data_) {
+    head_size = cli_hdl_ptr_->NetHeadPacket(
+                  head_data_,
+                  cli_hdl_ptr_->NetHeadSize(),
+                  n_data,
+                  e_flag);
+  }
+  if (head_size > 0) {
+    ret = SendN(head_data_, head_size);
+    if (ret <= 0) {
+      LOG(L_ERROR) << "send head failed.";
+      set_socket_nonblocking(GetSocket());
+      return ret;
+    }
+  }
+
+  for (uint32 i = 0; i < n_iov; i++) {
+    if (!iov[i].iov_base || iov[i].iov_len <= 0) {
+      continue;
+    }
+
+    ret = SendN((uint8*)iov[i].iov_base, iov[i].iov_len);
+    if (ret <= 0) {
+      LOG(L_ERROR) << "send head failed.";
+      set_socket_nonblocking(GetSocket());
+      return ret;
+    }
+  }
+
+  set_socket_nonblocking(GetSocket());
+  return (head_size + n_data);
+}
+
+int32 CTcpClient::SendN(const uint8 *p_data, uint32 n_data) {
+  int32 n_pos = 0;
+  int32 n_send = 0;
+  do {
+    n_send = VSocket::Send(p_data + n_pos, n_data - n_pos);
+    if (n_send <= 0) {
+      LOG(L_ERROR) << "socket send failed." << n_send;
+      return n_send;
+    }
+    n_pos += n_send;
+    LOG_INFO("send message %d %d.\n", n_send, n_pos);
+  } while (n_pos < n_data);
+  return n_data;
+}
+
 int32 CTcpClient::EvtRecv(SOCKET      fd,
                           short       events,
                           const void *p_usr_arg) {
@@ -314,33 +418,29 @@ int32 CTcpClient::EvtSend(SOCKET      fd,
 }
 
 int32 CTcpClient::OnSend() {
-  int32 n_ret = 0;
-
-  // 发送完成回调
-  if (cli_hdl_ptr_) {
-    n_ret = cli_hdl_ptr_->HandleSendPacket(this);
+  int32 need_send = (c_send_data_.UsedSize() > 1024)
+                      ? 1024 : c_send_data_.UsedSize();
+  int32 send_ = VSocket::Send(c_send_data_.GetReadPtr(), need_send);
+  if (send_ > 0) {
+    c_send_data_.MoveReadPtr(send_);
+    //Recycle();
   }
 
-  if (n_ret >= 0) {
-    int32 n_need_send = (c_send_data_.UsedSize() > 1024)
-                        ? 1024 : c_send_data_.UsedSize();
-    int32 n_send = VSocket::Send(c_send_data_.GetReadPtr(), n_need_send);
-    if (n_send > 0) {
-      c_send_data_.MoveReadPtr(n_send);
-      //Recycle();
+  int32 ret_ = 0;
+  if (c_send_data_.UsedSize() <= 0) {
+    if (cli_hdl_ptr_) {
+      ret_ = cli_hdl_ptr_->HandleSendPacket(this); // 发送完成回调
     }
-
-    if (c_send_data_.UsedSize() <= 0) {
-      c_evt_send_.Stop();
-    }
+    c_evt_send_.Stop();
   }
 
-  if (n_ret < 0) {
+  if (ret_ < 0) {
     if (cli_hdl_ptr_) {
       cli_hdl_ptr_->HandleClose(this);
+      return ret_;
     }
   }
-  return n_ret;
+  return 0;
 }
 
 int32 CTcpClient::EvtConnect(SOCKET       fd,

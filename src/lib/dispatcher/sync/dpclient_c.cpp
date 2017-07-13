@@ -144,7 +144,7 @@ EXPORT_DLL int DpClient_SendDpMessage(const char    *method,
                                       unsigned char  channel_id,
                                       const char    *data,
                                       int            data_size) {
-  LOG(L_INFO) << "send dp message "<<method;
+  // LOG(L_INFO) << "send dp message "<<method;
 
   int32 n_ret = 0;
   CDpClient* p_tcp = GetDpCli();
@@ -167,7 +167,7 @@ EXPORT_DLL int DpClient_SendDpRequest(const char *method,
                                       DpClient_MessageCallback  call_back,
                                       void                     *user_data,
                                       unsigned int              timeout) {
-  LOG(L_INFO) << "send dp request "<<method;
+  // LOG(L_INFO) << "send dp request " << method;
 
   int32 n_ret = 0;
   CDpClient* p_tcp = GetDpCli();
@@ -178,7 +178,7 @@ EXPORT_DLL int DpClient_SendDpRequest(const char *method,
 
   n_ret = p_tcp->SendDpRequest(method,
                                channel_id,
-                               method,
+                               data,
                                data_size,
                                call_back,
                                user_data,
@@ -191,7 +191,7 @@ EXPORT_DLL int DpClient_SendDpReply(const char    *method,
                                     unsigned int   id,
                                     const char    *data,
                                     int            data_size) {
-  LOG(L_INFO) << "send dp reply "<<method;
+  // LOG(L_INFO) << "send dp reply "<<method;
 
   int32 n_ret = 0;
   CDpClient* p_tcp = GetDpCli();

@@ -39,8 +39,6 @@ SET(SRC_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cserverbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cserverbuffer.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.cpp
 	
@@ -74,8 +72,6 @@ SOURCE_GROUP(base FILES
 SOURCE_GROUP(buffer FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cserverbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cserverbuffer.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.cpp
 )

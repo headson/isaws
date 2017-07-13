@@ -12,7 +12,7 @@ CDpClient::CDpClient(const char *server, unsigned short port,
   : vzconn::CTcpClient(p_evt_loop, this)
   , vzconn::CClientInterface()
   , p_evt_loop_(p_evt_loop)
-  , n_ret_type_((uint32)TYPE_INVALID) 
+  , n_ret_type_((uint32)TYPE_INVALID)
   , p_cur_dp_msg_(NULL)
   , n_session_id_(-1)
   , n_message_id_(1)
@@ -45,7 +45,6 @@ CDpClient* CDpClient::Create(const char *server, unsigned short port,
 CDpClient::~CDpClient() {
   c_evt_recv_.Stop();
   c_evt_send_.Stop();
-
   // 此处未释放p_evt_loop,需要解决
   //if (p_evt_loop_) {
   //  p_evt_loop_->Stop();
@@ -115,7 +114,9 @@ int CDpClient::SendDpRequest(const char *p_method,
   RunLoop(n_timeout);
   if ((get_ret_type() == TYPE_REPLY) ||
       (get_ret_type() == TYPE_SUCCEED)) {
-    p_callback(this, p_cur_dp_msg_, p_user_arg);
+    if (p_callback) {
+      p_callback(this, p_cur_dp_msg_, p_user_arg);
+    }
     return VZNETDP_SUCCEED;
   }
   LOG(L_ERROR) << get_ret_type();
@@ -205,11 +206,19 @@ int32 CDpClient::SendMessage(unsigned char             n_type,
   iov[1].iov_len  = n_data;
 
   n_ret_type_ = (uint32)TYPE_INVALID;
+#if 0
   int32 n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "async write failed " << n_dp_msg + n_data;
     return n_ret;
   }
+#else
+  int32 n_ret = SyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
+  if (n_ret <= 0) {
+    LOG(L_ERROR) << "sync write failed " << n_dp_msg + n_data;
+    return n_ret;
+  }
+#endif
   return n_ret;
 }
 

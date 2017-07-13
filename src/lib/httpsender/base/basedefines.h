@@ -231,13 +231,13 @@ const char POST_DATA_TEST[] =
 
 #ifdef WIN32
 
-const char DP_SERVER_IP_ADDR[]                      = "192.168.8.121";
+const char DP_SERVER_IP_ADDR[]                      = "192.168.7.18";
 const unsigned short DP_SERVER_PORT                 = 5291;
 
-const char KVDB_SERVER_IP_ADDR[]                    = "127.0.0.1";
+const char KVDB_SERVER_IP_ADDR[]                    = "192.168.7.18";
 const unsigned short KVDB_SERVER_PORT               = 5299;
 
-const char FILECACHED_IP_ADDR[]                     = "192.168.4.71";
+const char FILECACHED_IP_ADDR[]                     = "192.168.7.18";
 const unsigned short FILECACHED_PORT                = 5320;
 
 const char INTERNAL_IVSLOG_SERVER_BIND_ADDR[]       = "0.0.0.0";

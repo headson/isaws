@@ -9,8 +9,9 @@
 #include "httpsender/dataparse/dataparse.h"
 
 #include "json/json.h"
-#ifndef WIN32
 #include "sys_env_type.h"
+
+#ifndef _WIN32
 #include "file_msg_drv.h"
 #endif
 

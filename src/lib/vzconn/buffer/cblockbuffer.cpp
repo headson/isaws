@@ -152,6 +152,10 @@ bool CBlockBuffer::WriteBytes(const struct iovec iov[], uint32 n_iov) {
   }
 
   for (uint32 i = 0; i < n_iov; i++) {
+    if (!iov[i].iov_base || iov[i].iov_len <= 0) {
+      continue;
+    }
+
     n_data += iov[i].iov_len;
     memcpy(buffer_ + write_pos_,
            iov[i].iov_base, iov[i].iov_len);

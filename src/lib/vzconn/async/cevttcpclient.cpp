@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #include "cevttcpclient.h"
 
@@ -165,10 +165,10 @@ int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
                                 uint32       n_data,
                                 uint16       e_flag) {
   if (isOpen()) {
-    int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this, 
-                                                       p_data, 
-                                                       n_data, 
-                                                       e_flag);
+    int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this,
+                    p_data,
+                    n_data,
+                    e_flag);
     if (n_pkg < 0) {
       LOG(L_ERROR) << "not enough buffer to packet the data";
       return n_pkg;
@@ -185,14 +185,14 @@ int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
   return -1;
 }
 
-int32 CEvtTcpClient::AsyncWrite(struct iovec iov[], 
+int32 CEvtTcpClient::AsyncWrite(struct iovec iov[],
                                 uint32       n_iov,
                                 uint16       e_flag) {
   if (isOpen()) {
-    int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this, 
-                                                       iov,
-                                                       n_iov,
-                                                       e_flag);
+    int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this,
+                    iov,
+                    n_iov,
+                    e_flag);
     if (n_pkg < 0) {
       LOG(L_ERROR) << "not enough buffer to packet the data";
       return n_pkg;
@@ -251,18 +251,12 @@ int32 CEvtTcpClient::EvtSend(SOCKET      fd,
 
 int32 CEvtTcpClient::OnSend() {
   int32 n_ret = 0;
-
-  // 发送完成回调
-  if (cli_hdl_ptr_) {
-    n_ret = cli_hdl_ptr_->HandleSendPacket(this);
-  }
-
-  if (n_ret >= 0) {
-    // 发送数据
-    n_ret = c_send_data_.SendData(this);
-    if (c_send_data_.UsedSize() <= 0) {
-      c_evt_send_.Stop();
+  n_ret = c_send_data_.SendData(this);      // 发送数据
+  if (c_send_data_.UsedSize() <= 0) {
+    if (cli_hdl_ptr_) {
+      n_ret = cli_hdl_ptr_->HandleSendPacket(this);   // 发送完成回调
     }
+    c_evt_send_.Stop();
   }
 
   if (n_ret < 0) {

@@ -39,16 +39,15 @@ MESSAGE(STATUS "Step 4 : Add code source")
 MESSAGE(STATUS "Step 5 : Add executable or library target")
 ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
 set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_RUN})
-#IF(UNIX)
-#    add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
-#        COMMAND ${CMAKE_STRIP} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME}
-#        COMMAND cp ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} ${FTP_DIR}/${BUILD_PROJECT_NAME})
-#ENDIF()
+IF(UNIX)
+    add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
+        COMMAND ${CMAKE_STRIP} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME}
+        COMMAND cp ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} ${FTP_DIR}/${BUILD_PROJECT_NAME})
+ENDIF()
 #########################################################################
 #Step 6 : link with other library
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
-	ADD_DEFINITIONS(-DWIN32_LEAN_AND_MEAN)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libcachedserver
 		libvzconn
@@ -62,6 +61,7 @@ else()
 		vzconn
 		vzlogging
 		vzbase
+        -Wl,-rpath=.
 		${VZPROJECT_LINK_LIB}
 	)
 endif()

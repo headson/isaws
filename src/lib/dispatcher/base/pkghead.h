@@ -11,7 +11,7 @@
 #define VZNETDP_SUCCEED 1
 #define VZNETDP_FAILURE 0
 
-#define MAX_METHOD_SIZE   32
+#define MAX_METHOD_SIZE   64
 #define MAX_METHOD_COUNT  64
 #define MAX_DATA_SIZE     65536
 

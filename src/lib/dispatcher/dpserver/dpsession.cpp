@@ -55,6 +55,9 @@ bool Session::ProcessGetSessionIdMessage(const DpMessage *dmp) {
 bool Session::ProcessAddListenMessage(const DpMessage *dmp,
                                       const uint8 *data,
                                       int size) {
+  if (size == 0) {
+    return ReplyDpMessage(dmp, TYPE_FAILURE, dmp->channel_id);
+  }
   for (int i = 0; i < size; i+= MAX_METHOD_SIZE) {
     AddListenMessage((const char *)data + i);
   }

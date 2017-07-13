@@ -509,7 +509,9 @@ bool Thread::ProcessMessages(int cmsLoop) {
       Message msg;
       if (!Get(&msg, cmsNext))
         return !IsQuitting();
+      // LOG(L_INFO) << msg.message_id;
       Dispatch(&msg);
+      // LOG(L_INFO) << msg.message_id;
 
       if (cmsLoop != kForever) {
         cmsNext = TimeUntil(msEnd);

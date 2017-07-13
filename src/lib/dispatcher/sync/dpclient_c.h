@@ -131,7 +131,8 @@ EXPORT_DLL void  DpClient_ReleasePollHandle(DPPollHandle p_poll_handle);
 EXPORT_DLL int DpClient_HdlReConnect(const DPPollHandle p_poll_handle);
 
 /************************************************************************
-*Description : 轮询注册监听消息
+*Description : 轮询注册监听消息;
+*              DpClient_HdlReConnect立即执行,如果传入空消息会一直重连
 *Parameters  : p_poll_handle[IN]
 *              a_method_set[IN] 消息数组,每一个消息32Byte
 *              n_method_set_cnt[IN] 消息个数

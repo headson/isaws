@@ -46,6 +46,7 @@ class HttpConn {
 
   void SetRespData(const void* p_data, uint32 n_data) {
     s_resp_data_.append((char*)p_data, n_data);
+    printf("recv buffer %s.\n", s_resp_data_.c_str());
   }
   const std::string &GetRespData() {
     return s_resp_data_;

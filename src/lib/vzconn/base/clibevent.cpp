@@ -56,7 +56,11 @@ int32 EVT_LOOP::RunLoop(uint32 n_timeout) {
     if (0 == b_runging_) {
       b_runging_ = 1;
       // 无事件也不退出
-      n_ret = event_base_loop(p_event_, EVLOOP_NO_EXIT_ON_EMPTY);
+      if (n_timeout == 0) {
+        n_ret = event_base_loop(p_event_, EVLOOP_ONCE);
+      } {
+        n_ret = event_base_loop(p_event_, EVLOOP_NO_EXIT_ON_EMPTY);
+      }
       b_runging_ = 0;
       return n_ret;
     }
@@ -186,9 +190,11 @@ int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 n_timeout) {
     return n_ret;
   }
 
-  if (0 == b_init_ || 
+  if (0 == b_init_ ||
       c_evt_.ev_fd != vHdl ||
       c_evt_.ev_events != nEvt) {
+    Stop();
+
     event_set(&c_evt_, vHdl, nEvt, evt_callback, this);
     n_ret = event_base_set(p_base_->get_event(), &c_evt_);
     if (n_ret != 0) {
@@ -196,8 +202,6 @@ int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 n_timeout) {
       return n_ret;
     }
     b_init_  = 1;
-
-    Stop();
     //LOG(L_INFO) << "Set "<<vHdl<<" event "<<nEvt<<"-"<<c_evt_.ev_events;
   }
 

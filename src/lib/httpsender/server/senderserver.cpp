@@ -1450,6 +1450,7 @@ void SenderServer::OnDpMessage(DPPollHandle p_hdl, const DpMessage* p_dpm) {
 void SenderServer::dp_cli_state_cb(DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg) {
   if (p_usr_arg) {
     ((SenderServer*)p_usr_arg)->OnDpState(p_hdl, n_state);
+    return;
   }
   LOG(L_ERROR) << "param is null.";
 }
@@ -1479,13 +1480,15 @@ void SenderServer::kvdb_get_key_cb(const char *p_key, int n_key,
     LOG(L_ERROR) << "param is null.";
     return;
   }
-
+  
   if ((0 == strncmp(p_key, sys_hwinfo, MAX_KVDB_KEY_SIZE)) ||
+      (0 == strncmp(p_key, Acount_Info, MAX_KVDB_KEY_SIZE)) ||
       (0 == strncmp(p_key, NetworkInterface_Cfg, MAX_KVDB_KEY_SIZE)) ||
       (0 == strncmp(p_key, Sys_Title, MAX_KVDB_KEY_SIZE))) {
     ((std::string*)p_user_data)->append(p_value, n_value);
+    return;
   }
-  LOG(L_ERROR) << "param is null.";
+  LOG(L_ERROR) << "param is null." << p_key;
 }
 
 void SenderServer::InitHttpDataInfo() {

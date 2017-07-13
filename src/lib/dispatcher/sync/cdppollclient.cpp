@@ -69,7 +69,7 @@ int32 CDpPollClient::ListenMessage(uint8        e_type,
       continue;
     }
     uint32 n_method = strlen(method_set[i]) + 1;
-    if (n_method >= MAX_METHOD_SIZE) {
+    if (n_method > MAX_METHOD_SIZE) {
       continue;
     }
     memcpy(s_data + n_data, method_set[i], n_method);
