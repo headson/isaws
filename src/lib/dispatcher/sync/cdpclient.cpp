@@ -253,9 +253,6 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   return 0;
 }
 
-void CDpClient::HandleClose(vzconn::VSocket *p_cli) {
-}
-
 int CDpClient::EncDpMsg(DpMessage      *p_msg,
                         unsigned char   n_type,
                         unsigned char   n_session_id,
@@ -272,7 +269,12 @@ int CDpClient::EncDpMsg(DpMessage      *p_msg,
   p_msg->reply_type = (unsigned char)0;
   if (method != NULL) {
     p_msg->method_size = (unsigned char)strlen(method);
-    strncpy(p_msg->method, method, 31);
+    if (p_msg->method_size >= MAX_METHOD_SIZE) {
+      LOG(L_ERROR) << "method size is large than " << MAX_METHOD_SIZE;
+      return -2;
+    }
+
+    strncpy(p_msg->method, method, p_msg->method_size);
   }
   p_msg->id = (vzconn::VZ_ORDER_BYTE == vzconn::ORDER_NETWORK)
               ? vzconn::HostToNetwork32(n_message_id) : n_message_id;
@@ -286,6 +288,7 @@ int CDpClient::EncDpMsg(DpMessage      *p_msg,
 
 DpMessage *CDpClient::DecDpMsg(const void *p_data, uint32 n_data) {
   if (!p_data || n_data < sizeof(DpMessage)) {
+    LOG(L_ERROR) << "param is error.";
     return NULL;
   }
 

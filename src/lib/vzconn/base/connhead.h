@@ -23,12 +23,12 @@ typedef struct _NetHead {
 #pragma pack(pop)     // 作用：恢复对齐状态
 
 // 默认字符顺序[大端]
-const ByteOrder VZ_ORDER_BYTE       = ORDER_NETWORK;
+const ByteOrder VZ_ORDER_BYTE = ORDER_NETWORK;
 
 // 包默认大小
-#define DEF_BUFFER_SIZE (4096)
+#define SOCK_DEF_BUFFER_SIZE (4096)
 // 最大包尺寸
-#define MAX_BUFFER_SIZE (2 * 1024 * 1024)
+#define SOCK_MAX_BUFFER_SIZE (2 * 1024 * 1024)
 }  // namespace vzconn
 
 #endif  // LIBVZCONN_PKGHEAD_H_

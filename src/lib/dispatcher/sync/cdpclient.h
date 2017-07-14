@@ -65,7 +65,9 @@ class CDpClient : public vzconn::CTcpClient,
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
     return 0;
   }
-  virtual void  HandleClose(vzconn::VSocket *p_cli);
+  virtual void  HandleClose(vzconn::VSocket *p_cli) {
+
+  }
 
  public:
   int32 get_session_id() {

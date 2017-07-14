@@ -15,7 +15,7 @@ namespace vzconn {
 CBlockBuffer::CBlockBuffer() {
   read_pos_ = 0;
   write_pos_ = 0;
-  buffer_size_ = DEF_BUFFER_SIZE;
+  buffer_size_ = SOCK_DEF_BUFFER_SIZE;
   buffer_ = new uint8[buffer_size_ * sizeof(uint8)];
 }
 
@@ -34,20 +34,20 @@ bool CBlockBuffer::ReallocBuffer(uint32 size) {
   // 剩余空间够用
   Recycle();
   if (size < FreeSize() ||
-      buffer_size_ > MAX_BUFFER_SIZE) {
+      buffer_size_ > SOCK_MAX_BUFFER_SIZE) {
     return false;
   }
 
   // 分配一个1.5倍的BUFFER
-  uint32 buffer_size = 3 * buffer_size_ / 2;
-  while ((buffer_size - UsedSize()) < size) { // 计算新的剩余空间是否够用
-    buffer_size = 3 * buffer_size / 2;
-    if (buffer_size > MAX_BUFFER_SIZE) {      // 超过了最大空间
+  uint32 new_size = 3 * buffer_size_ / 2;
+  while ((new_size - UsedSize()) < size) {  // 计算新的剩余空间是否够用
+    new_size = 3 * new_size / 2;
+    if (new_size > SOCK_MAX_BUFFER_SIZE) {  // 超过了最大空间
       return false;
     }
   }
 
-  uint8 *new_buffer = new uint8[buffer_size];
+  uint8 *new_buffer = new uint8[new_size];
   if (new_buffer) {
     //memcpy(new_buffer, GetWritePtr(), UsedSize());
     memcpy(new_buffer, buffer_, write_pos_); // 全拷贝
@@ -56,7 +56,7 @@ bool CBlockBuffer::ReallocBuffer(uint32 size) {
     //read_pos_    = read_pos_;
     //write_pos_   = write_pos_;
     buffer_      = new_buffer;
-    buffer_size_ = buffer_size;
+    buffer_size_ = new_size;
     return true;
   }
   return false;

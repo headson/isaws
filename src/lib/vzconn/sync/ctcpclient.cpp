@@ -341,7 +341,7 @@ int32 CTcpClient::SendN(const uint8 *p_data, uint32 n_data) {
       return n_send;
     }
     n_pos += n_send;
-    LOG_INFO("send message %d %d.\n", n_send, n_pos);
+    // LOG_INFO("send message %d %d.\n", n_send, n_pos);
   } while (n_pos < n_data);
   return n_data;
 }
@@ -379,6 +379,7 @@ int32 CTcpClient::OnRecv() {
           n_pkg_size - cli_hdl_ptr_->NetHeadSize(),
           n_flag);
         c_recv_data_.MoveReadPtr(n_pkg_size);
+        c_recv_data_.Recycle(); // 保证包头在buffer起始位置
       }
     } while (n_pkg_size > 0 && c_recv_data_.UsedSize() >= n_pkg_size);
 
@@ -391,7 +392,7 @@ int32 CTcpClient::OnRecv() {
       }
     }
     if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
-      LOG(L_ERROR) << "the packet is large than "<<MAX_BUFFER_SIZE;
+      LOG(L_ERROR) << "the packet is large than " << SOCK_MAX_BUFFER_SIZE;
       return -1;
     }
   }
@@ -419,7 +420,7 @@ int32 CTcpClient::EvtSend(SOCKET      fd,
 
 int32 CTcpClient::OnSend() {
   int32 need_send = (c_send_data_.UsedSize() > 1024)
-                      ? 1024 : c_send_data_.UsedSize();
+                    ? 1024 : c_send_data_.UsedSize();
   int32 send_ = VSocket::Send(c_send_data_.GetReadPtr(), need_send);
   if (send_ > 0) {
     c_send_data_.MoveReadPtr(send_);
@@ -428,6 +429,8 @@ int32 CTcpClient::OnSend() {
 
   int32 ret_ = 0;
   if (c_send_data_.UsedSize() <= 0) {
+    c_send_data_.Recycle();   // 重置读写位置
+
     if (cli_hdl_ptr_) {
       ret_ = cli_hdl_ptr_->HandleSendPacket(this); // 发送完成回调
     }

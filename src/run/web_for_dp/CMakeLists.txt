@@ -49,7 +49,7 @@ set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_RUN
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		libwebserver
+		libwebfordp
 		libdpclient
 		libvzbase
 		libvzconn
@@ -58,7 +58,7 @@ if(WIN32)
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		webserver
+		webfordp
 		dpclient
 		vzbase
 		vzconn

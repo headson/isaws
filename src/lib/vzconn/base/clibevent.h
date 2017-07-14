@@ -30,9 +30,7 @@ extern "C" {
 
 namespace vzconn {
 
-typedef int32 (*EVT_FUNC)(SOCKET          fd,
-                          short           events,
-                          const void      *p_usr_arg);
+typedef int32 (*EVT_FUNC)(SOCKET fd, short events, const void *p_usr_arg);
 
 #define EVT_READ          EV_READ     // 读事件
 #define EVT_WRITE         EV_WRITE    // 写事件
@@ -44,13 +42,13 @@ class EVT_LOOP;
 ///TIMER///////////////////////////////////////////////////////////////////////
 class EVT_TIMER {
  private:
-  struct event    c_evt_;       //
-  EVT_LOOP*       p_base_;      //
+  struct event    event_;       //
+  EVT_LOOP*       base_event_;      //
 
-  EVT_FUNC        p_callback_;  // 消息回调
-  void*           p_usr_args_;  // 回调参数
+  EVT_FUNC        callback_;  // 消息回调
+  void*           usr_args_;  // 回调参数
 
-  uint32          b_init_, b_start_;
+  uint32          init_, start_;
 
  public:
   EVT_TIMER();
@@ -77,25 +75,26 @@ class EVT_TIMER {
 ///IO//////////////////////////////////////////////////////////////////////////
 class EVT_IO {
  private:
-  struct event    c_evt_;       //
-  EVT_LOOP*       p_base_;      //
+  struct event    event_;       //
+  EVT_LOOP*       base_event_;      //
 
-  EVT_FUNC        p_callback_;  // 消息回调
-  void*           p_usr_args_;  // 回调参数
-  uint32          b_init_, b_start_;
+  EVT_FUNC        callback_;  // 消息回调
+  void*           usr_args_;  // 回调参数
+  uint32          init_, start_;
 
  public:
   EVT_IO();
 
-  void            Init(const EVT_LOOP* loop, EVT_FUNC func, void* p_arg);
+  void           Init(const EVT_LOOP* loop, EVT_FUNC func, void* usr_arg);
 
   /************************************************************************
   *Description : 启动定时器
-  *Parameters  : v_hdl[IN] 句柄
-  *              n_evt[IN] 事件类型;EV_READ\EV_WRITE\EV_PERSIST
+  *Parameters  : hdl[IN] 句柄
+  *              evt[IN] 事件类型;EV_READ\EV_WRITE\EV_PERSIST
+  *              ms_timeout[IN] 超时时间
   *Return      : 0 成功
   ************************************************************************/
-  int32           Start(SOCKET v_hdl, int32 nEvt, uint32 n_timeout=0);
+  int32           Start(SOCKET hdl, int32 evt, uint32 ms_timeout=0);
   void            Stop();
 
   // 用户主动唤醒事件,调用事件回调时使用
@@ -108,8 +107,9 @@ class EVT_IO {
 ///LOOP////////////////////////////////////////////////////////////////////////
 class EVT_LOOP {
 private:
-  struct event_base* p_event_;
-  uint32             b_runging_;      // 运行状态
+  struct event_base* base_event_;     // 只能在第一位
+
+  uint32             running_;        // 运行状态
   EVT_TIMER          evt_exit_timer_; // 退出定时器
 
 public:
@@ -119,23 +119,23 @@ public:
   int32   Start();
   void    Stop();
 
-  // n_timeout>0,超时退出
-  // n_timeout=0,永久循环,除非调用LoopExit退出
-  int32   RunLoop(uint32 n_timeout = 0);
+  // ms_timeout > 0,超时退出
+  // ms_timeout = 0,运行一次;
+  int32   RunLoop(uint32 ms_timeout = 0);
 
   // 定时退出,0=立刻退出
-  void    LoopExit(uint32 n_timeout);
+  void    LoopExit(uint32 ms_timeout);
 
   bool    isRuning();
 
   struct event_base* get_event() const {
-    return p_event_;
+    return base_event_;
   }
 
 private:
-  static int32 exit_callback(SOCKET          fd,
-                             short           events,
-                             const void      *p_usr_arg);
+  static int32 exit_callback(SOCKET      fd,
+                             short       events,
+                             const void *p_usr_arg);
 };
 typedef EVT_LOOP EventService;
 
