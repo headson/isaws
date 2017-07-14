@@ -36,31 +36,31 @@ class CKvdbClient : public vzconn::CTcpClient,
               const char *p_value,
               uint32      n_value);
 
-  bool GetKey(const char *p_key,
-              uint8       n_key,
-              void       *p_value,
-              uint32      n_value,
-              bool        absolute = false);
+  int32 GetKey(const char *p_key,
+             uint8       n_key,
+             void       *p_value,
+             uint32      n_value,
+             bool        absolute = false);
 
-  bool GetKey(const std::string  s_key,
-              void       *p_value,
-              uint32      n_value,
-              bool           absolute = false);
+  int32 GetKey(const std::string  s_key,
+             void       *p_value,
+             uint32      n_value,
+             bool        absolute = false);
 
-  bool GetKey(const char    *p_key,
-              uint8          n_key,
-              std::string   *p_value,
-              bool           absolute = false);
+  int32 GetKey(const char    *p_key,
+             uint8          n_key,
+             std::string   *p_value,
+             bool           absolute = false);
 
-  bool GetKey(const std::string  s_key,
-              std::string       *p_value,
-              bool               absolute = false);
+  int32 GetKey(const std::string  s_key,
+             std::string       *p_value,
+             bool               absolute = false);
 
-  bool GetKey(const char          *p_key,
-              uint8                n_key,
-              Kvdb_GetKeyCallback  p_callback,
-              void                *p_usr_data,
-              bool                 absolute = false);
+  int32 GetKey(const char          *p_key,
+             uint8                n_key,
+             Kvdb_GetKeyCallback  p_callback,
+             void                *p_usr_data,
+             bool                 absolute = false);
 
   bool Delete(const char *p_key, uint8 n_key);
   bool BackupDatabase();
@@ -95,7 +95,7 @@ class CKvdbClient : public vzconn::CTcpClient,
   uint32                    n_cur_msg_;
   KvdbMessage              *p_cur_msg_;
 
-protected:
+ protected:
   uint32                    n_message_id_;    // 包序号[32bit]
   uint32                    n_cur_msg_id_;    // 当前发送msg id
 

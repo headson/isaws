@@ -421,8 +421,9 @@ EXPORT_DLL int Kvdb_GetKey(const char          *p_key,
     return KVDB_RET_FAILURE;
   }
 
-  if (g_kvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, false)) {
-    return KVDB_RET_SUCCEED;
+  int32 ret = g_kvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, false);
+  if (ret > 0) {
+    return ret;
   }
   return KVDB_RET_FAILURE;
 }
@@ -435,8 +436,9 @@ EXPORT_DLL int Kvdb_GetKeyAbsolutely(const char           *p_key,
     return KVDB_RET_FAILURE;
   }
 
-  if (g_kvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, true)) {
-    return KVDB_RET_SUCCEED;
+  int32 ret = g_kvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, true);
+  if (ret > 0) {
+    return ret;
   }
   return KVDB_RET_FAILURE;
 }
@@ -449,8 +451,9 @@ EXPORT_DLL int Kvdb_GetKeyToBuffer(const char   *p_key,
     return KVDB_RET_FAILURE;
   }
 
-  if (g_kvdb_client->GetKey(p_key, n_key, p_value, n_value, false)) {
-    return KVDB_RET_SUCCEED;
+  int32 ret = g_kvdb_client->GetKey(p_key, n_key, p_value, n_value, false);
+  if (ret > 0) {
+    return ret;
   }
   return KVDB_RET_FAILURE;
 }
@@ -463,8 +466,9 @@ EXPORT_DLL int Kvdb_GetKeyAbsolutelyToBuffer(const char   *p_key,
     return KVDB_RET_FAILURE;
   }
 
-  if (g_kvdb_client->GetKey(p_key, n_key, p_value, n_value, true)) {
-    return KVDB_RET_SUCCEED;
+  int32 ret = g_kvdb_client->GetKey(p_key, n_key, p_value, n_value, true);
+  if (ret > 0) {
+    return ret;
   }
   return KVDB_RET_FAILURE;
 }
@@ -544,8 +548,9 @@ EXPORT_DLL int SKvdb_GetKey(const char          *p_key,
     return KVDB_RET_FAILURE;
   }
 
-  if (g_skvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, false)) {
-    return KVDB_RET_SUCCEED;
+  int32 ret = g_skvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, false);
+  if (ret > 0) {
+    return ret;
   }
   return KVDB_RET_FAILURE;
 }
@@ -558,8 +563,9 @@ EXPORT_DLL int SKvdb_GetKeyAbsolutely(const char           *p_key,
     return KVDB_RET_FAILURE;
   }
 
-  if (g_skvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, true)) {
-    return KVDB_RET_SUCCEED;
+  int32 ret = g_skvdb_client->GetKey(p_key, n_key, p_callback, p_usr_arg, true);
+  if (ret > 0) {
+    return ret;
   }
   return KVDB_RET_FAILURE;
 }
@@ -572,8 +578,9 @@ EXPORT_DLL int SKvdb_GetKeyToBuffer(const char   *p_key,
     return KVDB_RET_FAILURE;
   }
 
-  if (g_skvdb_client->GetKey(p_key, n_key, p_value, n_value, false)) {
-    return KVDB_RET_SUCCEED;
+  int32 ret = g_skvdb_client->GetKey(p_key, n_key, p_value, n_value, false);
+  if (ret > 0) {
+    return ret;
   }
   return KVDB_RET_FAILURE;
 }
@@ -586,8 +593,9 @@ EXPORT_DLL int SKvdb_GetKeyAbsolutelyToBuffer(const char   *p_key,
     return KVDB_RET_FAILURE;
   }
 
-  if (g_skvdb_client->GetKey(p_key, n_key, p_value, n_value, true)) {
-    return KVDB_RET_SUCCEED;
+  int32 ret = g_skvdb_client->GetKey(p_key, n_key, p_value, n_value, true);
+  if (ret > 0) {
+    return ret;
   }
   return KVDB_RET_FAILURE;
 }

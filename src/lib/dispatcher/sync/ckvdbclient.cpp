@@ -107,13 +107,13 @@ bool CKvdbClient::SetKey(const std::string  s_key,
   return SetKey(s_key.c_str(), s_key.size(), p_value, n_value);
 }
 
-bool CKvdbClient::GetKey(const char *p_key,
-                         uint8       n_key,
-                         void       *p_value,
-                         uint32      n_value,
-                         bool        absolute) {
+int32 CKvdbClient::GetKey(const char *p_key,
+                          uint8       n_key,
+                          void       *p_value,
+                          uint32      n_value,
+                          bool        absolute) {
   if (CheckAndConnected() == false) {
-    return false;
+    return 0;
   }
 
   int32 n_ret = 0;
@@ -124,45 +124,49 @@ bool CKvdbClient::GetKey(const char *p_key,
                      0);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "param is error.";
-    return false;
+    return 0;
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
-    return false;
+    return 0;
   }
 
   n_ret = RunLoop(DEF_TIMEOUT_MSEC);
   if (n_ret == 0) {
     LOG(L_ERROR) << "get key time out";
-    return false;
+    return 0;
   }
 
   if ((n_ret_type_ == KVDB_SUCCEED)) {
     int n_val_len = n_cur_msg_-sizeof(KvdbMessage);
+    if (n_val_len <= 0) {
+      return 0;
+    }
+
     if (n_value >= n_val_len) {
       memcpy(p_value, p_cur_msg_->value, n_val_len);
-      return true;
+      return n_val_len;
     }
     LOG(L_ERROR) << "return value is small than kvdb's value.";
   }
-  return false;
+  return 0;
 }
 
-bool CKvdbClient::GetKey(const char          *p_key,
-                         uint8                n_key,
-                         Kvdb_GetKeyCallback  p_callback,
-                         void                *p_usr_arg,
-                         bool                 absolute /*= false*/) {
+int32 CKvdbClient::GetKey(const char          *p_key,
+                          uint8                n_key,
+                          Kvdb_GetKeyCallback  p_callback,
+                          void                *p_usr_arg,
+                          bool                 absolute /*= false*/) {
   if (CheckAndConnected() == false) {
-    return false;
+    return 0;
   }
 
   if (n_key > (MAX_KVDB_KEY_SIZE-1)) {
     LOG(L_ERROR) << "key is length than "<<MAX_KVDB_KEY_SIZE;
-    return false;
+    return 0;
   }
 
   int32 n_ret = 0;
@@ -174,35 +178,40 @@ bool CKvdbClient::GetKey(const char          *p_key,
                      0);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "param is error.";
-    return false;
+    return 0;
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
-    return false;
+    return 0;
   }
 
   n_ret = RunLoop(DEF_TIMEOUT_MSEC);
   if (n_ret == 0) {
     LOG(L_ERROR) << "get key time out";
-    return false;
+    return 0;
   }
   if (n_ret_type_ == KVDB_SUCCEED) {
+    int n_val_len = n_cur_msg_-sizeof(KvdbMessage);
+    if (n_val_len <= 0) {
+      return 0;
+    }
+
     p_callback(p_key, n_key,
                p_cur_msg_->value,
-               n_cur_msg_-sizeof(KvdbMessage),
+               n_val_len,
                p_usr_arg);
-    return true;
+    return n_val_len;
   }
-  return false;
+  return 0;
 }
 
-bool CKvdbClient::GetKey(const char  *p_key,
-                         uint8        n_key,
-                         std::string *p_value,
-                         bool         absolute /*= false*/) {
+int32 CKvdbClient::GetKey(const char  *p_key,
+                          uint8        n_key,
+                          std::string *p_value,
+                          bool         absolute /*= false*/) {
   if (CheckAndConnected() == false) {
     return false;
   }
@@ -215,40 +224,44 @@ bool CKvdbClient::GetKey(const char  *p_key,
                      0);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "param is error.";
-    return false;
+    return 0;
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
-    return false;
+    return 0;
   }
 
   n_ret = RunLoop(DEF_TIMEOUT_MSEC);
   if (n_ret == 0) {
     LOG(L_ERROR) << "get key time out";
-    return false;
+    return 0;
   }
 
   if ((n_ret_type_ == KVDB_SUCCEED)) {
+    int n_val_len = n_cur_msg_-sizeof(KvdbMessage);
+    if (n_val_len <= 0) {
+      return 0;
+    }
     p_value->append(p_cur_msg_->value,
-                    (n_cur_msg_ - sizeof(KvdbMessage)));
-    return true;
+                    n_val_len);
+    return n_val_len;
   }
-  return false;
+  return 0;
 }
 
-bool CKvdbClient::GetKey(const std::string s_key,
-                         std::string      *p_value,
-                         bool              absolute /*= false*/) {
+int32 CKvdbClient::GetKey(const std::string s_key,
+                          std::string      *p_value,
+                          bool              absolute /*= false*/) {
   return GetKey(s_key.c_str(), s_key.size(), p_value, absolute);
 }
 
-bool CKvdbClient::GetKey(const std::string  s_key,
-                         void       *p_value,
-                         uint32      n_value,
-                         bool           absolute) {
+int32 CKvdbClient::GetKey(const std::string  s_key,
+                          void              *p_value,
+                          uint32             n_value,
+                          bool               absolute) {
   return GetKey(s_key.c_str(), s_key.size(), p_value, n_value, absolute);
 }
 
