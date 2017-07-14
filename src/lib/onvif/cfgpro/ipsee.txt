@@ -1,0 +1,2 @@
+net_buf_fl_init::num = 32
+hdrv_buf_fl_init::num = 128

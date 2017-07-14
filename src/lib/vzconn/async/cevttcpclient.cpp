@@ -251,12 +251,14 @@ int32 CEvtTcpClient::EvtSend(SOCKET      fd,
 
 int32 CEvtTcpClient::OnSend() {
   int32 n_ret = 0;
-  n_ret = c_send_data_.SendData(this);      // 发送数据
+  n_ret = c_send_data_.SendData(this);  // 发送数据
   if (c_send_data_.UsedSize() <= 0) {
+    c_send_data_.Recycle();             // 重置读写位置;移动为0
+    c_evt_send_.Stop();
+
     if (cli_hdl_ptr_) {
       n_ret = cli_hdl_ptr_->HandleSendPacket(this);   // 发送完成回调
     }
-    c_evt_send_.Stop();
   }
 
   if (n_ret < 0) {

@@ -429,12 +429,12 @@ int32 CTcpClient::OnSend() {
 
   int32 ret_ = 0;
   if (c_send_data_.UsedSize() <= 0) {
-    c_send_data_.Recycle();   // 重置读写位置
+    c_send_data_.Recycle();             // 重置读写位置;移动为0
+    c_evt_send_.Stop();
 
     if (cli_hdl_ptr_) {
       ret_ = cli_hdl_ptr_->HandleSendPacket(this); // 发送完成回调
     }
-    c_evt_send_.Stop();
   }
 
   if (ret_ < 0) {
