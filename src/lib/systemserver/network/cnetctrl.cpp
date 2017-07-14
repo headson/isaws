@@ -99,16 +99,16 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
                                  const uint8      *p_data,
                                  uint32            n_data,
                                  uint16            n_flag) {
-  std::string s_json((char*)p_data, n_data);
-  LOG(L_INFO) << s_json.c_str();
+  std::string sjson((char*)p_data, n_data);
+  LOG(L_INFO) << sjson.c_str();
 
-  Json::Value  j_req;
-  Json::Reader j_parse;
-  if(!j_parse.parse(s_json, j_req)) {
-    LOG(L_ERROR) << j_parse.getFormattedErrorMessages();
+  Json::Value  jreq;
+  Json::Reader jread;
+  if(!jread.parse(sjson, jreq)) {
+    LOG(L_ERROR) << jread.getFormattedErrorMessages();
     return -1;
   }
-  std::string s_type = j_req[MSG_CMD].asString();
+  std::string s_type = jreq[MSG_CMD].asString();
   if (0 == strncmp(s_type.c_str(), MSG_SYSC_GET_DEVINFO, MSG_CMD_SIZE)) {
     // 获取设备信息
     Json::Value j_resp;
@@ -123,9 +123,9 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
     }
     j_resp[MSG_BODY] = j_body;
 
-    s_json = j_resp.toStyledString();
+    sjson = j_resp.toStyledString();
     p_mcast_sock_->SendUdpData((uint8*)DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                               (uint8*)s_json.c_str(), s_json.size());
+                               (uint8*)sjson.c_str(), sjson.size());
   } else if (0 == strncmp(s_type.c_str(), MSG_SYSC_SET_DEVINFO, MSG_CMD_SIZE)) {
     // 设置设备信息
     Json::Value j_resp;
@@ -144,9 +144,9 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
       j_resp[MSG_STATE] = 6;
     }
 
-    s_json = j_resp.toStyledString();
+    sjson = j_resp.toStyledString();
     p_mcast_sock_->SendUdpData((uint8*)DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                               (uint8*)s_json.c_str(), s_json.size());
+                               (uint8*)sjson.c_str(), sjson.size());
   } else {
     LOG(L_ERROR) << "this message type is no function to process." << s_type;
   }

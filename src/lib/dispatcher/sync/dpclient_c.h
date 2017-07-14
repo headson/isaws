@@ -207,53 +207,61 @@ typedef void(*Kvdb_GetKeyCallback)(const char *p_key,
                                    void       *p_user_data);
 
 // Return of Key Value database Interface
-#define KVDB_RET_SUCCEED                     0
-#define KVDB_RET_FAILURE                    -1
+#define KVDB_RET_SUCCEED    0
+#define KVDB_RET_FAILURE   -1
 
 // Default kvdb server:port is 127.0.0.1:5299
 EXPORT_DLL int Kvdb_Start(const char *server, unsigned short port);
 EXPORT_DLL int Kvdb_Stop();
 
 // SetKey, if the key not exist, then create the key
-// Return KV_SUCCEED, KV_DATABASE_NOT_EXIST
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int Kvdb_SetKey(const char *p_key, int n_key,
                            const char *p_value, int n_value);
 
-// Get the key
-// Return KV_SUCCEED KV_DATABASE_NOT_EXIST, KV_KEY_NOT_EXIST
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  : 
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int Kvdb_GetKey(const char *p_key, int n_key,
                            Kvdb_GetKeyCallback p_callback,
                            void *p_usr_arg);
 
-// Return KV_SUCCEED KV_DATABASE_NOT_EXIST, KV_KEY_NOT_EXIST
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int Kvdb_GetKeyAbsolutely(const char *p_key, int n_key,
                                      Kvdb_GetKeyCallback p_callback,
                                      void *p_usr_arg);
-// Return the result size
-// If the buffer_size small than result size,
-//    then return KVDB_BUFFER_SMALL_THAN_RESULT
-// If the reuslt size == 0, then return KVDB_FAILURE;
-// If the key not found then return KVDB_KEY_NOT_EXIST
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int Kvdb_GetKeyToBuffer(const char *p_key, int n_key,
                                    char *p_value, unsigned int n_value);
-// Return the result size
-// If the buffer_size small than result size,
-//    then return KVDB_BUFFER_SMALL_THAN_RESULT
-// If the reuslt size == 0, then return KVDB_FAILURE;
-// If the key not found then return KVDB_KEY_NOT_EXIST
+
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int Kvdb_GetKeyAbsolutelyToBuffer(const char *p_key, int n_key,
     char *p_value, unsigned int n_value);
 
 // Delete the key
-// Return KV_SUCCEED, KV_DATABASE_NOT_EXIST, KV_KEY_NOT_EXIST
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int Kvdb_DeleteKey(const char *p_key, int n_key);
 
 // backup the kvdb database
-// Return KV_SUCCEED, KVDB_FAILURE
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int Kvdb_BackupDatabase();
 
 // restore the kvdb database
-// Return KV_SUCCEED, KVDB_FAILURE
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int Kvdb_RestoreDatabase();
 
 //////////////////////////////////////////////////////////////////////////
@@ -262,45 +270,54 @@ EXPORT_DLL int SKvdb_Start(const char *server, unsigned short port);
 EXPORT_DLL int SKvdb_Stop();
 
 // SetKey, if the key not exist, then create the key
-// Return KV_SUCCEED, KV_DATABASE_NOT_EXIST
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int SKvdb_SetKey(const char *p_key, int n_key,
                             const char *p_value, int n_value);
 
-// Get the key
-// Return KV_SUCCEED KV_DATABASE_NOT_EXIST, KV_KEY_NOT_EXIST
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int SKvdb_GetKey(const char *p_key, int n_key,
                             Kvdb_GetKeyCallback p_callback,
                             void *p_usr_arg);
 
-// Return KV_SUCCEED KV_DATABASE_NOT_EXIST, KV_KEY_NOT_EXIST
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int SKvdb_GetKeyAbsolutely(const char *p_key, int n_key,
                                       Kvdb_GetKeyCallback p_callback,
                                       void *p_usr_arg);
-// Return the result size
-// If the buffer_size small than result size,
-//    then return KVDB_BUFFER_SMALL_THAN_RESULT
-// If the reuslt size == 0, then return KVDB_FAILURE;
-// If the key not found then return KVDB_KEY_NOT_EXIST
+
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int SKvdb_GetKeyToBuffer(const char *p_key, int n_key,
                                     char *p_value, unsigned int n_value);
-// Return the result size
-// If the buffer_size small than result size,
-//    then return KVDB_BUFFER_SMALL_THAN_RESULT
-// If the reuslt size == 0, then return KVDB_FAILURE;
-// If the key not found then return KVDB_KEY_NOT_EXIST
+
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int SKvdb_GetKeyAbsolutelyToBuffer(const char *p_key, int n_key,
     char *p_value, unsigned int n_value);
 
 // Delete the key
-// Return KV_SUCCEED, KV_DATABASE_NOT_EXIST, KV_KEY_NOT_EXIST
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int SKvdb_DeleteKey(const char *p_key, int n_key);
 
 // backup the kvdb database
-// Return KV_SUCCEED, KVDB_FAILURE
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int SKvdb_BackupDatabase();
 
 // restore the kvdb database
-// Return KV_SUCCEED, KVDB_FAILURE
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int SKvdb_RestoreDatabase();
 
 

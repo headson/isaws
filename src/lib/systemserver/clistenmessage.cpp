@@ -6,6 +6,7 @@
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/helper/vmessage.h"
 
+#include <fstream>
 #include "json/json.h"
 
 #include "vzbase/base/helper.h"
@@ -137,6 +138,26 @@ void CListenMessage::OnDpCliState(DPPollHandle p_hdl, unsigned int n_state) {
 }
 
 void CListenMessage::GetHwInfo() {
+  Json::Reader jread;
+  Json::Value  jroot;
+
+  jroot.clear();
+  std::string  sjson = "";
+#ifdef _WIN32
+  std::ifstream ifs;
+  ifs.open("test1.json");
+  if(false == ifs.is_open()) {
+    return;
+  }
+  
+  ifs >> sjson;
+#else
+
+#endif
+  if(!jread.parse(sjson, jroot)) {
+    return;
+  }
+
   sys_info_.dev_name =
     vzbase::Base64::Encode(vzbase::Gb2312ToUtf8("ÄãºÃ"));
   sys_info_.ins_addr =

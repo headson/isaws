@@ -36,31 +36,56 @@ class CKvdbClient : public vzconn::CTcpClient,
               const char *p_value,
               uint32      n_value);
 
+  /************************************************************************
+  *Description : 通过键值获取数据
+  *Parameters  :
+  *Return      : >0 成功(获取数据长度); 0 失败
+  ************************************************************************/
   int32 GetKey(const char *p_key,
-             uint8       n_key,
-             void       *p_value,
-             uint32      n_value,
-             bool        absolute = false);
+               uint8       n_key,
+               void       *p_value,
+               uint32      n_value,
+               bool        absolute = false);
 
+  /************************************************************************
+  *Description : 通过键值获取数据
+  *Parameters  :
+  *Return      : >0 成功(获取数据长度); 0 失败
+  ************************************************************************/
   int32 GetKey(const std::string  s_key,
-             void       *p_value,
-             uint32      n_value,
-             bool        absolute = false);
+               void              *p_value,
+               uint32             n_value,
+               bool               absolute = false);
 
+  /************************************************************************
+  *Description : 通过键值获取数据
+  *Parameters  :
+  *Return      : >0 成功(获取数据长度); 0 失败
+  ************************************************************************/
   int32 GetKey(const char    *p_key,
-             uint8          n_key,
-             std::string   *p_value,
-             bool           absolute = false);
+               uint8          n_key,
+               std::string   *p_value,
+               bool           absolute = false);
 
+  /************************************************************************
+  *Description : 通过键值获取数据
+  *Parameters  :
+  *Return      : >0 成功(获取数据长度); 0 失败
+  ************************************************************************/
   int32 GetKey(const std::string  s_key,
-             std::string       *p_value,
-             bool               absolute = false);
+               std::string       *p_value,
+               bool               absolute = false);
 
+  /************************************************************************
+  *Description : 通过键值获取数据
+  *Parameters  :
+  *Return      : >0 成功(获取数据长度); 0 失败
+  ************************************************************************/
   int32 GetKey(const char          *p_key,
-             uint8                n_key,
-             Kvdb_GetKeyCallback  p_callback,
-             void                *p_usr_data,
-             bool                 absolute = false);
+               uint8                n_key,
+               Kvdb_GetKeyCallback  p_callback,
+               void                *p_usr_data,
+               bool                 absolute = false);
 
   bool Delete(const char *p_key, uint8 n_key);
   bool BackupDatabase();

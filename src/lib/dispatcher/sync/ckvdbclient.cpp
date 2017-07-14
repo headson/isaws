@@ -87,7 +87,7 @@ bool CKvdbClient::SetKey(const char *p_key,
   iov[1].iov_len  = (size_t)n_value;
 
   n_ret_type_ = (uint32)KVDB_INVALID;
-  n_ret = AsyncWrite(iov, 2, 0);
+  n_ret = SyncWrite(iov, 2, 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed "<<p_key;
     return false;
@@ -128,7 +128,7 @@ int32 CKvdbClient::GetKey(const char *p_key,
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
-  n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
+  n_ret = SyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
     return 0;
@@ -182,7 +182,7 @@ int32 CKvdbClient::GetKey(const char          *p_key,
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
-  n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
+  n_ret = SyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
     return 0;
@@ -228,7 +228,7 @@ int32 CKvdbClient::GetKey(const char  *p_key,
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
-  n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
+  n_ret = SyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
     return 0;
@@ -282,7 +282,7 @@ bool CKvdbClient::Delete(const char *p_key, uint8 n_key) {
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
-  n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
+  n_ret = SyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed " << p_key;
     return false;
@@ -313,7 +313,7 @@ bool CKvdbClient::BackupDatabase() {
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
-  n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
+  n_ret = SyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed ";
     return false;
@@ -344,7 +344,7 @@ bool CKvdbClient::RestoreDatabase() {
   }
 
   n_ret_type_ = (uint32)KVDB_INVALID;
-  n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
+  n_ret = SyncWrite(&c_head, sizeof(c_head), 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed ";
     return false;
