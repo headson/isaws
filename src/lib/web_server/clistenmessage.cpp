@@ -30,9 +30,7 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start(const char     *s_dp_ip,
-                           unsigned short  n_dp_port,
-                           unsigned short  n_http_port,
+bool CListenMessage::Start(unsigned short  n_http_port,
                            const char     *s_http_path) {
 
   bool b_ret = false;
@@ -42,15 +40,6 @@ bool CListenMessage::Start(const char     *s_dp_ip,
   if (b_ret == false) {
     LOG(L_ERROR) << "start web server failed.";
     exit(EXIT_FAILURE);
-  }
-
-  // dp client poll
-  int32 n_ret = VZNETDP_SUCCEED;
-  DpClient_Init((char*)s_dp_ip, n_dp_port);
-  n_ret = DpClient_Start(0);
-  if (n_ret == VZNETDP_FAILURE) {
-    LOG(L_ERROR) << "dp client start failed.";
-    return false;
   }
 
   if (p_dp_cli_ == NULL) {
@@ -69,8 +58,9 @@ bool CListenMessage::Start(const char     *s_dp_ip,
     }
 
     DpClient_HdlAddListenMessage(p_dp_cli_, METHOD_SET, METHOD_SET_SIZE);
+    return VZNETDP_SUCCEED;
   }
-  return (n_ret == VZNETDP_SUCCEED);
+  return VZNETDP_FAILURE;
 }
 
 void CListenMessage::Stop() {

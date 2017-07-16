@@ -4,7 +4,8 @@
 /************************************************************************/
 #include "clistenmessage.h"
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/helper/vmessage.h"
+#include "vzbase/core/vmessage.h"
+#include "vzbase/core/vdatetime.h"
 
 #include <fstream>
 #include "json/json.h"
@@ -20,7 +21,8 @@ static const char  *K_METHOD_SET[] = {
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
-  , net_ctrl_()
+  , net_ctrl_(NULL)
+  , hw_clock_(NULL)
   , thread_slow_(NULL) {
 }
 
@@ -36,6 +38,11 @@ CListenMessage *CListenMessage::Instance() {
 bool CListenMessage::Start(const char *s_dp_ip, unsigned short n_dp_port) {
   bool b_ret = false;
 
+  GetHwInfo();  // 获取系统信息
+
+  // fast thread
+  thread_fast_ = vzbase::Thread::Current();
+
   // slow thread
   thread_slow_ = new vzbase::Thread();
   if (NULL == thread_slow_) {
@@ -49,7 +56,7 @@ bool CListenMessage::Start(const char *s_dp_ip, unsigned short n_dp_port) {
   }
 
   // net ctrl
-  net_ctrl_ = CNetCtrl::Create(vzbase::Thread::Current());
+  net_ctrl_ = CNetCtrl::Create(thread_fast_);
   if (NULL == net_ctrl_) {
     LOG(L_ERROR) << "create net ctrl failed.";
     return false;
@@ -60,11 +67,23 @@ bool CListenMessage::Start(const char *s_dp_ip, unsigned short n_dp_port) {
     return false;
   }
 
+  // hw clock
+  hw_clock_ = CHwclock::Create(thread_slow_);
+  if (NULL == hw_clock_) {
+    LOG(L_ERROR) << "create hw clock failed.";
+    return false;
+  }
+  b_ret = hw_clock_->Start();
+  if (false == b_ret) {
+    LOG(L_ERROR) << "hwclock start failed.";
+    return false;
+  }
+
   // dp client
   DpClient_Init(s_dp_ip, n_dp_port);
 
   vzconn::EventService *p_evt_srv =
-    vzbase::Thread::Current()->socketserver()->GetEvtService();
+    thread_fast_->socketserver()->GetEvtService();
   dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
                                       dpcli_poll_state_cb, this,
                                       p_evt_srv);
@@ -98,11 +117,11 @@ void CListenMessage::Stop() {
   }
   DpClient_Stop();
 
-  vzbase::Thread::Current()->Release();
+  thread_fast_->Release();
 }
 
 void CListenMessage::RunLoop() {
-  vzbase::Thread::Current()->Run();
+  thread_fast_->Run();
 }
 
 void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl,
@@ -116,7 +135,41 @@ void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl,
 }
 
 void CListenMessage::OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp) {
+  std::string   sjson;
+  sjson.append(dmp->data, dmp->data_size);
 
+  Json::Value   jreq;
+  Json::Reader  jread;
+  if (!jread.parse(sjson, jreq)) {
+    LOG(L_ERROR) << "iva info parse failed.";
+    return;
+  }
+
+  Json::Value   jresp;
+  jresp[MSG_CMD]   = jreq[MSG_CMD].asString();
+  jresp[MSG_ID]    = jreq[MSG_ID].asInt();
+  jresp[MSG_STATE] = RET_FAILED;
+
+  bool breply = false; // 返回
+  if (0 == strncmp(dmp->method, MSG_IVAC_GET_INFO, dmp->method_size)) {
+    // 算法信息
+    if (jreq[MSG_BODY]["version"].isString()) {
+      sys_info_.iva_ver = jreq[MSG_BODY]["version"].asString();
+    }
+  } else if (0 == strncmp(dmp->method, MSG_SYSC_SET_INFO, dmp->method_size)) {
+    breply = true;
+    if (SetDevInfo(jreq[MSG_BODY])) {
+      jresp[MSG_STATE] = RET_SUCCESS;
+    }
+  }
+
+  if (breply) {
+    sjson = jresp.toStyledString();
+    DpClient_SendDpReply(dmp->method,
+                         dmp->channel_id,
+                         dmp->id,
+                         sjson.c_str(), sjson.size());
+  }
 }
 
 void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl,
@@ -142,34 +195,72 @@ void CListenMessage::GetHwInfo() {
   Json::Value  jroot;
 
   jroot.clear();
-  std::string  sjson = "";
-#ifdef _WIN32
   std::ifstream ifs;
-  ifs.open("test1.json");
-  if(false == ifs.is_open()) {
-    return;
-  }
-  
-  ifs >> sjson;
+
+#ifdef _WIN32
+  ifs.open("./system.json");
 #else
-
+  ifs.open("/mnt/etc/system.json");
 #endif
-  if(!jread.parse(sjson, jroot)) {
-    return;
+  if(!ifs.is_open() ||
+      !jread.parse(ifs, jroot)) {
+    LOG(L_ERROR) << "system json parse failed.";
   }
 
-  sys_info_.dev_name =
-    vzbase::Base64::Encode(vzbase::Gb2312ToUtf8("你好"));
-  sys_info_.ins_addr =
-    vzbase::Base64::Encode(vzbase::Gb2312ToUtf8("你好"));
+  if (jroot["dev_name"].isString()) {
+    sys_info_.dev_name = jroot["dev_name"].asString();
+  } else {
+    sys_info_.dev_name = "PC_001";
+  }
 
-  sys_info_.dev_type  = 100100;
-  sys_info_.sw_ver    = 100000;
-  sys_info_.hw_ver    = 100000;
-  sys_info_.iva_ver   = 100000;
-  sys_info_.web_port  = 8080;
-  sys_info_.rtsp_port = 8554;
+  if (jroot["ins_addr"].isString()) {
+    sys_info_.ins_addr = jroot["ins_addr"].asString();
+  }
+
+  if (jroot["dev_type"].isInt()) {
+    sys_info_.dev_type  = jroot["dev_type"].asInt();
+  } else {
+    sys_info_.dev_type = 100100;
+  }
+
+  sys_info_.sw_ver    = SW_VERSION_;
+  sys_info_.sw_ver   += __DATE__;
+  sys_info_.hw_ver    = HW_VERSION_;
+
+  // dp获取算法信息
+  DpClient_SendDpRequest(MSG_IVAC_GET_INFO, 0,
+                         NULL, 0,
+                         dpcli_poll_msg_cb, this,
+                         DEF_TIMEOUT_MSEC);
+  if (sys_info_.iva_ver.empty()) {
+    sys_info_.iva_ver = "V100.00.00 ";
+    sys_info_.iva_ver   += __DATE__;
+  }
+
+  if (jroot["web_port"].isInt()) {
+    sys_info_.web_port  = jroot["web_port"].asInt();
+  } else {
+    sys_info_.web_port = 80;
+  }
+
+  if (jroot["rtsp_port"].isInt()) {
+    sys_info_.rtsp_port  = jroot["rtsp_port"].asInt();
+  } else {
+    sys_info_.rtsp_port = 8554;
+  }
+
+  // 读取磁盘大小
   sys_info_.rec_size  = 16000;
+
+  if (jroot["ip_addr"].isString() &&
+      jroot["netmask"].isString() &&
+      jroot["gateway"].isString() &&
+      jroot["dns"].isString()) {
+    CNetCtrl::SetNet(inet_addr(jroot["ip_addr"].asCString()),
+                     inet_addr(jroot["netmask"].asCString()),
+                     inet_addr(jroot["gateway"].asCString()),
+                     inet_addr(jroot["dns"].asCString())); // 配置参数
+  }
 }
 
 bool CListenMessage::GetDevInfo(Json::Value &j_body) {
@@ -178,11 +269,12 @@ bool CListenMessage::GetDevInfo(Json::Value &j_body) {
   j_body["sw_ver"]    = sys_info_.sw_ver;
   j_body["hw_ver"]    = sys_info_.hw_ver;
   j_body["iva_ver"]   = sys_info_.iva_ver;
-  j_body["ip_addr"]   = inet_ntoa(*((struct in_addr*)&net_ctrl_->ip_));
-  j_body["netmask"]   = inet_ntoa(*((struct in_addr*)&net_ctrl_->netmask_));
-  j_body["gateway"]   = inet_ntoa(*((struct in_addr*)&net_ctrl_->gateway_));
-  j_body["dns"]       = inet_ntoa(*((struct in_addr*)&net_ctrl_->dns_));
-  j_body["mac"]       = net_ctrl_->mac_;
+  j_body["dhcp"]      = sys_info_.dhcp_en;
+  j_body["ip_addr"]   = inet_ntoa(*((struct in_addr*)&CNetCtrl::ip_));
+  j_body["netmask"]   = inet_ntoa(*((struct in_addr*)&CNetCtrl::netmask_));
+  j_body["gateway"]   = inet_ntoa(*((struct in_addr*)&CNetCtrl::gateway_));
+  j_body["dns"]       = inet_ntoa(*((struct in_addr*)&CNetCtrl::dns_));
+  j_body["mac"]       = CNetCtrl::mac_;
   j_body["web_port"]  = sys_info_.web_port;
   j_body["rtsp_port"] = sys_info_.rtsp_port;
   j_body["rec_size"]  = sys_info_.rec_size;
@@ -191,16 +283,46 @@ bool CListenMessage::GetDevInfo(Json::Value &j_body) {
 }
 
 bool CListenMessage::SetDevInfo(const Json::Value &j_body) {
-  sys_info_.dev_name    = j_body["dev_name"].asString();
-  sys_info_.ins_addr    = j_body["ins_addr"].asString();
-  sys_info_.dev_type    = j_body["dev_type"].asUInt();
+  if (j_body["dev_name"].isString()) {
+    sys_info_.dev_name    = j_body["dev_name"].asString();
+  }
+
+  if (j_body["ins_addr"].isString()) {
+    sys_info_.ins_addr    = j_body["ins_addr"].asString();
+  }
+
+  if (j_body["dev_type"].isInt()) {
+    sys_info_.dev_type    = j_body["dev_type"].asUInt();
+  }
 
   if (sys_info_.web_port != j_body["web_port"].asUInt()) {
-
   }
   if (sys_info_.rtsp_port != j_body["rtsp_port"].asUInt()) {
-
   }
+
+  // dhcp判断
+  if (0 < j_body["dhcp"].asInt()) {
+
+  } else {
+    if (j_body["ip_addr"].isString() &&
+      j_body["netmask"].isString() &&
+      j_body["gateway"].isString() &&
+      j_body["dns"].isString()) {
+        CNetCtrl::SetNet(inet_addr(j_body["ip_addr"].asCString()),
+          inet_addr(j_body["netmask"].asCString()),
+          inet_addr(j_body["gateway"].asCString()),
+          inet_addr(j_body["dns"].asCString())); // 配置参数
+    }
+  }
+  
+  std::ofstream ofs;
+#ifdef _WIN32
+  ofs.open("./system.json");
+#else
+  ofs.open("/mnt/etc/system.json");
+#endif
+  ofs<<j_body.toStyledString();
+  ofs.close();
   return true;
 }
 

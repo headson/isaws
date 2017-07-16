@@ -51,7 +51,7 @@ SOURCE_GROUP(process FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_user.cpp
 )
 
-SOURCE_GROUP(listen_message FILES
+SOURCE_GROUP(message FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/cwebserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cwebserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h

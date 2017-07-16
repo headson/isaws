@@ -22,6 +22,16 @@
 #define snprintf    _snprintf
 #endif // snprintf
 
+#if _MSC_VER < 1300  
+#define strtoll(p, e, b) ((*(e) = (char*)(p) + (((b) == 10) ? strspn((p), "0123456789") : 0)), _atoi64(p))  
+#else  
+#define strtoll(p, e, b) _strtoi64(p, e, b)   
+#endif  
+
+#ifndef strtoull  
+#define strtoull strtoul  
+#endif  
+
 #define i_sync()  // sync;
 
 inline int set_socket_blocking(SOCKET vHdl) {

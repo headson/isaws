@@ -58,9 +58,9 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
 		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/hisiv300/lib
 	)
 	SET(VZPROJECT_LINK_LIB
+		vzlogging
 		libevent_core.so
 		libevent_pthreads.so
-		libvzlogging.so
         -Wl,-rpath=.
 		pthread
 		rt

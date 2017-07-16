@@ -12,6 +12,15 @@ namespace web {
 
 static struct mg_serve_http_opts s_web_def_opts_;
 
+/************************************************************************/
+/* Description : 注册处理函数
+/* Parameters  :
+/* Return      :
+/************************************************************************/
+static void register_http_endpoint(struct mg_connection *nc) {
+  mg_register_http_endpoint(nc, "/login_req", uri_hdl_login);
+}
+
 CWebServer::CWebServer()
   : vzbase::Runnable()
   , c_web_srv_()
@@ -22,15 +31,6 @@ CWebServer::CWebServer()
 
 CWebServer::~CWebServer() {
   Stop();
-}
-
-/************************************************************************/
-/* Description : 注册处理函数
-/* Parameters  :
-/* Return      :
-/************************************************************************/
-static void register_http_endpoint(struct mg_connection *nc) {
-  mg_register_http_endpoint(nc, "/http_login", uri_hdl_login);
 }
 
 bool CWebServer::Start(const char *s_http_path, const char *s_http_port) {
@@ -47,6 +47,8 @@ bool CWebServer::Start(const char *s_http_path, const char *s_http_port) {
 
   s_web_def_opts_.document_root = (char*)s_http_path;
   s_web_def_opts_.enable_directory_listing = "yes";
+
+  mg_set_timer(p_web_conn_, mg_time() + SESSION_CHECK_INTERVAL);
 
   p_web_thread_ = new vzbase::Thread();
   if (p_web_thread_) {
@@ -85,9 +87,15 @@ void CWebServer::web_ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 
 void CWebServer::OnWebEvHdl(struct mg_connection *nc, int ev, void *ev_data) {
   switch (ev) {
-  case MG_EV_HTTP_REQUEST:
+  case MG_EV_HTTP_REQUEST: {
     mg_serve_http(nc, (struct http_message *) ev_data, s_web_def_opts_);
     break;
+  }
+  case MG_EV_TIMER: {
+    check_sessions();
+    mg_set_timer(nc, mg_time() + SESSION_CHECK_INTERVAL);
+    break;
+  }
   }
 }
 

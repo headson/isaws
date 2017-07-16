@@ -11,6 +11,7 @@
 #include "vzbase/thread/thread.h"
 
 #include "network/cnetctrl.h"
+#include "hwclock/chwclock.h"
 
 #include "vzbase/base/noncoypable.h"
 #include "dispatcher/sync/dpclient_c.h"
@@ -50,8 +51,10 @@ class CListenMessage : public vzbase::noncopyable {
 
   DPPollHandle    dp_cli_;
   CNetCtrl       *net_ctrl_;    // 网络控制
+  CHwclock       *hw_clock_;    // 时间设置
 
-  vzbase::Thread *thread_slow_; // 耗时线程
+  vzbase::Thread *thread_fast_;  // 快速线程
+  vzbase::Thread *thread_slow_;  // 耗时线程
 };
 
 }  // namespace sys

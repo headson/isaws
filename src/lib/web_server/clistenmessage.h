@@ -24,14 +24,14 @@ class CListenMessage : public vzbase::noncopyable,
 public:
   static CListenMessage *Instance();
 
-  bool  Start(const char *s_dp_ip, unsigned short n_dp_port,
-              unsigned short n_http_port, const char *s_http_path);
+  bool  Start(unsigned short n_http_port, const char *s_http_path);
   void  Stop();
 
   void  RunLoop();
 
   vzbase::Thread  *MainThread();
   DPPollHandle     GetDpPollHdl();
+
  protected:
   static void dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
   void OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp);

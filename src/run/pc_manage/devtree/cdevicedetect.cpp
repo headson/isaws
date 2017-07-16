@@ -1,7 +1,7 @@
 #include "cdevicedetect.h"
 
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/helper/vmessage.h"
+#include "vzbase/core/vmessage.h"
 
 #include "json/json.h"
 

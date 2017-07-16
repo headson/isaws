@@ -14,7 +14,7 @@ foreach(inc_dir ${inc_dirs})
 endforeach()
 
 #########################################################################
-MESSAGE(STATUS "Print the link directores")
+MESSAGE(STATUS "Print the link directores") 
 get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
 foreach(link_dir ${link_dirs})
   message(STATUS "    link directory='${link_dir}'")
@@ -27,8 +27,11 @@ SET(PROJECT_SOURCE_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.h
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
+	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
 	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.h
+	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
@@ -38,14 +41,19 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.h
 )
 
+SOURCE_GROUP(hwclock FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.h
+	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.cpp
+)
+
 SOURCE_GROUP(network FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.h
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
+	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
 	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.cpp
 )
 
-SOURCE_GROUP(listen_message FILES
+SOURCE_GROUP(message FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )

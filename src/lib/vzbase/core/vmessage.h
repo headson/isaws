@@ -5,6 +5,9 @@
 #ifndef VMESSAGE_H
 #define VMESSAGE_H
 
+#define SW_VERSION_ "V100.00.00 "
+#define HW_VERSION_ "V100.00.00 "
+
 #define DEF_SHM_VIDEO_0       "/dev/shm/video_0"
 #define DEF_SHM_VIDEO_0_SIZE  ((352*288*3)/2 + 1024)
 
@@ -21,7 +24,11 @@
 
 // WEB Server ¼àÌı¶Ë¿ÚºÍÍøÒ³´æ´¢Â·¾¶
 #define DEF_WEB_SRV_PORT      8000
+#ifdef WIN32
 #define DEF_WEB_SRV_PATH      "c:/tools/web"
+#else
+#define DEF_WEB_SRV_PATH      "mnt/etc/web"
+#endif
 
 #define DEF_MCAST_IP          "228.5.6.2"
 #define DEF_MCAST_DEV_PORT    20003     // Éè±¸¼àÌı¶Ë¿Ú,ĞŞ¸ÄIPµØÖ·
@@ -56,22 +63,33 @@ body ÊÇÓÉ¿Í»§¶Ë·¢ËÍµÄ¾ßÌåÃüÁîµÄÊı¾İ£¬¸ù¾İ²»Í¬µÄÇëÇó£¬ÓĞ²»Í¬µÄ`body`Êı¾İ£¬Ô­ÔòÉÏ£
 #define MSG_BODY              "body"
 
 #define MSG_CMD_SIZE          32
+
+typedef enum _MSG_RET {
+  RET_SUCCESS       = 0,
+  RET_FAILED        = -1000,
+  RET_JSON_PARSE,
+  RET_USERNAME,
+  RET_PASSWORD,
+} MSG_RET;
 //////////////////////////////////////////////////////////////////////////
 
-#define DP_SYS_CONFIG         "dp_sys_config"   // ÏµÍ³²ÎÊı
+#define DP_SYS_CONFIG         "dp_sys_config"     // ÏµÍ³²ÎÊı
 
-#define MSG_SYSC_GET_DEVINFO  "get_devinfo"     // »ñÈ¡Éè±¸ĞÅÏ¢
-#define MSG_SYSC_SET_DEVINFO  "set_devinfo"     // ÉèÖÃÉè±¸ĞÅÏ¢
+#define MSG_SYSC_GET_INFO     "get_devinfo"       // »ñÈ¡Éè±¸ĞÅÏ¢
+#define MSG_SYSC_SET_INFO     "set_devinfo"       // ÉèÖÃÉè±¸ĞÅÏ¢
+#define MSG_SYSC_ADDR_CHANGE  "addr_change"       // µØÖ·¸Ä±ä
 
-#define MSG_SYSC_SET_HWCLOCK  "set_hwclock"     // ÉèÖÃÓ²¼şÊ±¼ä
+#define MSG_SYSC_HWCLOCK      "set_hwclock"       // ÉèÖÃÓ²¼şÊ±¼ä
+#define MSG_SYSC_TIME_CHANGE  "time_change"       // Ê±¼ä¸Ä±ä
 
-#define DP_NET_MODIFY         "dp_net_modify"   // ÍøÂçĞŞ¸ÄÏûÏ¢
-
-//////////////////////////////////////////////////////////////////////////
-#define DP_IVA_CONFIG         "dp_iva_config"   // Ëã·¨²ÎÊı
-
-#define DP_IVA_EVENT          "dp_iva_event"    // Ëã·¨ÊÂ¼ş
+#define DP_NET_MODIFY         "dp_net_modify"     // ÍøÂçĞŞ¸ÄÏûÏ¢
 
 //////////////////////////////////////////////////////////////////////////
+#define DP_IVA_CONFIG         "dp_iva_config"     // Ëã·¨²ÎÊı
+#define MSG_IVAC_GET_INFO     "get_iva_info"      // 
 
+#define DP_IVA_EVENT          "dp_iva_event"      // Ëã·¨ÊÂ¼ş
+
+//////////////////////////////////////////////////////////////////////////
+#define KVDB_KEY_USER         "key_user"     // kvdb»ñÈ¡ÓÃ»§
 #endif  // VMESSAGE_H

@@ -78,6 +78,12 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.h
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
 	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.c
@@ -130,6 +136,14 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.h
+)
+
+SOURCE_GROUP(core FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vtls.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.h
+	${CMAKE_CURRENT_SOURCE_DIR}/core/vdatetime.cpp
 )
 
 SOURCE_GROUP(helper FILES

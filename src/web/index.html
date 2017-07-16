@@ -1,111 +1,42 @@
 <!DOCTYPE html>
-<html>
-<head lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <title></title>
-    <link rel="stylesheet" href="css/all.css"/>
-    <link rel="stylesheet" href="css/animate.css"/>
+    <title>PC-Manage</title>
     <style>
-        *{
+        * {
             margin: 0;
             padding: 0;
         }
-        body{
-            background: url("img/img.jpg") no-repeat;
+        body {
+            background-color: #3992d0;
             background-size: 100% 100%;
             box-sizing: border-box;
             font-family: "open sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
             font-size: 12px;
             color: #fff;
         }
-        html,body{
-            height: 100%;
-        }
-        textarea{
-            color: #fff;
-            resize: none;
-        }
-        #container{
-            width: 1000px;
-            height: 700px;
-            background: rgba(0,0,0,0.4);
+        #container {
+            position: absolute;
+            width: 360px;
+            height: 240px;
+            background-color: lightgray;
+            background: rgba(0, 0, 0, 0.4);
             border: 1px solid #fff;
             border-radius: 20px;
             padding: 20px;
-            position: absolute;
             transition: all 0.2s;
             box-shadow: 0 0 20px 1px #fff;
         }
-        .center{
+        .center {
             position: absolute;
             left: 50%;
             top: 50%;
-            margin-top: -370px;
-            margin-left: -520px;
-        }
-        #container > div{
-            margin-bottom: 10px;
-            border: 1px solid #fff;
-            padding: 5px 10px;
-            box-sizing: border-box;
-            border-radius: 5px;
-        }
-        #container .div1{
-            height: 230px;
-            border: none;
-            padding: 0;
-            box-sizing: border-box;
-            border-radius: 5px;
-        }
-        .div1 > div{
-            border: 1px solid #fff;
-            padding: 5px 10px;
-            box-sizing: border-box;
-            border-radius: 5px;
-        }
-        .div1 .left{
-            width: 390px;
-            height: 100%;
-            margin-right: 10px;
-            float: left;
-        }
-        .div1 .right{
-            width: 600px;
-            height: 100%;
-            float: right;
-        }
-        .div1 .right .text{
-            width: 120px;
-        }
-        .div2{
-            height: 200px;
-        }
-        .div3{
-            height: 60px;
-        }
-        .div4{
-            height: 180px;
-        }
-        .title{
-            height: 20px;
-            line-height: 15px;
-            font-size: 14px;
-            font-weight: bolder;
-        }
-        .text{
-            background: none;
-            padding: 2px 5px;
-            border: 1px solid #fff;
-            color: #fff;
-            vertical-align: middle;
-            font-size: 12px;
-        }
-        .text:focus{
-            border: 1px solid rgba(255,255,255,0.7);
+            margin-top: -120px;
+            margin-left: -180px;
         }
         .btn{
             padding: 2px 5px;
@@ -120,628 +51,69 @@
             border-radius: 5px;
             cursor: pointer;
         }
-        #reg_msg_txt{
-            width: 280px;
-        }
-        .table tr td,.table tr th{
-            width: 280px;
-            width: 275px\0;
-        }
-        .table tr td:hover,.table tr th:hover{
-           cursor: default;
-        }
-        #reg_msg_tb_div{
-            margin-top: 10px;
-        }
-        #reg_msg_tb{
-            border: 1px solid #fff;
-            border-collapse: collapse;
-            display: inline-block;
-            vertical-align: top;
-        }
-        #reg_msg_tb td,#reg_msg_tb th,#rep_msg_tb td,#rep_msg_tb th{
-            padding: 3px 0;
-        }
-        #rep_msg_tb td,#rep_msg_tb th{
-            text-align: center;
-        }
-        #reg_msg_tb thead{
-            display: block;
-            width: 290px;
-        }
-        #reg_msg_tb tbody{
-            display: block;
-            height: 140px;
-            overflow-y: scroll;
-            width: 290px;
-        }
-        #msg_content{
-            width: 570px;
-            height: 60px;
-            border: 1px solid #fff;
-            background: none;
-            margin: 5px 0;
-        }
-        #rep_msg_tb{
-            border: 1px solid #fff;
-            border-collapse: collapse;
-            display: inline-block;
-            vertical-align: top;
-        }
-        #rep_msg_tb thead{
-            display: block;
-            width: 570px;
-        }
-        #rep_msg_tb tbody{
-            display: block;
-            height: 80px;
-            overflow-y: scroll;
-            width: 570px;
-        }
-        .div2 ul{
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-        .div2 ul li{
-            float: left;
-            height: 160px;
-            width: 320px;
-        }
-        .div2 ul .li2{
-            width: 70px;
-            line-height: 160px;
-            text-align: center;
-        }
-        .div2 ul .li4{
-            width: 260px;
-        }
-        #before_transform{
-            height: 160px;
-            width: 320px;
-            background: none;
-            border: 1px solid #fff;
-        }
-        #after_transform{
-            height: 160px;
-            width: 320px;
-            background: none;
-            border: 1px solid #fff;
-        }
-        .padding_tb tr td{
-            padding: 5px;
-        }
-        .li4 P{
-            margin:7px 0 10px 0;
-        }
-        .li4 P input{
-            margin-left: 19px;
-        }
-        #log_container{
-            width: 970px;
-            height: 140px;
-            border: 1px solid #fff;
-            overflow-y: auto;
-            overflow-x:hidden;
-        }
-        #log_container p{
-            padding: 2px 5px;
-        }
-        #msg_name,#msg_id{
-            width: 150px;
-        }
-        .active{
-            background: rgba(255,255,255,0.5);
-        }
     </style>
+
     <script src="js/jquery-1.11.2.min.js"></script>
-    <script src="js/jquery-migrate-1.2.1.min.js"></script>
-    <script src="js/canvas-particle.js"></script>
     <script src="js/base64.js"></script>
     <script src="js/utf8.js"></script>
 </head>
-<body id="body">
-    <div id="container" class="center">
-        <div class="div1">
-            <div class="left">
-                <p class="title">注册消息</p>
-                <div>
-                    <input type="text" class="text" id="reg_msg_txt" value="TEST_MSG_TYPE_01"/>&nbsp;&nbsp; <input type="button" class="btn" value="注册消息" id="reg_msg_btn"/>
-                </div>
-                <div id="reg_msg_tb_div">
-                    <table id="reg_msg_tb" class="table">
-                        <thead>
-                            <tr>
-                                <th align="left">已经注册的消息</th>
-                                <th style="width: 16px"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
 
-                        </tbody>
-                    </table>
-                    &nbsp;
-                    <input type="button" class="btn" value="取消注册" id="cancel_reg_msg_btn"/>
-                </div>
-            </div>
-            <div class="right">
-                <p class="title">接收消息</p>
-                <div>
-                    消息名称:  <input type="text" class="text msg_name" readonly/>&nbsp;&nbsp;
-                    消息ID:  <input type="text" class="text msg_id" readonly/>&nbsp;&nbsp;
-                    消息类型:  <input type="text" class="text msg_type" readonly/>
-                </div>
-                <textarea id="msg_content" readonly></textarea>
-                <table id="rep_msg_tb" class="table">
-                    <thead>
-                        <tr>
-                            <th style="width: 30px;">R/S</th>
-                            <th style="width: 150px">TIME</th>
-                            <th style="width: 240px">METHOD</th>
-                            <th style="width: 133px">ID</th>
-                            <th style="width: 16px"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="div2">
-            <p class="title">发送消息</p>
-            <ul>
-                <li>
-                    <textarea id="before_transform"></textarea>
-                </li>
-                <li class="li2">
-                    <input type="button" class="btn" value="转换>>" id="transform_btn"/>
-                </li>
-                <li>
-                    <textarea readonly id="after_transform"></textarea>
-                </li>
-                <li class="li4">
-                    <table class="padding_tb">
-                        <tr>
-                            <td style="min-width: 80px;" align="right">消息名称:</td>
-                            <td colspan="3"><input type="text" class="text msg_name" value="TEST_MSG_TYPE_01" id="msg_name"/></td>
-                        </tr>
-                        <tr>
-                            <td align="right">消息ID:</td>
-                            <td colspan="3"><input type="text" class="text msg_id" value="1" id="msg_id"/></td>
-                        </tr>
-                        <tr>
-                            <td align="right">超时时间:</td>
-                            <td><input type="text" class="text" style="width: 29px" value="5" id="timeout"/></td>
-                            <td style="min-width: 52px">循环时间:</td>
-                            <td><input type="text" class="text" style="width: 29px" value="5" id="fortime"/></td>
-                        </tr>
-                    </table>
-                    <p>
-                        <input type="button" class="btn" value="发送请求" id="send_request"/>
-                        <input type="button" class="btn" value="发送回复" id="send_reply">
-                        <input type="button" class="btn" value="发送推送" id="send_message"/>
-                    </p>
-                    <p>
-                        <input type="button" class="btn" value="循环请求"/>
-                        <input type="button" class="btn" style="visibility: hidden" value="隐藏按钮"/>
-                        <input type="button" class="btn" value="循环推送"/>
-                    </p>
-                </li>
-            </ul>
-        </div>
-        <div class="div3">
-            <p class="title">连接信息</p>
-            IP: <input type="text" class="text" id="ip_txt" value="127.0.0.1"/>
-            port: <input type="text" class="text" id="port_txt" value="5291"/>&nbsp;&nbsp;
-            <input type="button" value="连接" class="btn" id="connect_btn"/>&nbsp;&nbsp;
-            <input type="button" value="断开" class="btn" id="disconnect_btn"/>
-        </div>
-        <div class="div4">
-            <p class="title">日志信息</p>
-            <div id="log_container">
-
-            </div>
-        </div>
+<body>
+<div id="container" class="center" align="center">
+    <h1 style="margin-bottom: 15px;margin-top: 45px;" align="center">Login PC-Manage</h1>
+    <div style="margin-bottom: 20px" align="center">
+        用户帐户: <input type="text" class="text" id="username" autofocus/>
     </div>
-    <script>
-        function get_time(){
-            var date = new Date();
-            var time = date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds();
-            return time;
+
+    <div style="margin-bottom: 20px" align="center">
+        用户密码: <input type="text" class="text" id="password"/>
+    </div>
+
+    <div align="center">
+        <input type="button" class="btn" value="登录 ..." id="login_btn"/>
+    </div>
+</div>
+
+<script>
+  function login_req() {
+    var username = $('#username').val();
+    var password = $('#password').val();
+    if (username == '') {
+      alert('用户帐户不能为空!');
+      return;
+    }
+    if (password == '') {
+      alert('用户密码不能为空!');
+      return;
+    }
+    var req = {};
+    req.cmd = 'login_req';
+    req.id = 1;
+    req.body = {};
+    req.body.username = username;
+    req.body.password = Base64.encode(password, true);
+
+    var jsonstr = JSON.stringify(req);
+    $.ajax({
+      type: 'POST',
+      url: '/login_req',
+      dataType: 'text',
+      data: jsonstr,
+      success: function(ajaxdata) {
+        var jresp = eval('(' + ajaxdata + ')');
+        if (jresp.state == 0) {
+          parent.window.open("/main.html", "_top");
+        } else {
+          alert('用户帐户或用户密码错误!');
         }
-        function test_ip(ip){
-            var addr = ip.split('.');
-            if(addr.length != 4)return false;
-            for(var i=0;i<4;i++){
-                if(addr[i].length>3)return false;
-                var val = parseInt(addr[i]);
-                if(isNaN(val) || val<0 || val>255)return false;
-            }
-            return true;
-        }
-        function send_request(){
-            var val = $("#after_transform").val();
-            var method = $("#msg_name").val();
-            var timeout = parseInt($("#timeout").val());
-            var id = parseInt($("#msg_id").val());
-
-            if(val.trim() == ""){
-                alert("消息内容不能为空");
-                return;
-            }
-            if(isNaN(timeout)){
-                alert("超时时间为数字");
-                return;
-            }
-            if(method.trim() == ""){
-                alert("消息名称不能为空");
-                return;
-            }
-            var cfg = {};
-            cfg.cmd = "send_request";
-            cfg.id = id;
-            cfg.body = {};
-            cfg.body.method = method;
-            cfg.body.timeout = timeout;
-            cfg.body.data = val;
-
-            var jsonstr = JSON.stringify(cfg);
-
-            var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsonstr +"</p>";
-            $("#log_container").prepend(str_p);
-            $.ajax({
-                type:"POST",
-                url:"/send_request",
-                dataType:"text",
-                data:jsonstr,
-                success:function(ajaxdata){
-                    var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ ajaxdata +"</p>";
-                    $("#log_container").prepend(str_p);
-                    var jsondata = eval("(" + ajaxdata + ")");
-//                    if(jsondata.state == 0){
-                        var id = jsondata.id;
-                        var state = jsondata.state;
-                        var method = jsondata.cmd;
-                        var time = get_time();
-                        var data;
-                        try{
-                            data = Base64.decode(jsondata.body.data,true);
-                        }catch(e){
-                            data = "";
-                        }
-                        var str = "<tr data='"+ data +"'><td style='width: 30px;'>R</td><td style='width: 150px;' class='time'>"+time+"</td><td style='width: 250px' class='method'>"+method+"</td><td style='133px;' class='id'>"+ id +"</td></tr>";
-                        $("#rep_msg_tb tbody").append(str);
-                        scroll_bt($("#rep_msg_tb tbody"));
-//                    }
-                }
-            });
-        }
-        function send_reply(){
-            var val = $("#after_transform").val();
-            var method = $("#msg_name").val();
-            var timeout = parseInt($("#timeout").val());
-            var id = parseInt($("#msg_id").val());
-
-            if(val.trim() == ""){
-                alert("消息内容不能为空");
-                return;
-            }
-            if(isNaN(timeout)){
-                alert("超时时间为数字");
-                return;
-            }
-            if(method.trim() == ""){
-                alert("消息名称不能为空");
-                return;
-            }
-            var cfg = {};
-            cfg.cmd = "send_reply";
-            cfg.id = id;
-            cfg.body = {};
-            cfg.body.method = method;
-            cfg.body.timeout = timeout;
-            cfg.body.data = val;
-
-            var jsonstr = JSON.stringify(cfg);
-            var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsonstr +"</p>";
-            $("#log_container").prepend(str_p);
-            $.ajax({
-                type:"POST",
-                url:"/send_reply",
-                dataType:"text",
-                data:jsonstr,
-                success:function(ajaxdata){
-
-                }
-            });
-        }
-        function send_message(){
-            var val = $("#after_transform").val();
-            var method = $("#msg_name").val();
-            var timeout = parseInt($("#timeout").val());
-            var id = parseInt($("#msg_id").val());
-
-            if(val.trim() == ""){
-                alert("消息内容不能为空");
-                return;
-            }
-            if(isNaN(timeout)){
-                alert("超时时间为数字");
-                return;
-            }
-            if(method.trim() == ""){
-                alert("消息名称不能为空");
-                return;
-            }
-            var cfg = {};
-            cfg.cmd = "send_message";
-            cfg.id = id;
-            cfg.body = {};
-            cfg.body.method = method;
-            cfg.body.timeout = timeout;
-            cfg.body.data = val;
-
-            var jsonstr = JSON.stringify(cfg);
-            var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsonstr +"</p>";
-            $("#log_container").prepend(str_p);
-            $.ajax({
-                type:"POST",
-                url:"/send_message",
-                dataType:"text",
-                data:jsonstr,
-                success:function(ajaxdata){
-
-                }
-            });
-        }
-        function del_listen_msg(){
-            var msg = $("#reg_msg_tb tbody tr").eq(g_cfg_table_cur_index).find("td").html();
-            if(!msg){
-                return;
-            }
-            var cfg = {};
-            cfg.cmd = "del_listen_msg";
-            cfg.id = 2;
-            cfg.body = {};
-            cfg.body.method = msg;
-            $("#reg_msg_tb tbody tr").eq(g_cfg_table_cur_index).remove();
-            var jsonstr = JSON.stringify(cfg);
-            $.ajax({
-                type:"POST",
-                url:"/del_listen_msg",
-                dataType:"text",
-                data:jsonstr,
-                success:function(ajaxdata){
-                    var jsondata = eval("(" + ajaxdata + ")");
-                    if(jsondata.state == 0){
-                        $("#reg_msg_tb tbody tr").eq(g_cfg_table_cur_index).remove();
-                        g_cfg_table_cur_index = -1;
-                    }
-                }
-            });
-        }
-        function add_listen_msg(){
-            var msg = $("#reg_msg_txt").val();
-            if(msg.trim() == ""){
-                alert("消息不能为空");
-                return;
-            }
-            var flag = false;
-            $("#reg_msg_tb tbody tr td").each(function(){
-                if($(this).html() == msg){
-                    flag = true;
-                    return false;
-                }
-            })
-            if(flag){
-                alert("消息重复");
-                return;
-            }
-            var cfg = {};
-            cfg.cmd = "add_listen_msg";
-            cfg.id = 1;
-            cfg.body = {};
-            cfg.body.method = msg;
-
-            var jsonstr = JSON.stringify(cfg);
-            $.ajax({
-                type:"POST",
-                url:"/add_listen_msg",
-                dataType:"text",
-                data:jsonstr,
-                success:function(ajaxdata){
-                    var jsondata = eval("(" + ajaxdata + ")");
-                    var str_p;
-                    if(jsondata.state == 0){
-                        var str = "<tr><td>"+ msg +"</td></tr>";
-                        $("#reg_msg_tb tbody").append(str);
-                        scroll_bt($("#reg_msg_tb tbody"));
-                        str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" Register Message : "+ msg +"</p>";
-                    }else{
-                        alert("注册消息失败");
-                        str_p = "<p class='animated bounceInLeft'> [ERROR] "+ get_time() +" Register Get Error</p>";
-                    }
-                    $("#log_container").prepend(str_p);
-                }
-            });
-        }
-        function connect(){
-            var ip = $("#ip_txt").val();
-            var port = parseInt($("#port_txt").val());
-            if(!test_ip(ip)){
-                alert("请输入正确的IP");
-                return;
-            }
-            if(isNaN(port) || port == ""){
-                alert("端口号为数字");
-                return;
-            }
-            var cfg = {};
-            cfg.cmd = "set_dev_addr";
-            cfg.id = 0;
-            cfg.body = {};
-            cfg.body.ip = ip;
-            cfg.body.port = port;
-
-            var jsonstr = JSON.stringify(cfg);
-            $.ajax({
-                type:"POST",
-                url:"/set_dev_addr",
-                dataType:"text",
-                data:jsonstr,
-                success:function(ajaxdata){
-                    var jsondata = eval("(" + ajaxdata + ")");
-                    var str_p;
-                    if(jsondata.state == 0){
-                        str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" Connect Server Success</p>";
-                    }else{
-                        str_p = "<p class='animated bounceInLeft'> [ERROR] "+ get_time() +" Connect Server Error</p>";
-                    }
-                    $("#log_container").prepend(str_p);
-                }
-            });
-        }
-        var g_cfg_table_cur_index = -1;
-        function select_comm_cfg_table_item(index, cl) {
-            if (index < 0) return false;
-            //alert(index+"*"+g_cfg_table_cur_index);
-
-            var tr_item = $("#reg_msg_tb tbody tr");
-            if (tr_item.eq(index).length == 0) return false;
-            if (g_cfg_table_cur_index != -1 && g_cfg_table_cur_index < tr_item.length) {
-                tr_item.eq(g_cfg_table_cur_index).removeClass("active");
-            }
-            tr_item.eq(index).addClass("active");
-            g_cfg_table_cur_index = index;
-        }
-
-        function add_class(index){
-            if (index < 0) return false;
-            var tr_item = $("#rep_msg_tb tbody tr");
-            if (tr_item.eq(index).length == 0) return false;
-            tr_item.removeClass("active");
-            tr_item.eq(index).addClass("active");
-        }
-        var timer = 0;
-        function get_recv_msg(){
-            var cfg = {};
-            cfg.cmd = "get_recv_msg";
-            cfg.id = 4;
-
-            var jsonstr = JSON.stringify(cfg);
-            $.ajax({
-                type:"POST",
-                url:"/get_recv_msg",
-                dataType:"text",
-                data:jsonstr,
-                success:function(ajaxdata){
-                    var jsondata = eval("(" + ajaxdata + ")");
-                    try{
-                        var jsondata = jsondata.body;
-                    }catch(e){
-                        return;
-                    }
-                    var str = "";
-                    for(var i = 0;i < jsondata.length;i++){
-                        var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsondata[i] +"</p>";
-                        $("#log_container").prepend(str_p);
-                        var id = jsondata[i].id;
-                        var method = jsondata[i].method;
-                        var time = get_time();
-                        var data = Base64.decode(jsondata[i].data,true);
-                        str += "<tr data='"+ data +"'><td style='width: 30px;'>R</td><td style='width: 150px;' class='time'>"+time+"</td><td style='width: 250px' class='method'>"+method+"</td><td style='133px;' class='id'>"+ id +"</td></tr>";
-                    }
-                    $("#rep_msg_tb tbody").append(str);
-                    scroll_bt($("#rep_msg_tb tbody"));
-                }
-            });
-        }
-        function scroll_bt(ele){
-            var scrollHeight = ele.get(0).scrollHeight;
-            var height = ele.height();
-            ele.scrollTop(scrollHeight - height);
-        }
-        $(function(){
-            $(window).resize(function(){
-                var height = document.documentElement.clientHeight;
-                var width = document.documentElement.clientWidth;
-                if(width < 1040 || height < 740){
-                    $("#container").removeClass("center");
-                    $("body").height(740).width(1040);
-                    if(width < 1040){
-                        $("html").width(1040).height("100%");
-                    }
-                    if(height < 740){
-                        $("html").height(740).width("100%");
-                    }
-                    if(height < 740 && width < 1040){
-                        $("html").height(740).width(1040);
-                    }
-                }else{
-                    $("html").height("100%").width("100%");
-                    if(!$("#container").hasClass("center")){
-                        $("#container").addClass("center");
-                    }
-                }
-            })
-            var config = {
-                vx: 4,	//小球x轴速度,正为右，负为左
-                vy: 4,	//小球y轴速度
-                height: 2,	//小球高宽，其实为正方形，所以不宜太大
-                width: 2,
-                count: 200,		//点个数
-//                color: "121, 162, 185", 	//点颜色
-//                stroke: "130,255,255", 		//线条颜色
-                color: "255, 255, 255", 	//点颜色
-                stroke: "255,255,255", 		//线条颜色
-                dist: 6000, 	//点吸附距离
-                e_dist: 20000, 	//鼠标吸附加速距离
-                max_conn: 10 	//点到点最大连接数
-            }
-
-            //调用
-            CanvasParticle(config);
-            $("canvas").hide();
-            setTimeout(function(){
-                $("canvas").slideDown();
-            },3000);
-            $(document).dblclick(function(){
-                $("canvas").slideToggle();
-                return false;
-            });
-            $("#connect_btn").click(function(){
-                $("#reg_msg_tb tbody tr").remove();
-                connect();
-                if(timer == 0){
-                    timer = setInterval(get_recv_msg,1000);
-                }
-            });
-            $("#reg_msg_btn").click(add_listen_msg);
-            $("#cancel_reg_msg_btn").click(del_listen_msg);
-            $("#transform_btn").click(function(){
-                var b_v = $("#before_transform").val();
-                var a_v = Base64.encode(b_v,true);
-                $("#after_transform").val(a_v);
-            });
-            $("#reg_msg_tb tbody td").live("click",function(){
-                select_comm_cfg_table_item($(this).parent().index());
-            });
-            $("#rep_msg_tb tbody td").live("click",function(){
-                add_class($(this).parent().index());
-                var tr = $(this).parent();
-                var data = tr.attr("data");
-                var method = tr.find(".method").html();
-                var id = tr.find(".id").html();
-                var type = tr.find(".type").html();
-                $(".msg_name").val(method);
-                $(".msg_id").val(id);
-                $(".msg_type").val(type);
-                $("#msg_content").val(data);
-            });
-            $("#send_request").click(send_request);
-            $("#send_reply").click(send_reply);
-            $("#send_message").click(send_message);
-        })
-    </script>
+      },
+    });
+  }
+  $(function() {
+    $('#login_btn').click(function() {
+      login_req();
+    });
+  });
+</script>
 </body>
 </html>

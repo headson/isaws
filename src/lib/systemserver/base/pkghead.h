@@ -15,9 +15,11 @@ typedef struct _TAG_SYS_INFO{
 
   unsigned int  dev_type;
 
-  unsigned int  sw_ver;
-  unsigned int  hw_ver;
-  unsigned int  iva_ver;
+  std::string   sw_ver;
+  std::string   hw_ver;
+  std::string   iva_ver;
+
+  unsigned int  dhcp_en;
 
   unsigned int  web_port;
   unsigned int  rtsp_port;

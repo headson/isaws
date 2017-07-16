@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>PC-Manage</title>
+
+    <script src="js/jquery-1.11.2.min.js"></script>
+    <script src="js/base64.js"></script>
+    <script src="js/utf8.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        #menu {
+            position:absolute;
+            width:200px;
+            height:100%;
+            background: #eee;
+        }
+        #center {
+            position:absolute;
+            left: 220px;
+            height:100%;
+        }
+    </style>
+</head>
+
+<p><h1 class="title" align="center">PC-Manage</h1></p>
+<hr>
+
+<div class="">
+    <div id="menu" class="left">
+        <dl class="live_stream">
+            <hr/>
+            <dt><a href="#" onclick="a_jump_html('page/preview.html');return false;">实时预览</a></dt>
+            <p/>
+
+            <dt>流量统计</dt>
+            <dd><a href="#" onclick="a_jump_html('page/pc_day.html');return false;">日流量</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/pc_month.html');return false;">月流量</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/pc_year.html');return false;">年流量</a></dd>
+            <p/>
+
+            <dt>参数配置</dt>
+            <dd><a href="#" onclick="a_jump_html('page/cfg_devinfo.html');return false;">设备信息</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/cfg_pc_reset.html');return false;">流量清零</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/cfg_pc_valid_time.html');return false;">统计时间</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/cfg_vdo_enc.html');return false;">视频编码</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/cfg_upload_srv.html');return false;">上传配置</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/cfg_set_time.html');return false;">设备校时</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/cfg_dev_update.html');return false;">设备升级</a></dd>
+            <p/>
+
+            <dt>设备日志</dt>
+            <dd><a href="#" onclick="a_jump_html('page/log_view_real.html');return false;">实时日志</a></dd>
+            <dd><a href="#" onclick="a_jump_html('page/log_download.html');return false;">下载日志</a></dd>
+        </dl>
+    </div>
+
+    <div id="center" class="right">
+        <h1>you are welcome!</h1>
+    </div>
+</div>
+
+<script>
+  function a_jump_html(url) {
+    $("#center").load(url, function(response, status, xhr) {
+      $('#center').html(response);
+    });
+  }
+</script>
+</body>
+</html>

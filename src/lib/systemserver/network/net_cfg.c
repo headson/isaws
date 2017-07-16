@@ -154,13 +154,16 @@ int net_nic_down(const char *ifname) {
  * @retval	net address
  */
 in_addr_t net_get_ifaddr(const char *ifname) {
+  static int skfd = 0;
+
   struct ifreq ifr;
-  int skfd;
   struct sockaddr_in *saddr;
 
-  if ( (skfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
-    DBG_ERR("socket error");
-    return -1;
+  if (skfd == 0) {
+    if ((skfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+      DBG_ERR("socket error");
+      return -1;
+    }
   }
 
   strncpy(ifr.ifr_name, ifname, IFNAMSIZ);
@@ -169,7 +172,7 @@ in_addr_t net_get_ifaddr(const char *ifname) {
     close(skfd);
     return -1;
   }
-  close(skfd);
+  // close(skfd);
 
   saddr = (struct sockaddr_in *) &ifr.ifr_addr;
   return saddr->sin_addr.s_addr;
@@ -296,7 +299,11 @@ int net_get_hwaddr(const char *ifname, unsigned char *mac) {
   }
   close(skfd);
 
-  memcpy(mac, ifr.ifr_ifru.ifru_hwaddr.sa_data, IFHWADDRLEN);
+  char t[8] = {0};
+  memcpy(t, ifr.ifr_ifru.ifru_hwaddr.sa_data, IFHWADDRLEN);
+
+  sprintf(mac, "%02x:%02x:%02x:%02x:%02x:%02x"
+          , t[0], t[1], t[2], t[3], t[4], t[5]);
   return 0;
 }
 

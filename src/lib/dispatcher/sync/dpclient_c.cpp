@@ -458,6 +458,19 @@ EXPORT_DLL int Kvdb_GetKeyToBuffer(const char   *p_key,
   return KVDB_RET_FAILURE;
 }
 
+EXPORT_DLL int Kvdb_GetKeyToString(const char *p_key, int n_key, void *p_string)
+{
+  if (g_kvdb_client == NULL) {
+    return KVDB_RET_FAILURE;
+  }
+
+  int32 ret = g_kvdb_client->GetKey(p_key, n_key, (std::string*)p_string, false);
+  if (ret > 0) {
+    return ret;
+  }
+  return KVDB_RET_FAILURE;
+}
+
 EXPORT_DLL int Kvdb_GetKeyAbsolutelyToBuffer(const char   *p_key,
     int           n_key,
     char         *p_value,
@@ -584,6 +597,20 @@ EXPORT_DLL int SKvdb_GetKeyToBuffer(const char   *p_key,
   }
   return KVDB_RET_FAILURE;
 }
+
+EXPORT_DLL int SKvdb_GetKeyToString(const char *p_key, int n_key, void *p_string)
+{
+  if (g_skvdb_client == NULL) {
+    return KVDB_RET_FAILURE;
+  }
+
+  int32 ret = g_skvdb_client->GetKey(p_key, n_key, (std::string*)p_string, false);
+  if (ret > 0) {
+    return ret;
+  }
+  return KVDB_RET_FAILURE;
+}
+
 
 EXPORT_DLL int SKvdb_GetKeyAbsolutelyToBuffer(const char   *p_key,
     int           n_key,

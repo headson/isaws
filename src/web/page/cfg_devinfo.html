@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>PC-Manage</title>
+
+    <script src="js/jquery-1.11.2.min.js"></script>
+    <script src="js/base64.js"></script>
+    <script src="js/utf8.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+<div id="container" class="center" align="center">
+    <br/><br/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+
+    <div align="right">
+        <input type="button" class="btn" value="保存修改" id="save_btn"/>
+    </div>
+</div>
+<script>
+  function get_devinfo() {
+    alert('窗口准备好了!');
+  }
+
+  var is_ready = false;
+  $(function() {
+    $(window).ready(function() {
+      if (is_ready == false) {
+//          alert("document ready");
+        is_ready = true;
+      }
+    });
+  });
+
+</script>
+
+</body>
+</html>

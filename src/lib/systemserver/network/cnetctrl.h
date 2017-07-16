@@ -16,10 +16,10 @@ namespace sys {
 class CNetCtrl : public vzbase::MessageHandler,
   public vzconn::CClientInterface {
  protected:
-  CNetCtrl(vzbase::Thread *p_thread);
+  CNetCtrl(vzbase::Thread *thread_fast);
 
  public:
-  static CNetCtrl* Create(vzbase::Thread *p_thread);
+  static CNetCtrl* Create(vzbase::Thread *thread_fast);
 
   virtual ~CNetCtrl();
 
@@ -27,7 +27,7 @@ class CNetCtrl : public vzbase::MessageHandler,
   void Stop();
 
   vzbase::Thread *GetThread() {
-    return p_thread_;
+    return thread_fast_;
   }
 
  protected:
@@ -43,22 +43,22 @@ class CNetCtrl : public vzbase::MessageHandler,
   virtual void  HandleClose(vzconn::VSocket *p_cli) {
   }
 
- protected:
-   void SetNet(in_addr_t   ip,
-               in_addr_t   netmask,
-               in_addr_t   gateway,
-               in_addr_t   dns);
+ public:
+  static void SetNet(in_addr_t   ip,
+                     in_addr_t   netmask,
+                     in_addr_t   gateway,
+                     in_addr_t   dns);
 
  private:
-  vzbase::Thread       *p_thread_;
-  vzconn::CMCastSocket *p_mcast_sock_;
+  vzconn::CMCastSocket *mcast_sock_;
+  vzbase::Thread       *thread_fast_;
 
  public:
-  in_addr_t    ip_;          // inet_addr() inet_ntoa
-  in_addr_t    netmask_;     //
-  in_addr_t    gateway_;     //
-  in_addr_t    dns_;         //
-  std::string  mac_;         // 12:23:34:45:56:67
+  static in_addr_t    ip_;          // inet_addr() inet_ntoa
+  static in_addr_t    netmask_;     //
+  static in_addr_t    gateway_;     //
+  static in_addr_t    dns_;         //
+  static std::string  mac_;         // 12:23:34:45:56:67
 };
 
 }  // namespace sys

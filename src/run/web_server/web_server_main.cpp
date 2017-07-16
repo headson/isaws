@@ -1,8 +1,10 @@
 #include <signal.h>
 
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/helper/vmessage.h"
+#include "vzbase/core/vmessage.h"
 #include "web_server/clistenmessage.h"
+
+#include "dispatcher/sync/dpclient_c.h"
 
 void SignalHandle(int n_sig) {
   web::CListenMessage::Instance()->Stop();
@@ -21,8 +23,12 @@ int main(int argc, char *argv[]) {
   ShowVzLoggingAlways();
 #endif
 
+  // dp
+  DpClient_Init(DEF_DP_SRV_IP, DEF_DP_SRV_PORT);
+  // kvdb
+  Kvdb_Start(DEF_KVDB_SRV_IP, DEF_KVDB_SRV_PORT);
+
   bool b_ret = web::CListenMessage::Instance()->Start(
-                 DEF_DP_SRV_IP, DEF_DP_SRV_PORT,
                  DEF_WEB_SRV_PORT, DEF_WEB_SRV_PATH);
   while (b_ret) {
     web::CListenMessage::Instance()->RunLoop();

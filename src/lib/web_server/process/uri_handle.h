@@ -8,7 +8,8 @@
 #include "vzbase/base/basictypes.h"
 
 #include <string>
-#include <json/json.h>
+
+#include "json/json.h"
 
 #include "web_server/base/mongoose.h"
 
@@ -17,16 +18,40 @@ namespace web {
 extern "C" {
 #endif
 
-extern bool parse_request(std::string         &s_msg,
-                          unsigned int        &n_id,
-                          Json::Value         &j_root,
+#define SESSION_COOKIE_NAME     "mgs"
+#define SESSION_TTL             30.0
+#define SESSION_CHECK_INTERVAL  5.0
+#define USERNAME_SIZE           32
+
+typedef struct _TAG_WEB_SESSION {
+  uint64 id;
+  double created;
+  double last_used;
+  char   username[USERNAME_SIZE];
+  int32  lucky_number;
+} TAG_WEB_SESSION;
+
+#define SESSION_COUNT 10
+extern TAG_WEB_SESSION k_session[SESSION_COUNT];
+
+extern TAG_WEB_SESSION *get_session(struct http_message *hm);
+extern void             destroy_session(TAG_WEB_SESSION *s);
+extern TAG_WEB_SESSION *create_session(const char *usernmae,
+                                       const struct http_message *hm);
+extern void             check_sessions(void);
+
+//////////////////////////////////////////////////////////////////////////
+extern bool parse_request(std::string         &smsg,
+                          unsigned int        &nid,
+                          Json::Value         &jroot,
                           struct http_message *hm);
 
 extern void send_response(struct mg_connection *nc,
-                          const std::string    &s_msg,
-                          int                   n_id,
-                          int                   n_state,
-                          const Json::Value    &j_body);
+                          const std::string    &smsg,
+                          int                   nid,
+                          int                   nstate,
+                          const Json::Value    &jbody,
+                          const std::string     extra_header="");
 
 ///用户操作////////////////////////////////////////////////////////////////
 // 登陆验证

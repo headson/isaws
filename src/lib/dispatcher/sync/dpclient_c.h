@@ -249,6 +249,13 @@ EXPORT_DLL int Kvdb_GetKeyToBuffer(const char *p_key, int n_key,
 *Parameters  :
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
+EXPORT_DLL int Kvdb_GetKeyToString(const char *p_key, int n_key, void *p_string);
+
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
 EXPORT_DLL int Kvdb_GetKeyAbsolutelyToBuffer(const char *p_key, int n_key,
     char *p_value, unsigned int n_value);
 
@@ -299,6 +306,13 @@ EXPORT_DLL int SKvdb_GetKeyAbsolutely(const char *p_key, int n_key,
 ************************************************************************/
 EXPORT_DLL int SKvdb_GetKeyToBuffer(const char *p_key, int n_key,
                                     char *p_value, unsigned int n_value);
+
+/************************************************************************
+*Description : 通过键值获取数据
+*Parameters  :
+*Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
+************************************************************************/
+EXPORT_DLL int SKvdb_GetKeyToString(const char *p_key, int n_key, void *p_string);
 
 /************************************************************************
 *Description : 通过键值获取数据
