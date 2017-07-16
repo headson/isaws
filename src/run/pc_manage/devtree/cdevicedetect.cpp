@@ -31,7 +31,7 @@ bool CDeviceDetect::Start() {
 bool CDeviceDetect::Detect() {
   if (mcast_sock_) {
     Json::Value jroot;
-    jroot[MSG_CMD]  = MSG_SYSC_GET_DEVINFO;
+    jroot[MSG_CMD]  = MSG_SYSC_GET_INFO;
     jroot[MSG_ID]   = 1234567;
     jroot[MSG_BODY] = "";
 
@@ -79,9 +79,9 @@ int32 CDeviceDetect::HandleRecvPacket(vzconn::VSocket *p_cli,
   }
 
   std::string cmd_ = jroot[MSG_CMD].asString();
-  if (cmd_.compare(MSG_SYSC_GET_DEVINFO)) {     // 获取设备信息
+  if (cmd_.compare(MSG_SYSC_GET_INFO)) {     // 获取设备信息
     OnGetDevInfo(jroot);
-  } else if (cmd_.compare(MSG_SYSC_SET_DEVINFO)) {
+  } else if (cmd_.compare(MSG_SYSC_SET_INFO)) {
 
   }
   return 0;

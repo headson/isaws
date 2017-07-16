@@ -161,6 +161,11 @@ void CListenMessage::OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp) {
     if (SetDevInfo(jreq[MSG_BODY])) {
       jresp[MSG_STATE] = RET_SUCCESS;
     }
+  } else if (0 == strncmp(dmp->method, MSG_SYSC_GET_INFO, dmp->method_size)) {
+    breply = true;
+    if (GetDevInfo(jreq[MSG_BODY])) {
+      jresp[MSG_STATE] = RET_SUCCESS;
+    }
   }
 
   if (breply) {

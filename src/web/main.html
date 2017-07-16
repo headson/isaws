@@ -8,31 +8,41 @@
     <script src="js/utf8.js"></script>
 
     <style>
-        body {
-            margin: 0;
-            padding: 0;
+        #container {
+            width: 1000px;
+            height: 100%;
         }
+
+        .main {
+            position: absolute;
+            left: 50%;
+            margin-left: -500px;
+        }
+
         #menu {
-            position:absolute;
-            width:200px;
-            height:100%;
-            background: #eee;
+            position: absolute;
+            width: 200px;
+            height: 100%;
+            background-color: #3992d0;
         }
+
         #center {
-            position:absolute;
+            position: absolute;
             left: 220px;
-            height:100%;
+            width: 780px;
+            height: 100%;
         }
     </style>
 </head>
 
-<p><h1 class="title" align="center">PC-Manage</h1></p>
-<hr>
+<body>
+<div id="container" class="main">
+    <p>
+    <h1 class="title" align="center">PC-Manage</h1></p>
+    <hr/>
 
-<div class="">
-    <div id="menu" class="left">
+    <div id="menu">
         <dl class="live_stream">
-            <hr/>
             <dt><a href="#" onclick="a_jump_html('page/preview.html');return false;">实时预览</a></dt>
             <p/>
 
@@ -58,14 +68,14 @@
         </dl>
     </div>
 
-    <div id="center" class="right">
+    <div id="center">
         <h1>you are welcome!</h1>
     </div>
 </div>
 
 <script>
   function a_jump_html(url) {
-    $("#center").load(url, function(response, status, xhr) {
+    $('#center').load(url, function(response, status, xhr) {
       $('#center').html(response);
     });
   }

@@ -8,47 +8,79 @@
     <script src="js/utf8.js"></script>
 
     <style>
-        body {
-            margin: 0;
-            padding: 0;
+        #dev_info {
+            width: 260px;
+            height: 100%;
+        }
+        .dev_main {
+            position: absolute;
+            left: 50%;
+            margin-left: -130px;
         }
     </style>
 </head>
 
 <body>
-<div id="container" class="center" align="center">
+<div id="dev_info" class="dev_main">
     <br/><br/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
-    设备名称: <input type="text" class="text" id="dev_name"/><br/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/><p/>
+    设备类型: <input type="text" class="text" id="dev_type"/><p/>
+    软件版本: <input type="text" class="text" id="sw_ver"/><p/>
+    硬件版本: <input type="text" class="text" id="hw_ver"/><p/>
+    算法版本: <input type="text" class="text" id="iva_ver"/><p/>
+    WEB端口: <input type="text" class="text" id="web_port"/><p/>
+    RTSP端口: <input type="text" class="text" id="rtsp_port"/><p/>
+    磁盘大小: <input type="text" class="text" id="disk_size"/><p/>
+    DHCP使能: <input type="checkbox" class="checkbox" id="dhcp_en"/><p/>
+    IP地址: <input type="text" class="text" id="ip_addr"/><p/>
+    掩码: <input type="text" class="text" id="netmask"/><p/>
+    网关: <input type="text" class="text" id="gateway"/><p/>
+    DNS: <input type="text" class="text" id="dns_addr"/><p/>
+    MAC地址: <input type="text" class="text" id="phy_mac"/><p/>
 
-    <div align="right">
+    <div>
         <input type="button" class="btn" value="保存修改" id="save_btn"/>
     </div>
 </div>
+
 <script>
   function get_devinfo() {
-    alert('窗口准备好了!');
+    var req = {};
+    req.cmd = 'get_devinfo';
+    req.id = 1;
+    req.body = {};
+
+    var jsonstr = JSON.stringify(req);
+    $.ajax({
+      type: 'POST',
+      url: '/get_devinfo',
+      dataType: 'text',
+      data: jsonstr,
+      success: function(ajaxdata) {
+        var jresp = eval('(' + ajaxdata + ')');
+        if (jresp.state != 0) {
+          alert('获取设备信息错误!');
+        } else {
+          $("#dev_name").html(jresp.body.dev_name);
+          $("#dev_type").html(jresp.body.dev_type);
+          $("#sw_ver").html(jresp.body.sw_ver);
+        }
+      },
+    });
   }
 
   var is_ready = false;
-  $(function() {
+  $(document).ready(function() {
     $(window).ready(function() {
       if (is_ready == false) {
-//          alert("document ready");
+        alert("asdasdsa");
+        get_devinfo();
         is_ready = true;
       }
     });
-  });
 
+    $("#save_btn").click(get_devinfo);
+  });
 </script>
 
 </body>

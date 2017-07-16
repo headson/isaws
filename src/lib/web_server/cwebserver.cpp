@@ -18,7 +18,8 @@ static struct mg_serve_http_opts s_web_def_opts_;
 /* Return      :
 /************************************************************************/
 static void register_http_endpoint(struct mg_connection *nc) {
-  mg_register_http_endpoint(nc, "/login_req", uri_hdl_login);
+  mg_register_http_endpoint(nc, "/login_req",     uri_hdl_login);
+  mg_register_http_endpoint(nc, "/get_devinfo",   uri_hdl_get_info);
 }
 
 CWebServer::CWebServer()

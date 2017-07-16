@@ -140,6 +140,14 @@ void send_response(struct mg_connection *nc,
   mg_send(nc, s_resp.c_str(), s_resp.length());
 }
 
+void web::dpc_msg_callback(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
+  if (0 == memcmp(dmp->method, MSG_SYSC_GET_INFO, dmp->method_size)) {
+    if (p_usr_arg) {
+      ((std::string*)p_usr_arg)->append(dmp->data, dmp->data_size);
+    }
+  }
+}
+
 #ifdef __cplusplus
 }
 }  // namespace web

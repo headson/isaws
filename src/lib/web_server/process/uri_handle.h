@@ -12,6 +12,7 @@
 #include "json/json.h"
 
 #include "web_server/base/mongoose.h"
+#include "dispatcher/sync/dpclient_c.h"
 
 #ifdef __cplusplus
 namespace web {
@@ -53,7 +54,11 @@ extern void send_response(struct mg_connection *nc,
                           const Json::Value    &jbody,
                           const std::string     extra_header="");
 
-///用户操作////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////
+extern void dpc_msg_callback(
+  DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
+
+///用户操作///////////////////////////////////////////////////////////////
 // 登陆验证
 extern void uri_hdl_login(struct mg_connection *nc, int ev, void *ev_data);
 
@@ -70,9 +75,12 @@ extern void uri_hdl_user_cfg(struct mg_connection *nc, int ev, void *ev_data);
 // 手动矫正时间
 extern void uri_hdl_time_cfg(struct mg_connection *nc, int ev, void *ev_data);
 
-///时间配置////////////////////////////////////////////////////////////////
-// 手动矫正时间
-extern void uri_hdl_time_cfg(struct mg_connection *nc, int ev, void *ev_data);
+///设备信息////////////////////////////////////////////////////////////////
+// 获取设备信息
+extern void uri_hdl_get_info(struct mg_connection *nc, int ev, void *ev_data);
+
+// 设置设备信息
+extern void uri_hdl_set_info(struct mg_connection *nc, int ev, void *ev_data);
 
 #ifdef __cplusplus
 }
