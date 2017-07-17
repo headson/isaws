@@ -16,7 +16,10 @@
 namespace sys {
 
 static const char  *K_METHOD_SET[] = {
-  DP_SYS_CONFIG,
+  MSG_GET_DEVINFO,
+  MSG_SET_DEVINFO,
+  MSG_ADDR_CHANGE,
+  MSG_SET_HWCLOCK
 };
 
 CListenMessage::CListenMessage()
@@ -35,7 +38,7 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start(const char *s_dp_ip, unsigned short n_dp_port) {
+bool CListenMessage::Start() {
   bool b_ret = false;
 
   GetHwInfo();  // 获取系统信息
@@ -80,8 +83,6 @@ bool CListenMessage::Start(const char *s_dp_ip, unsigned short n_dp_port) {
   }
 
   // dp client
-  DpClient_Init(s_dp_ip, n_dp_port);
-
   vzconn::EventService *p_evt_srv =
     thread_fast_->socketserver()->GetEvtService();
   dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
@@ -151,19 +152,21 @@ void CListenMessage::OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp) {
   jresp[MSG_STATE] = RET_FAILED;
 
   bool breply = false; // 返回
-  if (0 == strncmp(dmp->method, MSG_IVAC_GET_INFO, dmp->method_size)) {
+  if (0 == strncmp(dmp->method, MSG_GET_IVAINFO, dmp->method_size)) {
     // 算法信息
     if (jreq[MSG_BODY]["version"].isString()) {
       sys_info_.iva_ver = jreq[MSG_BODY]["version"].asString();
     }
-  } else if (0 == strncmp(dmp->method, MSG_SYSC_SET_INFO, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_SET_DEVINFO, dmp->method_size)) {
     breply = true;
     if (SetDevInfo(jreq[MSG_BODY])) {
       jresp[MSG_STATE] = RET_SUCCESS;
     }
-  } else if (0 == strncmp(dmp->method, MSG_SYSC_GET_INFO, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_GET_DEVINFO, dmp->method_size)) {
     breply = true;
-    if (GetDevInfo(jreq[MSG_BODY])) {
+    Json::Value jbody;
+    if (GetDevInfo(jbody)) {
+      jresp[MSG_BODY] = jbody;
       jresp[MSG_STATE] = RET_SUCCESS;
     }
   }
@@ -233,7 +236,7 @@ void CListenMessage::GetHwInfo() {
   sys_info_.hw_ver    = HW_VERSION_;
 
   // dp获取算法信息
-  DpClient_SendDpRequest(MSG_IVAC_GET_INFO, 0,
+  DpClient_SendDpRequest(MSG_GET_IVAINFO, 0,
                          NULL, 0,
                          dpcli_poll_msg_cb, this,
                          DEF_TIMEOUT_MSEC);
@@ -260,11 +263,11 @@ void CListenMessage::GetHwInfo() {
   if (jroot["ip_addr"].isString() &&
       jroot["netmask"].isString() &&
       jroot["gateway"].isString() &&
-      jroot["dns"].isString()) {
+      jroot["dns_addr"].isString()) {
     CNetCtrl::SetNet(inet_addr(jroot["ip_addr"].asCString()),
                      inet_addr(jroot["netmask"].asCString()),
                      inet_addr(jroot["gateway"].asCString()),
-                     inet_addr(jroot["dns"].asCString())); // 配置参数
+                     inet_addr(jroot["dns_addr"].asCString())); // 配置参数
   }
 }
 
@@ -274,12 +277,12 @@ bool CListenMessage::GetDevInfo(Json::Value &j_body) {
   j_body["sw_ver"]    = sys_info_.sw_ver;
   j_body["hw_ver"]    = sys_info_.hw_ver;
   j_body["iva_ver"]   = sys_info_.iva_ver;
-  j_body["dhcp"]      = sys_info_.dhcp_en;
-  j_body["ip_addr"]   = inet_ntoa(*((struct in_addr*)&CNetCtrl::ip_));
+  j_body["dhcp_en"]   = sys_info_.dhcp_en;
+  j_body["ip_addr"]   = inet_ntoa(*((struct in_addr*)&CNetCtrl::ip_addr_));
   j_body["netmask"]   = inet_ntoa(*((struct in_addr*)&CNetCtrl::netmask_));
   j_body["gateway"]   = inet_ntoa(*((struct in_addr*)&CNetCtrl::gateway_));
-  j_body["dns"]       = inet_ntoa(*((struct in_addr*)&CNetCtrl::dns_));
-  j_body["mac"]       = CNetCtrl::mac_;
+  j_body["dns_addr"]  = inet_ntoa(*((struct in_addr*)&CNetCtrl::dns_addr_));
+  j_body["phy_mac"]   = CNetCtrl::phy_mac_;
   j_body["web_port"]  = sys_info_.web_port;
   j_body["rtsp_port"] = sys_info_.rtsp_port;
   j_body["rec_size"]  = sys_info_.rec_size;
@@ -288,46 +291,79 @@ bool CListenMessage::GetDevInfo(Json::Value &j_body) {
 }
 
 bool CListenMessage::SetDevInfo(const Json::Value &j_body) {
-  if (j_body["dev_name"].isString()) {
-    sys_info_.dev_name    = j_body["dev_name"].asString();
+  int bsave = 0;
+
+  if (j_body["dev_name"].isString() &&
+      sys_info_.dev_name != j_body["dev_name"].asString()) {
+    bsave++;
+    sys_info_.dev_name = j_body["dev_name"].asString();
   }
 
-  if (j_body["ins_addr"].isString()) {
+  if (j_body["ins_addr"].isString() &&
+      sys_info_.ins_addr != j_body["ins_addr"].asString()) {
+    bsave++;
     sys_info_.ins_addr    = j_body["ins_addr"].asString();
   }
 
-  if (j_body["dev_type"].isInt()) {
+  if (j_body["dev_type"].isInt() &&
+      sys_info_.dev_type != j_body["dev_type"].asUInt()) {
+    bsave++;
     sys_info_.dev_type    = j_body["dev_type"].asUInt();
   }
 
-  if (sys_info_.web_port != j_body["web_port"].asUInt()) {
+  if (j_body["web_port"].isInt() &&
+      sys_info_.web_port != j_body["web_port"].asInt()) {
+    bsave++;
+    sys_info_.web_port = j_body["web_port"].asInt();
   }
-  if (sys_info_.rtsp_port != j_body["rtsp_port"].asUInt()) {
+  if (j_body["rtsp_port"].isInt() &&
+      sys_info_.rtsp_port != j_body["rtsp_port"].asInt()) {
+    bsave++;
+    sys_info_.rtsp_port = j_body["rtsp_port"].asInt();
   }
 
   // dhcp判断
-  if (0 < j_body["dhcp"].asInt()) {
-
-  } else {
-    if (j_body["ip_addr"].isString() &&
-      j_body["netmask"].isString() &&
-      j_body["gateway"].isString() &&
-      j_body["dns"].isString()) {
-        CNetCtrl::SetNet(inet_addr(j_body["ip_addr"].asCString()),
-          inet_addr(j_body["netmask"].asCString()),
-          inet_addr(j_body["gateway"].asCString()),
-          inet_addr(j_body["dns"].asCString())); // 配置参数
+  if (j_body["dhcp_en"].isInt()) {
+    if (j_body["dhcp_en"].asInt()) {
+      if (sys_info_.dhcp_en != 1) {
+        bsave++;
+        sys_info_.dhcp_en = 1;
+      }
+    } else {
+      if (sys_info_.dhcp_en != 0) {
+        bsave++;
+        sys_info_.dhcp_en = 0;
+      }
     }
   }
-  
-  std::ofstream ofs;
-#ifdef _WIN32
-  ofs.open("./system.json");
-#else
-  ofs.open("/mnt/etc/system.json");
-#endif
-  ofs<<j_body.toStyledString();
-  ofs.close();
+  if (sys_info_.dhcp_en == 0) {
+    if (j_body["ip_addr"].isString() &&
+        j_body["netmask"].isString() &&
+        j_body["gateway"].isString() &&
+        j_body["dns_addr"].isString()) {
+      bool bret = CNetCtrl::SetNet(inet_addr(j_body["ip_addr"].asCString()),
+                                   inet_addr(j_body["netmask"].asCString()),
+                                   inet_addr(j_body["gateway"].asCString()),
+                                   inet_addr(j_body["dns_addr"].asCString())); // 配置参数
+      if (bret) {
+        bsave++;
+      }
+    }
+  }
+
+  if (bsave == 0) {
+    return true;
+  }
+
+  FILE *file = fopen("./system.json", "wt+");
+  if (file) {
+    std::string ss = j_body.toStyledString();
+
+    fwrite(ss.c_str(), 1, ss.size(), file);
+    fclose(file);
+  }
+
+  GetHwInfo();
   return true;
 }
 

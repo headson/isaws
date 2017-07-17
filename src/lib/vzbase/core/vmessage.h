@@ -25,7 +25,7 @@
 // WEB Server 监听端口和网页存储路径
 #define DEF_WEB_SRV_PORT      8000
 #ifdef WIN32
-#define DEF_WEB_SRV_PATH      "E:\\workspace\\git_work\\isaws\\src\\web"
+#define DEF_WEB_SRV_PATH      "C:\\tools\\web"
 #else
 #define DEF_WEB_SRV_PATH      "mnt/etc/web"
 #endif
@@ -70,25 +70,21 @@ typedef enum _MSG_RET {
   RET_JSON_PARSE,
   RET_USERNAME,
   RET_PASSWORD,
+  RET_DP_REPLY_FAILED,
 } MSG_RET;
 //////////////////////////////////////////////////////////////////////////
+#define MSG_ADDR_CHANGE       "addr_change"       // 地址改变
+#define MSG_TIME_CHANGE       "time_change"       // 时间改变
 
-#define DP_SYS_CONFIG         "dp_sys_config"     // 系统参数
+#define MSG_GET_DEVINFO       "get_devinfo"       // 获取设备信息
+#define MSG_SET_DEVINFO       "set_devinfo"       // 设置设备信息
 
-#define MSG_SYSC_GET_INFO     "get_devinfo"       // 获取设备信息
-#define MSG_SYSC_SET_INFO     "set_devinfo"       // 设置设备信息
-#define MSG_SYSC_ADDR_CHANGE  "addr_change"       // 地址改变
-
-#define MSG_SYSC_HWCLOCK      "set_hwclock"       // 设置硬件时间
-#define MSG_SYSC_TIME_CHANGE  "time_change"       // 时间改变
-
-#define DP_NET_MODIFY         "dp_net_modify"     // 网络修改消息
+#define MSG_SET_HWCLOCK       "set_hwclock"       // 设置硬件时间
 
 //////////////////////////////////////////////////////////////////////////
-#define DP_IVA_CONFIG         "dp_iva_config"     // 算法参数
-#define MSG_IVAC_GET_INFO     "get_iva_info"      // 
+#define MSG_GET_IVAINFO       "get_ivainfo"       // 
 
-#define DP_IVA_EVENT          "dp_iva_event"      // 算法事件
+#define MSG_CATCH_EVENT       "catch_event"        // 算法事件
 
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_KEY_USER         "key_user"     // kvdb获取用户

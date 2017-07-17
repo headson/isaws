@@ -28,7 +28,7 @@ class CListenMessage : public vzbase::noncopyable {
  public:
   static CListenMessage *Instance();
 
-  bool  Start(const char *s_dp_ip, unsigned short n_dp_port);
+  bool  Start();
   void  Stop();
 
   void  RunLoop();

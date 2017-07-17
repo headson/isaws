@@ -88,10 +88,10 @@ class CEvtTcpClient : public VSocket {
   EVT_IO& GetEvtSend() {
     return c_evt_send_;
   }
-  CSockRecvData& GetRecvData() {
+  CBlockBuffer& GetRecvData() {
     return c_recv_data_;
   }
-  CSockSendData& GetSendData() {
+  CBlockBuffer& GetSendData() {
     return c_send_data_;
   }
 
@@ -100,10 +100,10 @@ class CEvtTcpClient : public VSocket {
 
  protected:
   EVT_IO            c_evt_recv_;    // 接收事件
-  CSockRecvData     c_recv_data_;   // 接收buffer
+  CBlockBuffer      c_recv_data_;   // 接收buffer
 
   EVT_IO            c_evt_send_;    // 发送事件
-  CSockSendData     c_send_data_;   // 发送buffer
+  CBlockBuffer      c_send_data_;   // 发送buffer
 };
 
 }  // namespace vzconn

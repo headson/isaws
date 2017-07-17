@@ -77,7 +77,7 @@ bool CHwclock::ResetHwclock(Json::Value &jbody) {
         system("hwclock -uw");  // hwclock 还不能正常运行
 #endif  // _WIN32
 
-        DpClient_SendDpMessage(MSG_SYSC_TIME_CHANGE, 0,
+        DpClient_SendDpMessage(MSG_TIME_CHANGE, 0,
                                (const char*)&now, sizeof(time_t));
         return true;
       }
@@ -108,7 +108,7 @@ void CHwclock::OnMessage(vzbase::Message* msg) {
     LOG(L_INFO) << "diff_t=" << diff_t << ",diff_c=" << diff_c;
     if (diff_t != diff_c) {
       LOG(L_INFO) << "SendDpMessage,t_begin=" << t_begin;
-      DpClient_SendDpMessage(MSG_SYSC_TIME_CHANGE, 0,
+      DpClient_SendDpMessage(MSG_TIME_CHANGE, 0,
                              (const char*)&t_begin, sizeof(time_t));
     }
   }

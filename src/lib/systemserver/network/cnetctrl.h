@@ -44,7 +44,7 @@ class CNetCtrl : public vzbase::MessageHandler,
   }
 
  public:
-  static void SetNet(in_addr_t   ip,
+  static bool SetNet(in_addr_t   ip,
                      in_addr_t   netmask,
                      in_addr_t   gateway,
                      in_addr_t   dns);
@@ -54,11 +54,11 @@ class CNetCtrl : public vzbase::MessageHandler,
   vzbase::Thread       *thread_fast_;
 
  public:
-  static in_addr_t    ip_;          // inet_addr() inet_ntoa
+  static in_addr_t    ip_addr_;          // inet_addr() inet_ntoa
   static in_addr_t    netmask_;     //
   static in_addr_t    gateway_;     //
-  static in_addr_t    dns_;         //
-  static std::string  mac_;         // 12:23:34:45:56:67
+  static in_addr_t    dns_addr_;         //
+  static std::string  phy_mac_;         // 12:23:34:45:56:67
 };
 
 }  // namespace sys

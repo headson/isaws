@@ -19,7 +19,7 @@ namespace web {
 extern "C" {
 #endif
 
-void uri_hdl_get_info(struct mg_connection *nc, int ev, void *ev_data) {
+void uri_hdl_config(struct mg_connection *nc, int ev, void *ev_data) {
   int nstate = RET_JSON_PARSE;
 
   std::string smsg = "";
@@ -32,16 +32,22 @@ void uri_hdl_get_info(struct mg_connection *nc, int ev, void *ev_data) {
   }
 
   std::string sresp = "";
-  std::string sjson = jreq[MSG_BODY].toStyledString();
-  int ret = DpClient_SendDpRequest(MSG_SYSC_GET_INFO, 0,
-                                   sjson.c_str(), sjson.size(),
-                                   dpc_msg_callback, &sresp,
-                                   DEF_TIMEOUT_MSEC);
+  std::string sjson = jreq.toStyledString();
+  int ret = DpClient_SendDpReqToString(smsg.c_str(),
+                                       0,
+                                       sjson.c_str(),
+                                       sjson.size(),
+                                       &sresp,
+                                       DEF_TIMEOUT_MSEC);
   if (ret == VZNETDP_SUCCEED) {
     Json::Reader jread;
-    if (jread.parse(sresp, jresp)) {
-      jresp = jresp[MSG_BODY];
+    Json::Value  jroot;
+    if (jread.parse(sresp, jroot)) {
+      jresp = jroot[MSG_BODY];
+      nstate = RET_SUCCESS;
     }
+  } else {
+    nstate = RET_DP_REPLY_FAILED;
   }
 
   send_response(nc, smsg, nid, nstate, jresp);

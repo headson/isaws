@@ -25,7 +25,8 @@ typedef void* DPPollHandle;
 typedef void(*DpClient_MessageCallback)(
   DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
 
-#define DP_CLIENT_DISCONNECT  101   // 断开链接,需要重连
+#define DP_CLIENT_DISCONNECT    101   // 断开链接,需要重连
+#define DP_POLL_ISNOT_REG_MSG   102   // 没注册消息,需要重连
 typedef void(*DpClient_PollStateCallback)(
   DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg);
 

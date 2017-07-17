@@ -186,13 +186,26 @@ EXPORT_DLL int DpClient_SendDpRequest(const char *method,
   return n_ret;
 }
 
-EXPORT_DLL int DpClient_SendDpReqToString(const char *p_method, 
-                                          unsigned char n_session_id, 
-                                          const char *p_data,
-                                          int n_data, 
-                                          void *p_reply, 
-                                          unsigned int n_timeout) {
+EXPORT_DLL int DpClient_SendDpReqToString(const char *p_method,
+    unsigned char n_session_id,
+    const char *p_data,
+    int n_data,
+    void *p_reply,
+    unsigned int n_timeout) {
+  int32 n_ret = 0;
+  CDpClient* p_tcp = GetDpCli();
+  if (!p_tcp) {
+    LOG(L_ERROR) << "get tls client failed.";
+    return VZNETDP_FAILURE;
+  }
 
+  n_ret = p_tcp->SendDpRequest(p_method,
+                               n_session_id,
+                               p_data,
+                               n_data,
+                               (std::string*)p_reply,
+                               n_timeout);
+  return n_ret;
 }
 
 EXPORT_DLL int DpClient_SendDpReply(const char    *method,
@@ -363,7 +376,7 @@ EXPORT_DLL EventSignal Event_CreateSignalHandle(
     return NULL;
   }
 
-  p_evt_io->Init((vzconn::EVT_LOOP*)p_evt_service, 
+  p_evt_io->Init((vzconn::EVT_LOOP*)p_evt_service,
                  (vzconn::EVT_FUNC)p_callback, p_user_arg);
   int32 n_ret = p_evt_io->Start(n_signal_no, EV_SIGNAL | EVT_PERSIST);
   if (n_ret != 0) {
@@ -467,8 +480,7 @@ EXPORT_DLL int Kvdb_GetKeyToBuffer(const char   *p_key,
   return KVDB_RET_FAILURE;
 }
 
-EXPORT_DLL int Kvdb_GetKeyToString(const char *p_key, int n_key, void *p_string)
-{
+EXPORT_DLL int Kvdb_GetKeyToString(const char *p_key, int n_key, void *p_string) {
   if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
@@ -607,8 +619,7 @@ EXPORT_DLL int SKvdb_GetKeyToBuffer(const char   *p_key,
   return KVDB_RET_FAILURE;
 }
 
-EXPORT_DLL int SKvdb_GetKeyToString(const char *p_key, int n_key, void *p_string)
-{
+EXPORT_DLL int SKvdb_GetKeyToString(const char *p_key, int n_key, void *p_string) {
   if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }

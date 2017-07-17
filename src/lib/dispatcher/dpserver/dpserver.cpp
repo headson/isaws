@@ -73,12 +73,12 @@ int32 DpServer::HandleRecvPacket(vzconn::VSocket *p_cli,
     LOG(L_ERROR) << "No session Handle";
     return -1;
   }
-  LOG(L_INFO) << "recv packet length " << n_data
-              << " type " << dmsg->type
-              << " id " << vzconn::NetworkToHost32(dmsg->id)
-              << " session connection " << (uint32)session->vz_socket_
-              << " connection " << (uint32)p_cli
-              << " session id " << session->session_id_;
+  //LOG(L_INFO) << "recv packet length " << n_data
+  //            << " type " << dmsg->type
+  //            << " id " << vzconn::NetworkToHost32(dmsg->id)
+  //            << " session connection " << (uint32)session->vz_socket_
+  //            << " connection " << (uint32)p_cli
+  //            << " session id " << session->session_id_;
   //if (dmsg->type == TYPE_MESSAGE
   //    || dmsg->type == TYPE_REQUEST
   //    || dmsg->type == TYPE_REPLY) {
@@ -118,10 +118,10 @@ uint32 DpServer::DispatcherSession(Session *session,
                                    const uint8 *data,
                                    uint32 data_size) {
 
-  LOG(L_INFO) << "send packet length " << data_size
-              << " type " << dmsg->type
-              << " id " << vzconn::NetworkToHost32(dmsg->id)
-              << "  " << (dmsg->id & 0xff);
+  //LOG(L_INFO) << "send packet length " << data_size
+  //            << " type " << dmsg->type
+  //            << " id " << vzconn::NetworkToHost32(dmsg->id)
+  //            << "  " << (dmsg->id & 0xff);
 
   uint32 handler_size = 0;
   for (int i = 0; i < MAX_SESSION_SIZE; i++) {
@@ -135,11 +135,11 @@ uint32 DpServer::DispatcherSession(Session *session,
           return handler_size;
         }
       }
-    } else {
-      if (session_socket_map_[i].session != NULL) {
-        LOG(L_ERROR) << "the same session id "<<i;
-      }
-    }
+    }/* else {
+     if (session_socket_map_[i].session != NULL) {
+     LOG(L_ERROR) << "the same session id "<<i;
+     }
+     }*/
   }
   return handler_size;
 }
@@ -202,7 +202,7 @@ bool DpServer::AddSession(uint8 n_idx,
     session_socket_map_[n_idx].socket  = socket;
     return true;
   } else {
-    LOG(L_ERROR) << "session size big than MAX_METHOD_COUNT = 128";
+    LOG(L_ERROR) << "session size big than MAX_METHOD_COUNT " << MAX_METHOD_COUNT;
   }
   return false;
 }

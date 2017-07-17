@@ -3,15 +3,16 @@
     <meta charset="UTF-8">
     <title>PC-Manage</title>
 
-    <script src="js/jquery-1.11.2.min.js"></script>
-    <script src="js/base64.js"></script>
-    <script src="js/utf8.js"></script>
+    <script src="../js/jquery-1.11.2.min.js"></script>
+    <script src="../js/base64.js"></script>
+    <script src="../js/utf8.js"></script>
 
     <style>
         #dev_info {
             width: 260px;
             height: 100%;
         }
+
         .dev_main {
             position: absolute;
             left: 50%;
@@ -23,20 +24,34 @@
 <body>
 <div id="dev_info" class="dev_main">
     <br/><br/>
-    设备名称: <input type="text" class="text" id="dev_name"/><p/>
-    设备类型: <input type="text" class="text" id="dev_type"/><p/>
-    软件版本: <input type="text" class="text" id="sw_ver"/><p/>
-    硬件版本: <input type="text" class="text" id="hw_ver"/><p/>
-    算法版本: <input type="text" class="text" id="iva_ver"/><p/>
-    WEB端口: <input type="text" class="text" id="web_port"/><p/>
-    RTSP端口: <input type="text" class="text" id="rtsp_port"/><p/>
-    磁盘大小: <input type="text" class="text" id="disk_size"/><p/>
-    DHCP使能: <input type="checkbox" class="checkbox" id="dhcp_en"/><p/>
-    IP地址: <input type="text" class="text" id="ip_addr"/><p/>
-    掩码: <input type="text" class="text" id="netmask"/><p/>
-    网关: <input type="text" class="text" id="gateway"/><p/>
-    DNS: <input type="text" class="text" id="dns_addr"/><p/>
-    MAC地址: <input type="text" class="text" id="phy_mac"/><p/>
+    设备名称: <input type="text" class="text" id="dev_name"/>
+    <p/>
+    设备类型: <input type="text" class="text" id="dev_type"/>
+    <p/>
+    软件版本: <input type="text" class="text" id="sw_ver"/>
+    <p/>
+    硬件版本: <input type="text" class="text" id="hw_ver"/>
+    <p/>
+    算法版本: <input type="text" class="text" id="iva_ver"/>
+    <p/>
+    WEB端口: <input type="text" class="text" id="web_port"/>
+    <p/>
+    RTSP端口: <input type="text" class="text" id="rtsp_port"/>
+    <p/>
+    磁盘大小: <input type="text" class="text" id="disk_size"/>
+    <p/>
+    DHCP使能: <input type="checkbox" class="checkbox" id="dhcp_en"/>
+    <p/>
+    IP地址: <input type="text" class="text" id="ip_addr"/>
+    <p/>
+    掩码: <input type="text" class="text" id="netmask"/>
+    <p/>
+    网关: <input type="text" class="text" id="gateway"/>
+    <p/>
+    DNS: <input type="text" class="text" id="dns_addr"/>
+    <p/>
+    MAC地址: <input type="text" class="text" id="phy_mac"/>
+    <p/>
 
     <div>
         <input type="button" class="btn" value="保存修改" id="save_btn"/>
@@ -53,33 +68,87 @@
     var jsonstr = JSON.stringify(req);
     $.ajax({
       type: 'POST',
-      url: '/get_devinfo',
+      url: '/sys_config',
       dataType: 'text',
       data: jsonstr,
       success: function(ajaxdata) {
         var jresp = eval('(' + ajaxdata + ')');
-        if (jresp.state != 0) {
-          alert('获取设备信息错误!');
+        if (jresp.state == 0) {
+          $('#dev_name').val(jresp.body.dev_name);
+          $('#dev_type').val(jresp.body.dev_type);
+          $('#sw_ver').val(jresp.body.sw_ver);
+          $('#hw_ver').val(jresp.body.hw_ver);
+          $('#iva_ver').val(jresp.body.iva_ver);
+          $('#web_port').val(jresp.body.web_port);
+          $('#rtsp_port').val(jresp.body.rtsp_port);
+          $('#disk_size').val(jresp.body.disk_size);
+          if (jresp.body.dhcp_en == 1) {
+            $('#dhcp_en').attr('checked', 'true');
+          } else {
+            $('#dhcp_en').attr('checked', 'false');
+          }
+          $('#ip_addr').val(jresp.body.ip_addr);
+          $('#netmask').val(jresp.body.netmask);
+          $('#gateway').val(jresp.body.gateway);
+          $('#dns_addr').val(jresp.body.dns_addr);
+          $('#phy_mac').val(jresp.body.phy_mac);
         } else {
-          $("#dev_name").html(jresp.body.dev_name);
-          $("#dev_type").html(jresp.body.dev_type);
-          $("#sw_ver").html(jresp.body.sw_ver);
+          alert('获取设备参数错误!');
         }
       },
     });
   }
 
-  var is_ready = false;
+  function set_devinfo() {
+    var req = {};
+    req.cmd = 'set_devinfo';
+    req.id = 1;
+    req.body = {};
+    req.body.dev_name = $('#dev_name').val();
+    req.body.dev_type = parseInt($('#dev_type').val());
+    //req.body.sw_ver = $('#sw_ver').val();
+    //req.body.hw_ver = $('#hw_ver').val();
+    //req.body.iva_ver = $('#iva_ver').val();
+    req.body.web_port = parseInt($('#web_port').val());
+    req.body.rtsp_port = parseInt($('#rtsp_port').val());
+    //req.body.disk_size = $('#disk_size').val();
+    if($('#dhcp_en').attr('checked') ==true) {
+      req.body.dhcp_en = 1;
+    } else {
+      req.body.dhcp_en = 0;
+    }
+    req.body.ip_addr = $('#ip_addr').val();
+    req.body.netmask = $('#netmask').val();
+    req.body.gateway = $('#gateway').val();
+    req.body.dns_addr = $('#dns_addr').val();
+    //req.body.phy_mac = $('#phy_mac').val();
+
+    var jsonstr = JSON.stringify(req);
+    $.ajax({
+      type: 'POST',
+      url: '/sys_config',
+      dataType: 'text',
+      data: jsonstr,
+      success: function(ajaxdata) {
+        var jresp = eval('(' + ajaxdata + ')');
+        if (jresp.state == 0) {
+            get_devinfo();
+        } else {
+          alert('参数配置错误' + jresp.state);
+          get_devinfo();
+        }
+      },
+    });
+  }
+
   $(document).ready(function() {
     $(window).ready(function() {
-      if (is_ready == false) {
-        alert("asdasdsa");
-        get_devinfo();
-        is_ready = true;
-      }
+      get_devinfo();
     });
 
-    $("#save_btn").click(get_devinfo);
+    $('#save_btn').click(function() {
+      set_devinfo();
+    });
   });
 </script>
 

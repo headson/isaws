@@ -16,11 +16,12 @@ namespace sys {
 
 #define DEF_GET_PHY_ADDR 0x123456
 
-in_addr_t    CNetCtrl::ip_      = 0;
-in_addr_t    CNetCtrl::netmask_ = 0;
-in_addr_t    CNetCtrl::gateway_ = 0;
-in_addr_t    CNetCtrl::dns_     = 0;
-std::string  CNetCtrl::mac_     = "";
+in_addr_t    CNetCtrl::ip_addr_   = 0;
+in_addr_t    CNetCtrl::netmask_   = 0;
+in_addr_t    CNetCtrl::gateway_   = 0;
+in_addr_t    CNetCtrl::dns_addr_  = 0;
+
+std::string  CNetCtrl::phy_mac_   = "";
 
 //////////////////////////////////////////////////////////////////////////
 CNetCtrl::CNetCtrl(vzbase::Thread *thread_fast)
@@ -87,19 +88,19 @@ void CNetCtrl::OnMessage(vzbase::Message* msg) {
         net_set_gateway(inet_addr("192.168.254.1"));
       }
     } else {
-      if (ip_ != ip) {
+      if (ip_addr_ != ip) {
         netmask_ = net_get_netmask(PHY_IF_NAME);
         gateway_ = net_get_gateway(PHY_IF_NAME);
-        dns_     = net_get_dns();
+        dns_addr_     = net_get_dns();
 
         char smac[20] = {0};
         net_get_hwaddr(PHY_IF_NAME, smac); 
-        mac_ = smac;
+        phy_mac_ = smac;
       }
-      ip_ = ip;
+      ip_addr_ = ip;
 
       static unsigned int i = 0;
-      if (inet_addr("192.168.254.254") != ip_) {
+      if (inet_addr("192.168.254.254") != ip_addr_) {
         // 闪灯频率 200ms
 
       } else {
@@ -127,7 +128,7 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
     return -1;
   }
   std::string s_type = jreq[MSG_CMD].asString();
-  if (0 == strncmp(s_type.c_str(), MSG_SYSC_GET_INFO, MSG_CMD_SIZE)) {
+  if (0 == strncmp(s_type.c_str(), MSG_GET_DEVINFO, MSG_CMD_SIZE)) {
     // 获取设备信息
     Json::Value j_resp;
     j_resp[MSG_CMD] = s_type;
@@ -144,7 +145,7 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
     sjson = j_resp.toStyledString();
     mcast_sock_->SendUdpData((uint8*)DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
                              (uint8*)sjson.c_str(), sjson.size());
-  } else if (0 == strncmp(s_type.c_str(), MSG_SYSC_SET_INFO, MSG_CMD_SIZE)) {
+  } else if (0 == strncmp(s_type.c_str(), MSG_SET_DEVINFO, MSG_CMD_SIZE)) {
     // 设置设备信息
     Json::Value j_resp;
     j_resp[MSG_CMD]  = s_type;
@@ -166,18 +167,18 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
   return 0;
 }
 
-void CNetCtrl::SetNet(in_addr_t   ip,
+bool CNetCtrl::SetNet(in_addr_t   ip,
                       in_addr_t   netmask,
                       in_addr_t   gateway,
                       in_addr_t   dns) {
   system("killall dhcpc");
 
   bool ip_change_ = false;
-  if (ip_ != ip) {
-    ip_ = ip;
+  if (ip_addr_ != ip) {
+    ip_addr_ = ip;
 #ifdef _WIN32
     LOG(L_WARNING) << "set ip addr "
-                   << inet_ntoa(*((struct in_addr*)&ip_));
+                   << inet_ntoa(*((struct in_addr*)&ip_addr_));
 #else
     net_set_ifaddr(PHY_IF_NAME, ip);
 #endif
@@ -207,20 +208,21 @@ void CNetCtrl::SetNet(in_addr_t   ip,
     ip_change_ = true;
   }
 
-  if (dns_ != dns) {
-    dns_ = dns;
+  if (dns_addr_ != dns) {
+    dns_addr_ = dns;
 #ifdef _WIN32
     LOG(L_WARNING) << "set dns_1 "
-                   << inet_ntoa(*((struct in_addr*)&dns_));
+                   << inet_ntoa(*((struct in_addr*)&dns_addr_));
 #else
-    net_set_dns(inet_ntoa(*((struct in_addr*)&dns_)));
+    net_set_dns(inet_ntoa(*((struct in_addr*)&dns_addr_)));
 #endif
     ip_change_ = true;
   }
 
   if (ip_change_) {
-    DpClient_SendDpMessage(MSG_SYSC_ADDR_CHANGE, 0, NULL, 0);
+    DpClient_SendDpMessage(MSG_ADDR_CHANGE, 0, NULL, 0);
   }
+  return ip_change_;
 }
 
 }  // namespace sys

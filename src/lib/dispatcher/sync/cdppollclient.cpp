@@ -179,8 +179,14 @@ int32 CDpPollClient::HandleRecvPacket(vzconn::VSocket *p_cli,
 }
 
 int32 CDpPollClient::OnEvtTimer() {
-  bool b_close = isClose();
-  if (b_close || had_reg_msg_ == 0) {
+  if (had_reg_msg_ == 0) {
+    had_reg_msg_  = 0;
+    if (p_state_cb_) {
+      p_state_cb_(this, DP_POLL_ISNOT_REG_MSG, p_state_usr_arg_);
+    }
+  }
+
+  if (isClose() || had_reg_msg_ == 0) {
     n_session_id_ = -1;
     had_reg_msg_  = 0;
     if (p_state_cb_) {

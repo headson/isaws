@@ -69,15 +69,13 @@
     </div>
 
     <div id="center">
-        <h1>you are welcome!</h1>
+        <iframe id="myframe" src="page/cfg_devinfo.html" width="100%" height="100%"></iframe>
     </div>
 </div>
 
 <script>
-  function a_jump_html(url) {
-    $('#center').load(url, function(response, status, xhr) {
-      $('#center').html(response);
-    });
+  function a_jump_html(new_url) {
+    document.getElementById("myframe").src = new_url;
   }
 </script>
 </body>

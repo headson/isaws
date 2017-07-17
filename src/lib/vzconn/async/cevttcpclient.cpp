@@ -167,15 +167,27 @@ bool CEvtTcpClient::Connect(const CInetAddr *p_remote_addr,
 int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
                                 uint32       n_data,
                                 uint16       e_flag) {
-  if (isOpen()) {
-    int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this,
-                    p_data,
-                    n_data,
-                    e_flag);
-    if (n_pkg < 0) {
-      LOG(L_ERROR) << "not enough buffer to packet the data";
-      return n_pkg;
+  if (isOpen() && cli_hdl_ptr_) {
+    uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
+    if (c_send_data_.FreeSize() < (n_data+n_head)) {
+      c_send_data_.Recycle();
+      if (c_send_data_.FreeSize() < (n_data+n_head)) {
+        c_send_data_.ReallocBuffer((n_data+n_head));
+      }
     }
+    if (c_send_data_.FreeSize() < (n_data+n_head)) {
+      return 0;
+    }
+
+    // 包头
+    int32 n_head_size = cli_hdl_ptr_->NetHeadPacket(
+                          c_send_data_.GetWritePtr(),
+                          c_send_data_.FreeSize(),
+                          n_data,
+                          e_flag);
+    c_send_data_.MoveWritePtr(n_head_size);
+    c_send_data_.WriteBytes((uint8_t*)p_data, n_data);
+
     // 打开事件
     if (c_send_data_.UsedSize() > 0) {
       int32 n_ret = c_evt_send_.Start(GetSocket(), EVT_WRITE | EVT_PERSIST);
@@ -183,7 +195,7 @@ int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
         c_evt_send_.ActiceEvent();
       }
     }
-    return n_pkg;
+    return (n_data+n_head);
   }
   return -1;
 }
@@ -191,15 +203,31 @@ int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
 int32 CEvtTcpClient::AsyncWrite(struct iovec iov[],
                                 uint32       n_iov,
                                 uint16       e_flag) {
-  if (isOpen()) {
-    int32_t n_pkg = c_send_data_.DataCacheToSendBuffer(this,
-                    iov,
-                    n_iov,
-                    e_flag);
-    if (n_pkg < 0) {
-      LOG(L_ERROR) << "not enough buffer to packet the data";
-      return n_pkg;
+  if (isOpen() && cli_hdl_ptr_) {
+    uint32 n_data = 0;
+    for (uint32 i = 0; i < n_iov; i++) {
+      n_data += iov[i].iov_len;
     }
+    uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
+    if (c_send_data_.FreeSize() < (n_data + n_head)) {
+      c_send_data_.Recycle();
+      if (c_send_data_.FreeSize() < (n_data + n_head)) {
+        c_send_data_.ReallocBuffer((n_data + n_head));
+      }
+    }
+    if (c_send_data_.FreeSize() < (n_data + n_head)) {
+      return 0;
+    }
+
+    // 包头
+    int32 n_head_size = cli_hdl_ptr_->NetHeadPacket(
+                          c_send_data_.GetWritePtr(),
+                          c_send_data_.FreeSize(),
+                          n_data,
+                          e_flag);
+    c_send_data_.MoveWritePtr(n_head_size);
+    c_send_data_.WriteBytes(iov, n_iov);
+
     // 打开事件
     if (c_send_data_.UsedSize() > 0) {
       int32 n_ret = c_evt_send_.Start(GetSocket(), EVT_WRITE | EVT_PERSIST);
@@ -207,7 +235,7 @@ int32 CEvtTcpClient::AsyncWrite(struct iovec iov[],
         c_evt_send_.ActiceEvent();
       }
     }
-    return n_pkg;
+    return (n_data + n_head);
   }
   return -1;
 }
@@ -226,14 +254,8 @@ int32 CEvtTcpClient::EvtRecv(SOCKET      fd,
 }
 
 int32 CEvtTcpClient::OnRecv() {
-#if 0
-  int32 n_recv = c_recv_data_.RecvData(this);
-  if (n_recv > 0) {
-    n_recv = c_recv_data_.ParseSplitData(this); // 通过回调反馈给用户层
-  }
-#else
   int32_t n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
-                                  c_recv_data_.FreeSize());
+                                 c_recv_data_.FreeSize());
   if (n_recv > 0) {
     c_recv_data_.MoveWritePtr(n_recv);
 
@@ -267,7 +289,6 @@ int32 CEvtTcpClient::OnRecv() {
       return -1;
     }
   }
-#endif
 
   if (n_recv < 0) {
     if (cli_hdl_ptr_) {
@@ -291,23 +312,30 @@ int32 CEvtTcpClient::EvtSend(SOCKET      fd,
 }
 
 int32 CEvtTcpClient::OnSend() {
-  int32 n_ret = 0;
-  n_ret = c_send_data_.SendData(this);  // 发送数据
+  int32 nsend = VSocket::Send(c_send_data_.GetReadPtr(),
+                              c_send_data_.UsedSize());
+  if (nsend > 0) {
+    c_send_data_.MoveReadPtr(nsend);
+    //Recycle();
+  }
+
+  int32 nret = 0;
   if (c_send_data_.UsedSize() <= 0) {
     c_send_data_.Recycle();             // 重置读写位置;移动为0
     c_evt_send_.Stop();
 
     if (cli_hdl_ptr_) {
-      n_ret = cli_hdl_ptr_->HandleSendPacket(this);   // 发送完成回调
+      nret = cli_hdl_ptr_->HandleSendPacket(this); // 发送完成回调
     }
   }
 
-  if (n_ret < 0) {
+  if (nret < 0) {
     if (cli_hdl_ptr_) {
       cli_hdl_ptr_->HandleClose(this);
+      return nret;
     }
   }
-  return n_ret;
+  return 0;
 }
 
 int32 CEvtTcpClient::EvtConnect(SOCKET       fd,

@@ -73,12 +73,8 @@ extern void uri_hdl_user_cfg(struct mg_connection *nc, int ev, void *ev_data);
 // 手动矫正时间
 extern void uri_hdl_time_cfg(struct mg_connection *nc, int ev, void *ev_data);
 
-///设备信息////////////////////////////////////////////////////////////////
-// 获取设备信息
-extern void uri_hdl_get_info(struct mg_connection *nc, int ev, void *ev_data);
-
-// 设置设备信息
-extern void uri_hdl_set_info(struct mg_connection *nc, int ev, void *ev_data);
+///转发///////////////////////////////////////////////////////////////////
+extern void uri_hdl_config(struct mg_connection *nc, int ev, void *ev_data);
 
 #ifdef __cplusplus
 }

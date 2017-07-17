@@ -22,8 +22,10 @@ int main(int argc, char *argv[]) {
   ShowVzLoggingAlways();
 #endif
 
-  bool b_ret = sys::CListenMessage::Instance()->Start(
-                 DEF_DP_SRV_IP, DEF_DP_SRV_PORT);
+  DpClient_Init(DEF_DP_SRV_IP, DEF_DP_SRV_PORT);
+  Kvdb_Start(DEF_KVDB_SRV_IP, DEF_KVDB_SRV_PORT);
+
+  bool b_ret = sys::CListenMessage::Instance()->Start();
   while (b_ret) {
     sys::CListenMessage::Instance()->RunLoop();
   }

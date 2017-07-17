@@ -147,7 +147,7 @@ int CDpClient::SendDpRequest(const char *p_method,
   RunLoop(n_timeout);
   if ((get_ret_type() == TYPE_REPLY) ||
       (get_ret_type() == TYPE_SUCCEED)) {
-    p_reply->append(p_cur_dp_msg_->)
+    p_reply->append(p_cur_dp_msg_->data, p_cur_dp_msg_->data_size);
     return VZNETDP_SUCCEED;
   }
   LOG(L_ERROR) << get_ret_type();
