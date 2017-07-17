@@ -3,6 +3,7 @@
 *Description :
 ************************************************************************/
 #include "cdpclient.h"
+#include "vzconn/base/byteorder.h"
 
 #include "vzbase/helper/stdafx.h"
 #include "dispatcher/base/pkghead.h"
@@ -123,6 +124,36 @@ int CDpClient::SendDpRequest(const char *p_method,
   return VZNETDP_FAILURE;
 }
 
+int CDpClient::SendDpRequest(const char *p_method, 
+                             unsigned char n_session_id,
+                             const char *p_data, 
+                             int n_data, 
+                             std::string *p_reply,
+                             unsigned int n_timeout) {
+  if (!CheckAndConnected()) {
+    return VZNETDP_FAILURE;
+  }
+
+  int32 n_ret = 0;
+  n_ret = SendMessage(TYPE_REQUEST,
+                      p_method,
+                      new_msg_id(),
+                      p_data,
+                      n_data);
+  if (n_ret <= 0) {
+    return VZNETDP_FAILURE;
+  }
+
+  RunLoop(n_timeout);
+  if ((get_ret_type() == TYPE_REPLY) ||
+      (get_ret_type() == TYPE_SUCCEED)) {
+    p_reply->append(p_cur_dp_msg_->)
+    return VZNETDP_SUCCEED;
+  }
+  LOG(L_ERROR) << get_ret_type();
+  return VZNETDP_FAILURE;
+}
+
 int CDpClient::SendDpReply(const char *p_method,
                            unsigned char n_session_id,
                            unsigned int n_message_id,
@@ -236,8 +267,6 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
     return -2;
   }
 
-  LOG(L_INFO) << "message seq "<<p_cur_dp_msg_->method <<"  "<<get_msg_id();
-
   if (p_cur_dp_msg_->id == get_msg_id()) {  // 接收到正确的包
     if (NULL != p_evt_loop_) {
       p_evt_loop_->LoopExit(0);
@@ -250,6 +279,9 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
     n_session_id_ = (p_cur_dp_msg_->channel_id << 24);
     LOG(L_WARNING) << "get session id " << p_cur_dp_msg_->channel_id;
   }
+
+  LOG(L_INFO) << "message " << p_cur_dp_msg_->method
+              << "  " << get_msg_id() << "  " << get_ret_type();
   return 0;
 }
 

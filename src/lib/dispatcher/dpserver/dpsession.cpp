@@ -1,5 +1,6 @@
 #include "dispatcher/dpserver/dpsession.h"
 
+#include "vzconn/base/byteorder.h"
 #include "vzlogging/logging/vzloggingcpp.h"
 #include <string.h>
 

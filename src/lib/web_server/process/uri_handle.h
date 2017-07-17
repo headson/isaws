@@ -35,10 +35,12 @@ typedef struct _TAG_WEB_SESSION {
 #define SESSION_COUNT 10
 extern TAG_WEB_SESSION k_session[SESSION_COUNT];
 
-extern TAG_WEB_SESSION *get_session(struct http_message *hm);
-extern void             destroy_session(TAG_WEB_SESSION *s);
 extern TAG_WEB_SESSION *create_session(const char *usernmae,
                                        const struct http_message *hm);
+extern void             destroy_session(TAG_WEB_SESSION *s);
+
+extern TAG_WEB_SESSION *get_session(struct http_message *hm);
+extern TAG_WEB_SESSION *get_session_by_sid(const char* ssid);
 extern void             check_sessions(void);
 
 //////////////////////////////////////////////////////////////////////////
@@ -53,10 +55,6 @@ extern void send_response(struct mg_connection *nc,
                           int                   nstate,
                           const Json::Value    &jbody,
                           const std::string     extra_header="");
-
-//////////////////////////////////////////////////////////////////////////
-extern void dpc_msg_callback(
-  DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
 
 ///用户操作///////////////////////////////////////////////////////////////
 // 登陆验证

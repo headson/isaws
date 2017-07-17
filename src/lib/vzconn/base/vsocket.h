@@ -23,6 +23,7 @@ struct iovec {
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 #endif
 
 #include <string>

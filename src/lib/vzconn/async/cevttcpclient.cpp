@@ -63,6 +63,9 @@ bool CEvtTcpClient::Open(SOCKET s, bool b_block) {
 
   SetSocket(s);
 
+  const char chOpt = 1;
+  SetOption(IPPROTO_TCP, TCP_NODELAY, (char*)&chOpt, sizeof(char));
+
   //设置异步模式
   if (false == b_block) {
     set_socket_nonblocking(GetSocket());
@@ -223,17 +226,55 @@ int32 CEvtTcpClient::EvtRecv(SOCKET      fd,
 }
 
 int32 CEvtTcpClient::OnRecv() {
-  int32 n_ret = c_recv_data_.RecvData(this);
-  if (n_ret > 0) {
-    n_ret = c_recv_data_.ParseSplitData(this); // 通过回调反馈给用户层
+#if 0
+  int32 n_recv = c_recv_data_.RecvData(this);
+  if (n_recv > 0) {
+    n_recv = c_recv_data_.ParseSplitData(this); // 通过回调反馈给用户层
   }
+#else
+  int32_t n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
+                                  c_recv_data_.FreeSize());
+  if (n_recv > 0) {
+    c_recv_data_.MoveWritePtr(n_recv);
 
-  if (n_ret < 0) {
+    uint16 n_flag = 0;
+    uint32_t n_pkg_size = 0;
+    do {
+      n_pkg_size = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),
+                                              c_recv_data_.UsedSize(),
+                                              &n_flag);
+      if (n_pkg_size > 0 && c_recv_data_.UsedSize() >= n_pkg_size) {
+        cli_hdl_ptr_->HandleRecvPacket(
+          this,
+          c_recv_data_.GetReadPtr() + cli_hdl_ptr_->NetHeadSize(),
+          n_pkg_size - cli_hdl_ptr_->NetHeadSize(),
+          n_flag);
+        c_recv_data_.MoveReadPtr(n_pkg_size);
+        c_recv_data_.Recycle(); // 保证包头在buffer起始位置
+      }
+    } while (n_pkg_size > 0 && c_recv_data_.UsedSize() >= n_pkg_size);
+
+    // 空间不足,开新空间
+    if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
+      c_recv_data_.Recycle(); // 每次移动趋近于移动单位为0
+
+      if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
+        c_recv_data_.ReallocBuffer((n_pkg_size - c_recv_data_.UsedSize()));
+      }
+    }
+    if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
+      LOG(L_ERROR) << "the packet is large than " << SOCK_MAX_BUFFER_SIZE;
+      return -1;
+    }
+  }
+#endif
+
+  if (n_recv < 0) {
     if (cli_hdl_ptr_) {
       cli_hdl_ptr_->HandleClose(this);
     }
   }
-  return n_ret;
+  return n_recv;
 }
 
 int32 CEvtTcpClient::EvtSend(SOCKET      fd,

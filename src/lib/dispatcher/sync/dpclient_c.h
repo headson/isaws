@@ -84,6 +84,15 @@ EXPORT_DLL int DpClient_SendDpRequest(const char                *p_method,
                                       void                      *p_user_arg,
                                       unsigned int               n_timeout);
 
+#ifdef __cplusplus
+// p_reply std::string*
+EXPORT_DLL int DpClient_SendDpReqToString(const char *p_method,
+                                          unsigned char  n_session_id,
+                                          const char    *p_data,
+                                          int            n_data,
+                                          void          *p_reply,
+                                          unsigned int   n_timeout);
+#endif  // __cplusplus
 /************************************************************************
 *Description : DpClient发送回执
 *Parameters  : p_method[IN] 回执消息方法
@@ -194,7 +203,7 @@ EXPORT_DLL EventSignal Event_CreateSignalHandle(
 /************************************************************************
 *Description : 释放信号监听
 *Parameters  : p_evt_sig[IN] 信号监听句柄
-*Return      : 
+*Return      :
 ************************************************************************/
 EXPORT_DLL void Event_ReleaseSignalHandle(EventSignal p_evt_sig);
 
@@ -221,7 +230,7 @@ EXPORT_DLL int Kvdb_SetKey(const char *p_key, int n_key,
 
 /************************************************************************
 *Description : 通过键值获取数据
-*Parameters  : 
+*Parameters  :
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
 EXPORT_DLL int Kvdb_GetKey(const char *p_key, int n_key,
@@ -249,7 +258,9 @@ EXPORT_DLL int Kvdb_GetKeyToBuffer(const char *p_key, int n_key,
 *Parameters  :
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
+#ifdef __cplusplus
 EXPORT_DLL int Kvdb_GetKeyToString(const char *p_key, int n_key, void *p_string);
+#endif  // __cplusplus
 
 /************************************************************************
 *Description : 通过键值获取数据
@@ -312,7 +323,9 @@ EXPORT_DLL int SKvdb_GetKeyToBuffer(const char *p_key, int n_key,
 *Parameters  :
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
+#ifdef __cplusplus
 EXPORT_DLL int SKvdb_GetKeyToString(const char *p_key, int n_key, void *p_string);
+#endif  // __cplusplus
 
 /************************************************************************
 *Description : 通过键值获取数据

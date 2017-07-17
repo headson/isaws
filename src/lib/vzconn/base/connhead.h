@@ -6,9 +6,10 @@
 #define LIBVZCONN_PKGHEAD_H_
 
 #include "vzbase/base/basictypes.h"
-#include "byteorder.h"
-
+//#include "byteorder.h"
+#ifdef __cplusplus
 namespace vzconn {
+#endif
 
 #define NET_MARK_0  'V'
 #define NET_MARK_1  'Z'
@@ -23,12 +24,14 @@ typedef struct _NetHead {
 #pragma pack(pop)     // 作用：恢复对齐状态
 
 // 默认字符顺序[大端]
-const ByteOrder VZ_ORDER_BYTE = ORDER_NETWORK;
+const int32 VZ_ORDER_BYTE = 0;  // 0=ORDER_NETWORK;1=ORDER_HOST
 
 // 包默认大小
 #define SOCK_DEF_BUFFER_SIZE (4096)
 // 最大包尺寸
 #define SOCK_MAX_BUFFER_SIZE (2 * 1024 * 1024)
+#ifdef __cplusplus
 }  // namespace vzconn
+#endif
 
 #endif  // LIBVZCONN_PKGHEAD_H_

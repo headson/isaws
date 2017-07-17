@@ -100,7 +100,7 @@ class TypedMessageData : public MessageData {
   }
 
   ~TypedMessageData() {
-    printf("~TypedMessageData[%d] %u.\n");
+    // printf("~TypedMessageData[%d] %u.\n");
   }
 
   const T& data() const {

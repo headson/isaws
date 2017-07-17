@@ -107,9 +107,6 @@ class CTcpClient : public VSocket {
 
   EVT_IO            c_evt_send_;    // 发送事件
   CBlockBuffer      c_send_data_;   // 发送buffer
-
- protected:
-  uint8            *head_data_;
 };
 
 }  // namespace vzconn

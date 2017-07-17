@@ -186,6 +186,15 @@ EXPORT_DLL int DpClient_SendDpRequest(const char *method,
   return n_ret;
 }
 
+EXPORT_DLL int DpClient_SendDpReqToString(const char *p_method, 
+                                          unsigned char n_session_id, 
+                                          const char *p_data,
+                                          int n_data, 
+                                          void *p_reply, 
+                                          unsigned int n_timeout) {
+
+}
+
 EXPORT_DLL int DpClient_SendDpReply(const char    *method,
                                     unsigned char  channel_id,
                                     unsigned int   id,

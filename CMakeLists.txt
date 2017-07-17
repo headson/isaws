@@ -54,7 +54,7 @@ ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/live_stream)
 
 IF(WIN32)
-ADD_SUBDIRECTORY(src/run/pc_manage)
+#ADD_SUBDIRECTORY(src/run/pc_manage)
 ENDIF()
 
 ## add test

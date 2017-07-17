@@ -41,6 +41,15 @@ class CDpClient : public vzconn::CTcpClient,
                     void                      *p_user_arg,
                     unsigned int               n_timeout);
 
+  // return VZNETDP_FAILURE, ERROR
+  // return > 0, request id
+  int SendDpRequest(const char                *p_method,
+                    unsigned char              n_session_id,
+                    const char                *p_data,
+                    int                        n_data,
+                    std::string               *p_reply,
+                    unsigned int               n_timeout);
+
   // return VZNETDP_FAILURE / or VZNETDP_SUCCEED
   int SendDpReply(const char      *p_method,
                   unsigned char    n_session_id,

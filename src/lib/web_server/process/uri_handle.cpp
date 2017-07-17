@@ -17,32 +17,7 @@ extern "C" {
 
 TAG_WEB_SESSION k_session[SESSION_COUNT];
 
-TAG_WEB_SESSION * get_session(struct http_message *hm) {
-  struct mg_str *cookie_header = mg_get_http_header(hm, "cookie");
-  if (cookie_header == NULL)
-    return NULL;
-  char ssid[21];
-  if (!mg_http_parse_header(cookie_header, SESSION_COOKIE_NAME,
-                            ssid, sizeof(ssid))) {
-    return NULL;
-  }
-  uint64_t sid = strtoull(ssid, NULL, 16);
-  for (int i = 0; i < SESSION_COUNT; i++) {
-    if (k_session[i].id == sid) {
-      k_session[i].last_used = mg_time();
-      return &k_session[i];
-    }
-  }
-  return NULL;
-}
-
-
-void destroy_session(TAG_WEB_SESSION *s) {
-  memset(s, 0, sizeof(*s));
-}
-
-
-TAG_WEB_SESSION * create_session(const char *usernmae, const struct http_message *hm) {
+TAG_WEB_SESSION *create_session(const char *usernmae, const struct http_message *hm) {
   /* Find first available slot or use the oldest one. */
   TAG_WEB_SESSION *s = NULL;
   TAG_WEB_SESSION *oldest_s = k_session;
@@ -63,7 +38,7 @@ TAG_WEB_SESSION * create_session(const char *usernmae, const struct http_message
   }
 
   /* Initialize new session. */
-  s->created      = s->last_used = mg_time();
+  s->created = s->last_used = mg_time();
   strncpy(s->username, usernmae, USERNAME_SIZE);
   s->lucky_number = rand();
   /* Create an ID by putting various volatiles into a pot and stirring. */
@@ -75,6 +50,37 @@ TAG_WEB_SESSION * create_session(const char *usernmae, const struct http_message
   cs_sha1_final(digest, &ctx);
   s->id = *((uint64_t *)digest);
   return s;
+}
+
+void destroy_session(TAG_WEB_SESSION *s) {
+  memset(s, 0, sizeof(*s));
+}
+
+TAG_WEB_SESSION *get_session(struct http_message *hm) {
+  struct mg_str *cookie_header = mg_get_http_header(hm, "cookie");
+  if (cookie_header == NULL)
+    return NULL;
+
+  char ssid[21];
+  if (!mg_http_parse_header(cookie_header,
+                            SESSION_COOKIE_NAME,
+                            ssid,
+                            sizeof(ssid))) {
+    return NULL;
+  }
+
+  return get_session_by_sid(ssid);
+}
+
+extern TAG_WEB_SESSION * web::get_session_by_sid(const char* ssid) {
+  uint64_t sid = strtoull(ssid, NULL, 16);
+  for (int i = 0; i < SESSION_COUNT; i++) {
+    if (k_session[i].id == sid) {
+      k_session[i].last_used = mg_time();
+      return &k_session[i];
+    }
+  }
+  return NULL;
 }
 
 void check_sessions(void) {
@@ -138,14 +144,6 @@ void send_response(struct mg_connection *nc,
                s_resp.length(),
                (K_HTTP_CONTENT_TYPE + extra_header).c_str());
   mg_send(nc, s_resp.c_str(), s_resp.length());
-}
-
-void web::dpc_msg_callback(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
-  if (0 == memcmp(dmp->method, MSG_SYSC_GET_INFO, dmp->method_size)) {
-    if (p_usr_arg) {
-      ((std::string*)p_usr_arg)->append(dmp->data, dmp->data_size);
-    }
-  }
 }
 
 #ifdef __cplusplus

@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
   cached_server.StartCachedServer("0.0.0.0", 5320);
 
   while (1) {
-    event_service.RunLoop();
+    event_service.RunLoop(-1);
   }
 
   cached_server.StopCachedServer();

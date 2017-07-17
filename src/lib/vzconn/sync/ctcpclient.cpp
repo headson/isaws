@@ -15,8 +15,7 @@ CTcpClient::CTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl)
   , c_evt_recv_()
   , c_recv_data_()
   , c_evt_send_()
-  , c_send_data_()
-  , head_data_(NULL) {
+  , c_send_data_() {
   //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
@@ -47,11 +46,6 @@ CTcpClient::~CTcpClient() {
   c_evt_send_.Stop();
 
   Close();
-
-  if (head_data_) {
-    delete[] head_data_;
-    head_data_ = NULL;
-  }
   //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
@@ -66,6 +60,9 @@ bool CTcpClient::Open(SOCKET s, bool b_block) {
   }
 
   SetSocket(s);
+
+  const char chOpt = 1;
+  SetOption(IPPROTO_TCP, TCP_NODELAY, (char*)&chOpt, sizeof(char));
 
   //设置异步模式
   if (false == b_block) {
@@ -249,39 +246,39 @@ int32 CTcpClient::AsyncWrite(struct iovec iov[],
 
 
 int32 CTcpClient::SyncWrite(const void *p_data, uint32 n_data, uint16 e_flag) {
-  set_socket_blocking(GetSocket());
-
-  if (NULL == head_data_) {
-    head_data_ = new uint8[cli_hdl_ptr_->NetHeadSize() + 1];
-  }
-
-  int32 ret = 0;
-  int32 head_size = 0;
-  if (head_data_) {
-    head_size = cli_hdl_ptr_->NetHeadPacket(
-                  head_data_,
-                  cli_hdl_ptr_->NetHeadSize(),
-                  n_data,
-                  e_flag);
-  }
-  if (head_size > 0) {
-    ret = SendN(head_data_, head_size);
-    if (ret <= 0) {
-      LOG(L_ERROR) << "send head failed.";
-      set_socket_nonblocking(GetSocket());
-      return ret;
+  uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
+  if (c_send_data_.FreeSize() < (n_data + n_head)) {
+    c_send_data_.Recycle();
+    if (c_send_data_.FreeSize() < (n_data + n_head)) {
+      c_send_data_.ReallocBuffer((n_data + n_head));
     }
   }
+  if (c_send_data_.FreeSize() < (n_data + n_head)) {
+    return false;
+  }
 
-  ret = SendN((uint8*)p_data, n_data);
-  if (ret < 0) {
-    LOG(L_ERROR) << "send head failed.";
-    set_socket_nonblocking(GetSocket());
-    return ret;
+  set_socket_blocking(GetSocket());
+
+  // 包头
+  int32 n_head_size = cli_hdl_ptr_->NetHeadPacket(
+                        c_send_data_.GetWritePtr(),
+                        c_send_data_.FreeSize(),
+                        n_data,
+                        e_flag);
+  c_send_data_.MoveWritePtr(n_head_size);
+  c_send_data_.WriteBytes((uint8_t*)p_data, n_data);
+
+  n_data = SendN(c_send_data_.GetReadPtr(),
+                 c_send_data_.UsedSize());
+  if (n_data > 0) {
+    c_send_data_.MoveReadPtr(n_data);
+    c_send_data_.Recycle();
+  } else {
+    LOG(L_ERROR) << "send n failed.";
   }
 
   set_socket_nonblocking(GetSocket());
-  return (head_size + n_data);
+  return n_data;
 }
 
 int32 CTcpClient::SyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
@@ -289,46 +286,39 @@ int32 CTcpClient::SyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
   for (uint32 i = 0; i < n_iov; i++) {
     n_data += iov[i].iov_len;
   }
+  uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
+  if (c_send_data_.FreeSize() < (n_data + n_head)) {
+    c_send_data_.Recycle();
+    if (c_send_data_.FreeSize() < (n_data + n_head)) {
+      c_send_data_.ReallocBuffer((n_data + n_head));
+    }
+  }
+  if (c_send_data_.FreeSize() < (n_data + n_head)) {
+    return false;
+  }
 
   set_socket_blocking(GetSocket());
 
-  if (NULL == head_data_) {
-    head_data_ = new uint8[cli_hdl_ptr_->NetHeadSize() + 1];
-  }
+  // 包头
+  int32 n_head_size = cli_hdl_ptr_->NetHeadPacket(
+                        c_send_data_.GetWritePtr(),
+                        c_send_data_.FreeSize(),
+                        n_data,
+                        e_flag);
+  c_send_data_.MoveWritePtr(n_head_size);
+  c_send_data_.WriteBytes(iov, n_iov);
 
-  int32 ret = 0;
-  int32 head_size = 0;
-  if (head_data_) {
-    head_size = cli_hdl_ptr_->NetHeadPacket(
-                  head_data_,
-                  cli_hdl_ptr_->NetHeadSize(),
-                  n_data,
-                  e_flag);
-  }
-  if (head_size > 0) {
-    ret = SendN(head_data_, head_size);
-    if (ret <= 0) {
-      LOG(L_ERROR) << "send head failed.";
-      set_socket_nonblocking(GetSocket());
-      return ret;
-    }
-  }
-
-  for (uint32 i = 0; i < n_iov; i++) {
-    if (!iov[i].iov_base || iov[i].iov_len <= 0) {
-      continue;
-    }
-
-    ret = SendN((uint8*)iov[i].iov_base, iov[i].iov_len);
-    if (ret <= 0) {
-      LOG(L_ERROR) << "send head failed.";
-      set_socket_nonblocking(GetSocket());
-      return ret;
-    }
+  n_data = SendN(c_send_data_.GetReadPtr(),
+                 c_send_data_.UsedSize());
+  if (n_data > 0) {
+    c_send_data_.MoveReadPtr(n_data);
+    c_send_data_.Recycle();
+  } else {
+    LOG(L_ERROR) << "send n failed.";
   }
 
   set_socket_nonblocking(GetSocket());
-  return (head_size + n_data);
+  return n_data;
 }
 
 int32 CTcpClient::SendN(const uint8 *p_data, uint32 n_data) {

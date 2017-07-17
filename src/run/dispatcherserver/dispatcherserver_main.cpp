@@ -38,11 +38,11 @@ int main(int argc, char *argv[]) {
 #endif
 
   while (1) {
-    event_service.RunLoop();
+    event_service.RunLoop(-1);
   }
 
   dpserver.StopDpServer();
   kvdb_server.StopKvdbServer();
-
+  skvdb_server.StopKvdbServer();
   return 0;
 }
