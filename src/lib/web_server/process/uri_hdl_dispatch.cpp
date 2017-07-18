@@ -19,7 +19,7 @@ namespace web {
 extern "C" {
 #endif
 
-void uri_hdl_config(struct mg_connection *nc, int ev, void *ev_data) {
+void uri_hdl_dispath(struct mg_connection *nc, int ev, void *ev_data) {
   int nstate = RET_JSON_PARSE;
 
   std::string smsg = "";

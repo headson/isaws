@@ -74,7 +74,10 @@ extern void uri_hdl_user_cfg(struct mg_connection *nc, int ev, void *ev_data);
 extern void uri_hdl_time_cfg(struct mg_connection *nc, int ev, void *ev_data);
 
 ///转发///////////////////////////////////////////////////////////////////
-extern void uri_hdl_config(struct mg_connection *nc, int ev, void *ev_data);
+extern void uri_hdl_dispath(struct mg_connection *nc, int ev, void *ev_data);
+
+///上传///////////////////////////////////////////////////////////////////////
+extern void uri_hdl_upload(struct mg_connection *nc, int ev, void *p);
 
 #ifdef __cplusplus
 }

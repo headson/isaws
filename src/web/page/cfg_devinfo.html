@@ -24,34 +24,48 @@
 <body>
 <div id="dev_info" class="dev_main">
     <br/><br/>
-    设备名称: <input type="text" class="text" id="dev_name"/>
-    <p/>
-    设备类型: <input type="text" class="text" id="dev_type"/>
-    <p/>
-    软件版本: <input type="text" class="text" id="sw_ver"/>
-    <p/>
-    硬件版本: <input type="text" class="text" id="hw_ver"/>
-    <p/>
-    算法版本: <input type="text" class="text" id="iva_ver"/>
-    <p/>
-    WEB端口: <input type="text" class="text" id="web_port"/>
-    <p/>
-    RTSP端口: <input type="text" class="text" id="rtsp_port"/>
-    <p/>
-    磁盘大小: <input type="text" class="text" id="disk_size"/>
-    <p/>
-    DHCP使能: <input type="checkbox" class="checkbox" id="dhcp_en"/>
-    <p/>
-    IP地址: <input type="text" class="text" id="ip_addr"/>
-    <p/>
-    掩码: <input type="text" class="text" id="netmask"/>
-    <p/>
-    网关: <input type="text" class="text" id="gateway"/>
-    <p/>
-    DNS: <input type="text" class="text" id="dns_addr"/>
-    <p/>
-    MAC地址: <input type="text" class="text" id="phy_mac"/>
-    <p/>
+    <div class="formField clearfix">
+        <label>设备名称:</label><input type="text" class="formText" id="dev_name"/>
+    </div>
+    <div class="formField clearfix">
+        <label>设备类型:</label> <input type="text" class="formText" id="dev_type"/>
+    </div>
+    <div class="formField clearfix">
+        <label>软件版本:</label> <input type="text" class="formText" id="sw_ver"/>
+    </div>
+    <div class="formField clearfix">
+        <label>硬件版本:</label> <input type="text" class="formText" id="hw_ver"/>
+    </div>
+    <div class="formField clearfix">
+        <label>算法版本:</label> <input type="text" class="formText" id="iva_ver"/>
+    </div>
+    <div class="formField clearfix">
+        <label>WEB端口:</label> <input type="text" class="formText" id="web_port"/>
+    </div>
+    <div class="formField clearfix">
+        <label>RTSP端口:</label> <input type="text" class="formText" id="rtsp_port"/>
+    </div>
+    <div class="formField clearfix">
+        <label>磁盘大小:</label> <input type="text" class="formText" id="disk_size"/>
+    </div>
+    <div class="formField clearfix">
+        <label>DHCP使能:</label> <input type="checkbox" class="formText" id="dhcp_en"/>
+    </div>
+    <div class="formField clearfix">
+        <label>IP地址:</label> <input type="text" class="formText" id="ip_addr"/>
+    </div>
+    <div class="formField clearfix">
+        <label>掩码:</label> <input type="text" class="formText" id="netmask"/>
+    </div>
+    <div class="formField clearfix">
+        <label>网关:</label> <input type="text" class="formText" id="gateway"/>
+    </div>
+    <div class="formField clearfix">
+        <label>DNS:</label> <input type="text" class="formText" id="dns_addr"/>
+    </div>
+    <div class="formField clearfix">
+        <label>MAC地址:</label> <input type="text" class="formText" id="phy_mac"/>
+    </div>
 
     <div>
         <input type="button" class="btn" value="保存修改" id="save_btn"/>
@@ -112,7 +126,7 @@
     req.body.web_port = parseInt($('#web_port').val());
     req.body.rtsp_port = parseInt($('#rtsp_port').val());
     //req.body.disk_size = $('#disk_size').val();
-    if($('#dhcp_en').attr('checked') ==true) {
+    if ($('#dhcp_en').attr('checked') == true) {
       req.body.dhcp_en = 1;
     } else {
       req.body.dhcp_en = 0;
@@ -132,7 +146,7 @@
       success: function(ajaxdata) {
         var jresp = eval('(' + ajaxdata + ')');
         if (jresp.state == 0) {
-            get_devinfo();
+          get_devinfo();
         } else {
           alert('参数配置错误' + jresp.state);
           get_devinfo();
