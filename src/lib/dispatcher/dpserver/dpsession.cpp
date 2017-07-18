@@ -97,7 +97,7 @@ bool Session::ProcessDpMessage(const DpMessage *dmp,
   }
 
   if (dmp->type == TYPE_REPLY) { // TYPE_REPLY的method没改变,也会被worker捕获
-    //LOG(L_INFO) << "reply";
+    // LOG(L_INFO) << "reply";
     return false;
   }
 

@@ -145,11 +145,26 @@ uint32 DpServer::DispatcherSession(Session *session,
 }
 
 int32 DpServer::HandleSendPacket(vzconn::VSocket *p_cli) {
+  // LOG(L_INFO) << "HandleSendPacket.";
   return 0;
 }
 
 void  DpServer::HandleClose(vzconn::VSocket *p_cli) {
   RemoveBySocket(p_cli);
+
+  int32 total_buffer_size = 0;
+  for (int i = 0; i < MAX_SESSION_SIZE; i++) {
+    if (session_socket_map_[i].session != NULL
+        && session_socket_map_[i].socket != NULL) {  // È¥³ý×ÔÉí
+
+      int32 recv_buffer_len = ((vzconn::CEvtTcpClient*)session_socket_map_[i].socket)->GetRecvData().Length();
+      int32 send_buffer_len = ((vzconn::CEvtTcpClient*)session_socket_map_[i].socket)->GetSendData().Length();
+
+      total_buffer_size += recv_buffer_len;
+      total_buffer_size += send_buffer_len;
+    }
+  }
+  LOG(L_INFO)<<"---------------------------- socket buffer length "<<total_buffer_size;
 }
 
 bool DpServer::AsyncWrite(Session *session,

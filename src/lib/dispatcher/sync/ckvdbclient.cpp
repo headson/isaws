@@ -141,7 +141,7 @@ int32 CKvdbClient::GetKey(const char *p_key,
   }
 
   if ((n_ret_type_ == KVDB_SUCCEED)) {
-    int n_val_len = n_cur_msg_-sizeof(KvdbMessage);
+    uint32 n_val_len = n_cur_msg_-sizeof(KvdbMessage);
     if (n_val_len <= 0) {
       return 0;
     }

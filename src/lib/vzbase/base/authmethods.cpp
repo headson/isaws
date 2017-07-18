@@ -75,7 +75,7 @@ void HelpMethos::HmacSha1(const uint8 *key, std::size_t key_size,
 
 void HelpMethos::HmacSha1ToBase64(const std::string &key,
                                   const std::string &data, std::string &result) {
-  char *pbase64_buffer=NULL;
+  // char *pbase64_buffer=NULL;
   unsigned char digest_buffer[SHA1_DIGEST_SIZE];
 
   HmacSha1((const unsigned char *)key.c_str(), key.size(),

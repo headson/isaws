@@ -335,7 +335,7 @@ int32 CTcpClient::SyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
 }
 
 int32 CTcpClient::SendN(const uint8 *p_data, uint32 n_data) {
-  int32 n_pos = 0;
+  uint32 n_pos = 0;
   int32 n_send = 0;
   do {
     n_send = VSocket::Send(p_data + n_pos, n_data - n_pos);
