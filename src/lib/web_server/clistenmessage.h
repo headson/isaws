@@ -44,6 +44,7 @@ public:
 
  private:
   DPPollHandle               p_dp_cli_;
+  vzbase::Thread            *p_main_thread_;
 
   CWebServer                 c_web_srv_;
 };

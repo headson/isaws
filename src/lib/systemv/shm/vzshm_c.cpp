@@ -134,6 +134,7 @@ class CShareMemory {
     memcpy(p_shm->p_data, p_data, p_shm->n_data);
     p_shm->n_w_sec  = n_sec;
     p_shm->n_w_usec = n_usec;
+    p_shm->n_data   = n_data;
 
     vzSemUnLock(hdl_sem_w_);
     return p_shm->n_data;

@@ -37,6 +37,7 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_handle.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_user.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_upload.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_httpflv.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_dispatch.cpp
 )
 
@@ -52,6 +53,7 @@ SOURCE_GROUP(process FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_handle.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_user.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_upload.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_httpflv.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_dispatch.cpp
 )
 

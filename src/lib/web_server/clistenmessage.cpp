@@ -32,7 +32,6 @@ CListenMessage *CListenMessage::Instance() {
 
 bool CListenMessage::Start(unsigned short  n_http_port,
                            const char     *s_http_path) {
-
   bool b_ret = false;
   char s_port[9] = {0};
   snprintf(s_port, 8, "%d", n_http_port);
@@ -41,10 +40,11 @@ bool CListenMessage::Start(unsigned short  n_http_port,
     LOG(L_ERROR) << "start web server failed.";
     exit(EXIT_FAILURE);
   }
+  p_main_thread_ = vzbase::Thread::Current();
 
   if (p_dp_cli_ == NULL) {
     vzconn::EventService *p_evt_srv =
-      vzbase::Thread::Current()->socketserver()->GetEvtService();
+      p_main_thread_->socketserver()->GetEvtService();
 
     p_dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
                                           dpcli_poll_state_cb, this,
@@ -72,15 +72,18 @@ void CListenMessage::Stop() {
 
   c_web_srv_.Stop();
 
-  vzbase::Thread::Current()->Release();
+  if (p_main_thread_) {
+    p_main_thread_->Release();
+    p_main_thread_ = NULL;
+  }
 }
 
 void CListenMessage::RunLoop() {
-  vzbase::Thread::Current()->Run();
+  p_main_thread_->Run();
 }
 
 vzbase::Thread *CListenMessage::MainThread() {
-  return vzbase::Thread::Current();
+  return p_main_thread_;
 }
 void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
   if (p_usr_arg) {

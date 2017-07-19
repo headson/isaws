@@ -79,6 +79,9 @@ extern void uri_hdl_dispath(struct mg_connection *nc, int ev, void *ev_data);
 ///ÉÏ´«///////////////////////////////////////////////////////////////////////
 extern void uri_hdl_upload(struct mg_connection *nc, int ev, void *p);
 
+///HTTP_FLV///////////////////////////////////////////////////////////////////
+extern void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *p);
+
 #ifdef __cplusplus
 }
 }  // namespace web
