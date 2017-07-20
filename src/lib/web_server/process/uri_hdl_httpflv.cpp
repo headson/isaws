@@ -36,7 +36,7 @@ class CFlvOverHttp
     , evt_timer_()
     , shm_video_(NULL)
     , shm_audio_(NULL)
-    , flv_shm_(NULL) {
+    , flv_shm_(fopen("dadas.flv", "wb+")) {
   }
   virtual ~CFlvOverHttp() {
     // sock_.Close();
@@ -74,24 +74,36 @@ class CFlvOverHttp
       LOG(L_ERROR) << "shm video failed.";
       return false;
     }
+
+    file = fopen("test.flv", "wb+");
     return true;
   }
 
   int32 AsyncHeader(const void *phead, int32 nhead,
                     int32 nwidth, int32 nheight) {
-    char sdata[1024] = { 0 };
-    int32 nret = flv_shm_.InitHeadTag0((uint8*)sdata,
-                                       1023,
-                                       nwidth, nheight);
-    AsyncWrite(phead, nhead, 0);
-    AsyncWrite(sdata, nret, 0);
-    return nhead + nret;
+    int ndata = 0;
+    char sdata[2048] = { 0 };
+
+    memcpy(sdata, phead, nhead);
+    ndata += nhead;
+
+    int nflv_tag0= flv_shm_.InitHeadTag0((uint8*)sdata+ndata,
+                                         2048-ndata,
+                                         nwidth, nheight);
+    //if (file) {
+    //  fwrite(sdata+ndata, 1, nflv_tag0, file);
+    //  fflush(file);
+    //}
+    ndata += nflv_tag0;
+
+    AsyncWrite(sdata, ndata, 0);
+    return ndata;
   }
 
   virtual int32 AsyncWrite(const void  *p_data,
                            uint32       n_data,
                            uint16       e_flag) {
-    LOG(L_ERROR) << n_data;
+    //LOG(L_ERROR) << n_data;
     sock_.Send(p_data, n_data);
     return n_data;
 
@@ -146,11 +158,33 @@ class CFlvOverHttp
 
   int32 OnTimer() {
     static char *p_data = new char[640*480];
+    static char *p_flv = new char[640*480+1024];
+
+    static unsigned int npts = 0;
     static uint32 n_sec=0, n_usec=0;
+    static bool b_key_frame = false;
+
     if (p_data) {
-      int nret = Shm_Read(shm_video_, p_data, 640*480, &n_sec, &n_usec);
-      if (nret > 0) {
-        AsyncWrite(p_data, nret, 0);
+      int ndata = Shm_Read(shm_video_, p_data, 640*480, &n_sec, &n_usec);
+      LOG(L_ERROR) << "length "<<ndata;
+      if (ndata > 0) {
+        if (b_key_frame == false) {
+          if (ndata < 1500) {
+            return 0;
+          }
+        }
+        b_key_frame = true;
+
+        npts += 30;
+        int32_t n_flv = flv_shm_.VideoPacket((uint8_t*)p_flv, 640*480+1023,
+                                             true, npts,
+                                             (uint8_t*)p_data, ndata);
+
+        //if (file) {
+        //  fwrite(p_flv, 1, n_flv, file);
+        //  fflush(file);
+        //}
+        AsyncWrite(p_flv, n_flv, 0);
       }
     }
     return 0;
@@ -168,6 +202,7 @@ class CFlvOverHttp
   void                  *shm_video_;
   void                  *shm_audio_;
 
+  FILE*                  file;
   CFlvMux                flv_shm_;
 };
 

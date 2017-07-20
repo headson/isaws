@@ -15,7 +15,7 @@
 typedef struct _FLV_TAG {
   uint32_t n_max;    // 最大小
   uint32_t w_pos;    // 写偏移
-  uint8_t  data[0];  // 数据
+  uint8_t *buffer;   // 数据
 } FLV_DATA;
 
 class CFlvMux {

@@ -33,7 +33,7 @@ class CClientProcess : public vzconn::CClientInterface {
 
     p_cli->AsyncWrite(p_data,
                       n_data,
-                      vzconn::NetworkToHost16(p_head->type_flag));
+                      NetworkToHost16(p_head->type_flag));
     return 0;
   }
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
