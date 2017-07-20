@@ -15,90 +15,63 @@
 
 namespace hs {
 
+class HttpConn;
+
+class PostInterface {
+ public:
+  virtual void PostCallBack(HttpConn *cfg, int errcode) = 0;
+};
+
 class HttpConn {
  public:
-  HttpConn(const char   *s_url,
-           const char   *s_post_data,
-           uint32        n_post_data,
-           bool          b_ssl_enable,
-           uint16        n_url_port,
-           uint32        n_timeout,
-           uint32        n_resend_times,
-           uint32        n_conn_type);
-  ~HttpConn();
-
-  void SetEasy(CURL *p_easy) {
-    p_easy_ = p_easy;
-  }
-  CURL *GetEasy() {
-    return p_easy_;
-  }
-
-  std::string &GetUrl() {
-    return s_url_;
-  }
-  uint32      GetUrlPort() {
-    return n_url_port_;
-  }
-  const std::string &GetPostData() {
-    return s_post_data_;
-  }
-
-  void SetRespData(const void* p_data, uint32 n_data) {
-    s_resp_data_.append((char*)p_data, n_data);
-    printf("recv buffer %s.\n", s_resp_data_.c_str());
-  }
-  const std::string &GetRespData() {
-    return s_resp_data_;
-  }
-
-  uint32 GetTimeout() {
-    return n_timeout_;
-  }
-  bool   isSslEnable() {
-    return ((b_ssl_enabel_ > 0) ? true : false);
-  }
-  uint32 GetResendTimes() {
-    return n_resend_times_;
-  }
-
-  uint32 GetConnType() {
-    return n_conn_type_;
-  }
-
- private:
-  CURL        *p_easy_;
-
- private:
-  uint32       n_conn_type_;        // 链接类型
+  uint32       request_type_;      // 请求类型类型
+  void        *user_data_;         // 用户数据
 
   std::string  s_url_;             // URL地址
   uint32       n_url_port_;        // URL端口
-  std::string  s_post_data_;       // 上传数据
 
-  std::string  s_resp_data_;       // 返回数据
+  std::string  s_post_data_;       // 上传数据
+  int          post_data_size_;
 
   uint32       n_timeout_;         // 超时
   uint32       b_ssl_enabel_;      // 使能ssl
   uint32       n_resend_times_;    // 重发次数
-};
 
-class CHttpInterface {
+  PostInterface *post_callback_;  // 回调
+
+ private:
+  CURL        *curl_easy_;         // curl 句柄
+  curl_slist  *slist_;
+
  public:
-  /************************************************************************
-  *Description : 接收完成回调,n_result=0发送成功,n_result!=0接收失败,
-  *              需要用户在回调中释放HttpConn
-  *Parameters  :
-  *Return      :
-  ************************************************************************/
-  virtual bool OnHttpResponse(HttpConn* p_conn, bool b_success) = 0;
+  std::string  s_resp_data_;       // 返回数据
+
+  CURL *curl() {
+    return curl_easy_;
+  }
+  void Clean();
+
+ public:
+  HttpConn(const char    *s_url,
+           uint16         n_url_port,
+           const char    *s_post_data,
+           int            post_data_size,
+           uint32         n_timeout,
+           uint32         n_resend_times,
+           bool           b_ssl_enable,
+           uint32         n_conn_type,
+           PostInterface *post_callback);
+  ~HttpConn();
+
+ private:
+  HttpConn(HttpConn &other) {}
 };
 
 class CurlServices {
  public:
   class CEvtCurl {
    public:
-    CEvtCurl(curl_socket_t fd);
+    explicit CEvtCurl(curl_socket_t fd);
     ~CEvtCurl();
 
     friend class CurlServices;
@@ -112,15 +85,15 @@ class CurlServices {
   };
 
  protected:
-  CurlServices(vzconn::EVT_LOOP *p_evt_loop, CHttpInterface *p_http_interface);
+  explicit CurlServices(vzconn::EVT_LOOP *p_evt_loop);
+  virtual ~CurlServices();
+
+ private:
+  CurlServices(CurlServices &other) {};
 
  public:
-  virtual ~CurlServices();
-  static CurlServices *Create(vzconn::EVT_LOOP *p_evt_loop,
-                              CHttpInterface *p_http_interface);
-
-  bool InitCurlServices();
-  bool UninitCurlServices();
+  static CurlServices *Create(vzconn::EVT_LOOP *p_evt_loop);
+  static void Remove(CurlServices *curl_service);
 
   HttpConn *CreateHttpConn(const std::string s_url,
                            const std::string s_post_data,
@@ -128,15 +101,23 @@ class CurlServices {
                            uint16            n_url_port,
                            uint32            n_timeout,
                            uint32            n_resend_times,
-                           uint32            n_cb_type);
+                           uint32            n_conn_type,
+                           PostInterface    *post_callback);
 
   bool PostData(HttpConn *p_conn);
+
   bool PostDevRegData(HttpConn *p_conn, DeviceRegData &regdata);
 
   bool PostImageFile(HttpConn       *p_conn,
                      UserGetImgInfo *p_img_info,
                      std::string     s_user,
                      std::string     s_password);
+
+  static bool isSuccess(int errcode, std::string &serr);
+
+ private:
+  bool InitCurlServices();
+  bool UninitCurlServices();
 
  protected:
   static int   multi_sock_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp);
@@ -156,9 +137,6 @@ class CurlServices {
 
   CURLM                  *p_curl_multi_;
   int32                   n_still_running_;
-
- private:
-  CHttpInterface         *p_http_interface_;
 };
 
 }  // namespace hs

@@ -18,8 +18,8 @@
 namespace hs {
 
 // Get Cahced File callback function
-void FileCache_Callback(const char *s_path, int         n_path,
-                        const char *p_data, int         n_data,
+void FileCache_Callback(const char *s_path, int n_path,
+                        const char *p_data, int n_data,
                         void       *p_usr_arg) {
   if (!s_path || !p_data || !p_usr_arg) {
     LOG(L_ERROR) << "param is null.";
@@ -225,22 +225,18 @@ void DataParse::GetPlateJson(IVS_RESULT_PARAM *result,
   plateResult[JSON_TRIGGERTYPE] = result->plateInfo.uBitsTrigType;
 
   if (plateresult->is_send_image) {
-
-    std::string imagedata;
+    std::string imagedata = "";
     int n_ret = Cached_GetFile(result->imageSDPath,
                                strlen(result->imageSDPath),
                                FileCache_Callback,
                                &imagedata);
-    if (CACHED_RET_SUCCEED == n_ret) {
-      //char* imagefile =
-      //  const_cast<char*>(vzbase::Base64::Encode(imagedata).c_str());
+    if (imagedata.size() > 0) {
       std::string imagefile = vzbase::Base64::Encode(imagedata);
-      plateResult[JSON_IMAGEFILE] = imagefile.c_str();
+      plateResult[JSON_IMAGEFILE] = imagefile;
       plateResult[JSON_IMAGEFILE_LEN] = imagefile.length();
-      //plateResult[JSON_BEFORE_BASE64_IMAGEFILE_LEN] = imagedata.length();
     }
+    LOG(L_INFO) << "get image "<<imagedata.length();
   } else {
-
     char file_path[256] = { 0 };
     strcat(file_path, "/mmc");
     char* p = strstr(result->imageSDPath, "/media/mmcblk0p1");
@@ -259,34 +255,24 @@ void DataParse::GetPlateJson(IVS_RESULT_PARAM *result,
   if (plateresult->is_send_small_image) {
     char file_path[256] = { 0 };
     strcat(file_path, result->imageFragmentPath);
-    std::string smallimagedata;
 
+    std::string smallimagedata;
     int n_ret = Cached_GetFile(file_path,
                                strlen(file_path),
                                FileCache_Callback,
                                &smallimagedata);
     if (CACHED_RET_SUCCEED == n_ret) {
-      //char* smallimagefile =
-      //  const_cast<char*>(vzbase::Base64::Encode(smallimagedata).c_str());
       std::string smallimagefile = vzbase::Base64::Encode(smallimagedata);
       plateResult[JSON_IMAGEFRAGMENT_FILE] = smallimagefile.c_str();
       plateResult[JSON_IMAGEFRAGENMENT_FILELEN] = smallimagefile.length();
-      //plateResult[JSON_BEFORE_BASE64_IMAGEFRAGENMENT_FILELEN] = smallimagedata.length();
-
     }
-
   } else {
-
-    //plateResult["imageFragmentPath"] = result->imageFragmentPath;
   }
 
   Json::Value prResult;
-
   prResult[JSON_PLATE_RESULT] = plateResult;
   alarmInfoPlate[JSON_RESULT] = prResult;
-
   platejson[JSON_ALARMINFO_PLATE] = alarmInfoPlate;
-
 }
 
 void DataParse::GetDeviceRegJson(

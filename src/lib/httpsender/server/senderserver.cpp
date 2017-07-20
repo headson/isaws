@@ -4,6 +4,7 @@
 #include "ipc_comm/dp_logging_comm.h"
 #include "ipc_comm/HttpSenderComm.h"
 #include "vzbase/base/base64.h"
+#include "vzbase/thread/thread.h"
 
 #include "stdlib.h"
 #include "stdio.h"
@@ -56,7 +57,8 @@ SenderServer::SenderServer()
   , m_nSizeBuf4Reply(0)
   , m_nSizeData4Reply(0)
   , curl_services_(NULL)
-  , data_parse_() {
+  , data_parse_() 
+  , watchdog_handle_(NULL) {
   m_strLastReqMsg[0] = '\0';
   memcpy(server_settings_.hostname, DEFAULT_HOST_NAME,
          sizeof(DEFAULT_HOST_NAME));
@@ -173,8 +175,7 @@ void SenderServer::InitSysInfo() {
 #endif
 }
 
-static const uint32 MSG_METHOD_SET_CNT = 26;
-static const char *MSG_METHOD_SET[MSG_METHOD_SET_CNT] = {
+static const char *MSG_METHOD_SET[] = {
   EVT_SRV_IVS_RESULT,
   EVT_SRV_TT_TCP,
   //EVT_SRV_TT,
@@ -206,6 +207,7 @@ static const char *MSG_METHOD_SET[MSG_METHOD_SET_CNT] = {
   SYS_SRV_IP_CHANGED,
   DP_LOGGING_ENABLE
 };
+static const uint32 MSG_METHOD_SET_CNT = sizeof(MSG_METHOD_SET)/sizeof(char*);
 
 bool SenderServer::Start(void) {
   LOG(L_INFO) << "InitSysInfo";
@@ -227,9 +229,9 @@ bool SenderServer::Start(void) {
     // dp client
     DpClient_Init(DP_SERVER_IP_ADDR, DP_SERVER_PORT);
     DpClient_Start(0);
-    dp_client_ = DpClient_CreatePollHandle(dp_cli_msg_cb, this, 
-                                           dp_cli_state_cb, this, 
-                                           NULL);
+    dp_client_ = DpClient_CreatePollHandle(dp_cli_msg_cb, this,
+                                           dp_cli_state_cb, this,
+                                           vzbase::Thread::Current()->socketserver()->GetEvtService());
     if (!dp_client_) {
       LOG(L_ERROR) << "Failure to create dp client";
       return false;
@@ -238,10 +240,8 @@ bool SenderServer::Start(void) {
     vzconn::EVT_LOOP* p_evt_loop =
       (vzconn::EVT_LOOP*)DpClient_GetEvtLoopFromPoll(dp_client_);
     // curl_services
-    curl_services_ = CurlServices::Create(p_evt_loop, this);
-    LOG(L_INFO) << "InitCurlServices";
-    res = curl_services_->InitCurlServices();
-    if (!res) {
+    curl_services_ = CurlServices::Create(p_evt_loop);
+    if (!curl_services_) {
       LOG(L_ERROR) << "Failure to init CurlServices";
       return false;
     }
@@ -259,7 +259,7 @@ bool SenderServer::Start(void) {
 
 void SenderServer::Stop() {
   if (curl_services_) {
-    delete curl_services_;
+    CurlServices::Remove(curl_services_);
     curl_services_ = NULL;
   }
   if (dp_client_) {
@@ -273,6 +273,14 @@ void SenderServer::Stop() {
 }
 
 bool SenderServer::RunLoop() {
+  static int times = 0;
+  if (watchdog_handle_ == NULL) {
+    watchdog_handle_ = RegisterWatchDogKey("MAIN", 4, DEF_WATCHDOG_TIMEOUT);
+  }
+  if (watchdog_handle_ && ((times++) % 5) == 0) {
+    FeedDog(watchdog_handle_);
+  }
+
   int32 n_ret = DpClient_PollDpMessage(dp_client_, DEF_TIMEOUT_MSEC);
   if (n_ret == VZNETDP_SUCCEED) {
     return true;
@@ -285,7 +293,7 @@ bool SenderServer::RunLoop() {
 void SenderServer::HttpConnSnapImageComplete(hs::HttpConn *p_conn,
     const char   *data,
     std::size_t   data_size,
-    bool          b_success) {
+    int errcode) {
   if (p_conn == NULL)
     return;
 }
@@ -317,7 +325,8 @@ void SenderServer::OnGetSnapShotImage(const DpMessage* dmp,
                        port,
                        timeout,
                        0,
-                       HTTP_CB_TYPE_SNAPSHOT_IMAGE);
+                       HTTP_CB_TYPE_SNAPSHOT_IMAGE,
+                       this);
   if (p_conn == NULL)
     return;
 
@@ -328,13 +337,14 @@ bool SenderServer::OnIvsPlateResponseHandle(const char* data) {
   LOG(L_INFO) << "OnResponseHandle... ... : " << data;
   if (data == NULL)
     return false;
-  LOG(L_INFO) << data;
+
   Json::Reader reader;
   Json::Value value;
   if (!reader.parse(data, value)) {
     LOG(L_ERROR) << "OnResponseHandle parse error... ...";
     return false;
   }
+
   if (value[JSON_RESPONSE_ALARMINFOPLATE][JSON_INFO] == "ok") {
     GPIO_WAVE_VALUE gpioValue;
     gpioValue.eValue = IO_SQUARE_HIGH;
@@ -466,76 +476,77 @@ void SenderServer::OnDevRegTimer() {
   DeviceRegFunc();
 }
 
-bool SenderServer::OnHttpResponse(HttpConn* p_conn, bool b_success) {
+void SenderServer::PostCallBack(HttpConn *p_conn, int errcode) {
   if (p_conn == NULL) {
-    return false;
+    return;
   }
 
-  if (p_conn->GetConnType() == HTTP_CB_TYPE_IVS_RESULT) {
+  if (p_conn->request_type_ == HTTP_CB_TYPE_IVS_RESULT) {
     HttpConnIvsResultComplete(p_conn,
-                              p_conn->GetRespData().c_str(),
-                              p_conn->GetPostData().size(),
-                              b_success);
-    return true;
-  } else if (p_conn->GetConnType() == HTTP_CB_TYPE_SERIAL_DATA) {
+                              p_conn->s_resp_data_.c_str(),
+                              p_conn->s_resp_data_.size(),
+                              errcode);
+    return;
+  } else if (p_conn->request_type_ == HTTP_CB_TYPE_SERIAL_DATA) {
     HttpConnSerialDataComplete(p_conn,
-                               p_conn->GetRespData().c_str(),
-                               p_conn->GetPostData().size(),
-                               b_success);
-  } else if (p_conn->GetConnType() == HTTP_CB_TYPE_GIO_TRIGGER) {
+                               p_conn->s_resp_data_.c_str(),
+                               p_conn->s_resp_data_.size(),
+                               errcode);
+  } else if (p_conn->request_type_ == HTTP_CB_TYPE_GIO_TRIGGER) {
     HttpConnGioTriggerComplete(p_conn,
-                               p_conn->GetRespData().c_str(),
-                               p_conn->GetPostData().size(),
-                               b_success);
-  } else if (p_conn->GetConnType() == HTTP_CB_TYPE_SNAPSHOT_IMAGE) {
+                               p_conn->s_resp_data_.c_str(),
+                               p_conn->s_resp_data_.size(),
+                               errcode);
+  } else if (p_conn->request_type_ == HTTP_CB_TYPE_SNAPSHOT_IMAGE) {
     HttpConnSnapImageComplete(p_conn,
-                              p_conn->GetRespData().c_str(),
-                              p_conn->GetPostData().size(),
-                              b_success);
-  } else if (p_conn->GetConnType() == HTTP_CB_TYPE_FTP_POST_CONN) {
+                              p_conn->s_resp_data_.c_str(),
+                              p_conn->s_resp_data_.size(),
+                              errcode);
+  } else if (p_conn->request_type_ == HTTP_CB_TYPE_FTP_POST_CONN) {
     FtpConnPostFileComplete(p_conn,
-                            p_conn->GetRespData().c_str(),
-                            p_conn->GetPostData().size(),
-                            b_success);
-  } else if (p_conn->GetConnType() == HTTP_CB_TYPE_DEVICE_REG) {
+                            p_conn->s_resp_data_.c_str(),
+                            p_conn->s_resp_data_.size(),
+                            errcode);
+  } else if (p_conn->request_type_ == HTTP_CB_TYPE_DEVICE_REG) {
     HttpConnDeviceRegComplete(p_conn,
-                              p_conn->GetRespData().c_str(),
-                              p_conn->GetPostData().size(),
-                              b_success);
+                              p_conn->s_resp_data_.c_str(),
+                              p_conn->s_resp_data_.size(),
+                              errcode);
   }
 }
 
 void SenderServer::HttpConnIvsResultComplete(hs::HttpConn *p_conn,
     const char *data, std::size_t data_size,
-    bool b_success) {
+    int errcode) {
   LOG(L_INFO) << "HttpConnIvsResultComplete";
   if (p_conn == NULL) {
     LOG(L_INFO) << "http_conn.get() == NULL";
     return;
   }
   if (OnIvsPlateResponseHandle(data)) {
-    HttpWriteResponseLogging(p_conn->GetUrl(), data);
+    HttpWriteResponseLogging(p_conn->s_url_, data);
   }
 
-  if (false == b_success) {
+  std::string serr = "";
+  if (false == CurlServices::isSuccess(errcode, serr)) {
     if (m_nOfflineCheckStatus) {
       check_info_.bActive = 0;
       DpClient_SendDpMessage(TCP_SRV_SET_OFFLINE_CHECK,
                              0, (char*)&check_info_,
                              sizeof(TCP_SRV_OFFLINE_CHECK_INFO));
     }
-    // HttpDpLogging(err.message().c_str(), err.message().length());
+    HttpDpLogging(serr.c_str(), serr.length());
 
-    LOG(L_INFO) << p_conn->GetUrl();
+    LOG(L_INFO) << p_conn->s_url_;
 
-    int resend_times = p_conn->GetResendTimes();
+    int resend_times = p_conn->n_resend_times_;
     if (resend_times <= 0)
       return;
-    HttpPostData(p_conn->GetUrl().c_str(),
-                 p_conn->GetPostData().c_str(),
-                 p_conn->isSslEnable(),
-                 p_conn->GetUrlPort(),
-                 p_conn->GetTimeout(),
+    HttpPostData(p_conn->s_url_.c_str(),
+                 p_conn->s_post_data_.c_str(),
+                 p_conn->b_ssl_enabel_,
+                 p_conn->n_url_port_,
+                 p_conn->n_timeout_,
                  --resend_times,
                  HTTP_CB_TYPE_IVS_RESULT);
     LOG(L_INFO) << "resend_times : " << " : " << resend_times;
@@ -552,31 +563,33 @@ void SenderServer::HttpConnIvsResultComplete(hs::HttpConn *p_conn,
                            sizeof(TCP_SRV_OFFLINE_CHECK_INFO));
     //脱机检查心跳包
   }
-  LOG(L_INFO).write(data, data_size);
 }
 
 void SenderServer::HttpConnGioTriggerComplete(hs::HttpConn* p_conn,
     const char     *data,
     std::size_t     data_size,
-    bool            b_success) {
+    int errcode) {
 
   if (p_conn == NULL)
     return;
-  HttpWriteResponseLogging(p_conn->GetUrl(), data);
-  if (false == b_success) {
-    //HttpDpLogging(err.message().c_str(), err.message().length());
+  
+  HttpWriteResponseLogging(p_conn->s_url_, data);
 
-    int resend_times = p_conn->GetResendTimes();
+  std::string serr = "";
+  if (false == CurlServices::isSuccess(errcode, serr)) {
+    HttpDpLogging(serr.c_str(), serr.length());
+
+    int resend_times = p_conn->n_resend_times_;
     if (resend_times > 0) {
-      HttpPostData(p_conn->GetUrl(),
-                   p_conn->GetPostData(),
-                   p_conn->isSslEnable(),
-                   p_conn->GetUrlPort(),
-                   p_conn->GetTimeout(),
+      HttpPostData(p_conn->s_url_,
+                   p_conn->s_post_data_,
+                   p_conn->b_ssl_enabel_,
+                   p_conn->n_url_port_,
+                   p_conn->n_timeout_,
                    --resend_times,
                    HTTP_CB_TYPE_GIO_TRIGGER);
     }
-    //LOG(L_ERROR) << err.message();
+    LOG(L_ERROR) << serr;
     return;
   }
   LOG(L_INFO).write(data, data_size);
@@ -585,27 +598,28 @@ void SenderServer::HttpConnGioTriggerComplete(hs::HttpConn* p_conn,
 void SenderServer::HttpConnSerialDataComplete(hs::HttpConn *p_conn,
     const char *data,
     std::size_t data_size,
-    bool b_success) {
+    int errcode) {
 
   if (p_conn == NULL)
     return;
 
-  HttpWriteResponseLogging(p_conn->GetUrl(), data);
+  HttpWriteResponseLogging(p_conn->s_url_, data);
 
-  if (false == b_success) {
-    //HttpDpLogging(err.message().c_str(), err.message().length());
+  std::string serr = "";
+  if (false == CurlServices::isSuccess(errcode, serr)) {
+    HttpDpLogging(serr.c_str(), serr.length());
 
-    int resend_times = p_conn->GetResendTimes();
+    int resend_times = p_conn->n_resend_times_;
     if (resend_times > 0) {
-      HttpPostData(p_conn->GetUrl(),
-                   p_conn->GetPostData(),
-                   p_conn->isSslEnable(),
-                   p_conn->GetUrlPort(),
-                   p_conn->GetTimeout(),
+      HttpPostData(p_conn->s_url_,
+                   p_conn->s_post_data_,
+                   p_conn->b_ssl_enabel_,
+                   p_conn->n_url_port_,
+                   p_conn->n_timeout_,
                    --resend_times,
                    HTTP_CB_TYPE_SERIAL_DATA);
     }
-    // LOG(L_ERROR) << err.message();
+    LOG(L_ERROR) << serr;
     return;
   }
   LOG(L_INFO).write(data, data_size);
@@ -620,8 +634,8 @@ std::string SenderServer::GetSystemInfoAccount0User() {
   Json::Reader reader;
   Json::Value user_js;
   std::string user;
-  if(KVDB_FALSE == Kvdb_GetKey(Acount_Info, strlen(Acount_Info),
-                               kvdb_get_key_cb, &user))
+  if(0 >= Kvdb_GetKey(Acount_Info, strlen(Acount_Info),
+                      kvdb_get_key_cb, &user))
     return "admin";
   reader.parse(user,user_js);
   return user_js[0]["user"].asString();
@@ -631,8 +645,8 @@ std::string SenderServer::GetSystemInfoAccount0Password() {
   Json::Reader reader;
   Json::Value pass_js;
   std::string pass;
-  if(KVDB_FALSE == Kvdb_GetKey(Acount_Info, strlen(Acount_Info),
-                               kvdb_get_key_cb, &pass))
+  if(0 >= Kvdb_GetKey(Acount_Info, strlen(Acount_Info),
+                      kvdb_get_key_cb, &pass))
     return "admin";
   reader.parse(pass,pass_js);
   return pass_js[0]["password"].asString();
@@ -642,8 +656,8 @@ std::string SenderServer::GetSystemInfoTitle() {
   Json::Reader reader;
   Json::Value title_js;
   std::string title;
-  if(KVDB_FALSE == Kvdb_GetKey(Sys_Title, strlen(Sys_Title),
-                               kvdb_get_key_cb, &title)) {
+  if(0 >= Kvdb_GetKey(Sys_Title, strlen(Sys_Title),
+                      kvdb_get_key_cb, &title)) {
     LOG(L_ERROR) << "Get Device Title Failed";
     return "IVS";
   }
@@ -658,8 +672,8 @@ std::string SenderServer::GetSystemInfoDeviceIp() {
   Json::Value ip_js;
   std::string ip;
   //if(!kvdb_client_->GetKey(NetworkInterface_Cfg, &ip))
-  if(Kvdb_GetKey(NetworkInterface_Cfg, strlen(NetworkInterface_Cfg),
-                 kvdb_get_key_cb, &ip) == KVDB_FALSE)
+  if(0 >= Kvdb_GetKey(NetworkInterface_Cfg, strlen(NetworkInterface_Cfg),
+                      kvdb_get_key_cb, &ip) == KVDB_FALSE)
     return "192.168.1.100";
   reader.parse(ip,ip_js);
   return ip_js["ip"].asString();
@@ -706,7 +720,8 @@ void SenderServer::DeviceRegFunc() {
                        m_port,
                        timeout,
                        0,
-                       HTTP_CB_TYPE_DEVICE_REG);
+                       HTTP_CB_TYPE_DEVICE_REG,
+                       this);
 
     if (p_conn == NULL)
       return;
@@ -718,11 +733,12 @@ void SenderServer::DeviceRegFunc() {
 void SenderServer::FtpConnPostFileComplete(hs::HttpConn *p_conn,
     const char   *data,
     std::size_t   data_size,
-    bool          b_success) {
-  if (false == b_success) {
-    LOG(L_ERROR) << p_conn->GetUrl();
+    int errcode) {
+  std::string serr = "";
+  if (false == CurlServices::isSuccess(errcode, serr)) {
+    LOG(L_ERROR) << p_conn->s_url_;
   } else {
-    LOG(L_INFO) << p_conn->GetUrl() << " : " << "FtpConnPostFileComplete";
+    LOG(L_INFO) << p_conn->s_url_ << " : " << "FtpConnPostFileComplete";
   }
 }
 
@@ -747,7 +763,8 @@ void SenderServer::NewIPCFtpPostConn(char *filepath) {
                        ftp_json_[PORT_STR].asInt(),
                        10,
                        0,
-                       HTTP_CB_TYPE_FTP_POST_CONN);
+                       HTTP_CB_TYPE_FTP_POST_CONN,
+                       this);
   if (p_conn == NULL)
     return;
   curl_services_->PostImageFile(p_conn,
@@ -759,15 +776,17 @@ void SenderServer::NewIPCFtpPostConn(char *filepath) {
 void SenderServer::HttpConnDeviceRegComplete(hs::HttpConn *http_conn,
     const char *data,
     std::size_t data_size,
-    bool b_success) {
+    int errcode) {
   //LOG(L_INFO).write(data, data_size);
 
   if (http_conn == NULL)
     return;
 
+  std::string serr = "";
   if (REG_COMMON_HEARTBEAT == device_reg_settings_.enable) {
     int time_out = COMET_CONNTIME;
-    if(!b_success && m_nOfflineCheckStatus) {
+    if(false == CurlServices::isSuccess(errcode, serr)
+       && m_nOfflineCheckStatus) {
       time_out = 1;
       check_info_.bActive = 0;
       DpClient_SendDpMessage(TCP_SRV_SET_OFFLINE_CHECK,
@@ -782,19 +801,21 @@ void SenderServer::HttpConnDeviceRegComplete(hs::HttpConn *http_conn,
 
     c_deg_reg_timer_.Start(time_out*1000, 0);
   } else if (REG_COMET_POLLING == device_reg_settings_.enable) {
-    if (!b_success) {
+
+    if (false == CurlServices::isSuccess(errcode, serr)) {
       c_deg_reg_timer_.Start(2*1000, 0);
     } else {
       if (OnIvsPlateResponseHandle(data)) {
-        HttpWriteResponseLogging(http_conn->GetUrl(), data);
+        HttpWriteResponseLogging(http_conn->s_url_, data);
       }
       DeviceRegFunc();
     }
   }
-  if (!b_success) {
-    //HttpDpLogging(err.message().c_str(), err.message().length());
+
+  if (false == CurlServices::isSuccess(errcode, serr)) {
+    HttpDpLogging(serr.c_str(), serr.length());
     m_HttpServerPollLineStatus = false;
-    LOG(L_ERROR) << http_conn->GetUrl();
+    LOG(L_ERROR) << http_conn->s_url_;
     return;
   }
   m_HttpServerPollLineStatus = true;
@@ -818,9 +839,9 @@ void SenderServer::OnIvsResult(const DpMessage* dmp) {
 #ifndef WIN32
   std::string title = GetSystemInfoTitle();
   data_parse_.GetPlateJson((IVS_RESULT_PARAM *)(dmp->data),
-                            platedata,
-                            &plateresult_settings_,
-                            (char *)title.c_str());
+                           platedata,
+                           &plateresult_settings_,
+                           (char *)title.c_str());
 #else
   data_parse_.GetPlateJson((IVS_RESULT_PARAM *)(dmp->data),
                            platedata,
@@ -997,10 +1018,10 @@ int SenderServer::SetIpExt(const char *pdata, int datalen) {
   m_ipext[datalen] = '\0';
   Json::Reader reader;
   reader.parse(m_ipext, ip_extjs_);
-  if (Kvdb_SetKey(http_ipext_key,
-                  strlen(http_ipext_key),
-                  m_ipext,
-                  MAX_IP_EXT_LEN)) {
+  if (KVDB_RET_SUCCEED == Kvdb_SetKey(http_ipext_key,
+                                      strlen(http_ipext_key),
+                                      m_ipext,
+                                      MAX_IP_EXT_LEN)) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1008,9 +1029,9 @@ int SenderServer::SetIpExt(const char *pdata, int datalen) {
 
 int SenderServer::SetCenterServerNet(const char* net) {
   memcpy(&server_settings_, net, sizeof(VZ_CenterServer_Net));
-  if(Kvdb_SetKey(http_centerservernet_value,
-                 strlen(http_centerservernet_value),
-                 net, sizeof(VZ_CenterServer_Net))) {
+  if(KVDB_RET_SUCCEED == Kvdb_SetKey(http_centerservernet_value,
+                                     strlen(http_centerservernet_value),
+                                     net, sizeof(VZ_CenterServer_Net))) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1023,9 +1044,9 @@ int SenderServer::SetCenterServerDeviceReg(const char* devicereg) {
   if (oldreg != device_reg_settings_.enable && 0 == oldreg) {
     DeviceRegFunc();
   }
-  if (Kvdb_SetKey(http_centerserverreg_value,
-                  strlen(http_centerserverreg_value),
-                  devicereg, sizeof(VZ_CenterServer_DeviceReg))) {
+  if (KVDB_RET_SUCCEED == Kvdb_SetKey(http_centerserverreg_value,
+                                      strlen(http_centerserverreg_value),
+                                      devicereg, sizeof(VZ_CenterServer_DeviceReg))) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1035,9 +1056,9 @@ int SenderServer::SetCenterServerPlateResult(const char* plateresult) {
   memcpy(&plateresult_settings_,
          plateresult,
          sizeof(VZ_CenterServer_PlateResult));
-  if (Kvdb_SetKey(http_centerserveralarm_value,
-                  strlen(http_centerserveralarm_value),
-                  plateresult, sizeof(VZ_CenterServer_PlateResult))) {
+  if (KVDB_RET_SUCCEED == Kvdb_SetKey(http_centerserveralarm_value,
+                                      strlen(http_centerserveralarm_value),
+                                      plateresult, sizeof(VZ_CenterServer_PlateResult))) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1045,9 +1066,9 @@ int SenderServer::SetCenterServerPlateResult(const char* plateresult) {
 
 int SenderServer::SetCenterServerGio(const char* gio) {
   memcpy(&gpio_settings_, gio, sizeof(VZ_CenterServer_GioInAlarm));
-  if (Kvdb_SetKey(http_centerserverio_value,
-                  strlen(http_centerserverio_value),
-                  gio, sizeof(VZ_CenterServer_GioInAlarm))) {
+  if (KVDB_RET_SUCCEED == Kvdb_SetKey(http_centerserverio_value,
+                                      strlen(http_centerserverio_value),
+                                      gio, sizeof(VZ_CenterServer_GioInAlarm))) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1058,9 +1079,9 @@ int SenderServer::SetCenterServerSerial(const char* serial) {
   memcpy(&serial_settings_,
          serial,
          sizeof(VZ_CenterServer_Serial));
-  if (Kvdb_SetKey(http_centerserverserial_value,
-                  strlen(http_centerserverserial_value),
-                  serial, sizeof(VZ_CenterServer_Serial))) {
+  if (KVDB_RET_SUCCEED == Kvdb_SetKey(http_centerserverserial_value,
+                                      strlen(http_centerserverserial_value),
+                                      serial, sizeof(VZ_CenterServer_Serial))) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1071,9 +1092,9 @@ int SenderServer::SetHttpResendTimes(const char* resendtimes) {
   memcpy(&m_HttpResendTimes,
          resendtimes,
          sizeof(int));
-  if (Kvdb_SetKey(http_resendtimes_value,
-                  strlen(http_resendtimes_value),
-                  resendtimes, sizeof(int))) {
+  if (KVDB_RET_SUCCEED == Kvdb_SetKey(http_resendtimes_value,
+                                      strlen(http_resendtimes_value),
+                                      resendtimes, sizeof(int))) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1083,9 +1104,9 @@ int SenderServer::SetHttpServerPoll(const char* poll) {
   memcpy(&m_HttpServerPoll,
          poll,
          sizeof(int));
-  if (Kvdb_SetKey(http_serverpoll_value,
-                  strlen(http_serverpoll_value),
-                  poll, sizeof(int))) {
+  if (KVDB_RET_SUCCEED == Kvdb_SetKey(http_serverpoll_value,
+                                      strlen(http_serverpoll_value),
+                                      poll, sizeof(int))) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1105,9 +1126,9 @@ int SenderServer::SetHttpOfflineCheckStatus(const char* status) {
   }
   m_nOfflineCheckStatus = newstatus;
 
-  if (Kvdb_SetKey(http_offlinecheckstatus_value,
-                  strlen(http_offlinecheckstatus_value),
-                  status, sizeof(int))) {
+  if (KVDB_RET_SUCCEED == Kvdb_SetKey(http_offlinecheckstatus_value,
+                                      strlen(http_offlinecheckstatus_value),
+                                      status, sizeof(int))) {
     return KVDB_TRUE;
   }
   return KVDB_FALSE;
@@ -1302,12 +1323,10 @@ void SenderServer::OnConfigControl(const DpMessage* dmp) {
   LOG(L_INFO) << "Message : " << dmp->method;
   int   ret = -1;
   int   res_size = 0;
-  void  *res_data = NULL;
+  void  *res_data = &ret;
   std::string replystr;
-  LOG(L_INFO) << dmp->method;
   if (strcmp(dmp->method, HTTPSENDER_SET_HTTP_IP_EXT) == 0) {
     ret = SetIpExt(dmp->data, dmp->data_size);
-    res_data = &ret;
     res_size = sizeof(ret);
   } else if (strcmp(dmp->method, HTTPSENDER_GET_HTTP_IP_EXT) == 0) {
     res_data = GetIpExt();
@@ -1395,6 +1414,7 @@ void SenderServer::OnIpChange(const DpMessage* dmp) {
 void SenderServer::dp_cli_msg_cb(DPPollHandle p_hdl, const DpMessage *p_dpm, void* p_usr_arg) {
   if (p_usr_arg) {
     ((SenderServer*)p_usr_arg)->OnDpMessage(p_hdl, p_dpm);
+    return;
   }
   LOG(L_ERROR) << "param is null.";
 }
@@ -1461,7 +1481,7 @@ void SenderServer::OnDpState(DPPollHandle p_hdl, uint32 n_state) {
     n_ret = DpClient_HdlReConnect(p_hdl);
     if (n_ret == VZNETDP_SUCCEED) {
       // 重新注册消息
-      n_ret = DpClient_HdlAddListenMessage(p_hdl, 
+      n_ret = DpClient_HdlAddListenMessage(p_hdl,
                                            MSG_METHOD_SET, MSG_METHOD_SET_CNT);
 
       if (n_ret == VZNETDP_FAILURE) {
@@ -1480,7 +1500,7 @@ void SenderServer::kvdb_get_key_cb(const char *p_key, int n_key,
     LOG(L_ERROR) << "param is null.";
     return;
   }
-  
+
   if ((0 == strncmp(p_key, sys_hwinfo, MAX_KVDB_KEY_SIZE)) ||
       (0 == strncmp(p_key, Acount_Info, MAX_KVDB_KEY_SIZE)) ||
       (0 == strncmp(p_key, NetworkInterface_Cfg, MAX_KVDB_KEY_SIZE)) ||
@@ -1541,7 +1561,7 @@ void SenderServer::InitHttpDataInfo() {
 
   Json::Value hwinfo_js;
   std::string hwinfo;
-  if(Kvdb_GetKey(sys_hwinfo, strlen(sys_hwinfo),
+  if(0 < Kvdb_GetKey(sys_hwinfo, strlen(sys_hwinfo),
                  kvdb_get_key_cb, &hwinfo))
     reader.parse(hwinfo, hwinfo_js);
 
@@ -1557,7 +1577,7 @@ bool SenderServer::iGetKeyValueFunc(const char *p_key, int n_key,
                                     char *buffer, int bufferlen,
                                     int datatype) {
   LOG(L_INFO) << "GET " << p_key;
-  if (KVDB_RET_SUCCEED == Kvdb_GetKeyAbsolutelyToBuffer(
+  if (0 < Kvdb_GetKeyAbsolutelyToBuffer(
         p_key, n_key, buffer, bufferlen)) {
     LOG(L_INFO) << "Read key form kvdb " << p_key;
     return true;
@@ -1621,7 +1641,7 @@ bool SenderServer::iGetKeyValueFunc(const char *p_key, int n_key,
   default:
     break;
   }
-  return Kvdb_SetKey(p_key, n_key, buffer, bufferlen);
+  return (KVDB_RET_SUCCEED == Kvdb_SetKey(p_key, n_key, buffer, bufferlen));
 }
 
 int SenderServer::iReadJsonFile(const char* file_path, Json::Value &value) {
@@ -1754,7 +1774,8 @@ void SenderServer::HttpPostData(const std::string url,
                        m_port,
                        timeout,
                        resendtimes,
-                       n_cb_type);
+                       n_cb_type,
+                       this);
   if (p_conn == NULL)
     return;
 

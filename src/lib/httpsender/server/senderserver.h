@@ -26,7 +26,7 @@ namespace hs {
 
 typedef int IPC_DISP_RET;
 
-class SenderServer : public CHttpInterface {
+class SenderServer : public PostInterface {
  public:
   SenderServer();
   virtual ~SenderServer(void);
@@ -107,35 +107,35 @@ class SenderServer : public CHttpInterface {
   *Parameters  :
   *Return      :
   ************************************************************************/
-  virtual bool OnHttpResponse(HttpConn* p_conn, bool b_success);
+  virtual void PostCallBack(HttpConn *cfg, int errcode);
 
   void HttpConnIvsResultComplete(hs::HttpConn *p_conn,
                                  const char *p_resp, std::size_t n_resp,
-                                 bool b_success);
+                                 int errcode);
 
   void HttpConnGioTriggerComplete(hs::HttpConn* p_conn,
                                   const char   *data,
                                   std::size_t   data_size,
-                                  bool          b_success);
+                                  int errcode);
 
   void HttpConnSerialDataComplete(hs::HttpConn *p_conn,
                                   const char   *data,
                                   std::size_t   data_size,
-                                  bool          b_success);
+                                  int errcode);
 
   void HttpConnDeviceRegComplete(hs::HttpConn *http_conn,
                                  const char *data,
                                  std::size_t data_size,
-                                 bool b_success);
+                                 int errcode);
   void HttpConnSnapImageComplete(hs::HttpConn *p_conn,
                                  const char   *data,
                                  std::size_t   data_size,
-                                 bool          b_success);
+                                 int errcode);
 
   void FtpConnPostFileComplete(hs::HttpConn *p_conn,
                                const char   *data,
                                std::size_t   data_size,
-                               bool          b_success);
+                               int errcode);
 
   bool OnIvsPlateResponseHandle(const char* data);
 
@@ -295,6 +295,8 @@ class SenderServer : public CHttpInterface {
   CurlServices               *curl_services_;
 
   vzconn::EVT_TIMER           c_deg_reg_timer_;
+
+  void*                       watchdog_handle_;
 };
 };
 
