@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 #########################################################################
 
 # Basic environment setting
-SET(BUILD_PROJECT_NAME "test_file_io")
+SET(BUILD_PROJECT_NAME "h264_to_flv")
 
 #########################################################################
 #INCLUDE_DIRECTORIES(${LIBVZNET_INCLUDE_DIR})
@@ -25,10 +25,25 @@ endforeach()
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST 
-	${CMAKE_CURRENT_SOURCE_DIR}/event_file_main.cpp
-	)
+	${CMAKE_CURRENT_SOURCE_DIR}/cflvmux.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cflvmux.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264parse.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264parse.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/h264_to_flv_main.cpp
+)
+
+SOURCE_GROUP(flvmux FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/cflvmux.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cflvmux.cpp
+)
+
+SOURCE_GROUP(h264parse FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264parse.h
+	${CMAKE_CURRENT_SOURCE_DIR}/ch264parse.cpp
+)
+
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/event_file_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/h264_to_flv_main.cpp
 )
 #########################################################################
 #Step 4 : Add PROJECT define 

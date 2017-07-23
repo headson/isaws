@@ -1,6 +1,7 @@
 #include "vzbase/helper/stdafx.h"
 
 #include "vzconn/base/connhead.h"
+#include "vzconn/base/byteorder.h"
 #include "vzconn/async/cevtipcclient.h"
 #include "vzconn/async/cevtipcserver.h"
 
@@ -33,7 +34,7 @@ class CClientProcess : public vzconn::CClientInterface {
 
     p_cli->AsyncWrite(p_data,
                       n_data,
-                      NetworkToHost16(p_head->type_flag));
+                      vzconn::NetworkToHost16(p_head->type_flag));
     return 0;
   }
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {

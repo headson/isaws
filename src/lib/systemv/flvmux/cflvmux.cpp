@@ -163,7 +163,7 @@ int32_t CFlvMux::InitHeadTag0(uint8_t *p_dst, uint32_t n_dst,
   avio_wb32(&flv, flv.w_pos - 13);
 
   if (p_file) {
-    fwrite(&flv.buffer, 1, flv.w_pos, p_file);
+    fwrite(flv.buffer, 1, flv.w_pos, p_file);
     fflush(p_file);
   }
   return flv.w_pos;
@@ -215,7 +215,7 @@ int32_t CFlvMux::AudioPacket(uint8_t *p_dst, uint32_t n_dst,
 
   // 1
   avio_w8(&flv, (FLV_CODECID_PCM_ALAW |
-                      FLV_SAMPLERATE_SPECIAL | FLV_SAMPLESSIZE_16BIT));
+                 FLV_SAMPLERATE_SPECIAL | FLV_SAMPLESSIZE_16BIT));
 
   //
   avio_write(&flv, (char*)p_src, n_src);    // data
