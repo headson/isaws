@@ -7,275 +7,178 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "vz_shm.h"
+CShmVdo::CShmVdo() : hdl_shm_(NULL)
+  , hdl_sem_w_(NULL)
+  , hdl_sem_r_(NULL) {
 
-class CShareMemory {
- public:
-  CShareMemory()
-    : hdl_shm_(NULL)
-    , hdl_sem_w_(NULL)
-    , hdl_sem_r_(NULL) {
+}
+
+CShmVdo::~CShmVdo() {
+
+}
+
+bool CShmVdo::Create(const char *s_path, unsigned int n_size) {
+  bool ret = Open(s_path, n_size);
+  if (ret == true) {
+    vzSemUnLock(hdl_sem_r_);
+    vzSemUnLock(hdl_sem_w_);
   }
 
-  ~CShareMemory() {
+  TAG_SHM_VDO *p_shm = (TAG_SHM_VDO*)mem_ptr_;
+  p_shm->n_w_sec = p_shm->n_w_usec = 0;
+  p_shm->n_sps = p_shm->n_pps = 0;
+  p_shm->n_data = 0;
+  p_shm->n_size = n_size - sizeof(TAG_SHM_VDO);
+  return ret;
+}
+
+bool CShmVdo::Open(const char *s_file, unsigned int n_size) {
+  // 共享内存
+  hdl_shm_ = vzShmOpen(s_file, n_size);
+  if (hdl_shm_ == HDL_NULL) {
+    printf("shm open failed.");
+    return false;
+  }
+  mem_ptr_ = vzShmAt(hdl_shm_);
+  if (mem_ptr_ == NULL) {
+    printf("shm memory point failed.\n");
+    return false;
+  }
+  printf("shm handle 0x%x, 0x%x.\n", hdl_shm_, mem_ptr_);
+
+  // 信号
+  char s_sem_key[64] = {0};
+  // W
+  memset(s_sem_key, 0, 64);
+  snprintf(s_sem_key, 63, "%s_sem_w", s_file);
+  hdl_sem_w_ = vzSemOpen(s_sem_key);
+  if (hdl_sem_w_ == HDL_NULL) {
+    printf("sem open failed %s.", s_sem_key);
+    return false;
+  }
+  printf("sem w handle 0x%x.\n", hdl_sem_w_);
+  // R
+  memset(s_sem_key, 0, 64);
+  snprintf(s_sem_key, 63, "%s_sem_r", s_file);
+  hdl_sem_r_ = vzSemOpen(s_sem_key);
+  if (hdl_sem_r_ == HDL_NULL) {
+    printf("sem open failed %s.", s_sem_key);
+    return false;
+  }
+  printf("sem r handle 0x%x.\n", hdl_sem_r_);
+  return true;
+}
+
+int CShmVdo::ReadHead(char* p_data, unsigned int n_data, int *n_sps, int *n_pps) {
+  TAG_SHM_VDO *p_shm = (TAG_SHM_VDO*)mem_ptr_;
+  if (p_shm == NULL ||
+      p_data == NULL ||
+      p_shm->n_sps <= 0 ||
+      p_shm->n_pps <= 0 ||
+      n_data < (p_shm->n_sps+p_shm->n_pps)) {
+    return -1;
   }
 
-  int Create(const char *s_path, unsigned int n_size) {
-    int n_ret = Open(s_path, n_size);
-    if (n_ret == 0) {
-      vzSemUnLock(hdl_sem_r_);
-      vzSemUnLock(hdl_sem_w_);
-    }
-    return n_ret;
+  memcpy(p_data, p_shm->sps_pps, (p_shm->n_sps+p_shm->n_pps));
+  *n_sps = p_shm->n_sps;
+  *n_pps = p_shm->n_pps;
+  return (p_shm->n_sps+p_shm->n_pps);
+}
+
+int CShmVdo::Read(char* p_data, unsigned int n_data,
+                  unsigned int *n_sec, unsigned int *n_usec) {
+  if (p_data == NULL || n_data == 0 ||
+      n_sec == NULL || n_usec == NULL) {
+    printf("param is error.");
+    return -1;
+  }
+  if (hdl_shm_ == HDL_NULL ||
+      mem_ptr_ == NULL ||
+      hdl_sem_r_ == HDL_NULL ||
+      hdl_sem_w_ == HDL_NULL) {
+    printf("shm or sem is invalid.");
+    return -2;
   }
 
-  int Open(const char *s_file, unsigned int n_size) {
-    // 共享内存
-    hdl_shm_ = vzShmOpen(s_file, n_size);
-    if (hdl_shm_ == HDL_NULL) {
-      printf("shm open failed.");
-      return -1;
-    }
-    p_mem_ptr_ = vzShmAt(hdl_shm_);
-    if (p_mem_ptr_ == NULL) {
-      printf("shm memory point failed.\n");
-      return -2;
-    }
-    TAG_SHM *p_shm = (TAG_SHM*)p_mem_ptr_;
-    p_shm->n_size = n_size;
-    p_shm->n_data = 0;
-    p_shm->n_w_sec = p_shm->n_w_usec = 0;
-    printf("shm handle 0x%x, 0x%x.\n", hdl_shm_, p_mem_ptr_);
-
-    // 信号
-    char s_sem_key[64] = { 0 };
-    // W
-    memset(s_sem_key, 0, 64);
-    snprintf(s_sem_key, 63, "%s_sem_w", s_file);
-    hdl_sem_w_ = vzSemOpen(s_sem_key);
-    if (hdl_sem_w_ == HDL_NULL) {
-      printf("sem open failed %s.", s_sem_key);
-      return -3;
-    }
-    printf("sem w handle 0x%x.\n", hdl_sem_w_);
-    // R
-    memset(s_sem_key, 0, 64);
-    snprintf(s_sem_key, 63, "%s_sem_r", s_file);
-    hdl_sem_r_ = vzSemOpen(s_sem_key);
-    if (hdl_sem_r_ == HDL_NULL) {
-      printf("sem open failed %s.", s_sem_key);
-      return -4;
-    }
-    printf("sem r handle 0x%x.\n", hdl_sem_r_);
+  TAG_SHM_VDO *p_shm = (TAG_SHM_VDO*)mem_ptr_;
+  if (!p_shm || n_data < p_shm->n_data) { // 读优先
+    return -3;
+  }
+  //if (vzSemLock(hdl_sem_w_, -1) != 0) {
+  //  return -4;
+  //}
+  if (*n_sec == p_shm->n_w_sec
+      && *n_usec == p_shm->n_w_usec) {
     return 0;
   }
 
-  int Read(char* p_data, unsigned int n_data,
-           unsigned int *n_sec, unsigned int *n_usec) {
-    if (p_data == NULL || n_data == 0 ||
-        n_sec == NULL || n_usec == NULL) {
-      printf("param is error.");
-      return -1;
-    }
-    if (hdl_shm_ == HDL_NULL ||
-        p_mem_ptr_ == NULL    ||
-        hdl_sem_r_ == HDL_NULL ||
-        hdl_sem_w_ == HDL_NULL) {
-      printf("shm or sem is invalid.");
-      return -2;
-    }
+  n_data = p_shm->n_data;
+  memcpy(p_data, p_shm->p_data, n_data);
 
-    TAG_SHM *p_shm = (TAG_SHM*)p_mem_ptr_;
-    if (!p_shm || n_data < p_shm->n_data) { // 读优先
-      return -3;
-    }
-    if (vzSemLock(hdl_sem_w_, -1) != 0) {
-      return -4;
-    }
-    if (*n_sec == p_shm->n_w_sec
-        && *n_usec == p_shm->n_w_usec) {
-      vzSemUnLock(hdl_sem_w_);
-      return 0;
-    }
+  *n_sec = p_shm->n_w_sec;
+  *n_usec = p_shm->n_w_usec;
+  //vzSemUnLock(hdl_sem_w_);
+  return n_data;
+}
 
-    n_data = p_shm->n_data;
-    memcpy(p_data, p_shm->p_data, n_data);
-    //printf("read data length %d.\n", n_data);
 
-    *n_sec = p_shm->n_w_sec;
-    *n_usec = p_shm->n_w_usec;
-    vzSemUnLock(hdl_sem_w_);
-    return n_data;
+int CShmVdo::WriteSps(const char *p_data, unsigned int n_data) {
+  TAG_SHM_VDO *p_shm = (TAG_SHM_VDO*)mem_ptr_;
+  if (p_shm == NULL     ||
+      p_shm->n_sps > 0  ||
+      p_data == NULL    ||
+      n_data > 1024) {
+    return -1;
   }
 
-  int Write(const char  *p_data, unsigned int n_data,
-            unsigned int n_sec, unsigned int n_usec) {
-    if (p_data == NULL || n_data == 0) {
-      printf("param is error.\n");
-      return -1;
-    }
-    if (hdl_shm_ == HDL_NULL ||
-        p_mem_ptr_ == NULL    ||
-        hdl_sem_r_ == HDL_NULL ||
-        hdl_sem_w_ == HDL_NULL) {
-      printf("shm or sem is invalid.");
-      return -2;
-    }
+  memcpy(p_shm->sps_pps, p_data, n_data);
+  p_shm->n_sps = n_data;
+  return n_data;
+}
 
-    TAG_SHM *p_shm = (TAG_SHM*)p_mem_ptr_;
-    if (!p_shm || n_data > p_shm->n_size) {
-      return -3;
-    }
-
-    if (vzSemLock(hdl_sem_w_, -1) != 0) {
-      return -4;
-    }
-
-    memcpy(p_shm->p_data, p_data, p_shm->n_data);
-    p_shm->n_w_sec  = n_sec;
-    p_shm->n_w_usec = n_usec;
-    p_shm->n_data   = n_data;
-
-    vzSemUnLock(hdl_sem_w_);
-    return p_shm->n_data;
+int CShmVdo::WritePps(const char *p_data, unsigned int n_data) {
+  TAG_SHM_VDO *p_shm = (TAG_SHM_VDO*)mem_ptr_;
+  if (p_shm == NULL ||
+      p_shm->n_pps >= 0 ||
+      p_shm->n_sps < 0 ||
+      p_data == NULL ||
+      (n_data + p_shm->n_sps) > 1024) {
+    return -1;
   }
 
-///分批写入buffer[h264: head + body]///////////////////////////////////////
-  int WriteBegin() {
-    if (hdl_shm_ == HDL_NULL ||
-        p_mem_ptr_ == NULL    ||
-        hdl_sem_r_ == HDL_NULL ||
-        hdl_sem_w_ == HDL_NULL) {
-      printf("shm or sem is invalid.");
-      return -1;
-    }
+  memcpy(p_shm->sps_pps+p_shm->n_sps, p_data, n_data);
+  p_shm->n_pps = n_data;
+  return n_data;
+}
 
-    if (vzSemLock(hdl_sem_w_, -1) == 0) {
-      return 0;
-    }
+int CShmVdo::Write(const char *p_data, unsigned int n_data,
+                   unsigned int n_sec, unsigned int n_usec) {
+  if (p_data == NULL || n_data == 0) {
+    printf("param is error.\n");
+    return -1;
+  }
+  if (hdl_shm_ == HDL_NULL ||
+      mem_ptr_ == NULL ||
+      hdl_sem_r_ == HDL_NULL ||
+      hdl_sem_w_ == HDL_NULL) {
+    printf("shm or sem is invalid.");
     return -2;
   }
 
-  int WriteOffset(const char *p_data, unsigned int n_data, unsigned int n_offset) {
-    if (p_data == NULL || n_data == 0) {
-      printf("param is error.");
-      return -1;
-    }
-    if (hdl_shm_ == HDL_NULL ||
-        p_mem_ptr_ == NULL    ||
-        hdl_sem_r_ == HDL_NULL ||
-        hdl_sem_w_ == HDL_NULL) {
-      printf("shm or sem is invalid.");
-      return -2;
-    }
-
-    TAG_SHM *p_shm = (TAG_SHM*)p_mem_ptr_;
-    if (p_shm && (n_data+n_offset) <= p_shm->n_size) { // 读优先
-      memcpy(p_shm->p_data+n_offset, p_data, n_data);
-      p_shm->n_data = n_offset + n_data;
-      return n_data;
-    }
+  TAG_SHM_VDO *p_shm = (TAG_SHM_VDO*)mem_ptr_;
+  if (!p_shm || n_data > p_shm->n_size) {
     return -3;
   }
 
-  int WriteEnd(unsigned int n_sec, unsigned int n_usec) {
-    if (hdl_shm_ == HDL_NULL ||
-        p_mem_ptr_ == NULL    ||
-        hdl_sem_r_ == HDL_NULL ||
-        hdl_sem_w_ == HDL_NULL) {
-      printf("shm or sem is invalid.");
-      return -1;
-    }
-
-    ((TAG_SHM*)p_mem_ptr_)->n_w_sec  = n_sec;
-    ((TAG_SHM*)p_mem_ptr_)->n_w_usec = n_usec;
-    if (vzSemUnLock(hdl_sem_w_) == 0) {
-      return 0;
-    }
-    return -2;
+  if (vzSemLock(hdl_sem_w_, -1) != 0) {
+    return -4;
   }
 
- private:
-  HANDLE        hdl_shm_;
-  void         *p_mem_ptr_;
+  memcpy(p_shm->p_data, p_data, n_data);
+  p_shm->n_w_sec = n_sec;
+  p_shm->n_w_usec = n_usec;
+  p_shm->n_data = n_data;
 
-  unsigned int  n_r_sec_;
-  unsigned int  n_r_usec_;
-
-  HANDLE        hdl_sem_w_;
-  HANDLE        hdl_sem_r_;
-};
-
-///C API//////////////////////////////////////////////////////////////////
-void *Shm_Create(const char* s_key, unsigned int n_size) {
-  CShareMemory* p_shm = NULL;
-
-  p_shm = new CShareMemory();
-  if (p_shm) {
-    if (p_shm->Create(s_key, n_size) != 0) {
-      delete p_shm;
-      p_shm = NULL;
-    }
-  }
-  return p_shm;
-}
-
-void Shm_Release(void *p_hdl) {
-  if (p_hdl) {
-    delete (CShareMemory*)p_hdl;
-  }
-}
-
-int Shm_Write(void *p_hdl,
-              const char* p_data, unsigned int n_data,
-              unsigned int n_sec, unsigned int n_usec) {
-  CShareMemory *p_shm = NULL;
-  p_shm = (CShareMemory*)p_hdl;
-  if (p_shm) {
-    return p_shm->Write(p_data, n_data, n_sec, n_usec);
-  }
-  printf("shm write failed.");
-  return -4;
-}
-
-int Shm_Read(void *p_hdl,
-             char *p_data, unsigned int n_data,
-             unsigned int *n_sec, unsigned int *n_usec) {
-  CShareMemory *p_shm = NULL;
-  p_shm = (CShareMemory*)p_hdl;
-  if (p_shm) {
-    return p_shm->Read(p_data, n_data, n_sec, n_usec);
-  }
-  printf("shm read failed.");
-  return -4;
-}
-
-int Shm_W_Begin(void *p_hdl) {
-  CShareMemory *p_shm = NULL;
-  p_shm = (CShareMemory*)p_hdl;
-  if (p_shm) {
-    return p_shm->WriteBegin();
-  }
-  printf("shm w begin failed.");
-  return -3;
-}
-
-int Shm_W_Write(void *p_hdl, const char* p_data, unsigned int n_data, unsigned int n_offset) {
-  CShareMemory *p_shm = NULL;
-  p_shm = (CShareMemory*)p_hdl;
-  if (p_shm) {
-    return p_shm->WriteOffset(p_data, n_data, n_offset);
-  }
-  printf("shm w offet failed.");
-  return -4;
-}
-
-int Shm_W_End(void *p_hdl, unsigned int n_sec, unsigned int n_usec) {
-  CShareMemory *p_shm = NULL;
-  p_shm = (CShareMemory*)p_hdl;
-  if (p_shm) {
-    return p_shm->WriteEnd(n_sec, n_usec);
-  }
-  printf("shm w end failed.");
-  return -3;
+  vzSemUnLock(hdl_sem_w_);
+  return p_shm->n_data;
 }

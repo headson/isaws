@@ -1,43 +1,47 @@
-/************************************************************************
-*Author      : Sober.Peng 17-07-04
-*Description :
-************************************************************************/
-#ifndef _CFLVMUX_H
-#define _CFLVMUX_H
+/************************************************************************/
+/* Author      : SoberPeng 2017-07-05
+/* Description :
+/************************************************************************/
+#ifndef SHM_CAMERA_H264_CFLVMUX_H
+#define SHM_CAMERA_H264_CFLVMUX_H
 
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include "flv.h"
-
-typedef struct _FLV_TAG {
-  uint32_t n_max;    // 最大小
-  uint32_t w_pos;    // 写偏移
-  uint8_t *buffer;   // 数据
-} FLV_DATA;
-
-class CFlvMux {
- private:
-  FILE  *p_file;
-
- public:
-  CFlvMux(FILE *file=NULL);
-  virtual ~CFlvMux();
-
- public:
-  int32_t InitHeadTag0(uint8_t *p_dst, uint32_t n_dst,
-                       uint32_t n_width, uint32_t n_height);
-
-  int32_t VideoPacket(uint8_t *p_dst, uint32_t n_dst,
-                      bool b_key_frame, uint64_t n_pts,
-                      const uint8_t *p_src, uint32_t n_src);
-
-  int32_t AudioPacket(uint8_t *p_dst, uint32_t n_dst,
-                      uint64_t n_pts,
-                      const uint8_t *p_src, uint32_t n_src);
+enum FlvTagType {
+  FLV_TAG_TYPE_AUDIO = 0x08,
+  FLV_TAG_TYPE_VIDEO = 0x09,
+  FLV_TAG_TYPE_META  = 0x12,
 };
 
-#endif  // _CFLVMUX_H
+class CFlvMux {
+ public:
+  static char *Packet(char *p_packet,
+                      const char *p_head, int n_head,
+                      const char *p_data, int n_data,
+                      int type, unsigned int timestamp);
 
+
+  static char *HeaderAndMetaDataTag(char *p_packet,
+                                    int width, int height,
+                                    int audiodatarate, int audiosamplerate, int audiosamplesize, int audiochannels);
+
+
+
+  static char *PacketSpsPps(char *p_packet, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp);
+  static char *PacketVideo(char *p_packet, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp);
+
+
+ public:
+  CFlvMux();
+
+  int MakeAVCc(char* data, int size, char *output_data, int output_size);
+
+  int SetSps(const char *p_sps, int n_sps);
+  int SetPps(const char *p_pps, int n_pps);
+
+ public:
+  int  sps_size_;
+  int  pps_size_;
+  char sps_pps_[128];
+};
+
+
+#endif  // SHM_CAMERA_H264_CFLVMUX_H

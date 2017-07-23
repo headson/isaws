@@ -356,6 +356,40 @@ CFlvMux::CFlvMux() {
   pps_size_ = 0;
 }
 
+int CFlvMux::MakeAVCc(char* data, int size, char *output_data, int output_size) {
+  if (!data || size <= 0)
+    return -1;
+
+  int ps_size = (data[0] << 8) | (data[1]);
+  int ss_size = (data[ps_size + 2] << 8) | (data[ps_size + 3]);
+  int buf_size = 6 + ps_size + 2 + 1 + ss_size + 2;
+
+  if (buf_size > output_size)
+    return -1;
+
+  char* temp = data;
+  char* output_temp = output_data;
+
+  output_temp[0] = 0x01;
+  output_temp[1] = temp[3];
+  output_temp[2] = temp[4];
+  output_temp[3] = temp[5];
+  output_temp[4] = 0xff;
+  output_temp[5] = 0xe1;
+  output_temp += 6;
+
+  memcpy(output_temp, temp, ps_size + 2);
+  output_temp += ps_size + 2;
+  temp += ps_size + 2;
+
+  output_temp[0] = 1;
+  output_temp += 1;
+
+  memcpy(output_temp, temp, ss_size + 2);
+
+  return buf_size;
+}
+
 int CFlvMux::SetSps(const char *p_sps, int n_sps) {
   if (sps_size_ > 0) {
     return sps_size_;
@@ -407,5 +441,3 @@ int CFlvMux::SetPps(const char *p_pps, int n_pps) {
   pps_size_ += pps - (sps_pps_ + sps_size_);
   return pps_size_;
 }
-
-

@@ -31,6 +31,9 @@ class CFlvMux {
 
  public:
   CFlvMux();
+
+  int MakeAVCc(char* data, int size, char *output_data, int output_size);
+
   int SetSps(const char *p_sps, int n_sps);
   int SetPps(const char *p_pps, int n_pps);
 

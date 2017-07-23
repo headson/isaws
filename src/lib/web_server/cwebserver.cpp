@@ -7,6 +7,7 @@
 #include "vzbase/helper/stdafx.h"
 
 #include "web_server/process/uri_handle.h"
+#include "web_server/process/cflvoverhttp.h"
 
 namespace web {
 
@@ -89,7 +90,7 @@ void CWebServer::web_ev_handler(struct mg_connection *nc, int ev, void *ev_data)
 }
 
 void CWebServer::OnWebEvHdl(struct mg_connection *nc, int ev, void *ev_data) {
-  LOG(L_INFO) << "event "<<ev;
+  // LOG(L_INFO) << "event "<<ev;
   switch (ev) {
   case MG_EV_HTTP_REQUEST: {
     mg_serve_http(nc, (struct http_message *) ev_data, s_web_def_opts_);
@@ -97,10 +98,12 @@ void CWebServer::OnWebEvHdl(struct mg_connection *nc, int ev, void *ev_data) {
   }
 
   case MG_EV_CLOSE: {
-    //if (nc->user_data) {
-    //  delete nc->user_data;
-    //  nc->user_data = NULL;
-    //}
+    if (nc->user_data) {
+      //if (nc->proto_handler == uri_hdl_httpflv) {
+        ((CFlvOverHttp*)nc->user_data)->Close();
+      //}
+      nc->user_data = NULL;
+    }
     break;
   }
 
