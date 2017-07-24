@@ -220,19 +220,21 @@ char *AMF_EncodeNamedBoolean(char *output, const char *strName, int bVal) {
   return AMF_EncodeBoolean(output, bVal);
 }
 
-//flvµÄheader+previoustagsize
-static unsigned char header_data[] = {0x46,0x4C,0x56,
-                                      0x01,
-                                      0x05,
-                                      0x00,0x00,0x00,0x09,
-                                      0x00,0x00,0x00,0x00
-                                     };
-unsigned int header_data_size = 13;
 char *CFlvMux::HeaderAndMetaDataTag(char *p_packet,
                                     int width, int height,
                                     int audiodatarate, int audiosamplerate, int audiosamplesize, int audiochannels) {
-  memcpy(p_packet, header_data, header_data_size);
-  p_packet += header_data_size;
+  // write the file header
+  static unsigned char header[13] = {
+    'F', 'L', 'V',  // FLV file signature
+    0x01,           // FLV file version = 1
+    0x5,            // Flags - modified later
+    0, 0, 0, 9,     // size of the header
+    0, 0, 0, 0      // pre packet size
+  };
+  static unsigned int header_size = 13;
+
+  memcpy(p_packet, header, header_size);
+  p_packet += header_size;
 
   char  metaData[2048] = {0};
   char *dst = metaData;
@@ -248,11 +250,11 @@ char *CFlvMux::HeaderAndMetaDataTag(char *p_packet,
   dst = AMF_EncodeNamedNumber(dst, "width",           width);
   dst = AMF_EncodeNamedNumber(dst, "height",          height);
 
-  dst = AMF_EncodeNamedNumber(dst, "videocodecid",    7);
+  dst = AMF_EncodeNamedNumber(dst, "videocodecid",    FLV_CODECID_H264);
 
   dst = AMF_EncodeNamedNumber(dst, "videodatarate",   4000);
 
-  dst = AMF_EncodeNamedNumber(dst, "audiocodecid",    10);
+  dst = AMF_EncodeNamedNumber(dst, "audiocodecid",    FLV_CODECID_PCM_MULAW);
 
   dst = AMF_EncodeNamedNumber(dst, "audiodatarate",   audiodatarate);
   dst = AMF_EncodeNamedNumber(dst, "audiosamplerate", audiosamplerate);
@@ -270,26 +272,13 @@ char *CFlvMux::HeaderAndMetaDataTag(char *p_packet,
   return Packet(p_packet, NULL, 0, metaData, dst - metaData, 0x12, 0);
 }
 
-char * CFlvMux::PacketSpsPps(char *p_packet, char *p_vdo, int n_vdo,
-                             bool is_key_frame, unsigned int timestamp) {
-
-  char vdo[5] = {0};
-  char *enc = &vdo[0];
-
-  *enc++ = 0x17;
-  *enc++ = 0x00;
-  enc = AMF_EncodeInt24(enc, 0);
-
-  return Packet(p_packet, vdo, 5, p_vdo, n_vdo, 0x09, timestamp);
-}
-
 char * CFlvMux::PacketVideo(char *p_packet, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp) {
   char *p_enc = p_packet;
-  *p_enc++ = 0x09;
 
+  *p_enc++ = 0x09;
+  
   p_enc = AMF_EncodeInt24(p_enc, n_vdo+5+4); //3
 
-  //time tamp-> [time tamp 3b,time tamp ex 1b]
   unsigned long netTimestamp = fastHtonl(timestamp);
   memcpy(p_enc, ((char*)(&netTimestamp)) + 1, 3);
   p_enc += 3;
@@ -303,8 +292,7 @@ char * CFlvMux::PacketVideo(char *p_packet, char *p_vdo, int n_vdo, bool is_key_
 
   if (is_key_frame) {
     *p_enc++ = 0x17;
-  }
-  else {
+  } else {
     *p_enc++ = 0x27;
   }
 
@@ -352,100 +340,56 @@ char* CFlvMux::Packet(char *p_packet,
 }
 
 CFlvMux::CFlvMux() {
-  sps_size_ = 0;
-  pps_size_ = 0;
+  sps_pps_size_ = 0;
 }
 
-int CFlvMux::MakeAVCc(char* data, int size, char *output_data, int output_size) {
-  if (!data || size <= 0)
+int CFlvMux::MakeAVCc(char* sps_pps, int sps_size, int pps_size) {
+  if (!sps_pps ||
+      sps_size <= 0 ||
+      pps_size <= 0) {
     return -1;
+  }
+  if (sps_pps_size_ > 0) {
+    return sps_pps_size_;
+  }
 
-  int ps_size = (data[0] << 8) | (data[1]);
-  int ss_size = (data[ps_size + 2] << 8) | (data[ps_size + 3]);
-  int buf_size = 6 + ps_size + 2 + 1 + ss_size + 2;
+  char *p_sps = sps_pps;
+  char *p_pps = sps_pps + sps_size;
 
-  if (buf_size > output_size)
-    return -1;
+  char* p_out = sps_pps_;
 
-  char* temp = data;
-  char* output_temp = output_data;
+  p_out[0] = 0x17;
+  p_out[1] = 0;
+  p_out[2] = 0;
+  p_out[3] = 0;
+  p_out[4] = 0;
+  p_out[5] = 1;
+  p_out[6] = p_sps[5];
+  p_out[7] = p_sps[6];
+  p_out[8] = p_sps[7];
+  p_out[9] = 0xff;
+  p_out[10] = 0xe1;
+  p_out += 11;
 
-  output_temp[0] = 0x01;
-  output_temp[1] = temp[3];
-  output_temp[2] = temp[4];
-  output_temp[3] = temp[5];
-  output_temp[4] = 0xff;
-  output_temp[5] = 0xe1;
-  output_temp += 6;
+  unsigned short size = 0;
+  size = fastHtons(sps_size - 4);
+  memcpy(p_out, &size, 2);
+  p_out += 2;
 
-  memcpy(output_temp, temp, ps_size + 2);
-  output_temp += ps_size + 2;
-  temp += ps_size + 2;
+  memcpy(p_out, p_sps + 4, sps_size - 4);
+  p_out += (sps_size - 4);
 
-  output_temp[0] = 1;
-  output_temp += 1;
+  p_out[0] = 1;
+  p_out += 1;
 
-  memcpy(output_temp, temp, ss_size + 2);
+  size = fastHtons(pps_size - 4);
+  memcpy(p_out, &size, 2);
+  p_out += 2;
 
-  return buf_size;
+  memcpy(p_out, p_pps + 4, pps_size - 4);
+  p_out += (pps_size - 4);
+
+  sps_pps_size_ = p_out - sps_pps_;
+
+  return (p_out - sps_pps_);
 }
-
-int CFlvMux::SetSps(const char *p_sps, int n_sps) {
-  if (n_sps <= 0) {
-    return 0;
-  }
-  if (sps_size_ > 0) {
-    return sps_size_;
-  }
-
-  char *sps = sps_pps_+sps_size_;
-
-  //sps
-  static char header1[] = {0x17, 0x0, 0x0, 0x0, 0x0, 0x1};
-  memcpy(sps, header1, 6);
-  sps += 6;
-
-  memcpy(sps, p_sps + 5, 3);
-  sps += 3;
-
-  static char header2[] = {0xff, 0xe1};
-  memcpy(sps, header2, 2);
-  sps += 2;
-
-  unsigned short size = fastHtons(n_sps - 4);
-  memcpy(sps, &size, 2);
-  sps += 2;
-
-  memcpy(sps, p_sps + 4, n_sps - 4);
-  sps += (n_sps - 4);
-
-  sps_size_ = sps - sps_pps_;
-  return sps_size_;
-}
-
-int CFlvMux::SetPps(const char *p_pps, int n_pps) {
-  if (n_pps <= 0) {
-    return 0;
-  }
-  if (pps_size_ > 0) {
-    return pps_size_;
-  }
-
-  char *pps = sps_pps_ + sps_size_;
-
-  static char ppss = 0x1;
-  memcpy(pps, &ppss, 1);
-  pps += 1;
-
-  unsigned short size = fastHtons(n_pps - 4);
-  memcpy(pps, &size, 2);
-  pps += 2;
-
-  memcpy(pps, p_pps + 4, n_pps - 4);
-  pps += n_pps - 4;
-
-  pps_size_ += pps - (sps_pps_ + sps_size_);
-  return pps_size_;
-}
-
-

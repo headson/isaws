@@ -13,33 +13,26 @@ enum FlvTagType {
 
 class CFlvMux {
  public:
-  static char *Packet(char *p_packet,
+  static char *Packet(char *p_dst,
                       const char *p_head, int n_head,
                       const char *p_data, int n_data,
                       int type, unsigned int timestamp);
 
 
-  static char *HeaderAndMetaDataTag(char *p_packet,
+  static char *HeaderAndMetaDataTag(char *p_dst,
                                     int width, int height,
                                     int audiodatarate, int audiosamplerate, int audiosamplesize, int audiochannels);
 
-
-
-  static char *PacketSpsPps(char *p_packet, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp);
-  static char *PacketVideo(char *p_packet, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp);
-
+  static char *PacketVideo(char *p_dst, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp);
+  static char *PacketAudio(char *p_dst, char *p_ado, int n_ado, unsigned int timestamp);
 
  public:
   CFlvMux();
 
-  int MakeAVCc(char* data, int size, char *output_data, int output_size);
-
-  int SetSps(const char *p_sps, int n_sps);
-  int SetPps(const char *p_pps, int n_pps);
+  int MakeAVCc(char* sps_pps, int sps_size, int pps_size);
 
  public:
-  int  sps_size_;
-  int  pps_size_;
+  int  sps_pps_size_;
   char sps_pps_[128];
 };
 

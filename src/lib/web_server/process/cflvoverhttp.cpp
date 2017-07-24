@@ -52,7 +52,7 @@ bool CFlvOverHttp::Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop, const char* shm
     return false;
   }
 
-  file = fopen("./test2.flv", "wb+");
+  // file = fopen("./test2.flv", "wb+");
   return true;
 }
 
@@ -79,11 +79,10 @@ int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead,
   ndata = shm_vdo_.ReadHead(sdata, 2048, &n_sps, &n_pps);
   LOG(L_ERROR)<<"sps length "<<n_sps
               <<" pps length "<<n_pps;
-  ndata = flv_shm_.SetSps(sdata, n_sps);
-  ndata += flv_shm_.SetPps(sdata + n_sps, n_pps);
 
+  ndata = flv_shm_.MakeAVCc(sdata, n_sps, n_pps);
   p_dst = flv_shm_.Packet(avcc_data_, NULL, 0,
-                          flv_shm_.sps_pps_, flv_shm_.sps_size_ + flv_shm_.pps_size_,
+                          flv_shm_.sps_pps_, flv_shm_.sps_pps_size_,
                           0x09, 0);
   avcc_data_size_ = p_dst - avcc_data_;
   AsyncWrite(avcc_data_, avcc_data_size_);
@@ -163,12 +162,14 @@ int32 CFlvOverHttp::OnTimer() {
   static char *p_flv = new char[640 * 480 + 1024];
 
   static unsigned int npts = 0;
-  static unsigned int n_sec = 0, n_usec = 0;
+  static unsigned int n_lastsec = 0, n_lastusec = 0;
 
   if (p_data) {
+    unsigned int n_sec = n_lastsec, n_usec = n_lastusec;
     int ndata = shm_vdo_.Read(p_data, 640 * 480, &n_sec, &n_usec);
     if (ndata > 0) {
-      npts += 40;
+      npts += (n_sec - n_lastsec)*1000 + (n_usec - n_lastusec)/1000;
+      n_lastsec = n_sec; n_lastusec = n_usec;
 
       int nal_bng = 0;
       int frm_type = 0;
@@ -188,7 +189,7 @@ int32 CFlvOverHttp::OnTimer() {
       if (file) {
         fwrite(p_flv, 1, n_flv, file);
       }
-      printf("----------------- flv %d %d.\n", frm_type, n_flv);
+      // printf("----------------- flv %d %d.\n", frm_type, n_flv);
     }
   }
   return 0;
