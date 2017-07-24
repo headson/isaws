@@ -51,6 +51,8 @@ SET(SRC_LIST_LOGSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/server/vzflags.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.cpp
 )
 
 SOURCE_GROUP(base FILES
@@ -73,6 +75,8 @@ SOURCE_GROUP(server FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/server/vzflags.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.cpp
 	)
 ## build library vzlogging
 MESSAGE(STATUS "Build vzlogserver library")
@@ -95,12 +99,22 @@ if(WIN32)
 		ws2_32.lib
 	)
 else()
-	add_library(${BUILD_PROJECT_NAME_LOGGING} STATIC
+	add_library(${BUILD_PROJECT_NAME_LOGGING} SHARED
 			${SRC_LIST_BASE}
 			${SRC_LIST_LOGGING})
 
 	set_property(TARGET ${BUILD_PROJECT_NAME_LOGGING} 
 		PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME_LOGGING} 
+		libevent_core.so
+		libevent_pthreads.so
 	)
 endif()
+
+IF(UNIX)
+    add_custom_command(TARGET ${BUILD_PROJECT_NAME_LOGGING} POST_BUILD 
+        COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzlogging.so
+        COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzlogging.so ${FTP_DIR}/libvzlogging.so
+		#COMMAND rm -rf ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libdpinterface.so
+		)
+ENDIF()

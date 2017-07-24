@@ -14,54 +14,121 @@ namespace cached {
 
 #define SD_CAP_PATH    "/media/mmcblk0p1/VzIPCCap"
 
-CachedService::CachedService(vzconn::EventService &event_service)
-  : event_service_(event_service) {
+CachedService::CachedService(vzbase::Thread *cached_thread,
+                             std::size_t cache_size)
+  : cache_size_(cache_size),
+    cached_thread_(cached_thread),
+    current_cache_size_(0) {
+  cachedstanza_pool_ = CachedStanzaPool::Instance();
+  cachedstanza_pool_->SetDefaultCachedSize(32, cache_size + 6);
+  BOOST_ASSERT(cachedstanza_pool_ != NULL);
 }
 
 CachedService::~CachedService() {
 }
 
 bool CachedService::Start() {
+  //cached_service_work_.reset(
+  //  new boost::asio::io_service::work(cached_service_));
+  //cache_thread_.reset(
+  //  new boost::thread(boost::bind(&CachedService::OnCachedThread, this)));
   return true;
 }
 
-bool CachedService::AddFile(const char *path,
-                            const uint8 *data, uint32 size,
-                            bool is_cached) {
-  AsyncSaveFile(path, data, size);
-  return true;
-}
-
-//void CachedService::ReplaceCachedFile(CachedStanza::Ptr stanza) {
-//  // 去掉重复的元素
-//  for(std::size_t i = 0; i < cached_stanzas_.size(); i++) {
-//    if(cached_stanzas_[i]->path() == stanza->path()) {
-//      cached_stanzas_.erase(cached_stanzas_.begin() + i);
-//    }
-//  }
-//  cached_stanzas_.push_back(stanza);
+//void CachedService::OnCachedThread() {
+//  //while(true) {
+//  //  try {
+//  //    cached_service_.run();
+//  //  } catch(std::exception &e) {
+//  //    LOG(ERROR) << e.what();
+//  //  }
+//  //}
 //}
 
-bool CachedService::RemoveFile(const char *path) {
-  AsyncRemoveFile(path);
+void CachedService::OnMessage(vzbase::Message *msg) {
+  StanzaMessageData *stanza_msg = static_cast<StanzaMessageData *>(msg->pdata.get());
+  if (stanza_msg) {
+    OnAsyncSaveFile(stanza_msg->stanza);
+  }
+}
+
+bool CachedService::AddFile(CachedStanza::Ptr stanza, bool is_cached) {
+  LOG(INFO) << "Cached file = " << stanza->path()
+            <<" is cached "<< is_cached
+            <<" stanza use count "<<stanza.use_count();
+  ReplaceCachedFile(stanza);
+  // Try to remove out of data stanza
+  RemoveOutOfDataStanza();
+  if(cached_stanzas_.size() > MAX_CACHED_STANZA_SIZE) {
+    stanza->SaveConfimation();
+    LOG(WARNING) << "cached_stanzas size big than 64 " << cached_stanzas_.size();
+    return true;
+  }
+  if(is_cached) {
+    StanzaMessageData *stanza_msg = new StanzaMessageData();
+    stanza_msg->stanza = stanza;
+    vzbase::MessageData::Ptr msg_data(stanza_msg);
+
+    cached_thread_->Post(this, 0, msg_data);
+  }
   return true;
 }
 
-void CachedService::AsyncRemoveFile(const char *file_path) {
-  remove(file_path);
+void CachedService::ReplaceCachedFile(CachedStanza::Ptr stanza) {
+  // 去掉重复的元素
+  for(std::size_t i = 0; i < cached_stanzas_.size(); i++) {
+    if(cached_stanzas_[i]->path() == stanza->path()) {
+      cached_stanzas_.erase(cached_stanzas_.begin() + i);
+    }
+  }
+  cached_stanzas_.push_back(stanza);
 }
 
-bool CachedService::GetFile(const char *path, std::vector<char> &buffer) {
+bool CachedService::RemoveFile(const std::string path) {
+  LOG(INFO) << "Remove file " << path;
+  BOOST_ASSERT(cachedstanza_pool_ != NULL);
+  for(std::deque<CachedStanza::Ptr>::iterator iter = cached_stanzas_.begin();
+      iter != cached_stanzas_.end(); ++iter) {
+    if((*iter)->path() == path) {
+      //cached_service_.post(
+      //  boost::bind(&CachedService::OnAsyncRemoveFile, this, path));
+      OnAsyncRemoveFile(path);
+      cached_stanzas_.erase(iter);
+      break;
+    }
+  }
+  return true;
+}
 
-  LOG(L_INFO) << "Get File " << path;
+void CachedService::OnAsyncRemoveFile(std::string path) {
+  remove(path.c_str());
+}
 
-  if(ReadFile(path, buffer)) {
-    LOG(L_INFO) << "Read Stanza";
-    return true;
+CachedStanza::Ptr CachedService::GetFile(const char *path) {
+  LOG(INFO) << "Get File " << path;
+  for(std::deque<CachedStanza::Ptr>::iterator iter = cached_stanzas_.begin();
+      iter != cached_stanzas_.end(); ++iter) {
+    if((*iter)->path() == path) {
+      LOG(INFO) << "Find stanza";
+      return (*iter);
+    }
+  }
+  BOOST_ASSERT(cachedstanza_pool_ != NULL);
+  LOG(INFO) << "Can't to find the file " << path;
+  CachedStanza::Ptr stanza = cachedstanza_pool_->TakeStanza(READ_MAX_BUFFER);
+  if(!stanza) {
+    return CachedStanza::Ptr();
+  }
+
+  if(ReadFile(stanza->path(), stanza->data())) {
+    // AddFile(stanza, false);
+    // stanza->SaveConfimation();
+    LOG(INFO) << "Read Stanza";
+    return stanza;
   } else {
   }
-  LOG(L_INFO) << "Not find";
-  return false;
+  LOG(INFO) << "Not find";
+  return CachedStanza::Ptr();
 }
 
 #ifndef WIN32
@@ -112,10 +179,8 @@ void CachedService::iMakeDirRecursive(const char *pPath) {
 #define vzsleep(x) Sleep(x)
 #endif
 
-void CachedService::AsyncSaveFile(const char *path,
-                                  const uint8 *data,
-                                  uint32 size) {
-
+void CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
+  BOOST_ASSERT(stanza && (!stanza->IsSaved()));
   static const std::size_t CHAUNK_SIZE = 32 * 1024;
   static const uint32 RECURSION_TIME = 128;
   static const uint32 MAX_TRY_TIMES  = 4;
@@ -124,16 +189,17 @@ void CachedService::AsyncSaveFile(const char *path,
   //LOG(INFO) << "save cached file " << stanza->path();
   //return;
 #ifndef WIN32
-  iMakeDirRecursive(path);
+  iMakeDirRecursive(stanza->path().c_str());
 #endif
-  FILE *fp = fopen(path, "wb");
+  FILE *fp = fopen(stanza->path().c_str(), "wb");
   if(fp == NULL) {
-    LOG(L_ERROR) << "Failure to open file " << path;
+    LOG(ERROR) << "Failure to open file " << stanza->path();
+    stanza->SaveConfimation();
     return;
   }
   uint32 recursion_time = RECURSION_TIME;
-  const char *pdata = (const char *)data;
-  std::size_t data_size = size;
+  const char *pdata = stanza->DataString();
+  std::size_t data_size = stanza->size();
   std::size_t write_size = 0;
   std::size_t try_write_times = MAX_TRY_TIMES;
 
@@ -150,10 +216,10 @@ void CachedService::AsyncSaveFile(const char *path,
     //          << write_size
     //          << "\t" << stanza->size();
     if (ferror(fp) && try_write_times) {
-      LOG(L_ERROR) << "Write file error: size != stanza->data.size() "
-                   << ferror(fp);
+      LOG(ERROR) << "Write file error: size != stanza->data.size() "
+                 << ferror(fp);
       perror("Failure to write file");
-      LOG(L_ERROR) << "Try times " << MAX_TRY_TIMES - try_write_times;
+      LOG(ERROR) << "Try times " << MAX_TRY_TIMES - try_write_times;
       clearerr(fp);
       break;
     }
@@ -171,21 +237,24 @@ void CachedService::AsyncSaveFile(const char *path,
       recursion_time = recursion_time >> 1;
     }
   }
-  if(write_size != size) {
-    LOG(L_ERROR) << "Write file error: size != stanza->data.size() "
-                 << ferror(fp);
+  if(write_size != stanza->size()) {
+    LOG(ERROR) << "Write file error: size != stanza->data.size() "
+               << ferror(fp);
     perror("Failure to write file");
   } else {
-    LOG(L_INFO) << "save cached file " << path;
+    LOG(INFO) << "save cached file " << stanza->path()
+      << " stanze use count " << stanza.use_count();
   }
+  stanza->SaveConfimation();
   fclose(fp);
 }
 
-bool CachedService::ReadFile(const char *path, std::vector<char> &data_buffer) {
+bool CachedService::ReadFile(const std::string path,
+                             std::vector<char> &data_buffer) {
   static char read_buffer[READ_FILE_BUFFER_SIZE];
-  FILE *fp = fopen(path, "rb");
+  FILE *fp = fopen(path.c_str(), "rb");
   if(fp == NULL) {
-    LOG(L_ERROR) << "Failure to open the file " << path;
+    LOG(ERROR) << "Failure to open the file " << path;
     return false;
   }
   data_buffer.resize(0);
@@ -201,6 +270,21 @@ bool CachedService::ReadFile(const char *path, std::vector<char> &data_buffer) {
   }
   fclose(fp);
   return true;
+}
+
+void CachedService::RemoveOutOfDataStanza() {
+  BOOST_ASSERT(cachedstanza_pool_ != NULL);
+  LOG(INFO) << "cached stanza = " << cached_stanzas_.size()
+    << " cache_size_ " << cache_size_;
+  /*##rjx## 如果缓存队首数据未被存储，但队列中数据存在已经存储的则不能及时回收*/
+  while(cached_stanzas_.size() > cache_size_) {
+    CachedStanza::Ptr stanza = cached_stanzas_.front();
+    if(stanza && stanza->IsSaved()) {
+      cached_stanzas_.pop_front();
+    }/* else {
+      break;
+    }*/
+  }
 }
 
 

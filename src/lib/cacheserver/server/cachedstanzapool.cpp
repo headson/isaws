@@ -1,4 +1,5 @@
-#include "filecached/server/cachedstanzapool.h"
+#include "cacheserver/server/cachedstanzapool.h"
+#include "vzlogging/logging/vzloggingcpp.h"
 
 namespace cached {
 
@@ -18,7 +19,7 @@ CachedStanzaPool::~CachedStanzaPool() {
 }
 
 CachedStanza::Ptr CachedStanzaPool::TakeStanza(std::size_t mini_size) {
-  boost::mutex::scoped_lock stanza_mutex(pool_mutex_);
+  vzbase::CritScope stanza_mutex(&pool_mutex_);
   if(stanzas_.size()) {
     return TaskPerfectStanza(mini_size);
   }
@@ -26,14 +27,14 @@ CachedStanza::Ptr CachedStanzaPool::TakeStanza(std::size_t mini_size) {
   //  LOG(INFO) << "stanzas_.size() == 0, Create cached stanza";
   /*return CachedStanza::Ptr(new CachedStanza());*/
   //}
-  //LOG(WARNING) << "The stanza size reach limit "
-  //             << MAX_CACHED_STANZA_SIZE
-  //             << "\t" << stanzas_.size();
+  LOG(WARNING) << "The stanza size reach limit "
+               << MAX_CACHED_STANZA_SIZE
+               << "\t" << stanzas_.size();
   return CachedStanza::Ptr();
 }
 
 void CachedStanzaPool::RecyleStanza(CachedStanza *stanza) {
-  boost::mutex::scoped_lock stanza_mutex(pool_mutex_);
+  vzbase::CritScope stanza_mutex(&pool_mutex_);
   LOG(INFO) << "Recyle Stanza " << stanza->size();
   stanza->ResetDefualtState();
   InsertStanza(stanza);
@@ -59,9 +60,7 @@ CachedStanza::Ptr CachedStanzaPool::TaskPerfectStanza(std::size_t mini_size) {
   for(Stanzas::iterator iter = stanzas_.begin();
       iter != stanzas_.end(); ++iter) {
     if((*iter)->Capacity() >= mini_size) {
-      perfect_stanza.reset(*iter,
-                           boost::bind(&CachedStanzaPool::RecyleBuffer,
-                                       this, _1));
+      perfect_stanza.reset(*iter, &CachedStanzaPool::RecyleBuffer);
       stanzas_.erase(iter);
       LOG(INFO) << "Take stanza by mini size = " << mini_size
                 << "\t" << stanzas_.size();
@@ -69,11 +68,10 @@ CachedStanza::Ptr CachedStanzaPool::TaskPerfectStanza(std::size_t mini_size) {
     }
   }
   LOG(INFO) << "Task stanza by back size = " << stanzas_.size();
-  perfect_stanza.reset(stanzas_.front(),
-                       boost::bind(&CachedStanzaPool::RecyleBuffer,
-                                   this, _1));
+  perfect_stanza.reset(stanzas_.front(), &CachedStanzaPool::RecyleBuffer);
   stanzas_.pop_front();
-  LOG(INFO) << "Task stanza by back size = " << stanzas_.size();
+  LOG(INFO) << "Task stanza by back size = " << stanzas_.size()
+    << " perfect_stanza use count " << perfect_stanza.use_count();
   return perfect_stanza;
 }
 
@@ -81,15 +79,14 @@ void CachedStanzaPool::InsertStanza(CachedStanza *stanza) {
   for(Stanzas::iterator iter = stanzas_.begin();
       iter != stanzas_.end(); ++iter) {
     if(stanza->Capacity() > (*iter)->Capacity()) {
-      LOG(INFO) << stanzas_.size();
+      LOG(L_INFO) << "InsertStanza " << stanzas_.size();
       stanzas_.insert(iter, stanza);
       return;
     }
   }
   stanzas_.push_back(stanza);
-  LOG(INFO) << stanzas_.size();
+  LOG(L_INFO) << "InsertStanza " << stanzas_.size();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -107,12 +104,17 @@ CachedStanza::~CachedStanza() {
 }
 
 bool CachedStanza::IsSaved() {
-  boost::mutex::scoped_lock stanza_mutex(stanza_mutex_);
+  vzbase::CritScope stanza_mutex(&stanza_mutex_);
   return is_saved_;
 }
 
+void CachedStanza::SetData(const uint8 *data, uint32 size) {
+  data_.resize(size);
+  memcpy((void *)&data_[0], data, size);
+}
+
 void CachedStanza::SaveConfimation() {
-  boost::mutex::scoped_lock stanza_mutex(stanza_mutex_);
+  vzbase::CritScope stanza_mutex(&stanza_mutex_);
   BOOST_ASSERT(!is_saved_);
   is_saved_ = true;
 }

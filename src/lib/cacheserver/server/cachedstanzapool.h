@@ -1,13 +1,16 @@
 #ifndef FILECACHED_SERVER_CACHEDSTANZAPOOL_H_
 #define FILECACHED_SERVER_CACHEDSTANZAPOOL_H_
 
-#include "vzconn/base/basicdefines.h"
+#include "vzbase/base/boost_settings.hpp"
+#include "vzbase/base/basictypes.h"
+#include "vzbase/base/criticalsection.h"
 #include <list>
 #include <vector>
+#include <string>
 
 namespace cached {
 
-class CachedStanza : public boost::noncopyable,
+class CachedStanza : public vzbase::noncopyable,
   public boost::enable_shared_from_this<CachedStanza> {
  public:
   typedef boost::shared_ptr<CachedStanza> Ptr;
@@ -19,9 +22,15 @@ class CachedStanza : public boost::noncopyable,
     return path_;
   }
 
+  void SetPath(const char *path) {
+    path_ = path;
+  }
+
   std::vector<char> &data() {
     return data_;
   }
+
+  void SetData(const uint8 *data, uint32 size);
 
   bool IsSaved();
   void SaveConfimation();
@@ -41,10 +50,11 @@ class CachedStanza : public boost::noncopyable,
   std::string path_;
   std::vector<char> data_;
   bool is_saved_;
-  boost::mutex stanza_mutex_;
+
+  vzbase::CriticalSection stanza_mutex_;
 };
 
-class CachedStanzaPool : public boost::noncopyable,
+class CachedStanzaPool : public vzbase::noncopyable,
   public boost::enable_shared_from_this<CachedStanzaPool> {
  public:
   typedef boost::shared_ptr<CachedStanzaPool> Ptr;
@@ -61,13 +71,13 @@ class CachedStanzaPool : public boost::noncopyable,
  private:
   void InsertStanza(CachedStanza *stanza);
   CachedStanza::Ptr TaskPerfectStanza(std::size_t mini_size);
-  void RecyleBuffer(void *stanza);
+  static void RecyleBuffer(void *stanza);
   void RecyleStanza(CachedStanza *stanza);
  private:
   static const int MAX_CACHED_STANZA_SIZE = 128;
   typedef std::list<CachedStanza *> Stanzas;
   Stanzas stanzas_;
-  boost::mutex pool_mutex_;
+  vzbase::CriticalSection pool_mutex_;
  private:
   static CachedStanzaPool *pool_instance_;
 };

@@ -7,7 +7,7 @@
 
 #include "vzbase/base/basictypes.h"
 
-#include "dpclient_c.h"
+#include "dispatcher/sync/dpclient_c.h"
 
 #include "vzconn/sync/ctcpclient.h"
 #include "dispatcher/sync/cdpclient.h"

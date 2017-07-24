@@ -167,7 +167,7 @@ EXPORT_DLL int DpClient_SendDpRequest(const char *method,
                                       DpClient_MessageCallback  call_back,
                                       void                     *user_data,
                                       unsigned int              timeout) {
-  // LOG(L_INFO) << "send dp request " << method;
+  LOG(L_INFO) << "send dp request " << method;
 
   int32 n_ret = 0;
   CDpClient* p_tcp = GetDpCli();
@@ -183,6 +183,7 @@ EXPORT_DLL int DpClient_SendDpRequest(const char *method,
                                call_back,
                                user_data,
                                timeout);
+  LOG(L_INFO) << "send dp request " << method;
   return n_ret;
 }
 
@@ -405,7 +406,9 @@ EXPORT_DLL void Event_ReleaseSignalHandle(EventSignal p_evt_handle) {
 static CKvdbClient         *g_kvdb_client   = NULL;
 
 EXPORT_DLL int Kvdb_Start(const char *server, unsigned short port) {
-  g_kvdb_client = CKvdbClient::Create(server, port);
+  if (g_kvdb_client == NULL) {
+    g_kvdb_client = CKvdbClient::Create(server, port);
+  }
   if (g_kvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }
@@ -544,7 +547,9 @@ EXPORT_DLL int Kvdb_RestoreDatabase() {
 static CKvdbClient         *g_skvdb_client = NULL;
 
 EXPORT_DLL int SKvdb_Start(const char *server, unsigned short port) {
-  g_skvdb_client = CKvdbClient::Create(server, port);
+  if (g_skvdb_client == NULL) {
+    g_skvdb_client = CKvdbClient::Create(server, port);
+  }
   if (g_skvdb_client == NULL) {
     return KVDB_RET_FAILURE;
   }

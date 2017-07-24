@@ -7,14 +7,14 @@
 
 #include "vzbase/base/basictypes.h"
 
-#include "dpclient_c.h"
 #include "vzconn/sync/ctcpclient.h"
+#include "dispatcher/sync/dpclient_c.h"
 
 class CDpClient : public vzconn::CTcpClient,
   public vzconn::CClientInterface {
  protected:
   CDpClient(const char *server, unsigned short port,
-            vzconn::EVT_LOOP          *p_evt_loop);
+            vzconn::EVT_LOOP *p_evt_loop);
 
  public:
   static CDpClient* Create(const char *server, unsigned short port,
@@ -59,7 +59,7 @@ class CDpClient : public vzconn::CTcpClient,
 
   virtual bool  CheckAndConnected();
 
- protected:
+ public:
   int32 SendMessage(unsigned char             n_type,
                     const char               *p_method,
                     unsigned int              n_method,

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <head>
     <meta charset="UTF-8">
     <title>PC-Manage</title>
@@ -8,12 +8,12 @@
     <script src="../js/utf8.js"></script>
 
     <style>
-        #dev_info {
+        #devinfo_container {
             width: 260px;
             height: 100%;
         }
 
-        .dev_main {
+        .devinfo_center {
             position: absolute;
             left: 50%;
             margin-left: -130px;
@@ -22,55 +22,84 @@
 </head>
 
 <body>
-<div id="dev_info" class="dev_main">
-    <br/><br/>
-    <div class="formField clearfix">
-        <label>设备名称:</label><input type="text" class="formText" id="dev_name"/>
-    </div>
-    <div class="formField clearfix">
-        <label>设备类型:</label> <input type="text" class="formText" id="dev_type"/>
-    </div>
-    <div class="formField clearfix">
-        <label>软件版本:</label> <input type="text" class="formText" id="sw_ver"/>
-    </div>
-    <div class="formField clearfix">
-        <label>硬件版本:</label> <input type="text" class="formText" id="hw_ver"/>
-    </div>
-    <div class="formField clearfix">
-        <label>算法版本:</label> <input type="text" class="formText" id="iva_ver"/>
-    </div>
-    <div class="formField clearfix">
-        <label>WEB端口:</label> <input type="text" class="formText" id="web_port"/>
-    </div>
-    <div class="formField clearfix">
-        <label>RTSP端口:</label> <input type="text" class="formText" id="rtsp_port"/>
-    </div>
-    <div class="formField clearfix">
-        <label>磁盘大小:</label> <input type="text" class="formText" id="disk_size"/>
-    </div>
-    <div class="formField clearfix">
-        <label>DHCP使能:</label> <input type="checkbox" class="formText" id="dhcp_en"/>
-    </div>
-    <div class="formField clearfix">
-        <label>IP地址:</label> <input type="text" class="formText" id="ip_addr"/>
-    </div>
-    <div class="formField clearfix">
-        <label>掩码:</label> <input type="text" class="formText" id="netmask"/>
-    </div>
-    <div class="formField clearfix">
-        <label>网关:</label> <input type="text" class="formText" id="gateway"/>
-    </div>
-    <div class="formField clearfix">
-        <label>DNS:</label> <input type="text" class="formText" id="dns_addr"/>
-    </div>
-    <div class="formField clearfix">
-        <label>MAC地址:</label> <input type="text" class="formText" id="phy_mac"/>
-    </div>
+    <div id="devinfo_container" class="devinfo_center">
+        <br /><br />
+        <table>
+            <tr>
+                <th align="left"><label>设备名称:</label></th>
+                <th><input type="text" class="formText" id="dev_name" /></th>
+            </tr>
 
-    <div>
-        <input type="button" class="btn" value="保存修改" id="save_btn"/>
+            <tr>
+                <th align="left"><label>设备类型:</label></th>
+                <th><input type="text" class="formText" id="dev_type" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>软件版本:</label></th>
+                <th><input type="text" class="formText" id="sw_ver" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>硬件版本:</label></th>
+                <th><input type="text" class="formText" id="hw_ver" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>算法版本:</label></th>
+                <th><input type="text" class="formText" id="iva_ver" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>WEB端口:</label></th>
+                <th><input type="text" class="formText" id="web_port" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>RTSP端口:</label></th>
+                <th><input type="text" class="formText" id="rtsp_port" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>磁盘大小:</label></th>
+                <th><input type="text" class="formText" id="disk_size" /></th>
+            </tr>
+            <tr>
+                <th align="left"></th>
+                <th><input type="checkbox" class="formText" id="dhcp_en" />DHCP使能</th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>IP:</label></th>
+                <th><input type="text" class="formText" id="ip_addr" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>掩码:</label></th>
+                <th><input type="text" class="formText" id="netmask" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>网关:</label></th>
+                <th><input type="text" class="formText" id="gateway" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>DNS:</label></th>
+                <th><input type="text" class="formText" id="dns_addr" /></th>
+            </tr>
+
+            <tr>
+                <th align="left"><label>MAC地址:</label></th>
+                <th><input type="text" class="formText" id="phy_mac" /></th>
+            </tr>
+
+            <tr>
+                <th></th>
+                <th align="right"><input type="button" class="btn" value="保存修改" id="save_btn" /></th>
+            </tr>
+        </table>
     </div>
-</div>
 
 <script>
   function get_devinfo() {

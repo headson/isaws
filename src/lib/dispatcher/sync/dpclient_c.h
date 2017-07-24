@@ -17,6 +17,7 @@
 extern "C" {
 #endif
 
+#if 1
 typedef void* DpEvtService;
 typedef void* DPPollHandle;
 #define DP_POLL_HANDLE_NULL NULL
@@ -36,7 +37,7 @@ typedef void* EventSignal;   // 信号量
 typedef int (*Event_SignalCallback)(int         n_signal,
                                     short       events,
                                     const void *p_usr_arg);
-
+#endif
 /************************************************************************
 *Description : 初始化Dispatcher的服务器[地址:端口]
 *Parameters  :
@@ -88,11 +89,11 @@ EXPORT_DLL int DpClient_SendDpRequest(const char                *p_method,
 #ifdef __cplusplus
 // p_reply std::string*
 EXPORT_DLL int DpClient_SendDpReqToString(const char *p_method,
-                                          unsigned char  n_session_id,
-                                          const char    *p_data,
-                                          int            n_data,
-                                          void          *p_reply,
-                                          unsigned int   n_timeout);
+    unsigned char  n_session_id,
+    const char    *p_data,
+    int            n_data,
+    void          *p_reply,
+    unsigned int   n_timeout);
 #endif  // __cplusplus
 /************************************************************************
 *Description : DpClient发送回执

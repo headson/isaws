@@ -38,13 +38,13 @@ SET(SRC_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedserver.cpp
-	#${CMAKE_CURRENT_SOURCE_DIR}/server/cachedstanzapool.h
-	#${CMAKE_CURRENT_SOURCE_DIR}/server/cachedstanzapool.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedstanzapool.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedstanzapool.cpp
 	#${CMAKE_CURRENT_SOURCE_DIR}/server/cachedsession.h
 	#${CMAKE_CURRENT_SOURCE_DIR}/server/cachedsession.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedservice.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedservice.cpp
-	)
+)
 	
 SET(SRC_CLI_LIST 
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.h
@@ -53,29 +53,29 @@ SET(SRC_CLI_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cachedclient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cachedclient_c.h
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cachedclient_c.cpp
-	)
+)
 
 SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.h
-	)
+)
 
 SOURCE_GROUP(server FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedserver.cpp
-	#${CMAKE_CURRENT_SOURCE_DIR}/server/cachedstanzapool.h
-	#${CMAKE_CURRENT_SOURCE_DIR}/server/cachedstanzapool.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedstanzapool.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedstanzapool.cpp
 	#${CMAKE_CURRENT_SOURCE_DIR}/server/cachedsession.h
 	#${CMAKE_CURRENT_SOURCE_DIR}/server/cachedsession.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedservice.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cachedservice.cpp
-	)
+)
 
 SOURCE_GROUP(client FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cachedclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cachedclient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cachedclient_c.h
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cachedclient_c.cpp
-	)
+)
 
 #########################################################################
 #Step 4 : Add PROJECT define 
@@ -86,28 +86,35 @@ MESSAGE(STATUS "Step 4 : Add code source")
 MESSAGE(STATUS "Step 5 : Add executable or library target")
 #ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
 if(WIN32)
-	##ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
-	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
-ELSE()
-	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
-ENDIF()
-set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 
-ADD_LIBRARY(${BUILD_CACHE_CLI_NAME} STATIC ${SRC_CLI_LIST})
+	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
+	ADD_LIBRARY(${BUILD_CACHE_CLI_NAME} STATIC ${SRC_CLI_LIST})
+	
+ELSE()
+
+	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
+	ADD_LIBRARY(${BUILD_CACHE_CLI_NAME} SHARED ${SRC_CLI_LIST})
+		
+	TARGET_LINK_LIBRARIES(${BUILD_CACHE_CLI_NAME} 
+		vzconn
+		vzbase
+		vzlogging
+		libevent_core.so
+		libevent_pthreads.so
+	)
+	
+ENDIF()
+
+set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 set_property(TARGET ${BUILD_CACHE_CLI_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
-#IF(UNIX)
-#    add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
-#        COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libcachedserver.so
-#        COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libcachedserver.so ${FTP_DIR}/libcachedserver.so)
-#ENDIF()
+
+IF(UNIX)
+    add_custom_command(TARGET ${BUILD_CACHE_CLI_NAME} POST_BUILD 
+        COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libcachedclient.so
+        COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libcachedclient.so ${FTP_DIR}/libcachedclient.so
+		)
+ENDIF()
+
 #########################################################################
 #Step 6 : link with other library
 MESSAGE(STATUS "Step 6 : link with other library")
-
-if(WIN32)
-	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-	)
-else()
-	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-	)
-endif()

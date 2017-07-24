@@ -97,9 +97,32 @@ MESSAGE(STATUS "Step 5 : Add executable or library target")
 ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
 set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 
-ADD_LIBRARY(${BUILD_DP_CLI_NAME} STATIC ${SRC_CLI_LIST})
+IF(WIN32)
+	ADD_LIBRARY(${BUILD_DP_CLI_NAME} STATIC ${SRC_CLI_LIST})
+ELSE()
+	ADD_LIBRARY(${BUILD_DP_CLI_NAME} SHARED ${SRC_CLI_LIST})
+ENDIF()
+
 set_property(TARGET ${BUILD_DP_CLI_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 
 #########################################################################
 #Step 6 : link with other library
 MESSAGE(STATUS "Step 6 : link with other library")
+
+if(WIN32)
+	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+	)
+else()
+	TARGET_LINK_LIBRARIES(${BUILD_DP_CLI_NAME} 
+		vzconn
+		vzbase
+		vzlogging
+		libevent_core.so
+		libevent_pthreads.so
+	)
+    add_custom_command(TARGET ${BUILD_DP_CLI_NAME} POST_BUILD 
+        COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libdpclient.so
+        COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libdpclient.so ${FTP_DIR}/libdpclient.so
+		#COMMAND rm -rf ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libdpinterface.so
+	)
+endif()

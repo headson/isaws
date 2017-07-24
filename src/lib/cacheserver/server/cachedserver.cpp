@@ -6,9 +6,13 @@
 namespace cached {
 
 CachedServer::CachedServer(vzconn::EventService &event_service)
-  : event_service_(event_service),
-    tcp_server_(NULL),
-    cache_service_(NULL) {
+  : vzconn::CTcpServerInterface()
+  , vzconn::CClientInterface()
+  , event_service_(event_service)
+  , tcp_server_(NULL)
+  , cache_service_(NULL)
+  , cached_thread_(NULL)
+  , cached_message_() {
 }
 
 CachedServer::~CachedServer() {
@@ -22,15 +26,22 @@ bool CachedServer::StartCachedServer(
     LOG(L_ERROR) << "Failure to restart kvdb server";
     return false;
   }
-  vzconn::CEvtTcpServer *tcp_server_ = vzconn::CEvtTcpServer::Create(&event_service_,
-                                       this,
-                                       this);
+
+  cached_thread_ = new vzbase::Thread();
+  cached_thread_->Start();
+
+  vzconn::CEvtTcpServer *tcp_server_ = vzconn::CEvtTcpServer::Create(
+                                         &event_service_,
+                                         this,
+                                         this);
 
   int32 n_ret = 0;
   vzconn::CInetAddr c_addr(listen_addr, listen_port);
   n_ret = tcp_server_->Open(&c_addr, false, true);
 
-  cache_service_ = new CachedService(event_service_);
+
+  cache_service_ = new CachedService(cached_thread_, 12);
+  cache_service_->Start();
 
   return true;
 }
@@ -41,7 +52,7 @@ bool CachedServer::StopCachedServer() {
 
 // 服务端回调函数
 bool CachedServer::HandleNewConnection(vzconn::VSocket *p_srv,
-                                      vzconn::VSocket *new_sock) {
+                                       vzconn::VSocket *new_sock) {
   return true;
 }
 
@@ -51,12 +62,12 @@ void CachedServer::HandleServerClose(vzconn::VSocket *p_srv) {
 
 // 客户端回调函数
 int32 CachedServer::HandleRecvPacket(vzconn::VSocket *p_cli,
-                                    const uint8   *p_data,
-                                    uint32         n_data,
-                                    uint16         n_flag) {
+                                     const uint8   *p_data,
+                                     uint32         n_data,
+                                     uint16         n_flag) {
 
   const CacheMessage *cache_msg = (const CacheMessage *)(p_data);
-  memcpy(&kvdb_message_, cache_msg, sizeof(CacheMessage));
+  memcpy(&cached_message_, cache_msg, sizeof(CacheMessage));
 
   if (cache_msg->type == CACHED_SELECT
       && ProcessSelect(cache_msg,
@@ -69,9 +80,9 @@ int32 CachedServer::HandleRecvPacket(vzconn::VSocket *p_cli,
     return 0;
   }
 
-  if (ProcessKvdbService(cache_msg,
-                         p_data + sizeof(CacheMessage),
-                         n_data - sizeof(CacheMessage))) {
+  if (ProcessCacheService(cache_msg,
+                          p_data + sizeof(CacheMessage),
+                          n_data - sizeof(CacheMessage))) {
     ResponseKvdb(p_cli, CACHED_SUCCEED);
 
   } else {
@@ -81,11 +92,18 @@ int32 CachedServer::HandleRecvPacket(vzconn::VSocket *p_cli,
 }
 
 
-bool CachedServer::ProcessKvdbService(const CacheMessage *cache_msg,
-                                     const uint8 *data,
-                                     uint32 size) {
+bool CachedServer::ProcessCacheService(const CacheMessage *cache_msg,
+                                       const uint8 *data,
+                                       uint32 size) {
   if (cache_msg->type == CACHED_REPLACE) {
-    return cache_service_->AddFile(cache_msg->path, data, size);
+    CachedStanza::Ptr stanza = CachedStanzaPool::Instance()->TakeStanza(size);
+    if (stanza) {
+      stanza->SetPath(cache_msg->path);
+      stanza->SetData(data, size);
+      return cache_service_->AddFile(stanza, true);
+    } else {
+      return false;
+    }
   } else if (cache_msg->type == CACHED_DELETE) {
     return cache_service_->RemoveFile(cache_msg->path);
   }
@@ -93,29 +111,30 @@ bool CachedServer::ProcessKvdbService(const CacheMessage *cache_msg,
 }
 
 bool CachedServer::ResponseKvdb(vzconn::VSocket *p_cli, uint32 type) {
-  kvdb_message_.type = type;
-  p_cli->AsyncWrite(&kvdb_message_, sizeof(CacheMessage), 0);
+  cached_message_.type = type;
+  p_cli->AsyncWrite(&cached_message_, sizeof(CacheMessage), 0);
   return true;
 }
 
 bool CachedServer::ProcessSelect(const CacheMessage *cache_msg,
-                                const uint8 *data,
-                                uint32 size,
-                                vzconn::VSocket *p_cli) {
-  static std::vector<char> buffer;
+                                 const uint8 *data,
+                                 uint32 size,
+                                 vzconn::VSocket *p_cli) {
   if (cache_msg->type != CACHED_SELECT) {
     return false;
   }
-  if (cache_service_->GetFile(cache_msg->path, buffer)) {
-    kvdb_message_.type = CACHED_SUCCEED;
+  CachedStanza::Ptr stanza = cache_service_->GetFile(cache_msg->path);
+
+  if (stanza) {
+    cached_message_.type = CACHED_SUCCEED;
 
     iovec ivcec[2];
 
-    ivcec[0].iov_base = (void *)&kvdb_message_;
+    ivcec[0].iov_base = (void *)&cached_message_;
     ivcec[0].iov_len  = sizeof(CacheMessage);
 
-    ivcec[1].iov_base = (void *)&(buffer[0]);
-    ivcec[1].iov_len  = buffer.size();
+    ivcec[1].iov_base = (void *)&(stanza->data()[0]);
+    ivcec[1].iov_len  = stanza->data().size();
 
     p_cli->AsyncWrite(ivcec, 2, 0);
 

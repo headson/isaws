@@ -73,12 +73,12 @@ int32 DpServer::HandleRecvPacket(vzconn::VSocket *p_cli,
     LOG(L_ERROR) << "No session Handle";
     return -1;
   }
-  //LOG(L_INFO) << "recv packet length " << n_data
-  //            << " type " << dmsg->type
-  //            << " id " << vzconn::NetworkToHost32(dmsg->id)
-  //            << " session connection " << (uint32)session->vz_socket_
-  //            << " connection " << (uint32)p_cli
-  //            << " session id " << session->session_id_;
+  LOG(L_INFO) << dmsg->method << "\t recv packet length " << n_data
+              << " type " << dmsg->type
+              << " id " << vzconn::NetworkToHost32(dmsg->id)
+              << " session connection " << (uint32)session->vz_socket_
+              << " connection " << (uint32)p_cli
+              << " session id " << session->session_id_;
   //if (dmsg->type == TYPE_MESSAGE
   //    || dmsg->type == TYPE_REQUEST
   //    || dmsg->type == TYPE_REPLY) {

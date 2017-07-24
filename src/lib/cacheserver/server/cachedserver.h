@@ -34,9 +34,9 @@ class CachedServer : public vzbase::noncopyable,
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli);
   virtual void  HandleClose(vzconn::VSocket *p_cli);
  private:
-  bool ProcessKvdbService(const CacheMessage *cache_msg,
-                          const uint8 *data,
-                          uint32 size);
+  bool ProcessCacheService(const CacheMessage *cache_msg,
+                           const uint8 *data,
+                           uint32 size);
   bool ProcessSelect(const CacheMessage *cache_msg,
                      const uint8 *data,
                      uint32 size,
@@ -46,7 +46,8 @@ class CachedServer : public vzbase::noncopyable,
   vzconn::EventService  &event_service_;
   vzconn::CEvtTcpServer *tcp_server_;
   CachedService          *cache_service_;
-  CacheMessage           kvdb_message_;
+  vzbase::Thread         *cached_thread_;
+  CacheMessage           cached_message_;
 };
 
 }

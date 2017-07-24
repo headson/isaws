@@ -55,7 +55,7 @@ int32 EVT_LOOP::RunLoop(uint32 ms_timeout) {
     if (0 == running_) {
       running_ = 1;
       if (ms_timeout == 0) {
-        n_ret = event_base_loop(base_event_, EVLOOP_ONCE);
+        n_ret = event_base_loop(base_event_, EVLOOP_NONBLOCK);
       } else {
         n_ret = event_base_loop(base_event_, EVLOOP_NO_EXIT_ON_EMPTY); // 无事件不退出
       }
