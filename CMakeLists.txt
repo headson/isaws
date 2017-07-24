@@ -42,7 +42,7 @@ ADD_SUBDIRECTORY(src/lib/systemv)
 #ADD_SUBDIRECTORY(src/lib/onvif)
 ADD_SUBDIRECTORY(src/lib/systemserver)
 ADD_SUBDIRECTORY(src/lib/dispatcher)
-ADD_SUBDIRECTORY(src/lib/platform/hi3518ev200)
+#ADD_SUBDIRECTORY(src/lib/platform/hi3518ev200)
 
 ## add run
 #ADD_SUBDIRECTORY(src/run/onvif)
@@ -50,12 +50,13 @@ ADD_SUBDIRECTORY(src/run/web_server)
 ADD_SUBDIRECTORY(src/run/vzlogserver)
 ADD_SUBDIRECTORY(src/run/system_server)
 ADD_SUBDIRECTORY(src/run/dispatcherserver)
-ADD_SUBDIRECTORY(src/run/hi3518ev200)
+#ADD_SUBDIRECTORY(src/run/hi3518ev200)
 #ADD_SUBDIRECTORY(src/run/live_stream)
 
 IF(WIN32)
 #ADD_SUBDIRECTORY(src/run/pc_manage)
 ENDIF()
+ADD_SUBDIRECTORY(src/web)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_systemv)

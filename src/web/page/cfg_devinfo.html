@@ -1,199 +1,199 @@
 ﻿<!DOCTYPE html>
 <head>
-    <meta charset="UTF-8">
-    <title>PC-Manage</title>
+  <meta charset="UTF-8">
+  <title>PC-Manage</title>
 
-    <script src="../js/jquery-1.11.2.min.js"></script>
-    <script src="../js/base64.js"></script>
-    <script src="../js/utf8.js"></script>
+  <script src="../js/jquery-1.11.2.min.js"></script>
+  <script src="../js/base64.js"></script>
+  <script src="../js/utf8.js"></script>
 
-    <style>
-        #devinfo_container {
-            width: 260px;
-            height: 100%;
-        }
+  <style>
+    #devinfo_container {
+      width: 260px;
+      height: 100%;
+    }
 
-        .devinfo_center {
-            position: absolute;
-            left: 50%;
-            margin-left: -130px;
-        }
-    </style>
+    .devinfo_center {
+      position: absolute;
+      left: 50%;
+      margin-left: -130px;
+    }
+  </style>
 </head>
 
 <body>
-    <div id="devinfo_container" class="devinfo_center">
-        <br /><br />
-        <table>
-            <tr>
-                <th align="left"><label>设备名称:</label></th>
-                <th><input type="text" class="formText" id="dev_name" /></th>
-            </tr>
+  <div id="devinfo_container" class="devinfo_center">
+    <br /><br />
+    <table>
+      <tr>
+        <th align="left"><label>设备名称:</label></th>
+        <th><input type="text" class="formText" id="dev_name" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>设备类型:</label></th>
-                <th><input type="text" class="formText" id="dev_type" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>设备类型:</label></th>
+        <th><input type="text" class="formText" id="dev_type" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>软件版本:</label></th>
-                <th><input type="text" class="formText" id="sw_ver" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>软件版本:</label></th>
+        <th><input type="text" class="formText" id="sw_ver" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>硬件版本:</label></th>
-                <th><input type="text" class="formText" id="hw_ver" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>硬件版本:</label></th>
+        <th><input type="text" class="formText" id="hw_ver" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>算法版本:</label></th>
-                <th><input type="text" class="formText" id="iva_ver" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>算法版本:</label></th>
+        <th><input type="text" class="formText" id="iva_ver" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>WEB端口:</label></th>
-                <th><input type="text" class="formText" id="web_port" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>WEB端口:</label></th>
+        <th><input type="text" class="formText" id="web_port" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>RTSP端口:</label></th>
-                <th><input type="text" class="formText" id="rtsp_port" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>RTSP端口:</label></th>
+        <th><input type="text" class="formText" id="rtsp_port" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>磁盘大小:</label></th>
-                <th><input type="text" class="formText" id="disk_size" /></th>
-            </tr>
-            <tr>
-                <th align="left"></th>
-                <th><input type="checkbox" class="formText" id="dhcp_en" />DHCP使能</th>
-            </tr>
+      <tr>
+        <th align="left"><label>磁盘大小:</label></th>
+        <th><input type="text" class="formText" id="disk_size" /></th>
+      </tr>
+      <tr>
+        <th align="left"></th>
+        <th><input type="checkbox" class="formText" id="dhcp_en" />DHCP使能</th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>IP:</label></th>
-                <th><input type="text" class="formText" id="ip_addr" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>IP:</label></th>
+        <th><input type="text" class="formText" id="ip_addr" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>掩码:</label></th>
-                <th><input type="text" class="formText" id="netmask" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>掩码:</label></th>
+        <th><input type="text" class="formText" id="netmask" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>网关:</label></th>
-                <th><input type="text" class="formText" id="gateway" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>网关:</label></th>
+        <th><input type="text" class="formText" id="gateway" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>DNS:</label></th>
-                <th><input type="text" class="formText" id="dns_addr" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>DNS:</label></th>
+        <th><input type="text" class="formText" id="dns_addr" /></th>
+      </tr>
 
-            <tr>
-                <th align="left"><label>MAC地址:</label></th>
-                <th><input type="text" class="formText" id="phy_mac" /></th>
-            </tr>
+      <tr>
+        <th align="left"><label>MAC地址:</label></th>
+        <th><input type="text" class="formText" id="phy_mac" /></th>
+      </tr>
 
-            <tr>
-                <th></th>
-                <th align="right"><input type="button" class="btn" value="保存修改" id="save_btn" /></th>
-            </tr>
-        </table>
-    </div>
+      <tr>
+        <th></th>
+        <th align="right"><input type="button" class="btn" value="保存修改" id="save_btn" /></th>
+      </tr>
+    </table>
+  </div>
 
-<script>
-  function get_devinfo() {
-    var req = {};
-    req.cmd = 'get_devinfo';
-    req.id = 1;
-    req.body = {};
+  <script>
+    function get_devinfo() {
+      var req = {};
+      req.cmd = 'get_devinfo';
+      req.id = 1;
+      req.body = {};
 
-    var jsonstr = JSON.stringify(req);
-    $.ajax({
-      type: 'POST',
-      url: '/sys_config',
-      dataType: 'text',
-      data: jsonstr,
-      success: function(ajaxdata) {
-        var jresp = eval('(' + ajaxdata + ')');
-        if (jresp.state == 0) {
-          $('#dev_name').val(jresp.body.dev_name);
-          $('#dev_type').val(jresp.body.dev_type);
-          $('#sw_ver').val(jresp.body.sw_ver);
-          $('#hw_ver').val(jresp.body.hw_ver);
-          $('#iva_ver').val(jresp.body.iva_ver);
-          $('#web_port').val(jresp.body.web_port);
-          $('#rtsp_port').val(jresp.body.rtsp_port);
-          $('#disk_size').val(jresp.body.disk_size);
-          if (jresp.body.dhcp_en == 1) {
-            $('#dhcp_en').attr('checked', 'true');
+      var jsonstr = JSON.stringify(req);
+      $.ajax({
+        type: 'POST',
+        url: '/sys_config',
+        dataType: 'text',
+        data: jsonstr,
+        success: function (ajaxdata) {
+          var jresp = eval('(' + ajaxdata + ')');
+          if (jresp.state == 0) {
+            $('#dev_name').val(jresp.body.dev_name);
+            $('#dev_type').val(jresp.body.dev_type);
+            $('#sw_ver').val(jresp.body.sw_ver);
+            $('#hw_ver').val(jresp.body.hw_ver);
+            $('#iva_ver').val(jresp.body.iva_ver);
+            $('#web_port').val(jresp.body.web_port);
+            $('#rtsp_port').val(jresp.body.rtsp_port);
+            $('#disk_size').val(jresp.body.disk_size);
+            if (jresp.body.dhcp_en == 1) {
+              $('#dhcp_en').attr('checked', 'true');
+            } else {
+              $('#dhcp_en').attr('checked', 'false');
+            }
+            $('#ip_addr').val(jresp.body.ip_addr);
+            $('#netmask').val(jresp.body.netmask);
+            $('#gateway').val(jresp.body.gateway);
+            $('#dns_addr').val(jresp.body.dns_addr);
+            $('#phy_mac').val(jresp.body.phy_mac);
           } else {
-            $('#dhcp_en').attr('checked', 'false');
+            alert('获取设备参数错误!');
           }
-          $('#ip_addr').val(jresp.body.ip_addr);
-          $('#netmask').val(jresp.body.netmask);
-          $('#gateway').val(jresp.body.gateway);
-          $('#dns_addr').val(jresp.body.dns_addr);
-          $('#phy_mac').val(jresp.body.phy_mac);
-        } else {
-          alert('获取设备参数错误!');
-        }
-      },
-    });
-  }
-
-  function set_devinfo() {
-    var req = {};
-    req.cmd = 'set_devinfo';
-    req.id = 1;
-    req.body = {};
-    req.body.dev_name = $('#dev_name').val();
-    req.body.dev_type = parseInt($('#dev_type').val());
-    //req.body.sw_ver = $('#sw_ver').val();
-    //req.body.hw_ver = $('#hw_ver').val();
-    //req.body.iva_ver = $('#iva_ver').val();
-    req.body.web_port = parseInt($('#web_port').val());
-    req.body.rtsp_port = parseInt($('#rtsp_port').val());
-    //req.body.disk_size = $('#disk_size').val();
-    if ($('#dhcp_en').attr('checked') == true) {
-      req.body.dhcp_en = 1;
-    } else {
-      req.body.dhcp_en = 0;
+        },
+      });
     }
-    req.body.ip_addr = $('#ip_addr').val();
-    req.body.netmask = $('#netmask').val();
-    req.body.gateway = $('#gateway').val();
-    req.body.dns_addr = $('#dns_addr').val();
-    //req.body.phy_mac = $('#phy_mac').val();
 
-    var jsonstr = JSON.stringify(req);
-    $.ajax({
-      type: 'POST',
-      url: '/sys_config',
-      dataType: 'text',
-      data: jsonstr,
-      success: function(ajaxdata) {
-        var jresp = eval('(' + ajaxdata + ')');
-        if (jresp.state == 0) {
-          get_devinfo();
-        } else {
-          alert('参数配置错误' + jresp.state);
-          get_devinfo();
-        }
-      },
-    });
-  }
+    function set_devinfo() {
+      var req = {};
+      req.cmd = 'set_devinfo';
+      req.id = 1;
+      req.body = {};
+      req.body.dev_name = $('#dev_name').val();
+      req.body.dev_type = parseInt($('#dev_type').val());
+      //req.body.sw_ver = $('#sw_ver').val();
+      //req.body.hw_ver = $('#hw_ver').val();
+      //req.body.iva_ver = $('#iva_ver').val();
+      req.body.web_port = parseInt($('#web_port').val());
+      req.body.rtsp_port = parseInt($('#rtsp_port').val());
+      //req.body.disk_size = $('#disk_size').val();
+      if ($('#dhcp_en').attr('checked') == true) {
+        req.body.dhcp_en = 1;
+      } else {
+        req.body.dhcp_en = 0;
+      }
+      req.body.ip_addr = $('#ip_addr').val();
+      req.body.netmask = $('#netmask').val();
+      req.body.gateway = $('#gateway').val();
+      req.body.dns_addr = $('#dns_addr').val();
+      //req.body.phy_mac = $('#phy_mac').val();
 
-  $(document).ready(function() {
-    $(window).ready(function() {
-      get_devinfo();
-    });
+      var jsonstr = JSON.stringify(req);
+      $.ajax({
+        type: 'POST',
+        url: '/sys_config',
+        dataType: 'text',
+        data: jsonstr,
+        success: function (ajaxdata) {
+          var jresp = eval('(' + ajaxdata + ')');
+          if (jresp.state == 0) {
+            get_devinfo();
+          } else {
+            alert('参数配置错误' + jresp.state);
+            get_devinfo();
+          }
+        },
+      });
+    }
 
-    $('#save_btn').click(function() {
-      set_devinfo();
+    $(document).ready(function () {
+      $(window).ready(function () {
+        get_devinfo();
+      });
+
+      $('#save_btn').click(function () {
+        set_devinfo();
+      });
     });
-  });
-</script>
+  </script>
 
 </body>
 </html>
