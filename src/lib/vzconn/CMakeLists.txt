@@ -105,10 +105,24 @@ MESSAGE(STATUS "Step 4 : Add code source")
 #########################################################################
 #Step 5 : Add executable or library target
 MESSAGE(STATUS "Step 5 : Add executable or library target")
-#ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
-ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
-set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 
+IF(WIN32)
+	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
+ELSE()
+	ADD_LIBRARY(${BUILD_PROJECT_NAME} SHARED ${SRC_LIST})
+	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+		vzlogging
+		libevent_core.so
+		libevent_pthreads.so
+	)
+	IF(UNIX)
+		add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
+			COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzconn.so
+			COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzconn.so ${FTP_DIR}/libvzconn.so
+		)
+	ENDIF()
+ENDIF()
+SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 #########################################################################
 #Step 6 : link with other library
 MESSAGE(STATUS "Step 6 : link with other library")

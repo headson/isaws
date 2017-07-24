@@ -52,7 +52,7 @@ bool CFlvOverHttp::Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop, const char* shm
     return false;
   }
 
-  // file = fopen("d:\\test2.flv", "wb+");
+  file = fopen("./test2.flv", "wb+");
   return true;
 }
 
@@ -60,15 +60,15 @@ void CFlvOverHttp::Close() {
   sock_.SetSocket(INVALID_SOCKET);
 }
 
-int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead, 
+int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead,
                               unsigned int nwidth, unsigned int nheight) {
   AsyncWrite(phead, nhead);
 
   int ndata = 0;
   char sdata[2048] = {0};
   char *p_dst = flv_shm_.HeaderAndMetaDataTag(sdata,
-                                              nwidth, nheight,
-                                              16000, 8000, 16, 1);
+                nwidth, nheight,
+                16000, 8000, 16, 1);
   ndata = p_dst - sdata;
   AsyncWrite(sdata, ndata);
   if (file) {
@@ -77,7 +77,8 @@ int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead,
 
   int n_sps = 0, n_pps = 0;
   ndata = shm_vdo_.ReadHead(sdata, 2048, &n_sps, &n_pps);
-
+  LOG(L_ERROR)<<"sps length "<<n_sps
+              <<" pps length "<<n_pps;
   ndata = flv_shm_.SetSps(sdata, n_sps);
   ndata += flv_shm_.SetPps(sdata + n_sps, n_pps);
 
@@ -176,11 +177,10 @@ int32 CFlvOverHttp::OnTimer() {
 
       int n_flv = 0;
       if (frm_type == 5) {
-        // AsyncWrite(avcc_data_, avcc_data_size_, 0);
+        AsyncWrite(avcc_data_, avcc_data_size_);
         char *p_dst = flv_shm_.PacketVideo(p_flv, p_nal + nal_bng, ndata - nal_bng, true, npts);
         n_flv = p_dst - p_flv;
-      }
-      else if (frm_type == 1) {
+      } else if (frm_type == 1) {
         char *p_dst = flv_shm_.PacketVideo(p_flv, p_nal + nal_bng, ndata - nal_bng, false, npts);
         n_flv = p_dst - p_flv;
       }
@@ -211,8 +211,7 @@ char * CFlvOverHttp::nal_parse(const char *ph264, int nh264, int *frm_type, int 
 
     if (*p_nal == 0x00) {
       n_0_cnt ++;
-    }
-    else {
+    } else {
       n_0_cnt = 0;
     }
     p_nal++;

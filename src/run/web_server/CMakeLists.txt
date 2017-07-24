@@ -39,18 +39,18 @@ MESSAGE(STATUS "Step 4 : Add code source")
 MESSAGE(STATUS "Step 5 : Add executable or library target")
 ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
 set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_RUN})
-#IF(UNIX)
-#    add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
-#        COMMAND ${CMAKE_STRIP} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME}
-#        COMMAND cp ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} ${FTP_DIR}/${BUILD_PROJECT_NAME})
-#ENDIF()
+IF(UNIX)
+    ADD_CUSTOM_COMMAND(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
+        COMMAND ${CMAKE_STRIP} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME}
+        COMMAND mv ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} ${FTP_DIR}/${BUILD_PROJECT_NAME})
+ENDIF()
 #########################################################################
 #Step 6 : link with other library
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
-		libsystemv
 		libwebserver
+		libsystemv
 		libdpclient
 		libvzbase
 		libvzconn
@@ -60,6 +60,7 @@ if(WIN32)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		webserver
+		systemv
 		dpclient
 		vzbase
 		vzconn

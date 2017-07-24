@@ -40,7 +40,6 @@ IF(UNIX)
     ADD_CUSTOM_COMMAND(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
         COMMAND ${CMAKE_STRIP} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME}
         COMMAND mv ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} ${FTP_DIR}/${BUILD_PROJECT_NAME})
-        #COMMAND mv ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} /tftpboot/hi3518/nfs/${BUILD_PROJECT_NAME})
 ENDIF()
 
 #########################################################################
@@ -52,7 +51,7 @@ if(WIN32)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		platform
-		sharemem
+		systemv
 		libmpi.a 
 		libive.a
 		libmd.a 
@@ -68,9 +67,10 @@ else()
 		lib_hiawb.a 
 		lib_hiaf.a
 		lib_hidefog.a
-		${YHPROJECT_LINK_LIB}
+		${VZPROJECT_LINK_LIB}
 		-lpthread
 		-lm
 		-ldl
+		-Wl,-rpath=.
 	)
 endif()

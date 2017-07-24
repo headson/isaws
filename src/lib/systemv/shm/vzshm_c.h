@@ -8,7 +8,7 @@
 #include "vz_shm.h"
 
 //  ”∆µÕ®µ¿0
-#define SHM_VIDEO_0       "c:/tools/video_0"
+#define SHM_VIDEO_0       "/dev/shm/video_0"
 #define SHM_VIDEO_0_SIZE  1024*1024
 
 #define SHM_AUDIO_0       "/dev/shm/audio_0"

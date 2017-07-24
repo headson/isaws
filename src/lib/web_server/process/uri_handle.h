@@ -40,7 +40,7 @@ extern TAG_WEB_SESSION *create_session(const char *usernmae,
 extern void             destroy_session(TAG_WEB_SESSION *s);
 
 extern TAG_WEB_SESSION *get_session(struct http_message *hm);
-extern TAG_WEB_SESSION *get_session_by_sid(const char* ssid);
+extern TAG_WEB_SESSION *get_session_by_sid(const char* sid);
 extern void             check_sessions(void);
 
 //////////////////////////////////////////////////////////////////////////

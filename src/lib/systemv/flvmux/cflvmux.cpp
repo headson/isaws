@@ -118,10 +118,10 @@ typedef enum {
 #define DWORD_BE(val) (((val>>24)&0xFF) | (((val>>16)&0xFF)<<8) | (((val>>8)&0xFF)<<16) | ((val&0xFF)<<24))
 #define WORD_BE(val)  (((val>>8)&0xFF) | ((val&0xFF)<<8))
 
-__forceinline unsigned int fastHtonl(unsigned int dw) {
+unsigned int fastHtonl(unsigned int dw) {
   return DWORD_BE(dw);
 }
-__forceinline unsigned short fastHtons(unsigned short  w) {
+unsigned short fastHtons(unsigned short  w) {
   return  WORD_BE(w);
 }
 
@@ -248,11 +248,11 @@ char *CFlvMux::HeaderAndMetaDataTag(char *p_packet,
   dst = AMF_EncodeNamedNumber(dst, "width",           width);
   dst = AMF_EncodeNamedNumber(dst, "height",          height);
 
-  dst = AMF_EncodeNamedNumber(dst, "videocodecid",    FLV_CODECID_H264);
+  dst = AMF_EncodeNamedNumber(dst, "videocodecid",    7);
 
   dst = AMF_EncodeNamedNumber(dst, "videodatarate",   4000);
 
-  dst = AMF_EncodeNamedNumber(dst, "audiocodecid",    FLV_CODECID_PCM_ALAW);
+  dst = AMF_EncodeNamedNumber(dst, "audiocodecid",    10);
 
   dst = AMF_EncodeNamedNumber(dst, "audiodatarate",   audiodatarate);
   dst = AMF_EncodeNamedNumber(dst, "audiosamplerate", audiosamplerate);
@@ -412,7 +412,7 @@ int CFlvMux::SetSps(const char *p_sps, int n_sps) {
   memcpy(sps, header2, 2);
   sps += 2;
 
-  unsigned short size = htons(n_sps - 4);
+  unsigned short size = fastHtons(n_sps - 4);
   memcpy(sps, &size, 2);
   sps += 2;
 
@@ -437,7 +437,7 @@ int CFlvMux::SetPps(const char *p_pps, int n_pps) {
   memcpy(pps, &ppss, 1);
   pps += 1;
 
-  unsigned short size = htons(n_pps - 4);
+  unsigned short size = fastHtons(n_pps - 4);
   memcpy(pps, &size, 2);
   pps += 2;
 

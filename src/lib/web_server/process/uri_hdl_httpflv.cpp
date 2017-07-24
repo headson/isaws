@@ -63,7 +63,7 @@ void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *p) {
   nc->user_data = pflv;
 
   pflv->AsyncHeader(response_flv, response_flv_size,
-                    640, 480);
+                    1920, 1080);
 }
 
 #ifdef __cplusplus

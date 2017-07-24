@@ -13,7 +13,7 @@ HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_us
 }
 
 CVideoCatch::CVideoCatch()
-  : p_shm_vdo_(NULL) {
+  : shm_video_() {
 }
 
 CVideoCatch::~CVideoCatch() {
@@ -274,20 +274,11 @@ END_VENC_1080P_CLASSIC_0:	//system exit
   return NULL;
 }
 
-FILE *file = NULL;
-CFlvMux *p_flv_mux = NULL;
-uint8_t s_data[256*1024];
 int32 CVideoCatch::Start() {
-  p_shm_vdo_ = Shm_Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
-  if (p_shm_vdo_ == NULL) {
+  bool b_ret = shm_video_.Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+  if (b_ret == false) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
-  }
-
-  file = fopen("test.flv", "wb+");
-  p_flv_mux = new CFlvMux(file);
-  if (p_flv_mux) {
-    p_flv_mux->InitHeadTag0(s_data, 256*1024, 352, 240);
   }
 
   pthread_create(&p_enc_id_, NULL, VideoVencClassic, this);
@@ -303,32 +294,42 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream) {
   }
 
   bool b_i_frame = false;
-  Shm_W_Begin(p_shm_vdo_);
-
   if (H264E_NALU_SPS == p_stream->pstPack[0].DataType.enH264EType) {
     b_i_frame = true;
   }
 
-  uint32 n_vdo_data = 0;
-  char s_vdo_data[256*1024];
-  for (uint32 i = 0; i < p_stream->u32PackCount; i++) {
-    Shm_W_Write(p_shm_vdo_, (char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
-                p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset, n_vdo_data);
 
-    memcpy(s_vdo_data+n_vdo_data, (char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
+  for (uint32 i = 0; i < p_stream->u32PackCount; i++) {
+    int n_frm_type = 0;
+    char *p_nal = (char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset;
+    if (p_nal[0] == 0x00 && p_nal[1] == 0x00 && p_nal[1] == 0x01) {
+      n_frm_type = p_nal[3] & 0x1f;
+    } else if (p_nal[0] == 0x00 && p_nal[1] == 0x00 &&
+               p_nal[2] == 0x00 && p_nal[3] == 0x01) {
+      n_frm_type = p_nal[4] & 0x1f;
+    }
+    printf("------------------------ frame %d. length %d.\n", 
+           n_frm_type,
            p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
 
-    n_vdo_data += p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset;
-  }
-  if (p_flv_mux) {
-    p_flv_mux->VideoPacket(s_data, 256 * 1024, b_i_frame, 
-                           p_stream->pstPack[0].u64PTS/1000, 
-                           (uint8_t*)s_vdo_data, n_vdo_data);
-  }
+    if (n_frm_type == 7) {
+      shm_video_.WriteSps((char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
+                          p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
+    } else if (n_frm_type == 8) {
+      shm_video_.WritePps((char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
+                          p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
+    } else if (n_frm_type == 5 || n_frm_type == 1) {
+      struct timeval tv;
+      gettimeofday(&tv, NULL);
+      shm_video_.Write((char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
+                       p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset,
+                       tv.tv_sec, tv.tv_usec);
+    }
 
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  Shm_W_End(p_shm_vdo_, tv.tv_sec, tv.tv_usec);
+    /*memcpy(s_vdo_data+n_vdo_data, (char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
+           p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
+    n_vdo_data += p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset;*/
+  }
   return 0;
 }
 

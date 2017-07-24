@@ -27,7 +27,7 @@
 #ifdef WIN32
 #define DEF_WEB_SRV_PATH      "c:\\tools\\web"
 #else
-#define DEF_WEB_SRV_PATH      "mnt/etc/web"
+#define DEF_WEB_SRV_PATH      "./web"
 #endif
 
 #define DEF_MCAST_IP          "228.5.6.2"

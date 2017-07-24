@@ -26,6 +26,9 @@ extern HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p);
 };
 #endif
 
+#include "systemv/shm/vzshm_c.h"
+#include "systemv/flvmux/cflvmux.h"
+
 class CVideoCatch {
  public:
   CVideoCatch();
@@ -40,7 +43,8 @@ class CVideoCatch {
  private:
   pthread_t p_enc_id_;
   pthread_t p_yuv_id_;
-  void*     p_shm_vdo_;
+  
+  CShmVdo   shm_video_;
 };
 
 #endif  // LIBPLATFORM_CVIDEO_H

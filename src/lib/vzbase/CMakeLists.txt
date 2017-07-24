@@ -171,7 +171,7 @@ MESSAGE(STATUS "Step 4 : Add code source")
 #Step 5 : Add executable or library target
 MESSAGE(STATUS "Step 5 : Add executable or library target")
 #ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
-if(WIN32)
+IF(WIN32)
 	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
 ELSE()
 	ADD_LIBRARY(${BUILD_PROJECT_NAME} SHARED ${SRC_LIST})
@@ -180,13 +180,12 @@ ELSE()
 		libevent_core.so
 		libevent_pthreads.so
 	)
-    add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
+    ADD_CUSTOM_COMMAND(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
         COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzbase.so
         COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzbase.so ${FTP_DIR}/libvzbase.so
-		#COMMAND rm -rf ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libdpinterface.so
 		)
 ENDIF()
-set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
+SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 
 #########################################################################
 #Step 6 : link with other library

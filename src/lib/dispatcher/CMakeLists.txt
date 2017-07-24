@@ -123,6 +123,5 @@ else()
     add_custom_command(TARGET ${BUILD_DP_CLI_NAME} POST_BUILD 
         COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libdpclient.so
         COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libdpclient.so ${FTP_DIR}/libdpclient.so
-		#COMMAND rm -rf ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libdpinterface.so
 	)
 endif()

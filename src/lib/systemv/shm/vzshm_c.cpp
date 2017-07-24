@@ -128,18 +128,21 @@ int CShmVdo::WriteSps(const char *p_data, unsigned int n_data) {
       p_shm->n_sps > 0  ||
       p_data == NULL    ||
       n_data > 1024) {
+    printf("-------------------sps %d data .\n", 
+           p_shm->n_sps, n_data);
     return -1;
   }
 
   memcpy(p_shm->sps_pps, p_data, n_data);
   p_shm->n_sps = n_data;
+  printf("------------------- sps length %d.\n", p_shm->n_sps);
   return n_data;
 }
 
 int CShmVdo::WritePps(const char *p_data, unsigned int n_data) {
   TAG_SHM_VDO *p_shm = (TAG_SHM_VDO*)mem_ptr_;
   if (p_shm == NULL ||
-      p_shm->n_pps >= 0 ||
+      p_shm->n_pps > 0 ||
       p_shm->n_sps < 0 ||
       p_data == NULL ||
       (n_data + p_shm->n_sps) > 1024) {
@@ -148,6 +151,7 @@ int CShmVdo::WritePps(const char *p_data, unsigned int n_data) {
 
   memcpy(p_shm->sps_pps+p_shm->n_sps, p_data, n_data);
   p_shm->n_pps = n_data;
+  printf("------------------- pps length %d.\n", p_shm->n_pps);
   return n_data;
 }
 

@@ -63,6 +63,6 @@ MESSAGE(STATUS "Step 4 : Add project define")
 
 #########################################################################
 MESSAGE(STATUS "Step 5 : Add executable or library target")
-ADD_LIBRARY(${BUILD_PROJECT_NAME} ${PROJECT_SOURCE_LIST})
+ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${PROJECT_SOURCE_LIST})
 SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} 
 	PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})

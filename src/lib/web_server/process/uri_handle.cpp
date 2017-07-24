@@ -72,10 +72,10 @@ TAG_WEB_SESSION *get_session(struct http_message *hm) {
   return get_session_by_sid(ssid);
 }
 
-extern TAG_WEB_SESSION * web::get_session_by_sid(const char* ssid) {
-  uint64_t sid = strtoull(ssid, NULL, 16);
+TAG_WEB_SESSION *get_session_by_sid(const char* sid) {
+  uint64_t usid = strtoull(sid, NULL, 16);
   for (int i = 0; i < SESSION_COUNT; i++) {
-    if (k_session[i].id == sid) {
+    if (k_session[i].id == usid) {
       k_session[i].last_used = mg_time();
       return &k_session[i];
     }

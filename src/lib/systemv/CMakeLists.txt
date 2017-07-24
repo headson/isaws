@@ -23,7 +23,6 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/flv.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/cflvmux.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/cflvmux.cpp
 
@@ -34,7 +33,6 @@ SET(PROJECT_SOURCE_LIST
 )
 
 SOURCE_GROUP(flvmux FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/flv.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/cflvmux.h
 	${CMAKE_CURRENT_SOURCE_DIR}/flvmux/cflvmux.cpp
 )
@@ -50,6 +48,6 @@ MESSAGE(STATUS "Step 4 : Add project define")
 
 #########################################################################
 MESSAGE(STATUS "Step 5 : Add executable or library target")
-ADD_LIBRARY(${BUILD_PROJECT_NAME} ${PROJECT_SOURCE_LIST})
+ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${PROJECT_SOURCE_LIST})
 SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} 
 	PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
