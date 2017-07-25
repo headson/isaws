@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-//#include "vzbase/helper/stdafx.h"
-#include "vzlogging/logging/vzlogging.h"
+#include "vzbase/helper/stdafx.h"
+//#include "vzlogging/logging/vzlogging.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,6 +61,8 @@ CVpu::CVpu() {
 
   sps_size_ = pps_size_ = jpeg_size_ = 0;
   memset(head_, 0, 1024);
+
+  // file = fopen("./test.h264", "wb+");
 }
 
 CVpu::~CVpu() {
@@ -333,7 +335,7 @@ int CVpu::enc_process(FrameBuffer *pSrcFrm, char *pDstData, int nDstSize) {
   nRet = vpu_EncStartOneFrame(enc_fd, &stEncParam);
   if (nRet != RETCODE_SUCCESS) {
     LOG_ERROR("0x%x Can't enc next frame %d-0x%x.\n",
-           (unsigned int)enc_fd, nRet, (unsigned int)pSrcFrm);
+              (unsigned int)enc_fd, nRet, (unsigned int)pSrcFrm);
     return nRet;
   }
 
@@ -363,6 +365,66 @@ int CVpu::enc_process(FrameBuffer *pSrcFrm, char *pDstData, int nDstSize) {
   return nVdoLen;
 }
 
+int CVpu::enc_h264(FrameBuffer *pSrcFrm, CShmVdo *shm_vdo) {
+  int nRet = -1;
+  unsigned char sSlice[9] = {0};
+
+  EncParam stEncParam = {0};
+  EncOutputInfo stOutInfo = {0};
+  if (enc_fd == NULL) return nRet;
+
+  if (eEncFormat == STD_MJPG) // MJPG
+    bGetIFrame = true;
+
+  stEncParam.sourceFrame = pSrcFrm;
+  stEncParam.quantParam = 23;
+  stEncParam.forceIPicture = bGetIFrame; // IÖ¡ÉèÖÃ
+  stEncParam.skipPicture = 0;
+  stEncParam.enableAutoSkip = 1;
+  stEncParam.encLeftOffset = 0;
+  stEncParam.encTopOffset = 0;
+
+  stOutInfo.sliceInfo.enable = 1;
+  stOutInfo.sliceInfo.addr = sSlice;
+  vpu_EncGiveCommand(enc_fd, ENC_SET_REPORT_SLICEINFO, &stOutInfo.sliceInfo);
+  nRet = vpu_EncStartOneFrame(enc_fd, &stEncParam);
+  if (nRet != RETCODE_SUCCESS) {
+    LOG_ERROR("0x%x Can't enc next frame %d-0x%x.\n",
+              (unsigned int)enc_fd, nRet, (unsigned int)pSrcFrm);
+    return nRet;
+  }
+
+  nRet = RETCODE_FAILURE;
+  do {
+    while (vpu_IsBusy())
+      vpu_WaitForInt(100);
+
+    nRet = vpu_EncGetOutputInfo(enc_fd, &stOutInfo);
+  } while (nRet != RETCODE_SUCCESS);
+
+  if (stOutInfo.picType == 1) {
+    if (file) {
+      fwrite(head_, 1, sps_size_ + pps_size_, file);
+    }
+  }
+
+  // video
+  unsigned int nDataAddr = cMemDesc.virt_uaddr +
+                           stOutInfo.bitstreamBuffer -
+                           cMemDesc.phy_addr;
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  shm_vdo->Write((const char*)nDataAddr,
+                 stOutInfo.bitstreamSize,
+                 tv.tv_sec, tv.tv_usec);
+
+  if (file) {
+    fwrite((const char*)nDataAddr, 1, stOutInfo.bitstreamSize, file);
+  }
+  return stOutInfo.bitstreamSize;
+}
+
 //////////////////////////////////////////////////////////////////////////
 bool CVpu::vdo_restart() {
   if (!vpu_setup())
@@ -388,6 +450,10 @@ bool CVpu::vdo_restart() {
     nDataBuff = cMemDesc.virt_uaddr + enchdr_param.buf - cMemDesc.phy_addr;
     memcpy(head_ + sps_size_, (void*)nDataBuff, enchdr_param.size);
     pps_size_ = enchdr_param.size;
+
+    if (file) {
+      fwrite(head_, 1, sps_size_+pps_size_, file);
+    }
   } else if (eEncFormat == STD_MJPG) { // JPEGÍ·
     jpeg_size_ = 0;
     EncParamSet enchdr_param;

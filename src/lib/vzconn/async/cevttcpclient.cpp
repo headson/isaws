@@ -168,7 +168,7 @@ int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
                                 uint32       n_data,
                                 uint16       e_flag) {
   if (isOpen() && cli_hdl_ptr_) {
-    uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
+    uint32 n_head = cli_hdl_ptr_->NetHeadSize();
     if (c_send_data_.FreeSize() < (n_data+n_head)) {
       c_send_data_.Recycle();
       if (c_send_data_.FreeSize() < (n_data+n_head)) {
@@ -186,7 +186,7 @@ int32 CEvtTcpClient::AsyncWrite(const void  *p_data,
                           n_data,
                           e_flag);
     c_send_data_.MoveWritePtr(n_head_size);
-    c_send_data_.WriteBytes((uint8_t*)p_data, n_data);
+    c_send_data_.WriteBytes((uint8*)p_data, n_data);
 
     // 打开事件
     if (c_send_data_.UsedSize() > 0) {
@@ -208,7 +208,7 @@ int32 CEvtTcpClient::AsyncWrite(struct iovec iov[],
     for (uint32 i = 0; i < n_iov; i++) {
       n_data += iov[i].iov_len;
     }
-    uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
+    uint32 n_head = cli_hdl_ptr_->NetHeadSize();
     if (c_send_data_.FreeSize() < (n_data + n_head)) {
       c_send_data_.Recycle();
       if (c_send_data_.FreeSize() < (n_data + n_head)) {
@@ -254,13 +254,13 @@ int32 CEvtTcpClient::EvtRecv(SOCKET      fd,
 }
 
 int32 CEvtTcpClient::OnRecv() {
-  int32_t n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
+  int32 n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
                                  c_recv_data_.FreeSize());
   if (n_recv > 0) {
     c_recv_data_.MoveWritePtr(n_recv);
 
     uint16 n_flag = 0;
-    uint32_t n_pkg_size = 0;
+    uint32 n_pkg_size = 0;
     do {
       n_pkg_size = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),
                                               c_recv_data_.UsedSize(),

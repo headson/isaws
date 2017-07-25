@@ -68,6 +68,6 @@ class CVideoEncode {
  protected:
   CVpu        vpu_;     // ±àÂë
   CV4l2       v4l2_;    // V4L2
-  CShareVideo shm_vdo_;
+  CShmVdo     shm_vdo_;
 };
 #endif  // LIBPLATFORM_CVIDEOENCODE_H

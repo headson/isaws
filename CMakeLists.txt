@@ -56,14 +56,14 @@ ADD_SUBDIRECTORY(src/run/imx6q)
 #ADD_SUBDIRECTORY(src/run/live_stream)
 
 IF(WIN32)
-ADD_SUBDIRECTORY(src/run/pc_manage)
+#ADD_SUBDIRECTORY(src/run/pc_manage)
 ENDIF()
 ADD_SUBDIRECTORY(src/web)
 
 ## add test
 #ADD_SUBDIRECTORY(src/test/test_systemv)
 #ADD_SUBDIRECTORY(src/test/test_vzlogging)
-#ADD_SUBDIRECTORY(src/test/test_h264_to_flv)
+ADD_SUBDIRECTORY(src/test/test_h264_to_flv)
 #ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_client)
 #ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_worker)
 #ADD_SUBDIRECTORY(src/test/test_dispatch/test_kvdb_client)

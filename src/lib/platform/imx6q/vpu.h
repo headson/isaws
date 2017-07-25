@@ -16,6 +16,10 @@ extern "C" {
 }
 #endif
 
+#include <stdio.h>
+
+#include "systemv/shm/vzshm_c.h"
+
 class CVpu {
  public:
 #define VPU_BUFFER  0x200000// 2M
@@ -49,6 +53,9 @@ class CVpu {
   // 视频\照片编码
   int enc_process(FrameBuffer *pSrcFrm, char *pDstData, int nDstSize);
 
+  // 视频\照片编码
+  int enc_h264(FrameBuffer *pSrcFrm, CShmVdo *shm_vdo);
+
  public:
   bool vdo_restart();
   void vdo_stop();
@@ -68,6 +75,8 @@ class CVpu {
   unsigned int    nFrmNums;       // 分配FB个数
   FrameBuffer*    pFrmBufs;       // 存储使用地址
   vpu_mem_desc*   pFrmDesc;       // 存储使用地址
+
+  FILE           *file;
 
  public:
   int   sps_size_;    //

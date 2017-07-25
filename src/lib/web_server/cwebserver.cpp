@@ -84,20 +84,13 @@ void CWebServer::Broadcast(const void* p_data, unsigned int n_data) {
 }
 
 void CWebServer::web_ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
-  if (nc && nc->mgr && nc->mgr->user_data) {
-    ((CWebServer*)nc->mgr->user_data)->OnWebEvHdl(nc, ev, ev_data);
-  }
-}
-
-void CWebServer::OnWebEvHdl(struct mg_connection *nc, int ev, void *ev_data) {
   // LOG(L_INFO) << "event "<<ev;
   switch (ev) {
-  case MG_EV_HTTP_REQUEST: {
+  case MG_EV_HTTP_REQUEST:
     mg_serve_http(nc, (struct http_message *) ev_data, s_web_def_opts_);
     break;
-  }
 
-  case MG_EV_CLOSE: {
+  case MG_EV_CLOSE:
     if (nc->user_data) {
       //if (nc->proto_handler == uri_hdl_httpflv) {
         ((CFlvOverHttp*)nc->user_data)->Close();
@@ -105,13 +98,6 @@ void CWebServer::OnWebEvHdl(struct mg_connection *nc, int ev, void *ev_data) {
       nc->user_data = NULL;
     }
     break;
-  }
-
-    //case MG_EV_TIMER: {
-    //  check_sessions();
-    //  mg_set_timer(nc, mg_time() + SESSION_CHECK_INTERVAL);
-    //  break;
-    //}
   }
 }
 

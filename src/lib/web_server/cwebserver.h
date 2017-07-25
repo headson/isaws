@@ -31,7 +31,6 @@ class CWebServer : public vzbase::Runnable {
   /* Return      :
   /************************************************************************/
   static void web_ev_handler(struct mg_connection *nc, int ev, void *ev_data);
-  void OnWebEvHdl(struct mg_connection *nc, int ev, void *ev_data);
 
  private:
   struct mg_mgr              c_web_srv_;

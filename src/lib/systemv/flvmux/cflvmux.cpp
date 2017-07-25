@@ -301,7 +301,7 @@ char * CFlvMux::PacketVideo(char *p_packet, char *p_vdo, int n_vdo, bool is_key_
 
   p_enc = AMF_EncodeInt32(p_enc, n_vdo);
 
-  memcpy(p_enc, p_vdo, n_vdo);
+  // memcpy(p_enc, p_vdo, n_vdo);
   p_enc += n_vdo;
 
   return AMF_EncodeInt32(p_enc, n_vdo + 11 + 9);

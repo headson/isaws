@@ -41,17 +41,24 @@ class CFlvOverHttp {
 
 
  private:
+  unsigned int           exit_flag_;
+
   vzconn::EVT_LOOP      *evt_loop_;
 
-  vzconn::VSocket        sock_;
+  SOCKET                 sock_;
 
   vzconn::EVT_IO         evt_send_;
   vzconn::CBlockBuffer   send_data_;
 
   vzconn::EVT_TIMER      evt_timer_;
 
+  CShmVdo                shm_vdo_;
+  unsigned int           pts_;
+  unsigned int           w_sec_, w_usec_;
+
   CFlvMux                flv_shm_;
-  CShareVideo            shm_vdo_;
+  char                  *flv_data_;
+  int                    flv_data_size_;
 
   int                    avcc_data_size_;
   char                   avcc_data_[1024];

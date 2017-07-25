@@ -63,22 +63,18 @@ void CVideoEncode::Process() {
   else if(vpu_.nWidth>=1600)
     nScale = 4;
 
+  int nseqs = 0;
+
   // start capture
   struct v4l2_buffer v4l_buf;
-  int nFrmSeqs=0, nSeqs=0;
   FrameBuffer* pSrcFrm = NULL;                        // 帧源数据
   unsigned int nImgSize = vpu_.nWidth*vpu_.nHeight;   // 照片大小
 
-  CShareVideo::ShmVdo *p_shm_vdo = shm_vdo_.GetData();
-  if (p_shm_vdo != NULL) {
-    memcpy(p_shm_vdo->sps_pps, 
-           vpu_.head_, vpu_.sps_size_+vpu_.pps_size_);
-    p_shm_vdo->n_sps = vpu_.sps_size_;
-    p_shm_vdo->n_pps = vpu_.pps_size_;
+  shm_vdo_.WriteSps(vpu_.head_, vpu_.sps_size_);
+  shm_vdo_.WritePps(vpu_.head_+vpu_.sps_size_, vpu_.pps_size_);
 
-    p_shm_vdo->n_width  = vpu_.nWidth;
-    p_shm_vdo->n_height = vpu_.nHeight;
-  }
+  shm_vdo_.SetWidth(vpu_.nWidth);
+  shm_vdo_.SetHeight(vpu_.nHeight);
 
 REOPEN:
   // 打开V4L2
@@ -96,7 +92,7 @@ REOPEN:
   pSrcFrm = &vpu_.pFrmBufs[vpu_.nFrmNums-1];
 
   // 采集编码
-  while (p_shm_vdo) {
+  while (true) {
     nRet = v4l2_.v4l_get_capture_data(&v4l_buf);
     if (nRet != 0) {
       LOG_ERROR("video %s restart result %d.", v4l2_.sVideo.c_str(), nRet);
@@ -118,17 +114,11 @@ REOPEN:
     pSrcFrm->bufCr   = pSrcFrm->bufCb + (nImgSize >> 2);
     pSrcFrm->strideY = vpu_.nWidth;
     pSrcFrm->strideC = vpu_.nHeight >> 1;
-    nRet = vpu_.enc_process(pSrcFrm,
-                            (char*)p_shm_vdo->p_data,
-                            p_shm_vdo->n_size);
-    if (nRet) {
+    nRet = vpu_.enc_h264(pSrcFrm, &shm_vdo_);
+    if ((nseqs++ % 10) == 1) {
+      vpu_.bGetIFrame = true;
+    } else {
       vpu_.bGetIFrame = false;
-
-      struct timeval tv;
-      gettimeofday(&tv, NULL);
-      p_shm_vdo->n_data = nRet;
-      p_shm_vdo->n_w_sec = tv.tv_sec;
-      p_shm_vdo->n_w_usec = tv.tv_usec;
     }
     v4l2_.v4l_put_capture_data(&v4l_buf);
   }

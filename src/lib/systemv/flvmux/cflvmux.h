@@ -23,6 +23,9 @@ class CFlvMux {
                                     int width, int height,
                                     int audiodatarate, int audiosamplerate, int audiosamplesize, int audiochannels);
 
+  static int   VdoHeadSize() {
+    return 20;
+  }
   static char *PacketVideo(char *p_dst, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp);
   static char *PacketAudio(char *p_dst, char *p_ado, int n_ado, unsigned int timestamp);
 

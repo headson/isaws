@@ -63,7 +63,7 @@ int main() {
     pnal1 = pnal2;
   }
   FILE* fout = fopen("d:\\test1.flv", "wb+");
-  char *p_pkg = flv_mux.HeaderAndMetaDataTag(p_flv, 1366, 768, 1600, 800, 16, 1);
+  char *p_pkg = flv_mux.HeaderAndMetaDataTag(p_flv, 720, 576, 1600, 800, 16, 1);
   p_pkg = flv_mux.Packet(p_pkg, NULL, 0, flv_mux.sps_pps_, flv_mux.sps_size_+flv_mux.pps_size_,
                                0x09, 0);
   if (fout) {
