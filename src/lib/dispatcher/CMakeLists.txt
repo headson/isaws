@@ -59,14 +59,14 @@ SET(SRC_CLI_LIST
 
 SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/pkghead.h
-	)
+)
 
 SOURCE_GROUP(dpserver FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpsession.h
 	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpsession.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpserver.h 
 	${CMAKE_CURRENT_SOURCE_DIR}/dpserver/dpserver.cpp
-	)
+)
 
 
 SOURCE_GROUP(kvdbserver FILES
@@ -74,7 +74,7 @@ SOURCE_GROUP(kvdbserver FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbsqlite.h 
 	${CMAKE_CURRENT_SOURCE_DIR}/kvdbserver/kvdbsqlite.cpp
-	)
+)
 
 SOURCE_GROUP(client FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.h 
@@ -85,7 +85,7 @@ SOURCE_GROUP(client FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.cpp 
-	)
+)
 #########################################################################
 #Step 4 : Add PROJECT define 
 MESSAGE(STATUS "Step 4 : Add code source")

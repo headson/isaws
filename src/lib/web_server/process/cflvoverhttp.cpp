@@ -37,7 +37,9 @@ CFlvOverHttp::~CFlvOverHttp() {
   printf("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-bool CFlvOverHttp::Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop, const char* shm_key, unsigned int shm_size) {
+bool CFlvOverHttp::Open(SOCKET sock,
+                        vzconn::EVT_LOOP *evt_loop,
+                        const char* shm_key, unsigned int shm_size) {
   sock_.SetSocket(sock);
   set_socket_nonblocking(sock);
 
@@ -60,14 +62,19 @@ void CFlvOverHttp::Close() {
   sock_.SetSocket(INVALID_SOCKET);
 }
 
-int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead,
-                              unsigned int nwidth, unsigned int nheight) {
-  AsyncWrite(phead, nhead);
+int CFlvOverHttp::AsyncHeader(const void *p_resp, unsigned int n_resp) {
+  CShareVideo::ShmVdo *p_shm_vdo = shm_vdo_.GetData();
+  if (NULL == p_shm_vdo) {
+    LOG(L_ERROR) << "share video failed.";
+    return -1;
+  }
+
+  AsyncWrite(p_resp, n_resp);
 
   int ndata = 0;
   char sdata[2048] = {0};
   char *p_dst = flv_shm_.HeaderAndMetaDataTag(sdata,
-                nwidth, nheight,
+                p_shm_vdo->n_width, p_shm_vdo->n_height,
                 16000, 8000, 16, 1);
   ndata = p_dst - sdata;
   AsyncWrite(sdata, ndata);
@@ -75,14 +82,14 @@ int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead,
     fwrite(sdata, 1, ndata, file);
   }
 
-  int n_sps = 0, n_pps = 0;
-  ndata = shm_vdo_.ReadHead(sdata, 2048, &n_sps, &n_pps);
-  LOG(L_ERROR)<<"sps length "<<n_sps
-              <<" pps length "<<n_pps;
+  LOG(L_ERROR)<<"sps length "<<p_shm_vdo->n_sps
+              <<" pps length "<<p_shm_vdo->n_pps;
 
-  ndata = flv_shm_.MakeAVCc(sdata, n_sps, n_pps);
+  ndata = flv_shm_.MakeAVCc(sdata,
+                            p_shm_vdo->n_sps,
+                            p_shm_vdo->n_sps);
   p_dst = flv_shm_.Packet(avcc_data_, NULL, 0,
-                          flv_shm_.sps_pps_, flv_shm_.sps_pps_size_,
+                          flv_shm_.avcc_, flv_shm_.avcc_size_,
                           0x09, 0);
   avcc_data_size_ = p_dst - avcc_data_;
   AsyncWrite(avcc_data_, avcc_data_size_);
@@ -156,41 +163,57 @@ int CFlvOverHttp::EvtTimer(SOCKET fd, short events, const void *p_usr_arg) {
 
 int32 CFlvOverHttp::OnTimer() {
   if (sock_.isClose()) {
+    LOG(L_ERROR) << "socket is closed.";
     return -1;
   }
-  static char *p_data = new char[640 * 480];
-  static char *p_flv = new char[640 * 480 + 1024];
+  CShareVideo::ShmVdo *p_shm_vdo = shm_vdo_.GetData();
+  if (NULL == p_shm_vdo) {
+    LOG(L_ERROR) << "share video failed.";
+    return -1;
+  }
+  unsigned int n_flv = p_shm_vdo->n_width * p_shm_vdo->n_height + 1024;
+
+  static char *p_flv = new char[n_flv];
 
   static unsigned int npts = 0;
   static unsigned int n_lastsec = 0, n_lastusec = 0;
 
-  if (p_data) {
-    unsigned int n_sec = n_lastsec, n_usec = n_lastusec;
-    int ndata = shm_vdo_.Read(p_data, 640 * 480, &n_sec, &n_usec);
-    if (ndata > 0) {
-      npts += (n_sec - n_lastsec)*1000 + (n_usec - n_lastusec)/1000;
-      n_lastsec = n_sec; n_lastusec = n_usec;
-
-      int nal_bng = 0;
-      int frm_type = 0;
-
-      char *p_nal = nal_parse(p_data, ndata, &frm_type, &nal_bng);
-
-      int n_flv = 0;
-      if (frm_type == 5) {
-        AsyncWrite(avcc_data_, avcc_data_size_);
-        char *p_dst = flv_shm_.PacketVideo(p_flv, p_nal + nal_bng, ndata - nal_bng, true, npts);
-        n_flv = p_dst - p_flv;
-      } else if (frm_type == 1) {
-        char *p_dst = flv_shm_.PacketVideo(p_flv, p_nal + nal_bng, ndata - nal_bng, false, npts);
-        n_flv = p_dst - p_flv;
-      }
-      AsyncWrite(p_flv, n_flv);
-      if (file) {
-        fwrite(p_flv, 1, n_flv, file);
-      }
-      // printf("----------------- flv %d %d.\n", frm_type, n_flv);
+  if (n_lastsec != p_shm_vdo->n_w_sec &&
+      n_lastusec != p_shm_vdo->n_w_usec) {
+    npts += (p_shm_vdo->n_w_sec - n_lastsec)*1000
+            + (p_shm_vdo->n_w_usec - n_lastusec)/1000;
+    if (npts > 120) {
+      npts = 40;
     }
+    n_lastsec = p_shm_vdo->n_w_sec;
+    n_lastusec = p_shm_vdo->n_w_usec;
+
+    int nal_bng = 0;
+    int frm_type = 0;
+
+    char *p_nal = nal_parse((const char*)p_shm_vdo->p_data,
+                            p_shm_vdo->n_data,
+                            &frm_type, &nal_bng);
+    int n_flv = 0;
+    if (frm_type == 5) {
+      AsyncWrite(avcc_data_, avcc_data_size_);
+      char *p_dst = flv_shm_.PacketVideo(p_flv,
+                                         p_nal + nal_bng,
+                                         p_shm_vdo->n_data - nal_bng,
+                                         true, npts);
+      n_flv = p_dst - p_flv;
+    } else if (frm_type == 1) {
+      char *p_dst = flv_shm_.PacketVideo(p_flv,
+                                         p_nal + nal_bng,
+                                         p_shm_vdo->n_data - nal_bng,
+                                         false, npts);
+      n_flv = p_dst - p_flv;
+    }
+    AsyncWrite(p_flv, n_flv);
+    if (file) {
+      fwrite(p_flv, 1, n_flv, file);
+    }
+    printf("----------------- flv %d %d.\n", frm_type, n_flv);
   }
   return 0;
 }

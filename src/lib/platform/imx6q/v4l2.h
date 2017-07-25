@@ -5,9 +5,6 @@
 #ifndef LIBPLATFORM_V4L2_H
 #define LIBPLATFORM_V4L2_H
 
-#include "inc/vtypes.h"
-#include "inc/vdefine.h"
-
 #include <stdio.h>
 #include <string.h>
 
@@ -17,6 +14,8 @@
 
 #include <sys/mman.h>
 #include <sys/ioctl.h>
+
+#include "vzlogging/logging/vzlogging.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,7 +45,7 @@ class CV4l2 {
   }
 
   // V4L打开
-  int32_t v4l_open() {
+  int v4l_open() {
     int i, mode = 0;
     struct v4l2_format          fmt;
     struct v4l2_streamparm      parm;
@@ -151,7 +150,7 @@ class CV4l2 {
       return -1;
     }
     printf("Video=%s, mode=%d, w=%d, h=%d, input=%d.",
-             sVideo.c_str(), mode, nWidth, nHeight, nInput);
+           sVideo.c_str(), mode, nWidth, nHeight, nInput);
     return 0;
   }
 
@@ -164,7 +163,7 @@ class CV4l2 {
   }
 
   // V4l2开始抓拍
-  int32_t v4l_start_capturing() {
+  int v4l_start_capturing() {
     int i = 0;
     struct v4l2_buffer buf;
     enum v4l2_buf_type type;
@@ -178,7 +177,7 @@ class CV4l2 {
       buf.memory  = V4L2_MEMORY_MMAP;
       buf.type    = V4L2_BUF_TYPE_VIDEO_CAPTURE;
       if (ioctl(vdo_fd, VIDIOC_QUERYBUF, &buf) < 0) {
-        printf("VIDIOC_QUERYBUF error %s", sVideo.c_str());
+        LOG_ERROR("VIDIOC_QUERYBUF error %s", sVideo.c_str());
 
         v4l_stop_capturing();
         close(vdo_fd);
@@ -188,7 +187,11 @@ class CV4l2 {
 
       sBuffer[i].length = buf.length;
       sBuffer[i].offset = (size_t) buf.m.offset;
-      sBuffer[i].start  = mmap(NULL, sBuffer[i].length, PROT_READ | PROT_WRITE, MAP_SHARED, vdo_fd, sBuffer[i].offset);
+      sBuffer[i].start  = mmap(NULL, sBuffer[i].length, 
+                               PROT_READ | PROT_WRITE, 
+                               MAP_SHARED, 
+                               vdo_fd,
+                               sBuffer[i].offset);
       if (sBuffer[i].start == NULL) {
         printf("%s mmap start is failed.", sVideo.c_str());
 
@@ -229,7 +232,7 @@ class CV4l2 {
 
   // V4l2停止抓拍
   void v4l_stop_capturing() {
-    int32_t i = 0;
+    int i = 0;
 
     enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
@@ -249,7 +252,7 @@ class CV4l2 {
   }
 
   // V4l2从输出队列取得一帧数据
-  int32_t v4l_get_capture_data(struct v4l2_buffer *buf) {
+  int v4l_get_capture_data(struct v4l2_buffer *buf) {
     if (vdo_fd > 0 && buf != NULL) {
       memset(buf, 0, sizeof(struct v4l2_buffer));
       buf->type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -277,19 +280,19 @@ class CV4l2 {
   }
 
  public:
-  int         vdo_fd;
-  std::string sVideo;         // 视频地址
+  int           vdo_fd;
+  std::string   sVideo;         // 视频地址
 
-  uint16_t    nWidth, nHeight;    // 宽，高
-  int32_t     nInput;             // MEM,IC_MEM(IPU预处理)
+  unsigned int  nWidth, nHeight;    // 宽，高
+  int           nInput;             // MEM,IC_MEM(IPU预处理)
 
-  int32_t     nFrmFreq;           // 帧率
-  int32_t     nFrmLost;           // 丢帧
+  int           nFrmFreq;           // 帧率
+  int           nFrmLost;           // 丢帧
 
   struct TAG_V4L2_BUFFER {
-    void*    start;  // 虚拟地址
-    size_t   offset; //
-    uint32_t  length; // 长度
+    void*         start;  // 虚拟地址
+    size_t        offset; //
+    unsigned int  length; // 长度
   } sBuffer[REQBUFF_NUM];
 };
 

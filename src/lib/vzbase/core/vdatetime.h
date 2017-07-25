@@ -32,18 +32,18 @@ public:
     static VDateTime get(const std::string& sdt);
 
     // 返回自系统开机以来的毫秒数（tick）
-    static int64_t   get_sys_tick();
+    static int64     get_sys_tick();
     static bool      is_loop_yaer(int32 ny);
 
-    void set(int64_t ms);
+    void set(int64 ms);
     void set(uint32 s, uint32 us);
     void set(const struct timeval& tv);
 
     uint32    tsec() const;
     uint32    tusec() const;
 
-    int64_t     to_msec() const;
-    uint64_t    to_usec() const;
+    int64     to_msec() const;
+    uint64    to_usec() const;
     std::string to_string() const;  // 2016-12-30 13:41:33只一种格式
 
     int32     year() const;

@@ -1,18 +1,14 @@
 /************************************************************************/
 /* ×÷Õß: SoberPeng 17-05-23
-/* ÃèÊö: 
+/* ÃèÊö:
 /************************************************************************/
 #ifndef LIBPLATFORM_CPLATFORM_H
 #define LIBPLATFORM_CPLATFORM_H
 
-
-#include "platform/imx6q/cvideoencode.h"
-
-class CPlatform
-{
-public:
-    static void Initinal();
-    static void Release();
+class CPlatform {
+ public:
+  static void Initinal();
+  static void Release();
 };
 
 #endif  // LIBPLATFORM_CPLATFORM_H

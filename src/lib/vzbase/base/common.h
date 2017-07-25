@@ -71,7 +71,9 @@ inline void Unused(const void*) {}
 #define stdmax(x, y) himsev::_max(x, y)
 #endif
 
+#ifndef ARRAY_SIZE
 #define ARRAY_SIZE(x) (static_cast<int>(sizeof(x) / sizeof(x[0])))
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // Assertions

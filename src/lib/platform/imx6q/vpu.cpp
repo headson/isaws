@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "inc/vdefine.h"
+//#include "vzbase/helper/stdafx.h"
+#include "vzlogging/logging/vzlogging.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,8 +59,8 @@ CVpu::CVpu() {
   pFrmBufs = NULL;
   pFrmDesc = NULL;
 
-  nHeadData = 0;
-  memset(sHeadData, 0, 2*1024);
+  sps_size_ = pps_size_ = jpeg_size_ = 0;
+  memset(head_, 0, 1024);
 }
 
 CVpu::~CVpu() {
@@ -67,8 +68,8 @@ CVpu::~CVpu() {
 }
 
 // 编码创建
-int32_t CVpu::vpu_setup() {
-  int32_t nRet;
+bool CVpu::vpu_setup() {
+  int nRet;
   EncHandle handle   = {0};
   EncOpenParam encop = {0};
 
@@ -77,10 +78,10 @@ int32_t CVpu::vpu_setup() {
   nRet = IOGetPhyMem(&cMemDesc);
   if (nRet) {
     LOG_ERROR("Unable to obtain physical memory.");
-    return RET_MALLOC_ERROR;
+    return false;
   }
   cMemDesc.virt_uaddr = IOGetVirtMem(&cMemDesc);
-  printf("%s[%d] 0x%x.\n", __FUNCTION__, __LINE__,   cMemDesc.virt_uaddr);
+  LOG_INFO("virt uaddr 0x%x.\n", cMemDesc.virt_uaddr);
 
   /* Fill up parameters for encoding */
   encop.bitstreamBuffer       = cMemDesc.phy_addr;
@@ -116,7 +117,7 @@ int32_t CVpu::vpu_setup() {
   encop.IntraCostWeight       = 0;
   encop.MEUseZeroPmv          = 0;
   encop.MESearchRange         = 3;                    /* (3: 16x16, 2:32x16, 1:64x32, 0:128x64, H.263(Short Header : always 3) */
-  encop.userGamma             = (Uint32)(0.75*32768); /* (0*32768 <= gamma <= 1*32768) */
+  encop.userGamma             = (unsigned int)(0.75*32768); /* (0*32768 <= gamma <= 1*32768) */
   encop.RcIntervalMode        = 3;                    /* 0:normal, 1:frame_level, 2:slice_level, 3: user defined Mb_level */
   encop.MbInterval            = 1;
   encop.avcIntra16x16OnlyModeEnable = 0;
@@ -154,19 +155,19 @@ int32_t CVpu::vpu_setup() {
   nRet = vpu_EncOpen(&handle, &encop);
   if (nRet != RETCODE_SUCCESS) {
     LOG_ERROR("Encoder open failed %d %d-%d.\n", nRet, nWidth, nHeight);
-    return RET_INVLIAD_HANDLE;
+    return false;
   }
   enc_fd = handle;
 
   LOG_INFO("hdl 0x%x, w %d, h %d, enc %d, bit %d, iGop %d.\n",
-       (uint32_t)enc_fd, (int)nWidth, (int)nHeight, eEncFormat, nBitrate, nIGopSize);
-  return RET_SUCCESS;
+           (unsigned int)enc_fd, (int)nWidth, (int)nHeight, eEncFormat, nBitrate, nIGopSize);
+  return true;
 }
 
 // 编码关闭
 void CVpu::vpu_close() {
   if (enc_fd) {
-    LOG_INFO("hdl 0x%x close.", (uint32_t)enc_fd);
+    LOG_INFO("hdl 0x%x close.", (unsigned int)enc_fd);
 
     RetCode ret;
     ret = vpu_EncClose(enc_fd);
@@ -183,8 +184,8 @@ void CVpu::vpu_close() {
 }
 
 // 分配buffer
-int32_t CVpu::vpu_alloc_encbuffs() {
-  int32_t i;
+int CVpu::vpu_alloc_encbuffs() {
+  int i;
   RetCode nRet;
   int nEncStride, nSrcStride;
   int nEncWidth, nEncHeight;
@@ -200,17 +201,17 @@ int32_t CVpu::vpu_alloc_encbuffs() {
   // Total Frame Buffer
   nFrmNums = initinfo.minFrameBufferCount+nExtFrmBuffCount;
 
-  LOG_INFO("hdl 0x%x frame number %d.", (uint32_t)enc_fd, nFrmNums);
+  LOG_INFO("hdl 0x%x frame number %d.", (unsigned int)enc_fd, nFrmNums);
   // DST frame buffer
   pFrmDesc = (vpu_mem_desc *)calloc(sizeof(vpu_mem_desc), nFrmNums);
   if (pFrmDesc == NULL) {
-    LOG_ERROR("hdl 0x%x Can't calloc vpu_mem_desc.", (uint32_t)enc_fd);
+    LOG_ERROR("hdl 0x%x Can't calloc vpu_mem_desc.", (unsigned int)enc_fd);
     goto err;
   }
 
   pFrmBufs = (FrameBuffer*)calloc(sizeof(FrameBuffer), nFrmNums);
   if (pFrmBufs == NULL) {
-    LOG_ERROR("hdl 0x%x Can't calloc FrameBuffer.", (uint32_t)enc_fd);
+    LOG_ERROR("hdl 0x%x Can't calloc FrameBuffer.", (unsigned int)enc_fd);
     goto err;
   }
 
@@ -220,7 +221,7 @@ int32_t CVpu::vpu_alloc_encbuffs() {
     memset(&pFrmDesc[i], 0, sizeof(vpu_mem_desc));
     pFrmDesc[i].size = nEncWidth * nEncHeight * 3/2;
     if (IOGetPhyMem(&pFrmDesc[i])) {
-      LOG_ERROR("hdl 0x%x Frame buffer allocation failure.", (uint32_t)enc_fd);
+      LOG_ERROR("hdl 0x%x Frame buffer allocation failure.", (unsigned int)enc_fd);
       goto err;
     }
     pFrmBufs[i].bufY  = pFrmDesc[i].phy_addr;
@@ -240,22 +241,22 @@ int32_t CVpu::vpu_alloc_encbuffs() {
   nSrcStride = (nWidth + 15) & ~15;
   nRet = vpu_EncRegisterFrameBuffer(enc_fd, pFrmBufs, initinfo.minFrameBufferCount, nEncStride, nSrcStride, 0, 0, NULL);
   if (nRet != RETCODE_SUCCESS) {
-    LOG_ERROR("hdl 0x%x Register frame buffer failed", (uint32_t)enc_fd);
+    LOG_ERROR("hdl 0x%x Register frame buffer failed", (unsigned int)enc_fd);
     goto err;
   }
-  return RET_SUCCESS;
+  return 0;
 
 err:
   vpu_free_encbuffs();
-  LOG_ERROR("hdl 0x%x vpu_alloc_encbuffs failed.", (uint32_t)enc_fd);
-  return RET_MALLOC_ERROR;
+  LOG_ERROR("hdl 0x%x vpu_alloc_encbuffs failed.", (unsigned int)enc_fd);
+  return -1;
 }
 
 // 释放buffer
 void CVpu::vpu_free_encbuffs() {
   if (pFrmDesc) {
     //for (int i = 0; i < (nFrmNums - 1); i++)
-    for (uint32_t i = 0; i < nFrmNums; i++) {
+    for (unsigned int i = 0; i < nFrmNums; i++) {
       if (pFrmDesc[i].virt_uaddr)
         IOFreeVirtMem(&pFrmDesc[i]);
 
@@ -276,7 +277,7 @@ void CVpu::vpu_free_encbuffs() {
 
 //////////////////////////////////////////////////////////////////////////
 // 编码源分配
-int32_t CVpu::vpu_alloc_srcbuffs(TAG_VPU_SRC *pSrc, int w, int h) {
+int CVpu::vpu_alloc_srcbuffs(TAG_VPU_SRC *pSrc, int w, int h) {
   int nFrmSize = w * h;
   int nImgSize = nFrmSize * 3 / 2;
 
@@ -284,7 +285,7 @@ int32_t CVpu::vpu_alloc_srcbuffs(TAG_VPU_SRC *pSrc, int w, int h) {
   IOGetPhyMem(&pSrc->stFrmDesc);
   if (pSrc->stFrmDesc.phy_addr == 0) {
     LOG_ERROR("IOGetPhyMem %d failed.\n", nImgSize);
-    return RET_MALLOC_ERROR;
+    return -1;
   }
   pSrc->stFrmDesc.virt_uaddr = IOGetVirtMem(&pSrc->stFrmDesc);
 
@@ -293,7 +294,7 @@ int32_t CVpu::vpu_alloc_srcbuffs(TAG_VPU_SRC *pSrc, int w, int h) {
   pSrc->stFrmBuff.bufY    = pSrc->stFrmDesc.phy_addr;
   pSrc->stFrmBuff.bufCb   = pSrc->stFrmBuff.bufY + nFrmSize;
   pSrc->stFrmBuff.bufCr   = pSrc->stFrmBuff.bufCb+ (nFrmSize >> 2);
-  return RET_SUCCESS;
+  return 0;
 }
 
 // 编码源释放
@@ -307,9 +308,9 @@ void CVpu::vpu_free_srcbuffs(TAG_VPU_SRC *pSrc) {
 }
 
 // 视频\照片编码
-int32_t CVpu::enc_process(FrameBuffer *pSrcFrm, int8_t *pDstData, int32_t nDstSize, volatile bool& bRuning) {
-  int32_t nRet = -1;
-  uint8_t sSlice[9] = {0};
+int CVpu::enc_process(FrameBuffer *pSrcFrm, char *pDstData, int nDstSize) {
+  int nRet = -1;
+  unsigned char sSlice[9] = {0};
 
   EncParam stEncParam = {0};
   EncOutputInfo stOutInfo = {0};
@@ -331,76 +332,73 @@ int32_t CVpu::enc_process(FrameBuffer *pSrcFrm, int8_t *pDstData, int32_t nDstSi
   vpu_EncGiveCommand(enc_fd, ENC_SET_REPORT_SLICEINFO, &stOutInfo.sliceInfo);
   nRet = vpu_EncStartOneFrame(enc_fd, &stEncParam);
   if (nRet != RETCODE_SUCCESS) {
-    printf("0x%x Can't enc next frame %d-0x%x.\n",
-           (uint32_t)enc_fd, nRet, (uint32_t)pSrcFrm);
+    LOG_ERROR("0x%x Can't enc next frame %d-0x%x.\n",
+           (unsigned int)enc_fd, nRet, (unsigned int)pSrcFrm);
     return nRet;
   }
 
   nRet = RETCODE_FAILURE;
   do {
-    while (vpu_IsBusy() && bRuning)
+    while (vpu_IsBusy())
       vpu_WaitForInt(100);
-
-    if(!bRuning) return 0;
 
     nRet = vpu_EncGetOutputInfo(enc_fd, &stOutInfo);
   } while (nRet != RETCODE_SUCCESS);
   //nSlice = stOutInfo.sliceInfo.size;
 
   // sps\pps head
-  uint32_t nVdoLens = 0;
-  if ((stOutInfo.picType == 0)     // I帧
-      || (eEncFormat == STD_MJPG)) { // MJPG
+  unsigned int nVdoLen = 0;
+  if (eEncFormat == STD_MJPG) { // MJPG
     bGetIFrame = true;
-    memcpy(pDstData, sHeadData, nHeadData);
-    nVdoLens += nHeadData;
+    memcpy(pDstData, head_, jpeg_size_);
+    nVdoLen += jpeg_size_;
   }
 
   // video
-  uint32_t nDataAddr = cMemDesc.virt_uaddr + stOutInfo.bitstreamBuffer - cMemDesc.phy_addr;
-  memcpy(pDstData+nVdoLens, (uint8_t*)nDataAddr, stOutInfo.bitstreamSize);
-  nVdoLens              += stOutInfo.bitstreamSize;
+  unsigned int nDataAddr = cMemDesc.virt_uaddr + stOutInfo.bitstreamBuffer - cMemDesc.phy_addr;
+  memcpy(pDstData+nVdoLen, (unsigned char*)nDataAddr, stOutInfo.bitstreamSize);
+  nVdoLen              += stOutInfo.bitstreamSize;
 
-  nDstSize = nVdoLens;
-  return nVdoLens;
+  nDstSize = nVdoLen;
+  return nVdoLen;
 }
 
 //////////////////////////////////////////////////////////////////////////
-int32_t CVpu::vdo_restart() {
-  if (vpu_setup() != RET_SUCCESS)
-    return RET_INVLIAD_HANDLE;
+bool CVpu::vdo_restart() {
+  if (!vpu_setup())
+    return false;
 
-  if (vpu_alloc_encbuffs() != RET_SUCCESS) {
+  if (0 != vpu_alloc_encbuffs()) {
     vpu_close();
-    return RET_MALLOC_ERROR;
+    return false;
   }
 
   // 头
   if (eEncFormat == STD_AVC) {       // H264 - I帧数据头
-    nHeadData = 0;
-    uint32_t nDataBuff;
+    unsigned int nDataBuff;
     EncHeaderParam enchdr_param = {0};
     enchdr_param.headerType = SPS_RBSP;
     vpu_EncGiveCommand(enc_fd, ENC_PUT_AVC_HEADER, &enchdr_param);
     nDataBuff = cMemDesc.virt_uaddr + enchdr_param.buf - cMemDesc.phy_addr;
-    memcpy(sHeadData + nHeadData, (void*)nDataBuff, enchdr_param.size);
-    nHeadData = enchdr_param.size;
+    memcpy(head_, (void*)nDataBuff, enchdr_param.size);
+    sps_size_ = enchdr_param.size;
 
     enchdr_param.headerType = PPS_RBSP;
     vpu_EncGiveCommand(enc_fd, ENC_PUT_AVC_HEADER, &enchdr_param);
     nDataBuff = cMemDesc.virt_uaddr + enchdr_param.buf - cMemDesc.phy_addr;
-    memcpy(sHeadData + nHeadData, (void*)nDataBuff, enchdr_param.size);
-    nHeadData += enchdr_param.size;
+    memcpy(head_ + sps_size_, (void*)nDataBuff, enchdr_param.size);
+    pps_size_ = enchdr_param.size;
   } else if (eEncFormat == STD_MJPG) { // JPEG头
+    jpeg_size_ = 0;
     EncParamSet enchdr_param;
     enchdr_param.size = 1024;
-    enchdr_param.pParaSet = (Uint8*)malloc(1024);
+    enchdr_param.pParaSet = (unsigned char*)malloc(1024);
     vpu_EncGiveCommand(enc_fd,ENC_GET_JPEG_HEADER, &enchdr_param);
-    memcpy(sHeadData, enchdr_param.pParaSet, enchdr_param.size);
-    nHeadData = enchdr_param.size;
+    memcpy(head_, enchdr_param.pParaSet, enchdr_param.size);
+    jpeg_size_ = enchdr_param.size;
     free(enchdr_param.pParaSet);
   }
-  return RET_SUCCESS;
+  return true;
 }
 
 void CVpu::vdo_stop() {

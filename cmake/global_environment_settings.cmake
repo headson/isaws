@@ -7,7 +7,7 @@ SET(PROJECT_SET_NAME_LIB 					"lib")
 SET(PROJECT_SET_NAME_RUN 					"app")
 SET(PROJECT_SET_NAME_CMAKE 					"cmake")
 SET(PROJECT_SET_NAME_THIRD_PART 			"third_part")
-SET(FTP_DIR 								"/nfs")
+SET(FTP_DIR 								"/mnt/hgfs/shared/workspace/git_work/isaws/ftp_dir")
 SET(CMAKE_USE_RELATIVE_PATHS 				ON)
 
 if( NOT CMAKE_BUILD_TYPE )

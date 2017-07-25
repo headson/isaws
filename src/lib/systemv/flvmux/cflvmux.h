@@ -32,8 +32,8 @@ class CFlvMux {
   int MakeAVCc(char* sps_pps, int sps_size, int pps_size);
 
  public:
-  int  sps_pps_size_;
-  char sps_pps_[128];
+  int  avcc_size_;
+  char avcc_[128];
 };
 
 

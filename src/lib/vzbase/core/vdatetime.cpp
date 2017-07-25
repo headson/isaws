@@ -79,15 +79,15 @@ VDateTime VDateTime::get(const std::string& sdt) {
   return dt;
 }
 
-int64_t VDateTime::get_sys_tick() {
+int64 VDateTime::get_sys_tick() {
 #ifdef WIN32
-  //return (int64_t)GetTickCount64();
-  return (int64_t)GetTickCount();
+  //return (int64)GetTickCount64();
+  return (int64)GetTickCount();
 #else
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC, &ts);
-  return ((int64_t)ts.tv_sec * 1000 +
-          (int64_t)ts.tv_nsec / 1000000);
+  return ((int64)ts.tv_sec * 1000 +
+          (int64)ts.tv_nsec / 1000000);
 #endif
   return 0;
 }
@@ -96,8 +96,8 @@ bool VDateTime::is_loop_yaer(int32 ny) {
   return (((0 == (ny % 4)) && (0 != (ny % 100))) || (0 == (ny % 400)));
 }
 
-void VDateTime::set(int64_t ms) {
-  int64_t secs = ms / 1000;
+void VDateTime::set(int64 ms) {
+  int64 secs = ms / 1000;
   set((uint32)secs, ((ms % 1000) * 1000));
 }
 
@@ -131,16 +131,16 @@ uint32 VDateTime::tusec() const {
   return c_tv_.tv_usec;
 }
 
-int64_t VDateTime::to_msec() const {
-  int64_t ms = int64_t(this->c_tv_.tv_sec);
+int64 VDateTime::to_msec() const {
+  int64 ms = int64(this->c_tv_.tv_sec);
   ms *= 1000;
   ms += (this->c_tv_.tv_usec / 1000);
 
   return ms;
 }
 
-uint64_t VDateTime::to_usec() const {
-  uint64_t us = (uint64_t)(c_tv_.tv_sec);
+uint64 VDateTime::to_usec() const {
+  uint64 us = (uint64)(c_tv_.tv_sec);
   us *= ONE_SECOND_IN_USECS;
   us += c_tv_.tv_usec;
 
@@ -200,8 +200,8 @@ VDateTime& VDateTime::operator=(const struct timeval& tv) {
 }
 
 VDateTime& VDateTime::operator +=(const VDateTime &dt) {
-  uint64_t s  = this->tsec() + dt.tsec();
-  uint64_t us = this->tusec() + this->tusec();
+  uint64 s  = this->tsec() + dt.tsec();
+  uint64 us = this->tusec() + this->tusec();
 
   s += us / ONE_SECOND_IN_USECS;
   us = us % ONE_SECOND_IN_USECS;
@@ -215,8 +215,8 @@ VDateTime& VDateTime::operator -=(const VDateTime& dt) {
     c_tv_.tv_sec = 0;
     c_tv_.tv_usec = 0;
   } else {
-    uint64_t us = this->to_usec();
-    uint64_t us2 = dt.to_usec();
+    uint64 us = this->to_usec();
+    uint64 us2 = dt.to_usec();
     us = us - us2;
 
     c_tv_.tv_sec = static_cast<long>(us / ONE_SECOND_IN_USECS);
@@ -285,7 +285,7 @@ bool operator>=(const VDateTime& dt1, const VDateTime& dt2) {
 }
 
 VDateTime operator+(const VDateTime& dt1, const VDateTime& dt2) {
-  uint64_t us = dt1.to_usec() + dt2.to_usec();
+  uint64 us = dt1.to_usec() + dt2.to_usec();
   VDateTime timer((uint32)us / ONE_SECOND_IN_USECS, 
     (uint32)us % ONE_SECOND_IN_USECS);
   return timer;
@@ -293,7 +293,7 @@ VDateTime operator+(const VDateTime& dt1, const VDateTime& dt2) {
 
 VDateTime operator-(const VDateTime& dt1, const VDateTime& dt2) {
   {
-    uint64_t us = 0;
+    uint64 us = 0;
     if(dt1.to_usec() > dt2.to_usec()) {
       us = dt1.to_usec() - dt2.to_usec();
     }

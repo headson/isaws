@@ -11,25 +11,29 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #include "cplatform.h"
+#include "cvideoencode.h"
+#include "vzlogging/logging/vzlogging.h"
 
 void CPlatform::Initinal() {
   RetCode ret;
   vpu_versioninfo ver;
   ret = vpu_Init(NULL);
   if (ret) {
-    printf("VPU Init Failure.");
+    LOG_ERROR("VPU Init Failure.");
     return;
   }
 
   ret = vpu_GetVersionInfo(&ver);
   if (ret) {
-    printf("Cannot get version info, err:%d", ret);
+    LOG_ERROR("Cannot get version info, err:%d", ret);
     vpu_UnInit();
     return;
   }
 
-  printf("VPU firmware version: %d.%d.%d_r%d.\n", ver.fw_major, ver.fw_minor, ver.fw_release, ver.fw_code);
-  printf("VPU library version: %d.%d.%d.\n", ver.lib_major, ver.lib_minor, ver.lib_release);
+  LOG_INFO("VPU firmware version: %d.%d.%d_r%d.\n",
+         ver.fw_major, ver.fw_minor, ver.fw_release, ver.fw_code);
+  LOG_INFO("VPU library version: %d.%d.%d.\n", 
+         ver.lib_major, ver.lib_minor, ver.lib_release);
 }
 
 void CPlatform::Release() {

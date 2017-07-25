@@ -46,17 +46,14 @@ ENDIF()
 #########################################################################
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
-	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libplatform.lib
-	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		${YHPROJECT_LINK_LIB}
-		libplatform.a
-		libshm.a
+		platform
+		systemv
 		asound 
 		ipu 
 		iconv 
 		libvpu.a
+		${VZPROJECT_LINK_LIB}
 	)
 endif()

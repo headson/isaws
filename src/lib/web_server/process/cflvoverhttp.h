@@ -22,8 +22,7 @@ class CFlvOverHttp {
 
   void Close();
 
-  int AsyncHeader(const void *phead, unsigned int nhead,
-                  unsigned int nwidth, unsigned int nheight);
+  int AsyncHeader(const void *p_resp, unsigned int n_resp);
 
   int AsyncWrite(const void *p_data, unsigned int n_data);
 
@@ -51,8 +50,8 @@ class CFlvOverHttp {
 
   vzconn::EVT_TIMER      evt_timer_;
 
-  CShmVdo                shm_vdo_;
   CFlvMux                flv_shm_;
+  CShareVideo            shm_vdo_;
 
   int                    avcc_data_size_;
   char                   avcc_data_[1024];

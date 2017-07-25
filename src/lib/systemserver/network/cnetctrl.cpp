@@ -89,13 +89,13 @@ void CNetCtrl::OnMessage(vzbase::Message* msg) {
       }
     } else {
       if (ip_addr_ != ip) {
-        netmask_ = net_get_netmask(PHY_IF_NAME);
-        gateway_ = net_get_gateway(PHY_IF_NAME);
-        dns_addr_     = net_get_dns();
+        netmask_  = net_get_netmask(PHY_IF_NAME);
+        gateway_  = net_get_gateway();
+        dns_addr_ = net_get_dns();
 
-        char smac[20] = {0};
+        unsigned char smac[20] = {0};
         net_get_hwaddr(PHY_IF_NAME, smac); 
-        phy_mac_ = smac;
+        phy_mac_ = (char*)smac;
       }
       ip_addr_ = ip;
 

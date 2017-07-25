@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "platform/imx6q/cplatform.h"
+#include "platform/imx6q/cvideoencode.h"
 
 int main(int argc, char* argv[]) {
   CPlatform::Initinal();
@@ -10,7 +11,8 @@ int main(int argc, char* argv[]) {
   c_vdo_enc.SetInput(0);
   c_vdo_enc.SetViSize(720, 576);
 
-  int32_t n_ret = c_vdo_enc.Start();
+  bool bret = c_vdo_enc.Start(
+                SHM_VIDEO_0, 720*576*3/2);
 
   c_vdo_enc.Process();
 

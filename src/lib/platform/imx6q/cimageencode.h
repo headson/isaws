@@ -4,15 +4,14 @@
 /************************************************************************/
 #ifndef LIBPLATFORM_CPHOTOENCODE_H
 #define LIBPLATFORM_CPHOTOENCODE_H
-#include "inc/vtypes.h"
 
 #include "vpu.h"
 
-class CPhotoEncode
+class CImageEncode
 {
 public:
-    CPhotoEncode(int32_t eCodec = CODE_ID_JPEG);
-    virtual ~CPhotoEncode();
+    CImageEncode(int eCodec = STD_MJPG);
+    virtual ~CImageEncode();
 
     /*============================================================================
     函数功能: 照片编码
@@ -25,13 +24,13 @@ public:
     编写作者: Sober
     完成时间: 2014-9-9 14:01:54
     =============================================================================*/
-    int32_t Encode(int8_t* pDst, int32_t nDst, int8_t* pSrc, int32_t nW, int32_t nH);
+    int Encode(char* pDst, int nDst, char* pSrc, int nw, int nH);
 
 private:
-    volatile bool       m_bInited;  // 初始化
+    bool                bInited;  // 初始化
 
-    CVpu                m_cVpu;     // 
-    CVpu::TAG_VPU_SRC   m_cVpuSrc;  // 
+    CVpu                vpu_;     // 
+    CVpu::TAG_VPU_SRC   vpu_src_;  // 
 };
 
 #endif  // LIBPLATFORM_CPHOTOENCODE_H

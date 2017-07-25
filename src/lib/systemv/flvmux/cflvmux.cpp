@@ -340,7 +340,7 @@ char* CFlvMux::Packet(char *p_packet,
 }
 
 CFlvMux::CFlvMux() {
-  sps_pps_size_ = 0;
+  avcc_size_ = 0;
 }
 
 int CFlvMux::MakeAVCc(char* sps_pps, int sps_size, int pps_size) {
@@ -349,14 +349,14 @@ int CFlvMux::MakeAVCc(char* sps_pps, int sps_size, int pps_size) {
       pps_size <= 0) {
     return -1;
   }
-  if (sps_pps_size_ > 0) {
-    return sps_pps_size_;
+  if (avcc_size_ > 0) {
+    return avcc_size_;
   }
 
   char *p_sps = sps_pps;
   char *p_pps = sps_pps + sps_size;
 
-  char* p_out = sps_pps_;
+  char* p_out = avcc_;
 
   p_out[0] = 0x17;
   p_out[1] = 0;
@@ -389,7 +389,7 @@ int CFlvMux::MakeAVCc(char* sps_pps, int sps_size, int pps_size) {
   memcpy(p_out, p_pps + 4, pps_size - 4);
   p_out += (pps_size - 4);
 
-  sps_pps_size_ = p_out - sps_pps_;
+  avcc_size_ = p_out - avcc_;
 
-  return (p_out - sps_pps_);
+  return (p_out - avcc_);
 }

@@ -8,12 +8,6 @@
 #define SW_VERSION_ "V100.00.00 "
 #define HW_VERSION_ "V100.00.00 "
 
-#define DEF_SHM_VIDEO_0       "/dev/shm/video_0"
-#define DEF_SHM_VIDEO_0_SIZE  ((352*288*3)/2 + 1024)
-
-#define DEF_SHM_AUDIO_0       "/dev/shm/audio_0"
-#define DEF_SHM_AUDIO_0_SIZE  (1024)
-
 // DpClient_Init…Ë÷√dispatcher_server dpµÿ÷∑
 #define DEF_DP_SRV_IP         "127.0.0.1"
 #define DEF_DP_SRV_PORT       5291

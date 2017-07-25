@@ -14,46 +14,54 @@
 #define SHM_AUDIO_0       "/dev/shm/audio_0"
 #define SHM_AUDIO_0_SIZE  1024
 
-class CShmVdo {
-public:
+class CShareVideo {
+ public:
   typedef struct {
-    unsigned int  n_w_sec;      // 写秒
-    unsigned int  n_w_usec;     // 写微妙
+    unsigned int  n_w_sec;        // 写秒
+    unsigned int  n_w_usec;       // 写微妙
+
+    unsigned int  n_width;        // 图像宽
+    unsigned int  n_height;       // 图像高
 
     unsigned int  n_sps;
-    unsigned int  n_pps;         // SPS_PPS长度
-    unsigned char sps_pps[1024]; // SPS_PPS
+    unsigned int  n_pps;          // SPS_PPS长度
+    unsigned char sps_pps[128];   // SPS_PPS
 
-    unsigned int  n_size;       // 数据buffer长度
-    unsigned int  n_data;       // 写长度
-    unsigned char p_data[0];    // 数据指针
-  } TAG_SHM_VDO;
+    unsigned int  n_size;         // 数据buffer长度
+    unsigned int  n_data;         // 写长度
+    unsigned char p_data[0];      // 数据指针
+  } ShmVdo;
 
-public:
-  CShmVdo();
-  ~CShmVdo();
+ public:
+  CShareVideo();
+  ~CShareVideo();
 
-  bool Create(const char *s_path, unsigned int n_size);
+  bool Create(const char *s_key, unsigned int n_size);
+  bool Open(const char *s_key, unsigned int n_size);
 
-  bool Open(const char *s_file, unsigned int n_size);
+  int SetSps(const char *p_data, unsigned int n_data);
+  int SetPps(const char *p_data, unsigned int n_data);
 
-  int ReadHead(char* p_data, unsigned int n_data,
+  int GetSpsPps(char* p_data, unsigned int n_data,
                int *n_sps, int *n_pps);
-  int Read(char* p_data, unsigned int n_data,
-           unsigned int *n_sec, unsigned int *n_usec);
 
-  int WriteSps(const char *p_data, unsigned int n_data);
-  int WritePps(const char *p_data, unsigned int n_data);
+  unsigned int GetWidth();
+  void SetWidth(unsigned int w);
 
-  int Write(const char *p_data, unsigned int n_data,
-            unsigned int n_sec, unsigned int n_usec);
+  unsigned int GetHeight();
+  void SetHeight(unsigned int h);
 
-private:
-  HANDLE        hdl_shm_;
-  void         *mem_ptr_;
+ public:
+  bool Lock();
+  bool Unlock();
 
-  HANDLE        hdl_sem_w_;
-  HANDLE        hdl_sem_r_;
+  ShmVdo *GetData();
+
+ private:
+  HANDLE   hdl_sem_;
+
+  HANDLE   hdl_shm_;
+  void    *mem_ptr_;
 };
 
 #endif  // _VZSHM_C_H_
