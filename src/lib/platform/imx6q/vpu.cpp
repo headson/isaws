@@ -62,7 +62,7 @@ CVpu::CVpu() {
   sps_size_ = pps_size_ = jpeg_size_ = 0;
   memset(head_, 0, 1024);
 
-  // file = fopen("./test.h264", "wb+");
+  file = NULL;//fopen("./test.h264", "wb+");
 }
 
 CVpu::~CVpu() {

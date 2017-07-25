@@ -16,6 +16,7 @@
 #include "yuv420.h"
 
 #include "vzbase/helper/stdafx.h"
+#include "vzbase/core/vdatetime.h"
 
 #include "systemv/shm/vzshm_c.h"
 
@@ -44,7 +45,7 @@ bool CVideoEncode::Start(const char* s_key, unsigned int n_size) {
     LOG_ERROR("create share video failed.");
     return false;
   }
-  
+
   return true;
 }
 
@@ -98,14 +99,17 @@ REOPEN:
       LOG_ERROR("video %s restart result %d.", v4l2_.sVideo.c_str(), nRet);
       goto ERROR_;
     }
+
     // ÊÓÆµ´¦Àí
-    //unsigned int nTmNow     = vdt.tsec();
-    //if (nTmOld != nTmNow) {
-    //  nTmOld = nTmNow;
-    //  nColor = nColor ? 0 : 255;
-    //}
-    //yuv_osd(nColor, (unsigned char*)m_cV4l2.sBuffer[v4l_buf.index].start,
-    //        m_cVpu.nWidth, m_cVpu.nHeight, (char*)vdt.to_string().c_str(), nScale, asc8, 10, 10);
+    VDateTime vdt = VDateTime::get();
+    unsigned int nTmNow = vdt.tsec();
+    if (nTmOld != nTmNow) {
+      nTmOld = nTmNow;
+      nColor = nColor ? 0 : 255;
+    }
+    yuv_osd(nColor, (unsigned char*)v4l2_.sBuffer[v4l_buf.index].start,
+            v4l2_.nWidth, v4l2_.nHeight,
+            (char*)vdt.to_string().c_str(), nScale, asc8, 10, 10);
 
     // ±àÂë
     pSrcFrm->myIndex = vpu_.nFrmNums-1+v4l_buf.index;

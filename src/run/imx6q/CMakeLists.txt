@@ -49,6 +49,8 @@ if(WIN32)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		platform
+		vzbase
+		vzconn
 		systemv
 		asound 
 		ipu 

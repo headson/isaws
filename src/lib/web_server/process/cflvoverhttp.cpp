@@ -217,7 +217,7 @@ int32 CFlvOverHttp::OnTimer() {
       if (file) {
         fwrite(flv_data_+nal_bng, 1, n_flv, file);
       }
-      printf("----------------- flv %d %d.\n", frm_type, n_flv);
+      // printf("----------------- flv %d %d.\n", frm_type, n_flv);
     }
   }
   return 0;
