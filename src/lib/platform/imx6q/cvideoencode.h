@@ -7,17 +7,20 @@
 
 #include <string>
 
+#include "vzbase/thread/thread.h"
+
 #include "vpu.h"
 #include "v4l2.h"
 
 #include "systemv/shm/vzshm_c.h"
 
-class CVideoEncode {
+class CVideoEncode : public vzbase::Runnable {
  public:
   CVideoEncode();
   virtual ~CVideoEncode();
 
-  bool Start(const char* s_key, unsigned int n_size);
+  bool Start(const char *s_vdo_key, unsigned int n_vdo_size,
+             const char *s_img_key, unsigned int n_img_size);
   void Stop();
 
  public:
@@ -30,10 +33,7 @@ class CVideoEncode {
   virtual void SetVideo(std::string sVideo) {
     v4l2_.sVideo = sVideo;
   }
-  virtual void SetViSize(unsigned int nWidth, unsigned int nHeight) {
-    v4l2_.nWidth = nWidth;
-    v4l2_.nHeight = nHeight;
-  }
+  virtual void SetViSize(unsigned int nWidth, unsigned int nHeight);
   virtual void SetInput(int nInput) { // MEM IC-MEM
     v4l2_.nInput = nInput;
   }
@@ -59,15 +59,17 @@ class CVideoEncode {
     vpu_.nIGopSize = nIGop;
   }
 
-  void Process();
+  virtual void Run(vzbase::Thread* thread);
 
  protected:
   int         chn_;
   int         i2c_;
 
  protected:
-  CVpu        vpu_;     // 编码
-  CV4l2       v4l2_;    // V4L2
-  CShmVdo     shm_vdo_;
+  CVpu          vpu_;       // 编码
+  CV4l2         v4l2_;      // V4L2
+
+  CShareBuffer  shm_vdo_;   // 共享编码数据
+  CShareBuffer  shm_img_;   // 共享原始数据
 };
 #endif  // LIBPLATFORM_CVIDEOENCODE_H

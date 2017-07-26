@@ -47,6 +47,9 @@ SET(PROJECT_SOURCE_LIST
 	#${CMAKE_CURRENT_SOURCE_DIR}/calsaaudioencode.cpp
 	#${CMAKE_CURRENT_SOURCE_DIR}/calsaaudiodecode.h
 	#${CMAKE_CURRENT_SOURCE_DIR}/calsaaudiodecode.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
 
 SOURCE_GROUP(base FILES
@@ -62,6 +65,11 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideoencode.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cimageencode.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cimageencode.cpp
+)
+
+SOURCE_GROUP(listen_messge FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
 
 #########################################################################

@@ -12,6 +12,9 @@
 
 #include "dispatcher/sync/dpclient_c.h"
 
+#include "platform/imx6q/cplatform.h"
+#include "platform/imx6q/cvideoencode.h"
+
 namespace imx6q {
 
 class CListenMessage : public vzbase::noncopyable,
@@ -44,6 +47,9 @@ public:
  private:
   DPPollHandle      dp_cli_;
   vzbase::Thread   *main_thread_;
+
+  CVideoEncode      vdo_enc_;
+  vzbase::Thread   *vdo_thread_;
 };
 
 }  // namespace imx6q 

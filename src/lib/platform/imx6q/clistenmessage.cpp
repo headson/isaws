@@ -19,7 +19,8 @@ static const char  *METHOD_SET[] = {
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
-  , main_thread_(NULL) {
+  , main_thread_(NULL) 
+  , vdo_enc_() {
 }
 
 CListenMessage::~CListenMessage() {
@@ -32,6 +33,24 @@ CListenMessage *CListenMessage::Instance() {
 }
 
 bool CListenMessage::Start() {
+  vdo_enc_.SetVideo("/dev/video0");
+  vdo_enc_.SetInput(0);
+  vdo_enc_.SetViSize(320, 240);
+  vdo_enc_.SetEncSize(320, 240);
+  bool bret = vdo_enc_.Start(
+                SHM_VIDEO_0, 320 * 240 + 1024,
+                SHM_IMAGE_0, 320 * 240 * 3 / 2 + 1024);
+  if (false == bret) {
+    LOG(L_ERROR) << "vdo encode start failed.";
+    return false;
+  }
+
+  vdo_thread_ = new vzbase::Thread();
+  if (NULL == vdo_thread_) {
+    LOG(L_ERROR) << "Create vdo thread failed.";
+    return false;
+  }
+  vdo_thread_->Start(&vdo_enc_);
 
   //////////////////////////////////////////////////////////////////////////
   main_thread_ = vzbase::Thread::Current();
@@ -56,11 +75,18 @@ bool CListenMessage::Start() {
 }
 
 void CListenMessage::Stop() {
+  vdo_enc_.Stop();
+
   if (dp_cli_) {
     DpClient_ReleasePollHandle(dp_cli_);
     dp_cli_ = NULL;
   }
   DpClient_Stop();
+
+  if (vdo_thread_) {
+    vdo_thread_->Release();
+    vdo_thread_ = NULL;
+  }
 
   if (main_thread_) {
     main_thread_->Release();

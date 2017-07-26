@@ -16,7 +16,7 @@
 #include "yuv420.h"
 
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/core/vdatetime.h"
+#include "vzbase/base/timeutils.h"
 
 #include "systemv/shm/vzshm_c.h"
 
@@ -29,7 +29,8 @@ CVideoEncode::~CVideoEncode() {
   Stop();
 }
 
-bool CVideoEncode::Start(const char* s_key, unsigned int n_size) {
+bool CVideoEncode::Start(const char* s_vdo_key, unsigned int n_vdo_size,
+                         const char *s_img_key, unsigned int n_img_size) {
   bool b_ret = false;
 
   if (vpu_.enc_fd == 0) {
@@ -40,12 +41,17 @@ bool CVideoEncode::Start(const char* s_key, unsigned int n_size) {
     }
   }
 
-  b_ret = shm_vdo_.Create(s_key, n_size);
+  b_ret = shm_vdo_.Create(s_vdo_key, n_vdo_size);
   if (!b_ret) {
     LOG_ERROR("create share video failed.");
     return false;
   }
 
+  b_ret = shm_img_.Create(s_img_key, n_img_size);
+  if (!b_ret) {
+    LOG_ERROR("create share image failed.");
+    return false;
+  }
   return true;
 }
 
@@ -53,10 +59,16 @@ void CVideoEncode::Stop() {
   vpu_.vdo_stop();  // 关闭VPU
 }
 
-void CVideoEncode::Process() {
+void CVideoEncode::SetViSize(unsigned int nWidth, unsigned int nHeight) {
+  v4l2_.nWidth = nWidth;
+  v4l2_.nHeight = nHeight;
+}
+
+void CVideoEncode::Run(vzbase::Thread* thread) {
   int nRet = 0;
   int nScale = 1;
-  unsigned int nTmOld = 0, nColor = 0;
+  time_t nTmOld = 0;
+  unsigned int nColor = 0;
   if (vpu_.nWidth==720)
     nScale = 2;
   else if(vpu_.nWidth==1280)
@@ -76,6 +88,9 @@ void CVideoEncode::Process() {
 
   shm_vdo_.SetWidth(vpu_.nWidth);
   shm_vdo_.SetHeight(vpu_.nHeight);
+
+  shm_img_.SetWidth(v4l2_.nWidth);
+  shm_img_.SetHeight(v4l2_.nHeight);
 
 REOPEN:
   // 打开V4L2
@@ -100,18 +115,28 @@ REOPEN:
       goto ERROR_;
     }
 
-    // 视频处理
-    VDateTime vdt = VDateTime::get();
-    unsigned int nTmNow = vdt.tsec();
+    // share image
+    shm_img_.Write((char*)v4l2_.sBuffer[v4l_buf.index].start, 
+                   v4l2_.sBuffer[v4l_buf.index].length, 0, vzbase::Time());
+
+    // resize image
+    if ((v4l2_.nWidth != vpu_.nWidth) || (v4l2_.nHeight != vpu_.nHeight)) {
+      ImageResizeNN((uint8*)v4l2_.sBuffer[v4l_buf.index].start,
+                    v4l2_.nWidth, v4l2_.nHeight, vpu_.nWidth, vpu_.nHeight);
+    }
+
+    // add time osd
+    time_t nTmNow = time(NULL);
     if (nTmOld != nTmNow) {
       nTmOld = nTmNow;
       nColor = nColor ? 0 : 255;
     }
     yuv_osd(nColor, (unsigned char*)v4l2_.sBuffer[v4l_buf.index].start,
-            v4l2_.nWidth, v4l2_.nHeight,
-            (char*)vdt.to_string().c_str(), nScale, asc8, 10, 10);
+            vpu_.nWidth, vpu_.nHeight,
+            (char*)vzbase::TimeToString(nTmNow).c_str(),
+            nScale, asc8, 10, 10);
 
-    // 编码
+    // encode
     pSrcFrm->myIndex = vpu_.nFrmNums-1+v4l_buf.index;
     pSrcFrm->bufY    = v4l2_.sBuffer[v4l_buf.index].offset;
     pSrcFrm->bufCb   = pSrcFrm->bufY  + nImgSize;

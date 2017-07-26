@@ -9,32 +9,34 @@
 
 // 视频通道0
 #define SHM_VIDEO_0       "/dev/shm/video_0"
-#define SHM_VIDEO_0_SIZE  1024*1024
+#define SHM_IMAGE_0       "/dev/shm/image_0"
 
 #define SHM_AUDIO_0       "/dev/shm/audio_0"
 #define SHM_AUDIO_0_SIZE  1024
 
-class CShmVdo {
+#define SHM_HEAD_SIZE     128
+
+class CShareBuffer {
 public:
   typedef struct {
-    unsigned int  n_w_sec;      // 写秒
-    unsigned int  n_w_usec;     // 写微妙
+    unsigned int  n_w_sec;        // 写秒
+    unsigned int  n_w_usec;       // 写微妙
 
     unsigned int  n_width;
     unsigned int  n_height;
 
-    unsigned int  n_sps;
-    unsigned int  n_pps;         // SPS_PPS长度
-    unsigned char sps_pps[1024]; // SPS_PPS
+    unsigned int  n_head_1;       // SPS长度
+    unsigned int  n_head_2;       // PPS长度
+    unsigned char s_head[SHM_HEAD_SIZE]; // SPS_PPS
 
-    unsigned int  n_size;       // 数据buffer长度
-    unsigned int  n_data;       // 写长度
-    unsigned char p_data[0];    // 数据指针
+    unsigned int  n_size;         // 数据buffer长度
+    unsigned int  n_data;         // 写长度
+    unsigned char p_data[0];      // 数据指针
   } TAG_SHM_VDO;
 
 public:
-  CShmVdo();
-  ~CShmVdo();
+  CShareBuffer();
+  ~CShareBuffer();
 
   bool Create(const char *s_path, unsigned int n_size);
 
@@ -59,8 +61,7 @@ private:
   HANDLE        hdl_shm_;
   void         *mem_ptr_;
 
-  HANDLE        hdl_sem_w_;
-  HANDLE        hdl_sem_r_;
+  HANDLE        hdl_sem_;
 };
 
 #endif  // _VZSHM_C_H_

@@ -365,7 +365,7 @@ int CVpu::enc_process(FrameBuffer *pSrcFrm, char *pDstData, int nDstSize) {
   return nVdoLen;
 }
 
-int CVpu::enc_h264(FrameBuffer *pSrcFrm, CShmVdo *shm_vdo) {
+int CVpu::enc_h264(FrameBuffer *pSrcFrm, CShareBuffer *shm_vdo) {
   int nRet = -1;
   unsigned char sSlice[9] = {0};
 

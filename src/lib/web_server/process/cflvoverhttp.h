@@ -52,7 +52,7 @@ class CFlvOverHttp {
 
   vzconn::EVT_TIMER      evt_timer_;
 
-  CShmVdo                shm_vdo_;
+  CShareBuffer           shm_vdo_;
   unsigned int           pts_;
   unsigned int           w_sec_, w_usec_;
 

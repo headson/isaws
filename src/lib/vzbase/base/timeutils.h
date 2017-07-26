@@ -30,6 +30,8 @@
 #define SRC_BASE_TIMEUTILS_H_
 
 #include <time.h>
+#include <string>
+
 #include "vzbase/base/common.h"
 #ifndef WIN32
 #include <sys/time.h>
@@ -97,6 +99,8 @@ namespace vzbase {
   inline int64 UnixTimestampNanosecsToNtpMillisecs(int64 unix_ts_ns) {
     return unix_ts_ns / kNumNanosecsPerMillisec + kJan1970AsNtpMillisecs;
   }
+
+  std::string TimeToString(time_t tt);
 
 }  // namespace vzbase
 

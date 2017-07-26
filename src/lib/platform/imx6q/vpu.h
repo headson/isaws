@@ -54,7 +54,7 @@ class CVpu {
   int enc_process(FrameBuffer *pSrcFrm, char *pDstData, int nDstSize);
 
   //  ”∆µ\’’∆¨±‡¬Î
-  int enc_h264(FrameBuffer *pSrcFrm, CShmVdo *shm_vdo);
+  int enc_h264(FrameBuffer *pSrcFrm, CShareBuffer *shm_vdo);
 
  public:
   bool vdo_restart();

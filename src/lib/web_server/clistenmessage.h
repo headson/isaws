@@ -8,6 +8,8 @@
 #include "vzbase/base/basictypes.h"
 #include "vzbase/base/noncoypable.h"
 
+#include "vzbase/thread/thread.h"
+
 #include "dispatcher/sync/dpclient_c.h"
 
 #include "web_server/cwebserver.h"

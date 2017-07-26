@@ -75,10 +75,17 @@ typedef enum _MSG_RET {
 
 #define MSG_SET_HWCLOCK       "set_hwclock"       // 设置硬件时间
 
-//////////////////////////////////////////////////////////////////////////
-#define MSG_GET_IVAINFO       "get_ivainfo"       // 
+#define MSG_GET_I_FRAME       "get_i_frame"       // 请求I帧
+#define MSG_GET_ENC_CFG       "get_enc_cfg"       // 获取编码配置
+#define MSG_SET_ENC_CFG       "set_enc_cfg"       // 设置编码配置
 
-#define MSG_CATCH_EVENT       "catch_event"        // 算法事件
+//////////////////////////////////////////////////////////////////////////
+#define MSG_GET_IVAINFO       "get_ivainfo"       // 获取算法信息
+#define MSG_SET_IVAINFO       "set_ivainfo"       // 设置算法信息
+
+#define MSG_RESET_COUNT       "reset_count"       // 重置计数
+
+#define MSG_CATCH_EVENT       "catch_event"       // 算法事件
 
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_KEY_USER         "key_user"     // kvdb获取用户

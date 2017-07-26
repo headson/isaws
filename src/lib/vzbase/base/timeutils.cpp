@@ -41,6 +41,8 @@
 #include <mmsystem.h>
 #endif
 
+#include <stdio.h>
+
 #include "vzbase/base/common.h"
 #include "vzbase/base/timeutils.h"
 
@@ -206,6 +208,29 @@ int32 TimeDiff(uint32 later, uint32 earlier) {
     }
   }
 #endif
+}
+
+std::string TimeToString(time_t tt) {
+  char str[64] = { 0 };
+
+  struct tm* ptm;
+#if 1//选择无时区
+  ptm = localtime(&tt);
+#else
+  ptm = gmtime(&tt);
+#endif
+
+  if (ptm) {
+    sprintf(str, "%4d-%02d-%02d %02d:%02d:%02d",
+             ptm->tm_year + 1900,
+             ptm->tm_mon + 1,
+             ptm->tm_mday,
+             ptm->tm_hour,
+             ptm->tm_min,
+             ptm->tm_sec);
+    return str;
+  }
+  return "";
 }
 
 }  // namespace vzbase

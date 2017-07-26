@@ -1,18 +1,13 @@
 #include <stdio.h>
 
 #include "vzbase/helper/stdafx.h"
-
 #include "vzbase/base/vmessage.h"
-
 #include "dispatcher/sync/dpclient_c.h"
 
-#include "platform/imx6q/cplatform.h"
-#include "platform/imx6q/clistenmessage.h"
+#include "iva/clistenmessage.h"
 
 int main(int argc, char* argv[]) {
   InitVzLogging(argc, argv);
-
-  CPlatform::Initinal();
 
   DpClient_Init(DEF_DP_SRV_IP,
                 DEF_DP_SRV_PORT);
@@ -26,7 +21,5 @@ int main(int argc, char* argv[]) {
   while (true) {
     imx6q::CListenMessage::Instance()->RunLoop();
   }
-
-  CPlatform::Release();
   return 0;
 }

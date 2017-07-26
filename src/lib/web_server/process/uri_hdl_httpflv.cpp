@@ -51,7 +51,7 @@ void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *p) {
 
   //mg_get_http_var(&hm->query_string, "chn");
 
-  bool bret = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+  bool bret = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_0, 320 * 240 + 1024);
   if (bret == false) {
     delete pflv;
     pflv = NULL;

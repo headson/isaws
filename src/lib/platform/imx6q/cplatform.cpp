@@ -11,7 +11,18 @@
 *-----------------------------------------------------------------------------
 ******************************************************************************/
 #include "cplatform.h"
-#include "cvideoencode.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "sdk/inc/ipu.h"
+#include "sdk/inc/vpu_lib.h"
+#include "sdk/inc/vpu_io.h"
+#include "sdk/inc/videodev2.h"
+#ifdef __cplusplus
+}
+#endif
+
 #include "vzlogging/logging/vzlogging.h"
 
 void CPlatform::Initinal() {
