@@ -107,11 +107,11 @@
       req.cmd = 'get_devinfo';
       req.id = 1;
       req.body = {};
-
       var jsonstr = JSON.stringify(req);
+
       $.ajax({
         type: 'POST',
-        url: '/sys_config',
+        url: '/dispatch',
         dataType: 'text',
         data: jsonstr,
         success: function (ajaxdata) {
@@ -169,7 +169,7 @@
       var jsonstr = JSON.stringify(req);
       $.ajax({
         type: 'POST',
-        url: '/sys_config',
+        url: '/dispatch',
         dataType: 'text',
         data: jsonstr,
         success: function (ajaxdata) {

@@ -8,18 +8,21 @@
 
 #include "json/json.h"
 
-namespace imx6q {
+namespace iva {
+
+#define IVA_CFG_FILE    "./config/cfg_file_iva.xml"
+#define IVA_AUX_FILE    "./config/cfg_file_aux.xml"
 
 static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
-  MSG_GET_I_FRAME,
-  MSG_GET_ENC_CFG,
-  MSG_SET_ENC_CFG
+  MSG_GET_IVAINFO,
+  MSG_SET_IVAINFO
 };
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
-  , main_thread_(NULL) {
+  , main_thread_(NULL)
+  , iva_Handle_(NULL) {
 }
 
 CListenMessage::~CListenMessage() {
@@ -32,6 +35,36 @@ CListenMessage *CListenMessage::Instance() {
 }
 
 bool CListenMessage::Start() {
+  if (iva_Handle_) {
+    iva_alg_destroy(iva_Handle_);
+    iva_Handle_ = NULL;
+  }
+
+  /*算法创建*/
+  ALG_CREATE_ARG alg_arg;
+  alg_arg.iva_mode             = (uint8_t)5;
+  alg_arg.config_filename      = (int8_t*)IVA_CFG_FILE;
+  alg_arg.aux_config_filename  = (int8_t*)IVA_AUX_FILE;
+  alg_arg.iva_debug_callback   = DebugCallback;
+  alg_arg.iva_action_callback  = ActionCallback;
+
+  alg_arg.face_img_w = (uint32_t)720;
+  alg_arg.face_img_h = (uint32_t)576;
+  alg_arg.door_img_w = (uint32_t)720;
+  alg_arg.door_img_h = (uint32_t)576;
+  alg_arg.env_img_w  = (uint32_t)720;
+  alg_arg.env_img_h  = (uint32_t)576;
+
+  alg_arg.user_arg = (uint32_t)this;
+  LOG_INFO("iva mode %d, face w %d, h %d, door w %d, h %d.", alg_arg.iva_mode,
+           alg_arg.face_img_w, alg_arg.face_img_h, alg_arg.door_img_w, alg_arg.door_img_h);
+
+  int nret = iva_alg_create(&iva_Handle_, &alg_arg);
+  if (nret != IVA_NO_ERROR) {
+    LOG_ERROR("create iva failed, %d.", nret);
+    return -1;
+  }
+  iva_alg_set_time_zone(iva_Handle_, 8);  // 传给设备时区
 
   //////////////////////////////////////////////////////////////////////////
   main_thread_ = vzbase::Thread::Current();
@@ -40,8 +73,8 @@ bool CListenMessage::Start() {
       main_thread_->socketserver()->GetEvtService();
 
     dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
-                                          dpcli_poll_state_cb, this,
-                                          p_evt_srv);
+                                        dpcli_poll_state_cb, this,
+                                        p_evt_srv);
     if (dp_cli_ == NULL) {
       LOG(L_ERROR) << "dp client create poll handle failed.";
 
@@ -56,16 +89,21 @@ bool CListenMessage::Start() {
 }
 
 void CListenMessage::Stop() {
+  if (main_thread_) {
+    main_thread_->Release();
+    main_thread_ = NULL;
+  }
+
+  if (iva_Handle_) {
+    iva_alg_destroy(iva_Handle_);
+    iva_Handle_ = NULL;
+  }
+
   if (dp_cli_) {
     DpClient_ReleasePollHandle(dp_cli_);
     dp_cli_ = NULL;
   }
   DpClient_Stop();
-
-  if (main_thread_) {
-    main_thread_->Release();
-    main_thread_ = NULL;
-  }
 }
 
 void CListenMessage::RunLoop() {
@@ -111,4 +149,5 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
   //vzbase::Thread::Current()->PostDelayed(2*1000, this, THREAD_MSG_SET_DEV_ADDR);
   //}
 }
-}  // namespace imx6q
+
+}  // namespace iva
