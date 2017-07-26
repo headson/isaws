@@ -54,7 +54,7 @@ SET(SRC_CLI_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.h
-	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.cpp 
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.cpp
 )
 
 SOURCE_GROUP(base FILES
@@ -86,6 +86,7 @@ SOURCE_GROUP(client FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ckvdbclient.cpp 
 )
+
 #########################################################################
 #Step 4 : Add PROJECT define 
 MESSAGE(STATUS "Step 4 : Add code source")

@@ -94,11 +94,11 @@ bool KvdbServer::ProcessKvdbService(const KvdbMessage *kvdb_msg,
                                     uint32 size) {
   if (kvdb_msg->type == KVDB_REPLACE) {
     return kvdb_sqlite_->ReplaceKeyValue(kvdb_msg->key,
-                                         strnlen(kvdb_msg->key, MAX_KVDB_KEY_SIZE),
+                                         kvdb_msg->key_size,
                                          (const char *)data, size);
   } else if (kvdb_msg->type == KVDB_DELETE) {
     return kvdb_sqlite_->DeleteKeyValue(kvdb_msg->key,
-                                        strnlen(kvdb_msg->key, MAX_KVDB_KEY_SIZE));
+                                        kvdb_msg->key_size);
   } else if (kvdb_msg->type == KVDB_RESTORE) {
     return kvdb_sqlite_->RestoreDatabase();
   } else if (kvdb_msg->type == KVDB_BACKUP) {

@@ -7,7 +7,7 @@
 #include "vzbase/helper/stdafx.h"
 
 #include "vzbase/base/base64.h"
-#include "vzbase/core/vmessage.h"
+#include "vzbase/base/vmessage.h"
 
 #include <vector>
 #include <iostream>

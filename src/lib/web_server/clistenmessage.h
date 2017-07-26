@@ -6,7 +6,6 @@
 #define _CLISTENMESSAGE_H
 
 #include "vzbase/base/basictypes.h"
-
 #include "vzbase/base/noncoypable.h"
 
 #include "dispatcher/sync/dpclient_c.h"
@@ -34,10 +33,10 @@ public:
 
  protected:
   static void dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
-  void OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp);
+  void OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp);
 
   static void dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg);
-  void OnDpCliState(DPPollHandle p_hdl, unsigned int n_state);
+  void OnDpState(DPPollHandle p_hdl, unsigned int n_state);
 
   // 线程消息Post,处理函数
   void OnMessage(vzbase::Message* msg);

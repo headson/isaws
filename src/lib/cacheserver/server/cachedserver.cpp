@@ -135,7 +135,19 @@ bool CachedServer::ProcessSelect(const CacheMessage *cache_msg,
 
     ivcec[1].iov_base = (void *)&(stanza->data()[0]);
     ivcec[1].iov_len  = stanza->data().size();
+    
+    //std::size_t n_pos = stanza->path().find_last_of("/");
+    //if (n_pos != stanza->path().npos) {
+    //  std::string s_path = "/media/" + stanza->path().substr(n_pos + 1, stanza->path().npos);
 
+    //  LOG(L_WARNING) << "save tmp path " << s_path.c_str();
+    //  FILE *file = fopen(s_path.c_str(), "wb+");
+    //  if (file) {
+    //    fwrite(&stanza->data()[0], 1, stanza->data().size(), file);
+    //    fclose(file);
+    //  }
+    //}
+    LOG(L_WARNING) << "save tmp path " << stanza->path();
     p_cli->AsyncWrite(ivcec, 2, 0);
 
     return true;

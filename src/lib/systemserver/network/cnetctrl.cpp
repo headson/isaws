@@ -7,7 +7,7 @@
 #include "net_cfg.h"
 
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/core/vmessage.h"
+#include "vzbase/base/vmessage.h"
 #include "systemserver/clistenmessage.h"
 
 namespace sys {

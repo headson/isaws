@@ -766,7 +766,7 @@ int VzLogBin(unsigned int n_level,
       slog[nlog + buffer_index++] = ' ';
       data_index++;
     }
-    nlog += data_index;
+    nlog += buffer_index;
     if (nlog < p_tls->nlog_max_) {
       slog[nlog++] = '\n';
     }

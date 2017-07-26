@@ -27,7 +27,7 @@ CEvtTcpServer *CEvtTcpServer::Create(const EVT_LOOP      *p_loop,
     LOG(L_ERROR) << "param is failed.";
     return NULL;
   }
-  if (NULL == cli_hdl || NULL == srv_hdl) {
+  if (NULL == srv_hdl) {
     LOG(L_ERROR) << "param is failed.";
     return NULL;
   }

@@ -1,7 +1,7 @@
 #include <signal.h>
 
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/core/vmessage.h"
+#include "vzbase/base/vmessage.h"
 #include "web_server/clistenmessage.h"
 
 #include "dispatcher/sync/dpclient_c.h"

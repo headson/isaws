@@ -7,8 +7,9 @@
 
 #include "json/json.h"
 
+namespace web {
 
-static const uint32 METHOD_SET_SIZE = 3;
+static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
   "TEST_MSG_TYPE_01",
   "TEST_MSG_TYPE_02",
@@ -20,6 +21,7 @@ CListenMessage::CListenMessage()
 }
 
 CListenMessage::~CListenMessage() {
+  Stop();
 }
 
 CListenMessage *CListenMessage::Instance() {
@@ -27,18 +29,12 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start(const uint8 *s_dp_ip, uint16 n_dp_port) {
-  int32 n_ret = VZNETDP_SUCCEED;
-  DpClient_Init((char*)s_dp_ip, n_dp_port);
-  n_ret = DpClient_Start(0);
-  if (n_ret == VZNETDP_FAILURE) {
-    LOG(L_ERROR) << "dp client start failed.";
-    return false;
-  }
-
+bool CListenMessage::Start(unsigned short  n_http_port,
+                           const char     *s_http_path) {
+  p_main_thread_ = vzbase::Thread::Current();
   if (p_dp_cli_ == NULL) {
     vzconn::EventService *p_evt_srv =
-      vzbase::Thread::Current()->socketserver()->GetEvtService();
+      p_main_thread_->socketserver()->GetEvtService();
 
     p_dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
                                           dpcli_poll_state_cb, this,
@@ -53,7 +49,7 @@ bool CListenMessage::Start(const uint8 *s_dp_ip, uint16 n_dp_port) {
 
     DpClient_HdlAddListenMessage(p_dp_cli_, METHOD_SET, METHOD_SET_SIZE);
   }
-  return (n_ret == VZNETDP_SUCCEED);
+  return true;
 }
 
 void CListenMessage::Stop() {
@@ -63,32 +59,38 @@ void CListenMessage::Stop() {
   }
   DpClient_Stop();
 
-  vzbase::Thread::Current()->Release();
+  if (p_main_thread_) {
+    p_main_thread_->Release();
+    p_main_thread_ = NULL;
+  }
 }
 
 void CListenMessage::RunLoop() {
-  vzbase::Thread::Current()->Run();
+  p_main_thread_->Run();
 }
 
+vzbase::Thread *CListenMessage::MainThread() {
+  return p_main_thread_;
+}
 void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
   if (p_usr_arg) {
-    ((CListenMessage*)p_usr_arg)->OnDpCliMsg(p_hdl, dmp);
+    ((CListenMessage*)p_usr_arg)->OnDpMessage(p_hdl, dmp);
     return;
   }
   LOG(L_ERROR) << "param is error.";
 }
 
-void CListenMessage::OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp) {
+void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
 
 }
 
-void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg) {
+void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg) {
   if (p_usr_arg) {
-    ((CListenMessage*)p_usr_arg)->OnDpCliState(p_hdl, n_state);
+    ((CListenMessage*)p_usr_arg)->OnDpState(p_hdl, n_state);
   }
 }
 
-void CListenMessage::OnDpCliState(DPPollHandle p_hdl, uint32 n_state) {
+void CListenMessage::OnDpState(DPPollHandle p_hdl, unsigned int n_state) {
   if (n_state == DP_CLIENT_DISCONNECT) {
     int32 n_ret = DpClient_HdlReConnect(p_hdl);
     if (n_ret == VZNETDP_SUCCEED) {
@@ -96,3 +98,14 @@ void CListenMessage::OnDpCliState(DPPollHandle p_hdl, uint32 n_state) {
     }
   }
 }
+
+void CListenMessage::OnMessage(vzbase::Message* p_msg) {
+  //if (p_msg->message_id == THREAD_MSG_SET_DEV_ADDR) {
+  /*vzbase::TypedMessageData<std::string>::Ptr msg_ptr =
+    boost::static_pointer_cast<vzbase::TypedMessageData< std::string >> (p_msg->pdata);*/
+
+  //Restart("127.0.0.1", 5291);
+  //vzbase::Thread::Current()->PostDelayed(2*1000, this, THREAD_MSG_SET_DEV_ADDR);
+  //}
+}
+}  // namespace web

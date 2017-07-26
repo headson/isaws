@@ -243,7 +243,7 @@ void CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
     perror("Failure to write file");
   } else {
     LOG(INFO) << "save cached file " << stanza->path()
-      << " stanze use count " << stanza.use_count();
+              << " stanze use count " << stanza.use_count();
   }
   stanza->SaveConfimation();
   fclose(fp);
@@ -275,15 +275,16 @@ bool CachedService::ReadFile(const std::string path,
 void CachedService::RemoveOutOfDataStanza() {
   BOOST_ASSERT(cachedstanza_pool_ != NULL);
   LOG(INFO) << "cached stanza = " << cached_stanzas_.size()
-    << " cache_size_ " << cache_size_;
+            << " cache_size_ " << cache_size_;
   /*##rjx## 如果缓存队首数据未被存储，但队列中数据存在已经存储的则不能及时回收*/
   while(cached_stanzas_.size() > cache_size_) {
     CachedStanza::Ptr stanza = cached_stanzas_.front();
     if(stanza && stanza->IsSaved()) {
       cached_stanzas_.pop_front();
-    }/* else {
-      break;
-    }*/
+    } else {
+      //break;
+      vzsleep(1);
+    }
   }
 }
 

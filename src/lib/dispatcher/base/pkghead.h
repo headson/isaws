@@ -71,6 +71,7 @@ enum {
 typedef struct _KvdbMsg {
   unsigned int type;            // 请求类型;回执错误代码
   unsigned int id;              // 
+  unsigned int key_size;        // key 长度
   char key[MAX_KVDB_KEY_SIZE];
   char value[0];
 } KvdbMessage;

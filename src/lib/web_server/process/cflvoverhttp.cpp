@@ -9,7 +9,7 @@
 #include "vzconn/buffer/cblockbuffer.h"
 
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/core/vmessage.h"
+#include "vzbase/base/vmessage.h"
 
 #include "systemv/shm/vzshm_c.h"
 #include "systemv/flvmux/cflvmux.h"

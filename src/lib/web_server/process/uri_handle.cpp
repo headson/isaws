@@ -8,7 +8,7 @@
 #include <stdlib.h>
 
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/core/vmessage.h"
+#include "vzbase/base/vmessage.h"
 
 #ifdef __cplusplus
 namespace web {

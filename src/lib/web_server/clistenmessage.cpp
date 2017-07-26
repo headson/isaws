@@ -41,7 +41,6 @@ bool CListenMessage::Start(unsigned short  n_http_port,
     exit(EXIT_FAILURE);
   }
   p_main_thread_ = vzbase::Thread::Current();
-
   if (p_dp_cli_ == NULL) {
     vzconn::EventService *p_evt_srv =
       p_main_thread_->socketserver()->GetEvtService();
@@ -58,9 +57,8 @@ bool CListenMessage::Start(unsigned short  n_http_port,
     }
 
     DpClient_HdlAddListenMessage(p_dp_cli_, METHOD_SET, METHOD_SET_SIZE);
-    return VZNETDP_SUCCEED;
   }
-  return VZNETDP_FAILURE;
+  return true;
 }
 
 void CListenMessage::Stop() {
@@ -87,23 +85,23 @@ vzbase::Thread *CListenMessage::MainThread() {
 }
 void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
   if (p_usr_arg) {
-    ((CListenMessage*)p_usr_arg)->OnDpCliMsg(p_hdl, dmp);
+    ((CListenMessage*)p_usr_arg)->OnDpMessage(p_hdl, dmp);
     return;
   }
   LOG(L_ERROR) << "param is error.";
 }
 
-void CListenMessage::OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp) {
+void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
 
 }
 
 void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg) {
   if (p_usr_arg) {
-    ((CListenMessage*)p_usr_arg)->OnDpCliState(p_hdl, n_state);
+    ((CListenMessage*)p_usr_arg)->OnDpState(p_hdl, n_state);
   }
 }
 
-void CListenMessage::OnDpCliState(DPPollHandle p_hdl, unsigned int n_state) {
+void CListenMessage::OnDpState(DPPollHandle p_hdl, unsigned int n_state) {
   if (n_state == DP_CLIENT_DISCONNECT) {
     int32 n_ret = DpClient_HdlReConnect(p_hdl);
     if (n_ret == VZNETDP_SUCCEED) {

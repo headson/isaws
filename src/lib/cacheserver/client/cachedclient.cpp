@@ -132,7 +132,7 @@ bool CachedClient::GetCachedFile(const char *p_path, int n_path,
       return false;
     }
     if (n_ret_type_ == CACHED_SUCCEED) {
-      call_back(p_path, n_path, 
+      call_back(p_path, n_path,
                 p_cur_msg_->data,
                 n_cur_msg_ - sizeof(CacheMessage),
                 user_data);
@@ -142,6 +142,21 @@ bool CachedClient::GetCachedFile(const char *p_path, int n_path,
     LOG(L_ERROR) << e.what();
   }
   return false;
+}
+
+void CachedGetCallback(const char *s_path,
+                       int         n_path,
+                       const char *p_data,
+                       int         n_data,
+                       void       *p_usr_arg) {
+  std::string *buffer = (std::string *)p_usr_arg;
+  buffer->append(p_data, n_data);
+}
+
+bool CachedClient::GetCachedFile(const char *path,
+                                 int path_size,
+                                 std::string *buffer) {
+  return GetCachedFile(path, path_size, CachedGetCallback, buffer);
 }
 
 bool CachedClient::DeleteCachedFile(const char *p_path, int n_path) {

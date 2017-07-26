@@ -40,6 +40,8 @@ class CachedClient : public vzconn::CTcpClient,
                      Cached_GetFileCallback call_back,
                      void *user_data);
 
+  bool GetCachedFile(const char *path, int path_size, std::string *buffer);
+
   bool DeleteCachedFile(const char *path, int key_size);
 
  protected:
