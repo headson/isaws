@@ -27,7 +27,6 @@ CListenMessage::CListenMessage()
   , image_buffer_(NULL)
   , last_read_sec_(0)
   , last_read_usec_(0) {
-  memset(&valid_times_, 0, sizeof(valid_times_));
 }
 
 CListenMessage::~CListenMessage() {
@@ -252,10 +251,6 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
       boost::static_pointer_cast<vzbase::TypedMessageData< std::string >> (p_msg->pdata);*/
     //Restart("127.0.0.1", 5291);
     main_thread_->PostDelayed(POLL_TIMEOUT, this, CATCH_IMAGE);
-  } else if (p_msg->message_id == SEND_BUFFER) {
-    DpClient_SendDpMessage(MSG_CATCH_EVENT, 0, 
-                           event_.send_buffer_.c_str(),
-                           event_.send_buffer_.size());
   }
 }
 

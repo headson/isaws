@@ -9,6 +9,10 @@
 #include "vzbase/base/noncoypable.h"
 
 #include "json/json.h"
+#include "sqlite3/sqlite3.h"
+
+#include <string>
+#include <vector>
 
 class CDataBase : public vzbase::noncopyable {
  public:
@@ -19,9 +23,13 @@ class CDataBase : public vzbase::noncopyable {
   void Stop();
 
  public:
+  bool CreateTablePCount();
   bool ReplaceTablePCount(const Json::Value *p_root);
   bool DeleteTablePCount(const Json::Value *p_root);
   bool SelectTablePCount(Json::Value *p_root);
+
+ protected:
+  bool CheckFileExsits(const char *db_path);
 
  private:
   sqlite3      *db_instance_;

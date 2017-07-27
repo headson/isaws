@@ -25,11 +25,21 @@ MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/cdatabase.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cdatabase.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/table_pcnt.cpp
 )
 
 SOURCE_GROUP(listen_message FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
+)
+
+SOURCE_GROUP(databse FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/cdatabase.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cdatabase.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/table_pcnt.cpp
 )
 
 #########################################################################

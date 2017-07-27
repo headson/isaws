@@ -22,10 +22,7 @@ class CListenMessage : public vzbase::noncopyable,
   public vzbase::MessageHandler {
  protected:
   static const int POLL_TIMEOUT = 5;          // 5ms
-  static const int SEND_TIMEOUT = 60 * 1000;  // 60 * 1s = min
-
   static const int CATCH_IMAGE  = 0x123456;
-  static const int SEND_BUFFER  = 0x123457;
 
  protected:
   CListenMessage();

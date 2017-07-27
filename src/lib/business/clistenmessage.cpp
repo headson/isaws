@@ -10,15 +10,15 @@
 
 namespace bs {
 
-static const unsigned int METHOD_SET_SIZE = 3;
+static const unsigned int METHOD_SET_SIZE = 1;
 static const char  *METHOD_SET[] = {
-  MSG_GET_IVAINFO,
-  MSG_SET_IVAINFO
+  MSG_CATCH_EVENT
 };
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
-  , main_thread_(NULL) {
+  , main_thread_(NULL)
+  , database_() {
 }
 
 CListenMessage::~CListenMessage() {
@@ -31,6 +31,11 @@ CListenMessage *CListenMessage::Instance() {
 }
 
 bool CListenMessage::Start() {
+  bool res = database_.Start("./pcount.db");
+  if (!res) {
+    LOG(L_ERROR) << "database start failed.";
+    return false;
+  }
 
   //////////////////////////////////////////////////////////////////////////
   main_thread_ = vzbase::Thread::Current();

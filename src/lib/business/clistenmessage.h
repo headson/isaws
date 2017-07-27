@@ -12,6 +12,8 @@
 
 #include "dispatcher/sync/dpclient_c.h"
 
+#include "cdatabase.h"
+
 namespace bs {
 
 class CListenMessage : public vzbase::noncopyable,
@@ -55,6 +57,8 @@ class CListenMessage : public vzbase::noncopyable,
     unsigned int    send_interval_;   // 发送间隔(minute)
     time_t          last_send_time_;  // 上次发送时间
   } valid_times_;                     // 有效时间
+
+  CDataBase         database_;
 };
 
 }  // namespace bs
