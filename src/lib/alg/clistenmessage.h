@@ -12,12 +12,21 @@
 
 #include "dispatcher/sync/dpclient_c.h"
 
-#include "alg/include/iva_interface.h"
+
+#include "systemv/shm/vzshm_c.h"
+#include "alg/include/sdk_iva_interface.h"
 
 namespace alg {
 
 class CListenMessage : public vzbase::noncopyable,
   public vzbase::MessageHandler {
+ protected:
+  static const int POLL_TIMEOUT = 5;          // 5ms
+  static const int SEND_TIMEOUT = 60 * 1000;  // 60 * 1s = min
+
+  static const int CATCH_IMAGE  = 0x123456;
+  static const int SEND_BUFFER  = 0x123457;
+
  protected:
   CListenMessage();
   virtual ~CListenMessage();
@@ -45,28 +54,24 @@ class CListenMessage : public vzbase::noncopyable,
 
  protected:
   //智能视频分析回调函数，用于调试
-  static void DebugCallback(IVA_DEBUG_OUTPUT *pDebug) {
-    if (pDebug && pDebug->user_arg) {
-      ((CListenMessage*)pDebug->user_arg)->OnDebug(pDebug);
-    }
-  }
-
-  void OnDebug(IVA_DEBUG_OUTPUT *pDebug);
+  static void AlgDebugCallback(sdk_iva_debug_info *pDebug);
 
   //智能视频分析回调函数，用于发送指令
-  static void ActionCallback(IVA_ACTION_OUTPUT *pAction) {
-    if (pAction && pAction->user_arg) {
-      ((CListenMessage*)pAction->user_arg)->OnAction(pAction);
-    }
-  }
+  static void AlgActionCallback(sdk_iva_output_info *pAction);
 
-  void OnAction(IVA_ACTION_OUTPUT *pAction);
-
- private:
+ protected:
   DPPollHandle      dp_cli_;
   vzbase::Thread   *main_thread_;
 
-  IVA_HANDLE        iva_Handle_;      // 算法HANDLE
+ protected:
+  iva_count_handle  alg_handle_;      // 算法HANDLE
+
+ protected:
+  CShareBuffer      share_image_;
+
+  char             *image_buffer_;
+  unsigned int      last_read_sec_;
+  unsigned int      last_read_usec_;
 };
 
 }  // namespace alg

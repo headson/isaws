@@ -4,6 +4,6 @@
 ************************************************************************/
 #include "clistenmessage.h"
 
-void alg::CListenMessage::OnDebug(IVA_DEBUG_OUTPUT *pDebug) {
+void alg::CListenMessage::AlgDebugCallback(sdk_iva_debug_info *pDebug) {
 
 }

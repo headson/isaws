@@ -23,6 +23,8 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
+	${CMAKE_CURRENT_SOURCE_DIR}/include/sdk_iva_interface.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/ondebug.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/onaction.cpp
 	
@@ -31,6 +33,8 @@ SET(PROJECT_SOURCE_LIST
 )
 
 SOURCE_GROUP(listen_message FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/include/sdk_iva_interface.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/ondebug.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/onaction.cpp
 	

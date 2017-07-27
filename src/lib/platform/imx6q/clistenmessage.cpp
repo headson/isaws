@@ -19,7 +19,7 @@ static const char  *METHOD_SET[] = {
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
-  , main_thread_(NULL) 
+  , main_thread_(NULL)
   , vdo_enc_() {
 }
 
@@ -35,11 +35,10 @@ CListenMessage *CListenMessage::Instance() {
 bool CListenMessage::Start() {
   vdo_enc_.SetVideo("/dev/video0");
   vdo_enc_.SetInput(0);
-  vdo_enc_.SetViSize(320, 240);
-  vdo_enc_.SetEncSize(320, 240);
-  bool bret = vdo_enc_.Start(
-                SHM_VIDEO_0, 320 * 240 + 1024,
-                SHM_IMAGE_0, 320 * 240 * 3 / 2 + 1024);
+  vdo_enc_.SetViSize(SHM_VIDEO_0_W, SHM_VIDEO_0_H);
+  vdo_enc_.SetEncSize(SHM_VIDEO_0_W, SHM_VIDEO_0_H);
+  bool bret = vdo_enc_.Start(SHM_VIDEO_0, SHM_VIDEO_0_SIZE,
+                             SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
   if (false == bret) {
     LOG(L_ERROR) << "vdo encode start failed.";
     return false;
@@ -59,8 +58,8 @@ bool CListenMessage::Start() {
       main_thread_->socketserver()->GetEvtService();
 
     dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
-                                          dpcli_poll_state_cb, this,
-                                          p_evt_srv);
+                                        dpcli_poll_state_cb, this,
+                                        p_evt_srv);
     if (dp_cli_ == NULL) {
       LOG(L_ERROR) << "dp client create poll handle failed.";
 

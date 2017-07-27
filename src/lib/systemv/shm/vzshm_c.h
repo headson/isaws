@@ -9,7 +9,15 @@
 
 //  ”∆µÕ®µ¿0
 #define SHM_VIDEO_0       "/dev/shm/video_0"
+#define SHM_VIDEO_0_W     352
+#define SHM_VIDEO_0_H     288
+#define SHM_VIDEO_0_SIZE  (SHM_VIDEO_0_W * SHM_VIDEO_0_H / 3 * 2 + 512)
+
+
 #define SHM_IMAGE_0       "/dev/shm/image_0"
+#define SHM_IMAGE_0_W     352
+#define SHM_IMAGE_0_H     288
+#define SHM_IMAGE_0_SIZE  (SHM_IMAGE_0_W * SHM_IMAGE_0_H / 3 * 2 + 512)
 
 #define SHM_AUDIO_0       "/dev/shm/audio_0"
 #define SHM_AUDIO_0_SIZE  1024

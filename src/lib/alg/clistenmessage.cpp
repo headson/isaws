@@ -16,13 +16,18 @@ namespace alg {
 static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
   MSG_GET_IVAINFO,
-  MSG_SET_IVAINFO
+  MSG_SET_IVAINFO,
+  MSG_RESET_COUNT
 };
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
   , main_thread_(NULL)
-  , iva_Handle_(NULL) {
+  , alg_handle_(NULL)
+  , image_buffer_(NULL)
+  , last_read_sec_(0)
+  , last_read_usec_(0) {
+  memset(&valid_times_, 0, sizeof(valid_times_));
 }
 
 CListenMessage::~CListenMessage() {
@@ -35,38 +40,39 @@ CListenMessage *CListenMessage::Instance() {
 }
 
 bool CListenMessage::Start() {
-  if (iva_Handle_) {
-    iva_alg_destroy(iva_Handle_);
-    iva_Handle_ = NULL;
+  bool bret = false;
+
+  /*内存共享*/
+  bret = share_image_.Open(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
+  if (false == bret) {
+    LOG(L_ERROR) << "open share failed.";
+    return false;
+  }
+
+  image_buffer_ = new char[SHM_IMAGE_0_SIZE];
+  if (NULL == image_buffer_) {
+    LOG(L_ERROR) << "new image buffer failed.";
+    return false;
   }
 
   /*算法创建*/
-  ALG_CREATE_ARG alg_arg;
-  alg_arg.iva_mode             = (uint8_t)5;
-  alg_arg.config_filename      = (int8_t*)IVA_CFG_FILE;
-  alg_arg.aux_config_filename  = (int8_t*)IVA_AUX_FILE;
-  alg_arg.iva_debug_callback   = DebugCallback;
-  alg_arg.iva_action_callback  = ActionCallback;
+  iva_count_handle handle;
+  sdk_iva_create_param param;
+  param.debug_callback_fun  = AlgDebugCallback;
+  param.output_callback_fun = AlgActionCallback;
+  param.image_width         = SHM_IMAGE_0_W;
+  param.image_height        = SHM_IMAGE_0_H;
 
-  alg_arg.face_img_w = (uint32_t)720;
-  alg_arg.face_img_h = (uint32_t)576;
-  alg_arg.door_img_w = (uint32_t)720;
-  alg_arg.door_img_h = (uint32_t)576;
-  alg_arg.env_img_w  = (uint32_t)720;
-  alg_arg.env_img_h  = (uint32_t)576;
+  LOG_INFO("iva set image size %d, %d.",
+           param.image_width, param.image_height);
 
-  alg_arg.user_arg = (uint32_t)this;
-  LOG_INFO("iva mode %d, face w %d, h %d, door w %d, h %d.", alg_arg.iva_mode,
-           alg_arg.face_img_w, alg_arg.face_img_h, alg_arg.door_img_w, alg_arg.door_img_h);
-
-  int nret = iva_alg_create(&iva_Handle_, &alg_arg);
-  if (nret != IVA_NO_ERROR) {
+  int nret = sdk_iva_create(&handle, &param);
+  if (nret != IVA_ERROR_NO_ERROR) {
     LOG_ERROR("create iva failed, %d.", nret);
     return -1;
   }
-  iva_alg_set_time_zone(iva_Handle_, 8);  // 传给设备时区
 
-  //////////////////////////////////////////////////////////////////////////
+  /* 消息poll */
   main_thread_ = vzbase::Thread::Current();
   if (dp_cli_ == NULL) {
     vzconn::EventService *p_evt_srv =
@@ -85,6 +91,8 @@ bool CListenMessage::Start() {
 
     DpClient_HdlAddListenMessage(dp_cli_, METHOD_SET, METHOD_SET_SIZE);
   }
+
+  main_thread_->PostDelayed(POLL_TIMEOUT, this, CATCH_IMAGE);
   return true;
 }
 
@@ -94,9 +102,9 @@ void CListenMessage::Stop() {
     main_thread_ = NULL;
   }
 
-  if (iva_Handle_) {
-    iva_alg_destroy(iva_Handle_);
-    iva_Handle_ = NULL;
+  if (alg_handle_) {
+    sdk_iva_destroy(alg_handle_);
+    alg_handle_ = NULL;
   }
 
   if (dp_cli_) {
@@ -104,6 +112,11 @@ void CListenMessage::Stop() {
     dp_cli_ = NULL;
   }
   DpClient_Stop();
+
+  if (image_buffer_) {
+    delete[] image_buffer_;
+    image_buffer_ = NULL;
+  }
 }
 
 void CListenMessage::RunLoop() {
@@ -122,32 +135,128 @@ void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp,
 }
 
 void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
+  int nret = IVA_ERROR_NULL_HANDLE;
 
+  Json::Value jresp;
+  jresp[MSG_CMD]  = dmp->method;
+  jresp[MSG_BODY] = "";
+
+  if (strncmp(dmp->method, MSG_GET_IVAINFO, MAX_METHOD_SIZE) == 0) {
+    // 获取算法参数
+
+  } else if (strncmp(dmp->method, MSG_SET_IVAINFO, MAX_METHOD_SIZE) == 0) {
+    // 配置算法参数
+
+  } else if (strncmp(dmp->method, MSG_RESET_COUNT, MAX_METHOD_SIZE) == 0) {
+    // 重置统计数
+    if (alg_handle_) {
+      nret = sdk_iva_set_control_command(alg_handle_,
+                                         CONTROL_COMMAND_RESET_COUNTER);
+    }
+  }
+
+  if (dmp->type == TYPE_REQUEST) {
+    jresp[MSG_STATE] = nret;
+
+    Json::FastWriter jout;
+    std::string sjson = jout.write(jresp);
+    DpClient_SendDpReply(dmp->method, 0, dmp->id,
+                         sjson.c_str(), sjson.size());
+  }
 }
 
-void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg) {
+void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl,
+    unsigned int n_state,
+    void* p_usr_arg) {
   if (p_usr_arg) {
     ((CListenMessage*)p_usr_arg)->OnDpState(p_hdl, n_state);
   }
 }
 
-void CListenMessage::OnDpState(DPPollHandle p_hdl, unsigned int n_state) {
-  if (n_state == DP_CLIENT_DISCONNECT) {
-    int32 n_ret = DpClient_HdlReConnect(p_hdl);
-    if (n_ret == VZNETDP_SUCCEED) {
+void CListenMessage::OnDpState(DPPollHandle phdl, unsigned int nstate) {
+  if (nstate == DP_CLIENT_DISCONNECT) {
+    int nret = DpClient_HdlReConnect(phdl);
+    if (nret == VZNETDP_SUCCEED) {
       DpClient_HdlAddListenMessage(dp_cli_, METHOD_SET, METHOD_SET_SIZE);
     }
+  } else if (nstate == DP_POLL_ISNOT_REG_MSG) {
+    // 未注册消息
+
   }
 }
 
-void CListenMessage::OnMessage(vzbase::Message* p_msg) {
-  //if (p_msg->message_id == THREAD_MSG_SET_DEV_ADDR) {
-  /*vzbase::TypedMessageData<std::string>::Ptr msg_ptr =
-    boost::static_pointer_cast<vzbase::TypedMessageData< std::string >> (p_msg->pdata);*/
+static unsigned char chn_cmd_byte(int ch) {
+  unsigned char cmd = (((ch >> 1) | (ch & 0x01) << 2) << 4);
+  cmd |= 0x8c;
+  return cmd;
+}
 
-  //Restart("127.0.0.1", 5291);
-  //vzbase::Thread::Current()->PostDelayed(2*1000, this, THREAD_MSG_SET_DEV_ADDR);
-  //}
+static int chn_value(int fd, int nreg) {
+  if (write(fd, &nreg, 1) != 1) {
+    LOG_ERROR("write i2c reg %d failed.\n", nreg);
+    return -1;
+  }
+
+  unsigned char aval[2] = { 0 };
+  if (read(fd, aval, 2) != 2) {
+    LOG_ERROR("read i2c reg %d failed.\n", nreg);
+    return -1;
+  }
+
+  int nval = (aval[0] << 8) + aval[1];
+  return nval;
+}
+
+void CListenMessage::OnMessage(vzbase::Message* p_msg) {
+  if (p_msg->message_id == CATCH_IMAGE) {
+
+    int nlen = share_image_.Read(image_buffer_, SHM_IMAGE_0_SIZE,
+                                 &last_read_sec_, &last_read_usec_);
+    if (nlen > 0) {
+      iva_frame_t frame;
+
+      // 读红外测距
+#ifdef _WIN32
+      for (int i = 0; i < 3; i++) {
+        frame.param[i] = rand() % 100;
+      }
+#else
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+      static int fd = 0;
+      if (fd == 0) {
+        fd = open("/dev/i2c-0", O_RDWR);
+        if (fd > 0) {
+          if (ioctl(fd, I2C_SLAVE_FORCE, 0x48) < 0) {
+            LOG(L_ERROR) << "i2c ioctl failed.";
+            close(fd);
+            fd = 0;
+          }
+        }
+      }
+
+      if (fd > 0) {
+        for (int i = 0; i < 3; i++) {
+          frame.param[i] = chn_value(fd, chn_cmd_byte(i));
+        }
+      }
+#endif
+      frame.data_size_in_bytes = nlen;
+      frame.data = (unsigned char*)image_buffer_;
+      if (alg_handle_) {
+        sdk_iva_process(alg_handle_, &frame);
+      }
+    }
+
+    /*vzbase::TypedMessageData<std::string>::Ptr msg_ptr =
+      boost::static_pointer_cast<vzbase::TypedMessageData< std::string >> (p_msg->pdata);*/
+    //Restart("127.0.0.1", 5291);
+    main_thread_->PostDelayed(POLL_TIMEOUT, this, CATCH_IMAGE);
+  } else if (p_msg->message_id == SEND_BUFFER) {
+    DpClient_SendDpMessage(MSG_CATCH_EVENT, 0, 
+                           event_.send_buffer_.c_str(),
+                           event_.send_buffer_.size());
+  }
 }
 
 }  // namespace alg

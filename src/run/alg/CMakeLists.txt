@@ -13,7 +13,7 @@ foreach(inc_dir ${inc_dirs})
 endforeach()
 
 #########################################################################
-LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/lib/platform/imx6q/sdk/lib/)
+LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/run/alg/lib)
 MESSAGE(STATUS "Print the link directores")
 get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
 	PROPERTY LINK_DIRECTORIES)
@@ -45,21 +45,25 @@ ENDIF()
 #########################################################################
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
-TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
+		PeoCountDLL.lib
 		libalg
 		libdpclient
 		libvzconn
 		libvzbase
 		libsystemv
+		libjsoncpp.lib
 		${VZPROJECT_LINK_LIB}
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+		libcount.so
 		alg
 		dpclient
 		vzconn
 		vzbase
 		systemv
+		libjsoncpp.so
 		${VZPROJECT_LINK_LIB}
 	)
 endif()

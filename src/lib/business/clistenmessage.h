@@ -41,9 +41,20 @@ class CListenMessage : public vzbase::noncopyable,
   // 线程消息Post,处理函数
   void OnMessage(vzbase::Message* msg);
 
- private:
+ protected:
   DPPollHandle      dp_cli_;
   vzbase::Thread   *main_thread_;
+
+ protected:
+  struct {
+    unsigned int    day_bng_hour_;    // 一天开始小时
+    unsigned int    day_bng_minute_;  // 一天开始分钟
+    unsigned int    day_end_hour_;    // 一天结束小时
+    unsigned int    day_end_minute_;  // 一天结束分钟
+
+    unsigned int    send_interval_;   // 发送间隔(minute)
+    time_t          last_send_time_;  // 上次发送时间
+  } valid_times_;                     // 有效时间
 };
 
 }  // namespace bs
