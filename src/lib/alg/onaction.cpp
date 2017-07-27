@@ -4,7 +4,7 @@
 /************************************************************************/
 #include "clistenmessage.h"
 
-void CListenMessage::OnAction(IVA_ACTION_OUTPUT *pAction) {
+void alg::CListenMessage::OnAction(IVA_ACTION_OUTPUT *pAction) {
 
 
 }

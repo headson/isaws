@@ -4,7 +4,7 @@
 #include "vzbase/base/vmessage.h"
 #include "dispatcher/sync/dpclient_c.h"
 
-#include "iva/clistenmessage.h"
+#include "alg/clistenmessage.h"
 
 int main(int argc, char* argv[]) {
   InitVzLogging(argc, argv);
@@ -14,12 +14,12 @@ int main(int argc, char* argv[]) {
   Kvdb_Start(DEF_KVDB_SRV_IP, 
              DEF_KVDB_SRV_PORT);
 
-  if (!imx6q::CListenMessage::Instance()->Start()) {
+  if (!alg::CListenMessage::Instance()->Start()) {
     return -1;
   }
 
   while (true) {
-    imx6q::CListenMessage::Instance()->RunLoop();
+    alg::CListenMessage::Instance()->RunLoop();
   }
   return 0;
 }

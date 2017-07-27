@@ -45,6 +45,7 @@ ADD_SUBDIRECTORY(src/lib/dispatcher)
 #ADD_SUBDIRECTORY(src/lib/platform/hi3518ev200)
 ADD_SUBDIRECTORY(src/lib/platform/imx6q)
 ADD_SUBDIRECTORY(src/lib/alg)
+ADD_SUBDIRECTORY(src/lib/business)
 
 ## add run
 #ADD_SUBDIRECTORY(src/run/onvif)
@@ -55,6 +56,7 @@ ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/hi3518ev200)
 ADD_SUBDIRECTORY(src/run/imx6q)
 ADD_SUBDIRECTORY(src/run/alg)
+ADD_SUBDIRECTORY(src/run/business)
 #ADD_SUBDIRECTORY(src/run/live_stream)
 
 IF(WIN32)

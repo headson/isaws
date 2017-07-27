@@ -12,9 +12,7 @@
 
 #include "dispatcher/sync/dpclient_c.h"
 
-#include "alg/include/iva_interface.h"
-
-namespace alg {
+namespace bs {
 
 class CListenMessage : public vzbase::noncopyable,
   public vzbase::MessageHandler {
@@ -43,31 +41,10 @@ class CListenMessage : public vzbase::noncopyable,
   // 线程消息Post,处理函数
   void OnMessage(vzbase::Message* msg);
 
- protected:
-  //智能视频分析回调函数，用于调试
-  static void DebugCallback(IVA_DEBUG_OUTPUT *pDebug) {
-    if (pDebug && pDebug->user_arg) {
-      ((CListenMessage*)pDebug->user_arg)->OnDebug(pDebug);
-    }
-  }
-
-  void OnDebug(IVA_DEBUG_OUTPUT *pDebug);
-
-  //智能视频分析回调函数，用于发送指令
-  static void ActionCallback(IVA_ACTION_OUTPUT *pAction) {
-    if (pAction && pAction->user_arg) {
-      ((CListenMessage*)pAction->user_arg)->OnAction(pAction);
-    }
-  }
-
-  void OnAction(IVA_ACTION_OUTPUT *pAction);
-
  private:
   DPPollHandle      dp_cli_;
   vzbase::Thread   *main_thread_;
-
-  IVA_HANDLE        iva_Handle_;      // 算法HANDLE
 };
 
-}  // namespace alg
+}  // namespace bs
 #endif  // _CLISTENMESSAGE_H

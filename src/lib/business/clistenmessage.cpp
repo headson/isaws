@@ -8,10 +8,7 @@
 
 #include "json/json.h"
 
-namespace alg {
-
-#define IVA_CFG_FILE    "./config/cfg_file_iva.xml"
-#define IVA_AUX_FILE    "./config/cfg_file_aux.xml"
+namespace bs {
 
 static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
@@ -21,8 +18,7 @@ static const char  *METHOD_SET[] = {
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
-  , main_thread_(NULL)
-  , iva_Handle_(NULL) {
+  , main_thread_(NULL) {
 }
 
 CListenMessage::~CListenMessage() {
@@ -35,36 +31,6 @@ CListenMessage *CListenMessage::Instance() {
 }
 
 bool CListenMessage::Start() {
-  if (iva_Handle_) {
-    iva_alg_destroy(iva_Handle_);
-    iva_Handle_ = NULL;
-  }
-
-  /*算法创建*/
-  ALG_CREATE_ARG alg_arg;
-  alg_arg.iva_mode             = (uint8_t)5;
-  alg_arg.config_filename      = (int8_t*)IVA_CFG_FILE;
-  alg_arg.aux_config_filename  = (int8_t*)IVA_AUX_FILE;
-  alg_arg.iva_debug_callback   = DebugCallback;
-  alg_arg.iva_action_callback  = ActionCallback;
-
-  alg_arg.face_img_w = (uint32_t)720;
-  alg_arg.face_img_h = (uint32_t)576;
-  alg_arg.door_img_w = (uint32_t)720;
-  alg_arg.door_img_h = (uint32_t)576;
-  alg_arg.env_img_w  = (uint32_t)720;
-  alg_arg.env_img_h  = (uint32_t)576;
-
-  alg_arg.user_arg = (uint32_t)this;
-  LOG_INFO("iva mode %d, face w %d, h %d, door w %d, h %d.", alg_arg.iva_mode,
-           alg_arg.face_img_w, alg_arg.face_img_h, alg_arg.door_img_w, alg_arg.door_img_h);
-
-  int nret = iva_alg_create(&iva_Handle_, &alg_arg);
-  if (nret != IVA_NO_ERROR) {
-    LOG_ERROR("create iva failed, %d.", nret);
-    return -1;
-  }
-  iva_alg_set_time_zone(iva_Handle_, 8);  // 传给设备时区
 
   //////////////////////////////////////////////////////////////////////////
   main_thread_ = vzbase::Thread::Current();
@@ -92,11 +58,6 @@ void CListenMessage::Stop() {
   if (main_thread_) {
     main_thread_->Release();
     main_thread_ = NULL;
-  }
-
-  if (iva_Handle_) {
-    iva_alg_destroy(iva_Handle_);
-    iva_Handle_ = NULL;
   }
 
   if (dp_cli_) {
@@ -150,4 +111,4 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
   //}
 }
 
-}  // namespace alg
+}  // namespace bs
