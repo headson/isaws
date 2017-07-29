@@ -19,23 +19,27 @@ class CDataBase : public vzbase::noncopyable {
   CDataBase();
   virtual ~CDataBase();
 
-  bool Start(const char *db_path);
-  void Stop();
+  bool InitDB(const char *db_path);
+  void UninitDB();
 
  public:
-  bool CreateTablePCount();
-  bool ReplaceTablePCount(const Json::Value *p_root);
-  bool DeleteTablePCount(const Json::Value *p_root);
-  bool SelectTablePCount(Json::Value *p_root);
+  bool CreatePCount();
+  bool InitPCountStmt();
+  void UninitPCountStmt();
+  bool ReplacePCount(const Json::Value &jreq);
+  bool DeletePCount(const Json::Value &jreq);
+  bool SelectPCount(Json::Value &jresp, const Json::Value &jreq);
 
  protected:
   bool CheckFileExsits(const char *db_path);
 
  private:
   sqlite3      *db_instance_;
-  sqlite3_stmt *replace_stmt_;
-  sqlite3_stmt *delete_stmt_;
-  sqlite3_stmt *select_stmt_;
+  struct {
+    sqlite3_stmt *replace_stmt_;
+    sqlite3_stmt *delete_stmt_;
+    //sqlite3_stmt *select_stmt_;
+  } pcount_;
 };
 
 #endif  // _CDATABASE_H_

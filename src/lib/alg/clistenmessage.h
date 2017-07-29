@@ -47,7 +47,7 @@ class CListenMessage : public vzbase::noncopyable,
   void OnDpState(DPPollHandle p_hdl, unsigned int n_state);
 
   // 线程消息Post,处理函数
-  void OnMessage(vzbase::Message* msg);
+  virtual void OnMessage(vzbase::Message* msg);
 
  protected:
   //智能视频分析回调函数，用于调试

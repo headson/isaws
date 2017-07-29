@@ -25,11 +25,17 @@ MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/include/sdk_iva_interface.h
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/basedefine.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/ondebug.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/onaction.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
+)
+
+SOURCE_GROUP(base FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/basedefine.h
 )
 
 SOURCE_GROUP(listen_message FILES

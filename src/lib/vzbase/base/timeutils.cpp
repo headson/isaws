@@ -210,10 +210,29 @@ int32 TimeDiff(uint32 later, uint32 earlier) {
 #endif
 }
 
-std::string TimeToString(time_t tt) {
-  char str[64] = { 0 };
+uint32 CurrentTimet() {
+  return time(NULL);
+}
+
+uint32 ToTimet(int32 year, int32 month, int32 day,
+               int32 hour, int32 minute, int32 second) {
+  struct tm tt;
+  tt.tm_year = year - 1900;
+  tt.tm_mon = month - 1;
+  tt.tm_mday = day;
+  tt.tm_hour = hour;
+  tt.tm_min = minute;
+  tt.tm_sec = second;
+  tt.tm_isdst = -1;
+  return (uint32)mktime(&tt);
+}
+
+#ifdef __cplusplus
+std::string ToString(uint32 sec) {
+  char str[32] = {0};
 
   struct tm* ptm;
+  time_t tt = sec;
 #if 1//选择无时区
   ptm = localtime(&tt);
 #else
@@ -222,15 +241,35 @@ std::string TimeToString(time_t tt) {
 
   if (ptm) {
     sprintf(str, "%4d-%02d-%02d %02d:%02d:%02d",
-             ptm->tm_year + 1900,
-             ptm->tm_mon + 1,
-             ptm->tm_mday,
-             ptm->tm_hour,
-             ptm->tm_min,
-             ptm->tm_sec);
+            ptm->tm_year + 1900,
+            ptm->tm_mon + 1,
+            ptm->tm_mday,
+            ptm->tm_hour,
+            ptm->tm_min,
+            ptm->tm_sec);
     return str;
   }
   return "";
 }
+
+static bool isLoopYear(int32 ny) {
+  return (((0 == (ny % 4)) && (0 != (ny % 100))) || (0 == (ny % 400)));
+}
+
+static int32 kMonOfDays[] = {31, 28, 31, 30, 31, 30,
+                             31, 31, 30, 31, 30, 31};
+int32 GetMonthOfDays(int32 ny, int32 month) {
+  if (month < 1 || month > 12) {
+    printf("param is error.\n");
+    return -1;
+  }
+
+  if (month == 2 && isLoopYear(ny)) {
+    return 29;
+  }
+  return kMonOfDays[month-1];
+}
+
+#endif
 
 }  // namespace vzbase

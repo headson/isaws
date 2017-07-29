@@ -87,9 +87,10 @@ int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead) {
 
   int ndata = 0;
   char sdata[2048] = {0};
-  char *p_dst = flv_shm_.HeaderAndMetaDataTag(sdata,
-                width, height,
-                16000, 8000, 16, 1);
+  char *p_dst = NULL;
+  p_dst = flv_shm_.HeaderAndMetaDataTag(sdata,
+                                        width, height,
+                                        16000, 8000, 16, 1);
   ndata = p_dst - sdata;
   AsyncWrite(sdata, ndata);
   if (file) {

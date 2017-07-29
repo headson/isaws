@@ -52,7 +52,7 @@ if(WIN32)
 		libvzconn
 		libvzbase
 		libsystemv
-		libjsoncpp.lib
+		libjsoncpp
 		${VZPROJECT_LINK_LIB}
 	)
 else()
@@ -63,7 +63,7 @@ else()
 		vzconn
 		vzbase
 		systemv
-		libjsoncpp.so
+		jsoncpp
 		${VZPROJECT_LINK_LIB}
 	)
 endif()

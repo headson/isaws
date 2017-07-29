@@ -10,10 +10,12 @@
 
 namespace bs {
 
-static const unsigned int METHOD_SET_SIZE = 1;
-static const char  *METHOD_SET[] = {
-  MSG_CATCH_EVENT
+static const char *METHOD_SET[] = {
+  MSG_CATCH_EVENT,
+  MSG_GET_PCOUNTS,
+  MSG_CLEAR_PCOUNT
 };
+static const unsigned int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
@@ -30,8 +32,8 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start() {
-  bool res = database_.Start("./pcount.db");
+bool CListenMessage::Start(const char *db_path) {
+  bool res = database_.InitDB(db_path);
   if (!res) {
     LOG(L_ERROR) << "database start failed.";
     return false;
@@ -88,7 +90,42 @@ void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp,
 }
 
 void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
+  Json::Value jreq;
+  Json::Reader jread;
+  if (!jread.parse(dmp->data,
+                   dmp->data+dmp->data_size,
+                   jreq)) {
+    LOG(L_ERROR) << "Json parse failed.";
+    return;
+  }
+  Json::Value jresp;
+  jresp[MSG_CMD] = jreq[MSG_CMD].asString();
+  jresp[MSG_ID] = jreq[MSG_ID].asInt();
 
+  bool res = false;  
+  if (0 == strncmp(dmp->method, MSG_CATCH_EVENT, MAX_METHOD_SIZE)) {
+    res = database_.ReplacePCount(jreq);
+  } else if (0 == strncmp(dmp->method, MSG_GET_PCOUNTS, MAX_METHOD_SIZE)) {
+    res = database_.SelectPCount(jresp, jreq);
+  } else if (0 == strncmp(dmp->method, MSG_CLEAR_PCOUNT, MAX_METHOD_SIZE)) {
+    res = database_.DeletePCount(jresp);
+  }
+
+  if (dmp->type != TYPE_REQUEST) {
+    return;
+  }
+
+  if (true == res) {
+    jresp[MSG_STATE] = 200;
+  } else {
+    jresp[MSG_STATE] = 201;
+  }
+
+  Json::FastWriter jfw;
+  std::string sjson = jfw.write(jresp);
+  DpClient_SendDpReply(dmp->method,
+                       dmp->channel_id, dmp->id,
+                       sjson.c_str(), sjson.size());
 }
 
 void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg) {

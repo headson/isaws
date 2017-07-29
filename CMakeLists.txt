@@ -46,6 +46,7 @@ ADD_SUBDIRECTORY(src/lib/dispatcher)
 ADD_SUBDIRECTORY(src/lib/platform/imx6q)
 ADD_SUBDIRECTORY(src/lib/alg)
 ADD_SUBDIRECTORY(src/lib/business)
+ADD_SUBDIRECTORY(src/lib/web_for_dp)
 
 ## add run
 #ADD_SUBDIRECTORY(src/run/onvif)
@@ -58,8 +59,10 @@ ADD_SUBDIRECTORY(src/run/imx6q)
 ADD_SUBDIRECTORY(src/run/alg)
 ADD_SUBDIRECTORY(src/run/business)
 #ADD_SUBDIRECTORY(src/run/live_stream)
+ADD_SUBDIRECTORY(src/run/web_for_dp)
 
 IF(WIN32)
+ADD_SUBDIRECTORY(src/run/icamera)
 #ADD_SUBDIRECTORY(src/run/pc_manage)
 ENDIF()
 ADD_SUBDIRECTORY(src/web)

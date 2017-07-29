@@ -50,6 +50,7 @@ TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		libdpclient
 		libvzconn
 		libvzbase
+		libjsoncpp
 		libsqlite3.lib
 		${VZPROJECT_LINK_LIB}
 	)
@@ -59,7 +60,8 @@ else()
 		dpclient
 		vzconn
 		vzbase
-		libsqlite3.so
+		jsoncpp
+		sqlite3
 		${VZPROJECT_LINK_LIB}
 	)
 endif()

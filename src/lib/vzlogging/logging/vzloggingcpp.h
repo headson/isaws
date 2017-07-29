@@ -68,7 +68,7 @@ class CVzLogStream {
 #define VZLOGSTR_WARNING()  VZLOGSTR(L_WARNING)
 #define VZLOGSTR_ERROR()    VZLOGSTR(L_ERROR)
 
-#if 0
+#if 1
 #define LOG(V)              VZLOGSTR(V)
 #define DLOG(V)             VZDLOGSTR(V)
 #else

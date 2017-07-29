@@ -100,7 +100,16 @@ namespace vzbase {
     return unix_ts_ns / kNumNanosecsPerMillisec + kJan1970AsNtpMillisecs;
   }
 
-  std::string TimeToString(time_t tt);
+  uint32 CurrentTimet();
+
+  uint32 ToTimet(int32 year, int32 month, int32 day,
+                 int32 hour, int32 minute, int32 second);
+
+#ifdef __cplusplus
+  std::string ToString(uint32 sec);
+
+  int32       GetMonthOfDays(int32 ny, int32 month);
+#endif
 
 }  // namespace vzbase
 

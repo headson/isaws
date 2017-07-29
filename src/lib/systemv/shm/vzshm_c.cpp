@@ -9,9 +9,9 @@
 
 #include "vzbase/helper/stdafx.h"
 
-CShareBuffer::CShareBuffer() 
+CShareBuffer::CShareBuffer()
   : hdl_shm_(NULL)
-  , hdl_sem_(HDL_NULL){
+  , hdl_sem_(HDL_NULL) {
 }
 
 CShareBuffer::~CShareBuffer() {
@@ -77,7 +77,7 @@ int CShareBuffer::ReadHead(char* p_data, unsigned int n_data, int *n_head_1, int
 }
 
 int CShareBuffer::Read(char* p_data, unsigned int n_data,
-                  unsigned int *n_sec, unsigned int *n_usec) {
+                       unsigned int *n_sec, unsigned int *n_usec) {
   if (p_data == NULL || n_data == 0 ||
       n_sec == NULL || n_usec == NULL) {
     printf("param is error.");
@@ -118,8 +118,6 @@ int CShareBuffer::WriteSps(const char *p_data, unsigned int n_data) {
       p_shm->n_head_1 > 0  ||
       p_data == NULL    ||
       n_data > 128) {
-    printf("-------------------sps %d data .\n", 
-           p_shm->n_head_1, n_data);
     return -1;
   }
 
@@ -146,7 +144,7 @@ int CShareBuffer::WritePps(const char *p_data, unsigned int n_data) {
 }
 
 int CShareBuffer::Write(const char *p_data, unsigned int n_data,
-                   unsigned int n_sec, unsigned int n_usec) {
+                        unsigned int n_sec, unsigned int n_usec) {
   if (p_data == NULL || n_data == 0) {
     printf("param is error.\n");
     return -1;
@@ -160,10 +158,13 @@ int CShareBuffer::Write(const char *p_data, unsigned int n_data,
 
   TAG_SHM_VDO *p_shm = (TAG_SHM_VDO*)mem_ptr_;
   if (!p_shm || n_data > p_shm->n_size) {
+    printf("shm or sem is small. %d-%d\n",
+           n_data, p_shm->n_size);
     return -3;
   }
 
   if (vzSemLock(hdl_sem_, -1) != 0) {
+    printf("lock failed.");
     return -4;
   }
 

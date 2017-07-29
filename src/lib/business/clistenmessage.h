@@ -25,7 +25,7 @@ class CListenMessage : public vzbase::noncopyable,
  public:
   static CListenMessage *Instance();
 
-  bool  Start();
+  bool  Start(const char *db_path);
   void  Stop();
 
   void  RunLoop();

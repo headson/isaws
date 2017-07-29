@@ -87,6 +87,10 @@ typedef enum _MSG_RET {
 
 #define MSG_CATCH_EVENT       "catch_event"       // 算法事件
 
+
+#define MSG_GET_PCOUNTS       "get_pcounts"       // 获取客流量
+#define MSG_CLEAR_PCOUNT      "clear_pcount"      // 清空pcount数据库
+
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_KEY_USER         "key_user"     // kvdb获取用户
 #endif  // VMESSAGE_H

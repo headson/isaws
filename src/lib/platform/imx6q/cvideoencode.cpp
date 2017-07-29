@@ -116,14 +116,11 @@ REOPEN:
     }
 
     // share image
-    shm_img_.Write((char*)v4l2_.sBuffer[v4l_buf.index].start, 
-                   v4l2_.sBuffer[v4l_buf.index].length, 0, vzbase::Time());
-
-    // resize image
-    if ((v4l2_.nWidth != vpu_.nWidth) || (v4l2_.nHeight != vpu_.nHeight)) {
-      ImageResizeNN((uint8*)v4l2_.sBuffer[v4l_buf.index].start,
-                    v4l2_.nWidth, v4l2_.nHeight, vpu_.nWidth, vpu_.nHeight);
-    }
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    shm_img_.Write((char*)v4l2_.sBuffer[v4l_buf.index].start,
+                   v4l2_.nWidth * v4l2_.nHeight * 3 / 2, 
+                   tv.tv_usec, tv.tv_usec);
 
     // add time osd
     time_t nTmNow = time(NULL);
@@ -135,6 +132,13 @@ REOPEN:
             vpu_.nWidth, vpu_.nHeight,
             (char*)vzbase::TimeToString(nTmNow).c_str(),
             nScale, asc8, 10, 10);
+
+    // resize image
+    if ((v4l2_.nWidth != vpu_.nWidth) || (v4l2_.nHeight != vpu_.nHeight)) {
+      ImageResizeNN((uint8*)v4l2_.sBuffer[v4l_buf.index].start,
+                    v4l2_.nWidth, v4l2_.nHeight,
+                    vpu_.nWidth, vpu_.nHeight);
+    }
 
     // encode
     pSrcFrm->myIndex = vpu_.nFrmNums-1+v4l_buf.index;

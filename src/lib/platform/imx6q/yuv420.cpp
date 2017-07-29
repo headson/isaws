@@ -139,28 +139,58 @@ void YUV1024x768toD1(unsigned char *srcYUV, unsigned int mountHeight) {
   }
 }
 
-void ImageResizeNN(unsigned char *srcYUV, int src_w, int src_h, int dst_w, int dst_h) {
-  int i, j;
-  const unsigned char *p_src = NULL;
-  unsigned char *p_dst = NULL;
+static int GrayImageResizeNN(unsigned char *src_image, unsigned char *dst_image,
+                             int src_width, int src_height,
+                             int dst_width, int dst_height) {
+  int w, h;
   unsigned int x16, y16;
   unsigned int kx, ky;
+  unsigned char *src_line;
+  unsigned char *dst_line;
 
-  kx = (src_w << 16) / dst_w;
-  ky = (src_h << 16) / dst_h;
+  //x方向缩放系数
+  kx = (src_width << 16) / dst_width;
+
+  //y方向缩放系数
+  ky = (src_height << 16) / dst_height;
 
   y16 = 0;
-  p_dst = srcYUV;
-  for(i = 0; i < dst_h; i++) {
+  dst_line = dst_image;
+  for (h = 0; h < dst_height; h++) {
     x16 = 0;
-    p_src = srcYUV + src_w * (y16 >> 16);
-    for(j = 0; j < dst_w; j++) {
-      p_dst[j] = p_src[(x16 >> 16)];
+    src_line = src_image + src_width * (y16 >> 16);
+    for (w = 0; w < dst_width; w++) {
+      dst_line[w] = src_line[(x16 >> 16)];
       x16 += kx;
     }
     y16 += ky;
-    p_dst += dst_w;
+    dst_line += dst_width;
   }
+  return 1;
+}
+
+int ImageResizeNN(unsigned char *yuv420p,
+                  int src_width, int src_height,
+                  int dst_width, int dst_height) {
+  unsigned char *y_in = yuv420p;
+  unsigned char *u_in = yuv420p + src_width * src_height;
+  unsigned char *v_in = yuv420p + src_width * src_height + (src_width / 2) * (src_height / 2);
+  unsigned char *y_out = yuv420p;
+  unsigned char *u_out = yuv420p + dst_width * dst_height;
+  unsigned char *v_out = yuv420p + dst_width * dst_height + (dst_width / 2) * (dst_height / 2);
+
+  if (yuv420p == 0) {
+    return 0;
+  }
+  if (dst_width > src_width || dst_height > src_height) {
+    return 0;
+  }
+
+  GrayImageResizeNN(y_in, y_out, src_width, src_height, dst_width, dst_height);
+  GrayImageResizeNN(u_in, u_out, src_width / 2, src_height / 2, dst_width / 2, dst_height / 2);
+  GrayImageResizeNN(v_in, v_out, src_width / 2, src_height / 2, dst_width / 2, dst_height / 2);
+
+  return 1;
 }
 
 void get_image_average_intensity(unsigned char *yuv420, int img_w, int img_h, unsigned int *average_intensity, float *light_coef) {

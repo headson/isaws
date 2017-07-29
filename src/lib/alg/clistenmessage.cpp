@@ -8,6 +8,12 @@
 
 #include "json/json.h"
 
+#ifdef _LINUX
+#include <sys/ioctl.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+#endif
+
 namespace alg {
 
 #define IVA_CFG_FILE    "./config/cfg_file_iva.xml"
@@ -55,7 +61,6 @@ bool CListenMessage::Start() {
   }
 
   /*Ëã·¨´´½¨*/
-  iva_count_handle handle;
   sdk_iva_create_param param;
   param.debug_callback_fun  = AlgDebugCallback;
   param.output_callback_fun = AlgActionCallback;
@@ -65,7 +70,7 @@ bool CListenMessage::Start() {
   LOG_INFO("iva set image size %d, %d.",
            param.image_width, param.image_height);
 
-  int nret = sdk_iva_create(&handle, &param);
+  int nret = sdk_iva_create(&alg_handle_, &param);
   if (nret != IVA_ERROR_NO_ERROR) {
     LOG_ERROR("create iva failed, %d.", nret);
     return -1;
@@ -208,49 +213,48 @@ static int chn_value(int fd, int nreg) {
 
 void CListenMessage::OnMessage(vzbase::Message* p_msg) {
   if (p_msg->message_id == CATCH_IMAGE) {
+    main_thread_->PostDelayed(POLL_TIMEOUT, this, CATCH_IMAGE);
 
     int nlen = share_image_.Read(image_buffer_, SHM_IMAGE_0_SIZE,
                                  &last_read_sec_, &last_read_usec_);
-    if (nlen > 0) {
-      iva_frame_t frame;
+    //LOG_INFO("get one frame image. length %d, %u %u.",
+    //         nlen,
+    //         last_read_sec_, last_read_usec_);
+    if (nlen <= 0) {
+      return;
+    }
 
-      // ¶ÁºìÍâ²â¾à
+    iva_frame_t frame;
+
+    // ¶ÁºìÍâ²â¾à
 #ifdef _WIN32
-      for (int i = 0; i < 3; i++) {
-        frame.param[i] = rand() % 100;
-      }
+    for (int i = 0; i < 3; i++) {
+      frame.param[i] = rand() % 100;
+    }
 #else
-#include <linux/i2c.h>
-#include <linux/i2c-dev.h>
-      static int fd = 0;
-      if (fd == 0) {
-        fd = open("/dev/i2c-0", O_RDWR);
-        if (fd > 0) {
-          if (ioctl(fd, I2C_SLAVE_FORCE, 0x48) < 0) {
-            LOG(L_ERROR) << "i2c ioctl failed.";
-            close(fd);
-            fd = 0;
-          }
-        }
-      }
-
+    static int fd = 0;
+    if (fd == 0) {
+      fd = open("/dev/i2c-0", O_RDWR);
       if (fd > 0) {
-        for (int i = 0; i < 3; i++) {
-          frame.param[i] = chn_value(fd, chn_cmd_byte(i));
+        if (ioctl(fd, I2C_SLAVE_FORCE, 0x48) < 0) {
+          LOG(L_ERROR) << "i2c ioctl failed.";
+          close(fd);
+          fd = 0;
         }
-      }
-#endif
-      frame.data_size_in_bytes = nlen;
-      frame.data = (unsigned char*)image_buffer_;
-      if (alg_handle_) {
-        sdk_iva_process(alg_handle_, &frame);
       }
     }
 
-    /*vzbase::TypedMessageData<std::string>::Ptr msg_ptr =
-      boost::static_pointer_cast<vzbase::TypedMessageData< std::string >> (p_msg->pdata);*/
-    //Restart("127.0.0.1", 5291);
-    main_thread_->PostDelayed(POLL_TIMEOUT, this, CATCH_IMAGE);
+    if (fd > 0) {
+      for (int i = 0; i < 3; i++) {
+        frame.param[i] = chn_value(fd, chn_cmd_byte(i));
+      }
+    }
+#endif
+    frame.data_size_in_bytes = nlen;
+    frame.data = (unsigned char*)image_buffer_;
+    if (alg_handle_) {
+      sdk_iva_process(alg_handle_, &frame);
+    }  // if (alg_handle_)
   }
 }
 
