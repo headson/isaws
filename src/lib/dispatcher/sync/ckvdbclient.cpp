@@ -397,7 +397,7 @@ int CKvdbClient::EncKvdbMsg(KvdbMessage   *p_msg,
   n_cur_msg_id_   = p_msg->id;
 
   p_msg->key_size = n_key;
-  strncpy(p_msg->key, p_key, MAX_KVDB_KEY_SIZE);
+  strncpy(p_msg->key, p_key, n_key);
   return sizeof(KvdbMessage);
 }
 

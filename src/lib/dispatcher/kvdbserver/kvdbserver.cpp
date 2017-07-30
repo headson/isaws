@@ -122,7 +122,7 @@ bool KvdbServer::ProcessSelect(const KvdbMessage *kvdb_msg,
     return false;
   }
   if (kvdb_sqlite_->SelectKeyValue(kvdb_msg->key,
-                                   strnlen(kvdb_msg->key, MAX_KVDB_KEY_SIZE),
+                                   kvdb_msg->key_size,
                                    buffer)) {
     kvdb_message_.type = KVDB_SUCCEED;
 

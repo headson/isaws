@@ -217,6 +217,7 @@ bool KvdbSqlite::ReplaceKeyValue(const char *key, int key_size,
   }
   LOG(L_INFO) << "Replace Key " << res;
   LOG(L_INFO).write(key, key_size);
+  LOGB_INFO(key, key_size);
   return true;
 }
 
@@ -273,6 +274,7 @@ bool KvdbSqlite::SelectKeyValue(const char *key, int key_size,
     memcpy(&buffer[0], data, data_size);
     return true;
   }
+  LOGB_INFO(key, key_size);
   LOG(L_INFO).write(key, key_size);
   LOG(L_INFO) << "Failure find this key " << res;
   return false;

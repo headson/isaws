@@ -20,7 +20,7 @@
 #include "vzconn/base/connhead.h"
 namespace vzconn {
 
-SOCKET CMCastSocket::send_socket_ = INVALID_SOCKET;
+// SOCKET CMCastSocket::send_socket_ = INVALID_SOCKET;
 
 CMCastSocket::CMCastSocket(vzconn::EVT_LOOP* p_loop,
                            vzconn::CClientInterface *cli_hdl)
@@ -234,7 +234,6 @@ int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
 
   LOG(L_WARNING) << multicast_addr << " : " << multicast_port;
   sockaddr_in         peeraddr;
-  int                 sockfd;
 #ifdef WIN32
   int                 socklen;
 #else
@@ -262,26 +261,26 @@ int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
   //}
 
   // Create Udp socket that used to recv data
-  sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  if (sockfd < 0) {
+  send_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
+  if (send_socket_ < 0) {
     LOG(L_ERROR) << "socket creating err in udptalk";
     return 1;
   }
   int enable = 1;
-  if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR,
+  if (setsockopt(send_socket_, SOL_SOCKET, SO_REUSEADDR,
                  (const char*)&enable, sizeof(int)) < 0) {
     LOG(L_ERROR) << "SO_REUSEADDR error";
     return 1;
   }
   LOG(L_INFO) << "------------START FOUND DEVICES---------------";
 #ifdef WIN32
-  ChangeMulticastMembership(sockfd, multicast_addr);
+  ChangeMulticastMembership(send_socket_, multicast_addr);
 #else
   struct ip_mreq      mreq;
   bzero(&mreq, sizeof(struct ip_mreq));
   mreq.imr_interface.s_addr = INADDR_ANY;
   mreq.imr_multiaddr.s_addr = inet_addr(multicast_addr);
-  if (setsockopt(sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+  if (setsockopt(send_socket_, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                  (const char *)&mreq, sizeof(struct ip_mreq)) == -1) {
     printf("Add membership error\n");
     //LOG(L_ERROR) << "IP_ADD_MEMBERSHIP " << inet_ntoa(net_inter[i].ip_addr);
@@ -296,7 +295,7 @@ int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
   peeraddr.sin_addr.s_addr = INADDR_ANY;
   // peeraddr.sin_addr.s_addr = inet_addr("0.0.0.0");
   /* 绑定自己的端口和IP信息到socket上 */
-  if (bind(sockfd, (struct sockaddr *) &peeraddr,
+  if (bind(send_socket_, (struct sockaddr *) &peeraddr,
            sizeof(struct sockaddr_in)) == -1) {
     LOG(L_ERROR) << "Bind error\n";
     return 1;
@@ -308,7 +307,7 @@ int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
   //time(&start_time);
   /* 循环接收网络上来的组播消息 */
 
-  SetSocket(sockfd);
+  SetSocket(send_socket_);
 
   c_evt_recv_.Init(p_evt_loop_, EvtRecv, this);
   if (c_evt_recv_.Start(GetSocket(), EVT_READ | EVT_PERSIST) != 0) {
@@ -348,46 +347,17 @@ int32 CMCastSocket::OnRecv() {
 
 int CMCastSocket::SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
                               const uint8* p_data, uint32 n_data) {
-  if (send_socket_ == INVALID_SOCKET) {
-    send_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
-    if (send_socket_ <0) {
-      perror("socket failed");
-      return -1;
-    }
-
-    int yes = 1;
-    int ret = setsockopt(send_socket_, SOL_SOCKET,SO_REUSEADDR, (char*)&yes, sizeof(yes));
-    if (ret < 0) {
-      perror("Reusing ADDR failed");
-      return -1;
-    }
-
-    char ttl = 1;
-    ret = setsockopt(send_socket_,  IPPROTO_IP, IP_MULTICAST_TTL, (char*)&ttl, sizeof(ttl));
-    if (ret < 0) {
-      perror("Setsockopt IP_MULTICAST_TTL fall.");
-      return -1;
-    }
-
-    char loop = 0;
-    ret = setsockopt(send_socket_, IPPROTO_IP, IP_MULTICAST_LOOP, (char*)&loop, sizeof(loop));
-    if (ret < 0) {
-      perror("Setsockopt IP_MULTICAST_LOOP fall.");
-      return -1;
-    }
-  }
-
-  if (send_socket_ < 0) {
-    LOG_ERROR("socket failed");
-    return -1;
-  }
-
+  LOG(L_INFO) << (const char *)s_center_ip << "\t" << n_center_port;
   struct sockaddr_in s_center;
   s_center.sin_family = AF_INET;
-  s_center.sin_addr.s_addr = inet_addr((char*)s_center_ip);
   s_center.sin_port = htons(n_center_port);
-  int ret = sendto(send_socket_, (const char*)p_data, n_data, 0,
-                   (struct sockaddr*)&s_center, sizeof(struct sockaddr));
+  s_center.sin_addr.s_addr = inet_addr((char*)s_center_ip);
+  int ret = sendto(send_socket_,
+                   (const char*)p_data,
+                   n_data,
+                   0,
+                   (struct sockaddr*)&s_center,
+                   sizeof(struct sockaddr));
   return ret;
 }
 

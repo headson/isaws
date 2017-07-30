@@ -1,5 +1,6 @@
 #include "cacheserver/server/cachedservice.h"
 #include "vzlogging/logging/vzloggingcpp.h"
+#include "json/json.h"
 
 #ifndef WIN32
 
@@ -12,13 +13,28 @@
 
 namespace cached {
 
+
+// -----------------------------------------------------------------------------
+#ifdef WIN32
+#define FILE_LIMIT_CONFIG "E:/work/vscp/code/branches/ftp_dir/file_limit_config.json"
+#else
+#define FILE_LIMIT_CONFIG "/tmp/app/exec/file_limit_config.json"
+#endif
+
+#define MAX_PATH_SIZE         256
+
+#define JSON_FLC_LIMIT_CHECKS "limit_checks"
+#define JSON_FLC_PATH         "path"
+#define JSON_FLC_MAX_SIZE     "max_size"
+
 #define SD_CAP_PATH    "/media/mmcblk0p1/VzIPCCap"
 
 CachedService::CachedService(vzbase::Thread *cached_thread,
                              std::size_t cache_size)
   : cache_size_(cache_size),
     cached_thread_(cached_thread),
-    current_cache_size_(0) {
+    current_cache_size_(0),
+    current_stanzas_index_(0) {
   cachedstanza_pool_ = CachedStanzaPool::Instance();
   cachedstanza_pool_->SetDefaultCachedSize(32, cache_size + 6);
   BOOST_ASSERT(cachedstanza_pool_ != NULL);
@@ -32,6 +48,9 @@ bool CachedService::Start() {
   //  new boost::asio::io_service::work(cached_service_));
   //cache_thread_.reset(
   //  new boost::thread(boost::bind(&CachedService::OnCachedThread, this)));
+  if (InitFileLimitCheck()) {
+    WattingNextTransactionAsyncEvent();
+  }
   return true;
 }
 
@@ -46,10 +65,113 @@ bool CachedService::Start() {
 //}
 
 void CachedService::OnMessage(vzbase::Message *msg) {
-  StanzaMessageData *stanza_msg = static_cast<StanzaMessageData *>(msg->pdata.get());
-  if (stanza_msg) {
-    OnAsyncSaveFile(stanza_msg->stanza);
+  switch (msg->message_id) {
+  case CACHED_ADD: {
+    StanzaMessageData *stanza_msg =
+      static_cast<StanzaMessageData *>(msg->pdata.get());
+    if (stanza_msg) {
+      OnAsyncSaveFile(stanza_msg->stanza);
+    }
   }
+  break;
+  case CACHED_CHECK: {
+    CheckFileLimit();
+    WattingNextTransactionAsyncEvent();
+  }
+  break;
+  default:
+    break;
+  }
+}
+
+void CachedService::CheckFileLimit() {
+  // Check to reset stanza index
+  if (current_stanzas_index_ >= flc_stanzas_.size()) {
+    current_stanzas_index_ = 0;
+  }
+  FlcStanza &stanza = flc_stanzas_[current_stanzas_index_];
+  current_stanzas_index_++;
+  uint32 file_size = 0;
+
+#ifndef WIN32
+  struct stat statbuf;
+  if (!stat(stanza.path.c_str(), &statbuf)) {
+    file_size = statbuf.st_size;
+  }
+#endif
+  LOG(INFO) << "The file info "
+            << stanza.max_size << "\t"
+            << file_size << "\t"
+            << stanza.path;
+  if (stanza.max_size < file_size) {
+    std::remove(stanza.path.c_str());
+  }
+}
+
+void CachedService::WattingNextTransactionAsyncEvent() {
+  cached_thread_->PostDelayed(ASYNC_TIMEOUT_TIMES * 1000,
+                              this,
+                              CACHED_CHECK);
+}
+
+
+bool CachedService::InitFileLimitCheck() {
+  // Open this file
+  FILE * fp = fopen(FILE_LIMIT_CONFIG, "rb");
+  if (fp == NULL) {
+    LOG(ERROR) << "Failure to open " << FILE_LIMIT_CONFIG;
+    return false;
+  }
+
+  do {
+    // Read the file data
+    char temp[128];
+    std::string data;
+    while(true) {
+      std::size_t read_size = fread(temp, sizeof(char), 128, fp);
+      if (read_size) {
+        data.append(temp, read_size);
+      } else {
+        break;
+      }
+    }
+    // Check the file data is empty
+    if (data.empty()) {
+      LOG(ERROR) << "The file is empty " << FILE_LIMIT_CONFIG;
+      break;
+    }
+
+    // Parse the file data to flc_stanzas_
+    Json::Reader reader;
+    Json::Value  value;
+    if (!reader.parse(data, value)) {
+      LOG(ERROR) << "Parse the file data error "
+                 << reader.getFormattedErrorMessages();
+      break;
+    }
+
+    Json::Value limit_checks = value[JSON_FLC_LIMIT_CHECKS];
+    for (std::size_t i = 0; i < limit_checks.size(); i++) {
+      if (limit_checks[i][JSON_FLC_PATH].isNull()
+          || limit_checks[i][JSON_FLC_MAX_SIZE].isNull()) {
+        LOG(ERROR) << "Failure Item";
+        continue;
+      }
+      FlcStanza stanza;
+      stanza.max_size   = limit_checks[i][JSON_FLC_MAX_SIZE].asUInt();
+      stanza.path       = limit_checks[i][JSON_FLC_PATH].asString();
+      LOG(INFO) << stanza.max_size << "\t" << stanza.path;
+      flc_stanzas_.push_back(stanza);
+    }
+
+  } while(0);
+
+  fclose(fp);
+
+  if (flc_stanzas_.size()) {
+    return true;
+  }
+  return false;
 }
 
 bool CachedService::AddFile(CachedStanza::Ptr stanza, bool is_cached) {

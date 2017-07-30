@@ -129,14 +129,14 @@ int32 CEvtTcpServer::OnAccept() {
   CEvtTcpClient *cli_ptr = CEvtTcpClient::Create(p_evt_loop_,
                            cli_hdl_ptr_);
   if (cli_ptr) {
+    cli_ptr->Open(s, true);
+    cli_ptr->SetRemoteAddr(c_addr);
     bool b_open = false;
     if (srv_handle_ptr_) {
       b_open = srv_handle_ptr_->HandleNewConnection(this, cli_ptr);
     }
 
-    if (b_open) {
-      cli_ptr->Open(s, true);
-    } else {
+    if (!b_open) {
       delete cli_ptr;
       evutil_closesocket(s);
       s = INVALID_SOCKET;

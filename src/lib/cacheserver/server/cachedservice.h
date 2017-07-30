@@ -18,6 +18,21 @@ struct FlashCachedSettings {
   char     root_prefix_[MAX_ROOT_PREFIX_SIZE];
 };
 
+struct FlcStanza {
+  uint32 max_size;
+  std::string path;
+  FlcStanza &operator=(const FlcStanza &stanza) {
+    max_size = stanza.max_size;
+    path     = stanza.path;
+    return *this;
+  }
+};
+
+enum CachedMessage {
+  CACHED_ADD,
+  CACHED_CHECK
+};
+
 class CachedService : public vzbase::noncopyable,
   public vzbase::MessageHandler {
  public:
@@ -32,7 +47,10 @@ class CachedService : public vzbase::noncopyable,
   void RemoveOutOfDataStanza();
 
   virtual void OnMessage(vzbase::Message *msg);
-
+ private:
+  void CheckFileLimit();
+  bool InitFileLimitCheck();
+  void WattingNextTransactionAsyncEvent();
  private:
   // void OnCachedThread();
   void OnAsyncSaveFile(CachedStanza::Ptr stanza);
@@ -52,12 +70,17 @@ class CachedService : public vzbase::noncopyable,
   static const int READ_FILE_BUFFER_SIZE  = 4096;
   static const int READ_MAX_BUFFER        = 1024 * 128;
   static const int MAX_CACHED_STANZA_SIZE = 32;
+  static const int ASYNC_TIMEOUT_TIMES    = 10;
   std::size_t cache_size_;
   std::size_t current_cache_size_;
   vzbase::Thread *cached_thread_;
   std::deque<CachedStanza::Ptr> cached_stanzas_;
   CachedStanzaPool *cachedstanza_pool_;
   FlashCachedSettings *flash_cached_settings_;
+
+
+  std::vector<FlcStanza> flc_stanzas_;
+  uint32                 current_stanzas_index_;
 };
 }
 

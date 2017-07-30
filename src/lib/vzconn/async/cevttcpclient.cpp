@@ -25,10 +25,10 @@ CEvtTcpClient* CEvtTcpClient::Create(const EVT_LOOP   *p_loop,
     LOG(L_ERROR) << "param is failed.";
     return NULL;
   }
-  if (NULL == cli_hdl) {
-    LOG(L_ERROR) << "param is failed.";
-    return NULL;
-  }
+  //if (NULL == cli_hdl) {
+  //  LOG(L_ERROR) << "param is failed.";
+  //  return NULL;
+  //}
 
   return (new CEvtTcpClient(p_loop, cli_hdl));
 }
@@ -120,6 +120,7 @@ bool CEvtTcpClient::Connect(const CInetAddr *p_remote_addr,
                       (sockaddr*)p_remote_addr->GetAddr(),
                       (socklen_t)sizeof(sockaddr_in));
   if (0 == ret) {
+    LOG(L_INFO) << "Open the socket " << p_remote_addr->ToString();
     return Open(s, b_block);
   } else {
     if (error_no() == XEINPROGRESS) {

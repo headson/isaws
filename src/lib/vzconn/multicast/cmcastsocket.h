@@ -21,8 +21,8 @@ class CMCastSocket : public vzconn::VSocket {
 
   int32 Open(const uint8* s_center_ip, uint16 n_center_port);
 
-  static int SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
-                         const uint8* p_data, uint32 n_data);
+  int SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
+                  const uint8* p_data, uint32 n_data);
 
  protected:
   // 接收事件
@@ -35,7 +35,7 @@ class CMCastSocket : public vzconn::VSocket {
   vzconn::EVT_LOOP*     p_evt_loop_;
   vzconn::EVT_IO        c_evt_recv_;
 
-  static SOCKET         send_socket_;
+  SOCKET                send_socket_;
 };
 
 }  // namespace vzconn

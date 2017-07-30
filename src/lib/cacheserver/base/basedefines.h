@@ -20,4 +20,6 @@ typedef struct _CacheMessage {
   char         data[0];
 } CacheMessage;
 
+
+
 #endif // CACHESERVER_BASE_BASEDEFINES_H_
