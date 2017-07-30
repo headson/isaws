@@ -19,7 +19,7 @@
 // WEB Server ¼àÌý¶Ë¿ÚºÍÍøÒ³´æ´¢Â·¾¶
 #define DEF_WEB_SRV_PORT      8000
 #ifdef WIN32
-#define DEF_WEB_SRV_PATH      "c:\\tools\\web"
+#define DEF_WEB_SRV_PATH      "d:\\web"
 #else
 #define DEF_WEB_SRV_PATH      "./web"
 #endif

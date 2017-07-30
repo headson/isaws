@@ -1,92 +1,105 @@
-<!DOCTYPE html>
+Ôªø<!DOCTYPE html>
 <head>
-  <meta charset="UTF-8">
-  <title>PC-Manage</title>
+    <meta charset="UTF-8">
+    <title>PC-Manage</title>
 
-  <script src="../js/jquery-1.11.2.min.js"></script>
-  <script src="../js/base64.js"></script>
-  <script src="../js/utf8.js"></script>
+    <script src="../js/jquery-1.11.2.min.js"></script>
+    <script src="../js/base64.js"></script>
+    <script src="../js/utf8.js"></script>
+    <script src="../js/showdate.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
 
-  <style>
-    #container {
-      width: 260px;
-      height: 100%;
-    }
-
-    .center {
-      position: absolute;
-      left: 50%;
-      margin-left: -130px;
-    }
-  </style>
+        body {
+            width: 680px;
+            height: 100%;
+        }
+    </style>
 </head>
 
 <body>
-  <div id="container" class="center">
-    <br /><br />
-    <table>
-      <table id="pcount">
-
-      </table>
-
-      <tr>
-        <th></th>
-        <th align="right"><input type="button" class="btn" value="À¢–¬ ˝æ›" id="refresh_btn" /></th>
-      </tr>
-    </table>
-  </div>
-
-  <script>
-    function get_pcount_day() {
-      var req = {};
-      req.cmd = 'get_devinfo';
-      req.id = 1;
-      req.body = {};
-      var jsonstr = JSON.stringify(req);
-
-      $.ajax({
-        type: 'POST',
-        url: '/dispatch',
-        dataType: 'text',
-        data: jsonstr,
-        success: function (ajaxdata) {
-          var jresp = eval('(' + ajaxdata + ')');
-          if (jresp.state == 0) {
-            $('#dev_name').val(jresp.body.dev_name);
-            $('#dev_type').val(jresp.body.dev_type);
-            $('#sw_ver').val(jresp.body.sw_ver);
-            $('#hw_ver').val(jresp.body.hw_ver);
-            $('#iva_ver').val(jresp.body.iva_ver);
-            $('#web_port').val(jresp.body.web_port);
-            $('#rtsp_port').val(jresp.body.rtsp_port);
-            $('#disk_size').val(jresp.body.disk_size);
-            if (jresp.body.dhcp_en == 1) {
-              $('#dhcp_en').attr('checked', 'true');
-            } else {
-              $('#dhcp_en').attr('checked', 'false');
+    <div id="search_div" class="search_center">
+        <label for="search_day">Êü•ËØ¢Êó•ÊúüÔºö</label>
+        <input type="text" id="search_day" onclick="return Calendar('search_day');" />
+        <input type="button" class="btn" value="Êü•ËØ¢" id="search_btn" />
+    </div>
+    <div id="table_div" class="table_center">
+        <br /><br />
+        <table id="pcount_tb" class="table">
+            <thead>
+                <tr>
+                    <th style="width: 150px">ÁªüËÆ°Êó∂ÊÆµ</th>
+                    <th style="width: 240px">Ê≠£Âêë‰∫∫Êï∞</th>
+                    <th style="width: 240px">ÂèçÂêë‰∫∫Êï∞</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    <script>
+        function get_pcount_day() {
+            var date = $("#search_day").val();
+            date = date.split("-");
+            if(date.length < 3) {
+                alert("ÂèÇÊï∞ÈîôËØØ");
+                return false;
             }
-            $('#ip_addr').val(jresp.body.ip_addr);
-            $('#netmask').val(jresp.body.netmask);
-            $('#gateway').val(jresp.body.gateway);
-            $('#dns_addr').val(jresp.body.dns_addr);
-            $('#phy_mac').val(jresp.body.phy_mac);
-          } else {
-            alert('ªÒ»°…Ë±∏≤Œ ˝¥ÌŒÛ!');
-          }
-        },
-      });
-    }
 
-    $(document).ready(function () {
-      $(window).ready(function () {
-        get_pcount_day();
-      });
+            var req = {};
+            req.cmd = 'get_pcounts';
+            req.id = 1;
+            req.body = {};
+            req.body.unit  = "day";
+            req.body.year  = parseInt(date[0]);
+            req.body.month = parseInt(date[1]);
+            req.body.day   = parseInt(date[2]);
+            var jsonstr = JSON.stringify(req);
 
-      $('#refresh_btn').click(function () {
-        get_pcount_day();
-      });
-    });
-  </script>
+            $.ajax({
+                type: 'POST',
+                url: '/dispatch',
+                dataType: 'text',
+                data: jsonstr,
+                success: function (ajaxdata) {
+                    var jresp = eval('(' + ajaxdata + ')');
+                    if (jresp.state == 200) {
+                        try {
+                            var jresp = jresp.body.pcount;
+                        } catch (e) {
+                            return;
+                        }
+                        var str = "";
+                        for (var i = 0; i < jresp.length; i++) {
+                            var number = jsondata[i].number;
+                            var positive = jsondata[i].positive;
+                            var negative = jsondata[i].negative;
+                            str += "<tr>" +
+                            "<td style='width: 150px;'>"+ number +"</td>" +
+                            "<td style='width: 240px;' class='time'>" + positive + "</td>" +
+                            "<td style='width: 240px' class='method'>" + negative + "</td>" +
+                            "</tr>";
+                        }
+                        $("#pcount_tb tbody").append(str);
+                    } else {
+                        alert('Ëé∑ÂèñÂ§±Ë¥•');
+                    }
+                },
+            });
+        }
+
+        $(document).ready(function () {
+            /*$(window).ready(function () {
+                get_pcount_day();
+            });*/
+
+            $('#search_btn').click(function () {
+                get_pcount_day();
+            });
+        });
+    </script>
 
 </body>
 </html>

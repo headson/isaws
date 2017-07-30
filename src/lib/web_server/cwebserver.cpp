@@ -89,19 +89,19 @@ void CWebServer::Broadcast(const void* p_data, unsigned int n_data) {
 }
 
 void CWebServer::web_ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
-  // LOG(L_INFO) << "event "<<ev;
+  LOG(L_INFO) << "event "<<ev;
   struct http_message *hm = (struct http_message*)ev_data;
   switch (ev) {
   case MG_EV_HTTP_REQUEST:
     mg_serve_http(nc, (struct http_message*) ev_data, s_web_def_opts_);
     break;
 
-  case MG_EV_CLOSE:
-    if (nc->user_data) {
-      url_hdl_httpflv_release(nc);
-      nc->user_data = NULL;
-    }
-    break;
+  //case MG_EV_CLOSE:
+  //  if (nc->user_data) {
+  //    url_hdl_httpflv_release(nc);
+  //    nc->user_data = NULL;
+  //  }
+  //  break;
   }
 }
 

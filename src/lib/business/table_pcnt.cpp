@@ -23,7 +23,7 @@ static const char REPLACE_STMT_SQL[] = "REPLACE INTO "
 
 static const char DELETE_STMT_SQL[] = "DELETE FROM pcount";
 
-#define  SELECT_STMT_SQL "SELECT ident_timet, positive_number, negative_number " \
+#define  SELECT_STMT_SQL_NOT_SEND "SELECT ident_timet, positive_number, negative_number " \
   " main_srv_send_flag, minor_srv_send_flag "                   \
   " FROM pcount WHERE main_srv_send_flag == 0 OR minor_srv_send_flag == 0"  \
   " ORDER BY ident_timet DESC LIMIT 0, 1"
