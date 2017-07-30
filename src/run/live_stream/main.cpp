@@ -39,15 +39,15 @@ int main(int argc, char** argv) {
   char const* descriptionString
     = "Session streamed by \"testOnDemandRTSPServer\"";
 
-  void *p_shm_vdo = Shm_Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
-  void *p_shm_ado = Shm_Create(SHM_AUDIO_0, SHM_AUDIO_0_SIZE);
+  CShareBuffer shm_vdo;
+  shm_vdo.Open(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
   {
     char const* s_stream_name = "live";
-    ServerMediaSession* sms = 
+    ServerMediaSession* sms =
       ServerMediaSession::createNew(
-      *env, s_stream_name, s_stream_name, descriptionString);
+        *env, s_stream_name, s_stream_name, descriptionString);
     sms->addSubsession(CH264LiveVideoServerMediaSubsession::createNew(
-      *env, reuseFirstSource, p_shm_vdo));
+                         *env, reuseFirstSource, &shm_vdo));
     //sms->addSubsession(CPCMAudioServerMediaSubsession::createNew(
     //  *env, reuseFirstSource, p_shm_ado));
     rtspServer->addServerMediaSession(sms);

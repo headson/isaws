@@ -116,7 +116,7 @@
         data: jsonstr,
         success: function (ajaxdata) {
           var jresp = eval('(' + ajaxdata + ')');
-          if (jresp.state == 0) {
+          if (jresp.state == 200) {
             $('#dev_name').val(jresp.body.dev_name);
             $('#dev_type').val(jresp.body.dev_type);
             $('#sw_ver').val(jresp.body.sw_ver);
@@ -174,7 +174,7 @@
         data: jsonstr,
         success: function (ajaxdata) {
           var jresp = eval('(' + ajaxdata + ')');
-          if (jresp.state == 0) {
+          if (jresp.state == 200) {
             get_devinfo();
           } else {
             alert('参数配置错误' + jresp.state);

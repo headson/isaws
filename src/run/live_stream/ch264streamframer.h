@@ -8,6 +8,8 @@
 #include "MediaSink.hh"
 #include "H264VideoStreamFramer.hh"
 
+#include "systemv/shm/vzshm_c.h"
+
 //*********************************************************************
 class CH264VideoStreamFramer: public H264VideoStreamFramer {
  public:
@@ -16,7 +18,7 @@ class CH264VideoStreamFramer: public H264VideoStreamFramer {
   CH264VideoStreamFramer(
     UsageEnvironment  &env,
     FramedSource      *inputSource,
-    void              *p_shm_vdo);
+    void              *shm_vdo);
 
   static CH264VideoStreamFramer* createNew(
     UsageEnvironment &env,
@@ -26,7 +28,7 @@ class CH264VideoStreamFramer: public H264VideoStreamFramer {
   virtual void doGetNextFrame();
 
  private:
-  void           *p_shm_vdo_;
+  CShareBuffer   *shm_vdo_;
   struct timeval  c_tm_capture_;  // 采集时间
 };
 // Functions to set the optimal buffer size for RTP sink objects.

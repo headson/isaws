@@ -9,6 +9,7 @@
 #include "vzconn/buffer/cblockbuffer.h"
 
 #include "vzbase/helper/stdafx.h"
+#include "vzbase/base/timeutils.h"
 #include "vzbase/base/vmessage.h"
 
 #include "systemv/shm/vzshm_c.h"
@@ -27,7 +28,7 @@ CFlvOverHttp::CFlvOverHttp()
   , flv_data_(NULL)
   , flv_data_size_(0)
   , file(NULL) {
-
+  pts_ = vzbase::CurrentSystemTicket();
 }
 
 CFlvOverHttp::~CFlvOverHttp() {
@@ -189,14 +190,12 @@ int32 CFlvOverHttp::OnTimer() {
   }
 
   if (flv_data_) {
-    unsigned int n_sec = w_sec_, n_usec = w_usec_;
     int ndata = shm_vdo_.Read(flv_data_+flv_shm_.VdoHeadSize(),
                               flv_data_size_,
-                              &n_sec, &n_usec);
+                              &w_sec_, &w_usec_);
     if (ndata > 0) {
-      pts_ += (n_sec - w_sec_)*1000 + (n_usec - w_usec_)/1000;
-      w_sec_ = n_sec;
-      w_usec_ = n_usec;
+      uint32 pts = vzbase::CurrentSystemTicket() - pts_;
+      LOG(L_INFO) << "pts "<< pts;
 
       int   nal_bng = 0, frm_type = 0;
       char *p_nal = nal_parse(flv_data_+flv_shm_.VdoHeadSize(), ndata, &frm_type, &nal_bng);
@@ -206,12 +205,12 @@ int32 CFlvOverHttp::OnTimer() {
         AsyncWrite(avcc_data_, avcc_data_size_);
         char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
                                            p_nal + nal_bng, ndata - nal_bng,
-                                           true, pts_);
+                                           true, pts);
         n_flv = p_dst - (flv_data_ + nal_bng);
       } else if (frm_type == 1) {
         char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
                                            p_nal + nal_bng, ndata - nal_bng,
-                                           false, pts_);
+                                           false, pts);
         n_flv = p_dst - (flv_data_ + nal_bng);
       }
       AsyncWrite(flv_data_+nal_bng, n_flv);

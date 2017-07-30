@@ -1,105 +1,106 @@
 ﻿<!DOCTYPE html>
 <head>
-    <meta charset="UTF-8">
-    <title>PC-Manage</title>
+  <meta charset="UTF-8">
+  <title>PC-Manage</title>
 
-    <script src="../js/jquery-1.11.2.min.js"></script>
-    <script src="../js/base64.js"></script>
-    <script src="../js/utf8.js"></script>
-    <script src="../js/showdate.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
+  <script src="../js/jquery-1.11.2.min.js"></script>
+  <script src="../js/base64.js"></script>
+  <script src="../js/utf8.js"></script>
+  <script src="../js/showdate.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
 
-        body {
-            width: 680px;
-            height: 100%;
-        }
-    </style>
+    body {
+      width: 680px;
+      height: 100%;
+    }
+  </style>
 </head>
 
 <body>
-    <div id="search_div" class="search_center">
-        <label for="search_day">查询日期：</label>
-        <input type="text" id="search_day" onclick="return Calendar('search_day');" />
-        <input type="button" class="btn" value="查询" id="search_btn" />
-    </div>
-    <div id="table_div" class="table_center">
-        <br /><br />
-        <table id="pcount_tb" class="table">
-            <thead>
-                <tr>
-                    <th style="width: 150px">统计时段</th>
-                    <th style="width: 240px">正向人数</th>
-                    <th style="width: 240px">反向人数</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-    <script>
-        function get_pcount_day() {
-            var date = $("#search_day").val();
-            date = date.split("-");
-            if(date.length < 3) {
-                alert("参数错误");
-                return false;
+  <div id="search_div" class="search_center">
+    <label for="search_day">查询日期：</label>
+    <input type="text" id="search_date" onclick="return Calendar('search_date');" />
+    <input type="button" class="btn" value="查询" id="search_btn" />
+  </div>
+  <div id="table_div" class="table_center">
+    <br /><br />
+    <table id="pcount_tb" class="table">
+      <thead>
+        <tr>
+          <th style="width: 150px">统计时段</th>
+          <th style="width: 240px">正向人数</th>
+          <th style="width: 240px">反向人数</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <script>
+    function get_pcount_day() {
+      var date = $("#search_date").val();
+      date = date.split("-");
+      if (date.length < 3) {
+        alert("参数错误");
+        return false;
+      }
+
+      var req = {};
+      req.cmd = 'get_pcounts';
+      req.id = 1;
+      req.body = {};
+      req.body.unit = "day";
+      req.body.year = parseInt(date[0]);
+      req.body.month = parseInt(date[1]);
+      req.body.day = parseInt(date[2]);
+      var jsonstr = JSON.stringify(req);
+
+      $.ajax({
+        type: 'POST',
+        url: '/dispatch',
+        dataType: 'text',
+        data: jsonstr,
+        success: function (ajaxdata) {
+          var jresp = eval('(' + ajaxdata + ')');
+          if (jresp.state == 200) {
+            try {
+              var jresp = jresp.body.pcount;
+            } catch (e) {
+              return;
             }
+            var str = "";
+            $("#pcount_tb tbody").clearQueue();
+            for (var i = 0; i < jresp.length; i++) {
+              var number = jresp[i].number;
+              var positive = jresp[i].positive;
+              var negative = jresp[i].negative;
+              str += "<tr>" +
+              "<td style='width: 150px;' align='center'>" + number + "</td>" +
+              "<td style='width: 240px;' align='center'>" + positive + "</td>" +
+              "<td style='width: 240px' align='center'>" + negative + "</td>" +
+              "</tr>";
+            }
+            $("#pcount_tb tbody").html(str);
+          } else {
+            alert('获取失败');
+          }
+        },
+      });
+    }
 
-            var req = {};
-            req.cmd = 'get_pcounts';
-            req.id = 1;
-            req.body = {};
-            req.body.unit  = "day";
-            req.body.year  = parseInt(date[0]);
-            req.body.month = parseInt(date[1]);
-            req.body.day   = parseInt(date[2]);
-            var jsonstr = JSON.stringify(req);
+    $(document).ready(function () {
+      /*$(window).ready(function () {
+          get_pcount_day();
+      });*/
 
-            $.ajax({
-                type: 'POST',
-                url: '/dispatch',
-                dataType: 'text',
-                data: jsonstr,
-                success: function (ajaxdata) {
-                    var jresp = eval('(' + ajaxdata + ')');
-                    if (jresp.state == 200) {
-                        try {
-                            var jresp = jresp.body.pcount;
-                        } catch (e) {
-                            return;
-                        }
-                        var str = "";
-                        for (var i = 0; i < jresp.length; i++) {
-                            var number = jsondata[i].number;
-                            var positive = jsondata[i].positive;
-                            var negative = jsondata[i].negative;
-                            str += "<tr>" +
-                            "<td style='width: 150px;'>"+ number +"</td>" +
-                            "<td style='width: 240px;' class='time'>" + positive + "</td>" +
-                            "<td style='width: 240px' class='method'>" + negative + "</td>" +
-                            "</tr>";
-                        }
-                        $("#pcount_tb tbody").append(str);
-                    } else {
-                        alert('获取失败');
-                    }
-                },
-            });
-        }
-
-        $(document).ready(function () {
-            /*$(window).ready(function () {
-                get_pcount_day();
-            });*/
-
-            $('#search_btn').click(function () {
-                get_pcount_day();
-            });
-        });
-    </script>
+      $('#search_btn').click(function () {
+        get_pcount_day();
+      });
+    });
+  </script>
 
 </body>
 </html>

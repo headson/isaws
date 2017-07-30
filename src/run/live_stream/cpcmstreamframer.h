@@ -8,6 +8,8 @@
 #include "MediaSink.hh"
 #include "FramedSource.hh"
 
+#include "systemv/shm/vzshm_c.h"
+
 class CPcmAudioStreamFramer : public FramedSource
 {
 public:
@@ -16,7 +18,7 @@ public:
   CPcmAudioStreamFramer(
     UsageEnvironment  &env,
     FramedSource      *inputSource,
-    void              *p_shm_vdo);
+    void              *shm_ado);
 
   static CPcmAudioStreamFramer* createNew(
     UsageEnvironment &env,
@@ -26,7 +28,7 @@ public:
   virtual void doGetNextFrame();
 
 private:
-  void              *p_shm_vdo_;
+  CShareBuffer     *shm_ado_;
   struct timeval    c_tm_capture_;  // 采集时间
 };
 

@@ -7,14 +7,13 @@
 #include "ch264streamframer.h"
 #include "GroupsockHelper.hh"
 
-#include "systemv/shm/vzshm_c.h"
 //#include "vzbase/helper/stdafx.h"
 
 CPcmAudioStreamFramer::CPcmAudioStreamFramer(UsageEnvironment &env,
     FramedSource *inputSource,
-    void         *p_shm_vdo)
+    void         *shm_ado)
   : FramedSource(env)
-  , p_shm_vdo_(p_shm_vdo) {
+  , shm_ado_((CShareBuffer*)shm_ado) {
 }
 
 CPcmAudioStreamFramer::~CPcmAudioStreamFramer() {
@@ -33,12 +32,13 @@ CPcmAudioStreamFramer* CPcmAudioStreamFramer::createNew(UsageEnvironment &env,
 }
 
 void CPcmAudioStreamFramer::doGetNextFrame() {
-  gettimeofday(&fPresentationTime, NULL);
+  int n_r_size = 0;  
+  if (shm_ado_) {
+    n_r_size = shm_ado_->Read((char*)fTo, fMaxSize,
+                              (unsigned int*)&c_tm_capture_.tv_sec,
+                              (unsigned int*)&c_tm_capture_.tv_usec);
+  }
 
-  int n_r_size = Shm_Read(p_shm_vdo_, 
-                          (char*)fTo, fMaxSize,
-                          (unsigned int*)&c_tm_capture_.tv_sec, 
-                          (unsigned int*)&c_tm_capture_.tv_usec);
   if (n_r_size <= 0) {
     n_r_size = 0;
     printf("shm read failed.");
@@ -51,6 +51,6 @@ void CPcmAudioStreamFramer::doGetNextFrame() {
 
   // 赋值nextTask() 当应用退出时,可销毁此schedule,防止应用处理脏afterGetting
   nextTask() = envir().taskScheduler().scheduleDelayedTask(
-                 5 * 1000, (TaskFunc*)afterGetting, this);
+                 3, (TaskFunc*)afterGetting, this);
 }
 

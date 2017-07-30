@@ -24,7 +24,7 @@ static void register_http_endpoint(struct mg_connection *nc) {
   mg_register_http_endpoint(nc, "/login_req",     uri_hdl_login);
   mg_register_http_endpoint(nc, "/upload",        uri_hdl_upload);
   mg_register_http_endpoint(nc, "/httpflv",       uri_hdl_httpflv);
-  mg_register_http_endpoint(nc, "/dispath",       uri_hdl_dispath);
+  mg_register_http_endpoint(nc, "/dispatch",      uri_hdl_dispatch);
 }
 
 CWebServer::CWebServer()
@@ -89,19 +89,19 @@ void CWebServer::Broadcast(const void* p_data, unsigned int n_data) {
 }
 
 void CWebServer::web_ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
-  LOG(L_INFO) << "event "<<ev;
+  // LOG(L_INFO) << "event "<<ev;
   struct http_message *hm = (struct http_message*)ev_data;
   switch (ev) {
   case MG_EV_HTTP_REQUEST:
     mg_serve_http(nc, (struct http_message*) ev_data, s_web_def_opts_);
     break;
 
-  //case MG_EV_CLOSE:
-  //  if (nc->user_data) {
-  //    url_hdl_httpflv_release(nc);
-  //    nc->user_data = NULL;
-  //  }
-  //  break;
+  case MG_EV_CLOSE:
+    if (nc->user_data) {
+      url_hdl_httpflv_release(nc);
+      nc->user_data = NULL;
+    }
+    break;
   }
 }
 

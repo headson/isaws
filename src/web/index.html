@@ -105,7 +105,7 @@
         data: jsonstr,
         success: function (ajaxdata) {
           var jresp = eval('(' + ajaxdata + ')');
-          if (jresp.state == 0) {
+          if (jresp.state == 200) {
             parent.window.open('/main.html', '_top');
           } else {
             alert('用户帐户或用户密码错误!');

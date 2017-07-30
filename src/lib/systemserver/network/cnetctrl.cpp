@@ -77,7 +77,7 @@ void CNetCtrl::Stop() {
 void CNetCtrl::OnMessage(vzbase::Message* msg) {
   if (msg->message_id == DEF_GET_PHY_ADDR) {
 #ifdef _WIN32
-    LOG(L_WARNING) << "get phy addr.";
+    // LOG(L_WARNING) << "get phy addr.";
 #else
     in_addr_t ip = net_get_ifaddr(PHY_IF_NAME);
     if (0 == ip) {

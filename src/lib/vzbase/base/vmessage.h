@@ -19,7 +19,7 @@
 // WEB Server ¼àÌý¶Ë¿ÚºÍÍøÒ³´æ´¢Â·¾¶
 #define DEF_WEB_SRV_PORT      8000
 #ifdef WIN32
-#define DEF_WEB_SRV_PATH      "d:\\web"
+#define DEF_WEB_SRV_PATH      "c:\\tools\\web"
 #else
 #define DEF_WEB_SRV_PATH      "./web"
 #endif
@@ -59,7 +59,7 @@ body ÊÇÓÉ¿Í»§¶Ë·¢ËÍµÄ¾ßÌåÃüÁîµÄÊý¾Ý£¬¸ù¾Ý²»Í¬µÄÇëÇó£¬ÓÐ²»Í¬µÄ`body`Êý¾Ý£¬Ô­ÔòÉÏ£
 #define MSG_CMD_SIZE          32
 
 typedef enum _MSG_RET {
-  RET_SUCCESS       = 0,
+  RET_SUCCESS       = 200,
   RET_FAILED        = -1000,
   RET_JSON_PARSE,
   RET_USERNAME,

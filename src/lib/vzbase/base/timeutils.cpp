@@ -214,6 +214,19 @@ uint32 CurrentTimet() {
   return time(NULL);
 }
 
+int64 CurrentSystemTicket() {
+#ifdef WIN32
+  return (int64)GetTickCount();
+  //return (int64_t)GetTickCount();
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return ((int64)ts.tv_sec * 1000 +
+          (int64)ts.tv_nsec / 1000000);
+#endif
+  return 0;
+}
+
 uint32 ToTimet(int32 year, int32 month, int32 day,
                int32 hour, int32 minute, int32 second) {
   struct tm tt;

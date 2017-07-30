@@ -2,14 +2,13 @@
 
 #include "GroupsockHelper.hh"
 
-#include "systemv/shm/vzshm_c.h"
 //#include "vzbase/helper/stdafx.h"
 
 // CamH264VideoStreamFramer *********************************************************
 CH264VideoStreamFramer::CH264VideoStreamFramer(UsageEnvironment& env,
-    FramedSource* inputSource, void* p_shm_vdo)
+    FramedSource* inputSource, void* shm_vdo)
   : H264VideoStreamFramer(env, inputSource, False, False)
-  , p_shm_vdo_(p_shm_vdo) {
+  , shm_vdo_((CShareBuffer*)shm_vdo) {
   fFrameRate = 16.0;
 }
 
@@ -35,9 +34,10 @@ void CH264VideoStreamFramer::doGetNextFrame() {
   gettimeofday(&fPresentationTime, NULL);
 
   int n_r_size = 0;
-  if (p_shm_vdo_) {
-    n_r_size = Shm_Read(p_shm_vdo_,
-                        (char*)fTo, fMaxSize,
+  if (shm_vdo_) {
+    int sps_size = 0, pps_size = 0;
+    n_r_size = shm_vdo_->ReadHead((char*)fTo, fMaxSize, &sps_size, &sps_size);
+    n_r_size = shm_vdo_->Read((char*)fTo+n_r_size, fMaxSize-n_r_size,
                         (unsigned int*)&c_tm_capture_.tv_sec,
                         (unsigned int*)&c_tm_capture_.tv_usec);
   }
@@ -53,5 +53,5 @@ void CH264VideoStreamFramer::doGetNextFrame() {
   //usleep(2);
 
   // 赋值nextTask() 当应用退出时,可销毁此schedule,防止应用处理脏afterGetting
-  nextTask() = envir().taskScheduler().scheduleDelayedTask(5*1000, (TaskFunc*)afterGetting, this);
+  nextTask() = envir().taskScheduler().scheduleDelayedTask(5, (TaskFunc*)afterGetting, this);
 }

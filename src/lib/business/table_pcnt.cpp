@@ -257,7 +257,7 @@ static bool SelectPCountOfMonth(Json::Value &jresp, sqlite3 *db,
                  &positive_number_last, &negative_number_last);
 
     Json::Value jone;
-    jone["number"]   = day - 1;
+    jone["number"]   = day;
     jone["positive"] = positive_number_first - positive_number_last;
     jone["negative"] = positive_number_last - positive_number_last;
     jret.append(jone);
@@ -294,7 +294,7 @@ static bool SelectPCountOfYear(Json::Value &jresp, sqlite3 *db,
                  &positive_number_last, &negative_number_last);
 
     Json::Value jone;
-    jone["number"] = month - 1;
+    jone["number"] = month;
     jone["positive"] = positive_number_first - positive_number_last;
     jone["negative"] = positive_number_last - positive_number_last;
     jret.append(jone);

@@ -102,6 +102,8 @@ namespace vzbase {
 
   uint32 CurrentTimet();
 
+  int64  CurrentSystemTicket();
+
   uint32 ToTimet(int32 year, int32 month, int32 day,
                  int32 hour, int32 minute, int32 second);
 
