@@ -130,7 +130,6 @@ int32 CEvtTcpServer::OnAccept() {
                            cli_hdl_ptr_);
   if (cli_ptr) {
     cli_ptr->Open(s, true);
-    cli_ptr->SetRemoteAddr(c_addr);
     bool b_open = false;
     if (srv_handle_ptr_) {
       b_open = srv_handle_ptr_->HandleNewConnection(this, cli_ptr);

@@ -62,18 +62,17 @@ bool CListenMessage::Start(unsigned short  n_http_port,
 }
 
 void CListenMessage::Stop() {
-  if (p_dp_cli_) {
-    DpClient_ReleasePollHandle(p_dp_cli_);
-    p_dp_cli_ = NULL;
-  }
-  DpClient_Stop();
-
   c_web_srv_.Stop();
 
   if (p_main_thread_) {
     p_main_thread_->Release();
     p_main_thread_ = NULL;
   }
+  if (p_dp_cli_) {
+    DpClient_ReleasePollHandle(p_dp_cli_);
+    p_dp_cli_ = NULL;
+  }
+  DpClient_Stop();
 }
 
 void CListenMessage::RunLoop() {

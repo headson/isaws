@@ -65,6 +65,13 @@ void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *p) {
   pflv->AsyncHeader(response_flv, response_flv_size);
 }
 
+void url_hdl_httpflv_release(struct mg_connection *nc) {
+  char *p = strstr(nc->recv_mbuf.buf, "httpflv");
+  if (p != NULL) {
+    ((CFlvOverHttp*)nc->user_data)->Close();
+  }
+}
+
 #ifdef __cplusplus
 }
 }  // namespace web

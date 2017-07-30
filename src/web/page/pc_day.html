@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <title>PC-Manage</title>
+
+  <script src="../js/jquery-1.11.2.min.js"></script>
+  <script src="../js/base64.js"></script>
+  <script src="../js/utf8.js"></script>
+
+  <style>
+    #container {
+      width: 260px;
+      height: 100%;
+    }
+
+    .center {
+      position: absolute;
+      left: 50%;
+      margin-left: -130px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="container" class="center">
+    <br /><br />
+    <table>
+      <table id="pcount">
+
+      </table>
+
+      <tr>
+        <th></th>
+        <th align="right"><input type="button" class="btn" value="刷新数据" id="refresh_btn" /></th>
+      </tr>
+    </table>
+  </div>
+
+  <script>
+    function get_pcount_day() {
+      var req = {};
+      req.cmd = 'get_devinfo';
+      req.id = 1;
+      req.body = {};
+      var jsonstr = JSON.stringify(req);
+
+      $.ajax({
+        type: 'POST',
+        url: '/dispatch',
+        dataType: 'text',
+        data: jsonstr,
+        success: function (ajaxdata) {
+          var jresp = eval('(' + ajaxdata + ')');
+          if (jresp.state == 0) {
+            $('#dev_name').val(jresp.body.dev_name);
+            $('#dev_type').val(jresp.body.dev_type);
+            $('#sw_ver').val(jresp.body.sw_ver);
+            $('#hw_ver').val(jresp.body.hw_ver);
+            $('#iva_ver').val(jresp.body.iva_ver);
+            $('#web_port').val(jresp.body.web_port);
+            $('#rtsp_port').val(jresp.body.rtsp_port);
+            $('#disk_size').val(jresp.body.disk_size);
+            if (jresp.body.dhcp_en == 1) {
+              $('#dhcp_en').attr('checked', 'true');
+            } else {
+              $('#dhcp_en').attr('checked', 'false');
+            }
+            $('#ip_addr').val(jresp.body.ip_addr);
+            $('#netmask').val(jresp.body.netmask);
+            $('#gateway').val(jresp.body.gateway);
+            $('#dns_addr').val(jresp.body.dns_addr);
+            $('#phy_mac').val(jresp.body.phy_mac);
+          } else {
+            alert('获取设备参数错误!');
+          }
+        },
+      });
+    }
+
+    $(document).ready(function () {
+      $(window).ready(function () {
+        get_pcount_day();
+      });
+
+      $('#refresh_btn').click(function () {
+        get_pcount_day();
+      });
+    });
+  </script>
+
+</body>
+</html>

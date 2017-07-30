@@ -13,6 +13,8 @@ static const char PCOUNT_SQL[] = "CREATE TABLE [pcount] ("
                                  " [ident_timet] INTEGER NOT NULL ON CONFLICT REPLACE,"
                                  " [positive_number] INTEGER NOT NULL ON CONFLICT REPLACE, "
                                  " [negative_number] INTEGER NOT NULL ON CONFLICT REPLACE, "
+                                 " [main_srv_send_flag]  INTEGER NOT NULL ON CONFLICT REPLACE, "
+                                 " [minor_srv_send_flag] INTEGER NOT NULL ON CONFLICT REPLACE, "
                                  " CONSTRAINT [] PRIMARY KEY ([ident_timet]) ON CONFLICT REPLACE);";
 
 static const char REPLACE_STMT_SQL[] = "REPLACE INTO "
@@ -20,6 +22,11 @@ static const char REPLACE_STMT_SQL[] = "REPLACE INTO "
                                        " VALUES (?, ?, ?);";
 
 static const char DELETE_STMT_SQL[] = "DELETE FROM pcount";
+
+#define  SELECT_STMT_SQL "SELECT ident_timet, positive_number, negative_number " \
+  " main_srv_send_flag, minor_srv_send_flag "                   \
+  " FROM pcount WHERE main_srv_send_flag == 0 OR minor_srv_send_flag == 0"  \
+  " ORDER BY ident_timet DESC LIMIT 0, 1"
 
 #define  SELECT_STMT_SQL_FIRST "SELECT positive_number, negative_number " \
   " FROM pcount WHERE %d <= ident_timet AND ident_timet < %d " \

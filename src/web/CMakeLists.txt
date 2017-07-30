@@ -54,10 +54,12 @@ SOURCE_GROUP(main FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/web_main.cpp
 )
 
-SOURCE_GROUP(html FILES
+SOURCE_GROUP(main_html FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/index.html
-	${CMAKE_CURRENT_SOURCE_DIR}/main.html
-	
+	${CMAKE_CURRENT_SOURCE_DIR}/main.html=
+)
+
+SOURCE_GROUP(page_html FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/page/preview.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/pc_year.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/pc_month.html
