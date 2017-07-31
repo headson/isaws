@@ -7,10 +7,11 @@
 #ifndef __NET_CONFIG_H_
 #define __NET_CONFIG_H_
 
+#define PHY_ETH_NAME    "eth0"
+#define PHY_WIFI_NAME   "wifi0"
+
 #ifdef _LINUX
 #include <paths.h>
-
-#define PHY_IF_NAME            "eth0"
 
 #define RESOLV_CONF           "/etc/resolv.conf"
 #define PROCNET_ROUTE_PATH    "/proc/net/route"

@@ -34,10 +34,12 @@ class CListenMessage : public vzbase::noncopyable {
   void  RunLoop();
 
  protected:
-  static void dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg);
+  static void dpcli_poll_msg_cb(DPPollHandle p_hdl,
+                                const DpMessage *dmp, void* p_usr_arg);
   void OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp);
 
-  static void dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg);
+  static void dpcli_poll_state_cb(DPPollHandle p_hdl,
+                                  unsigned int n_state, void* p_usr_arg);
   void OnDpCliState(DPPollHandle p_hdl, unsigned int n_state);
 
  public:
@@ -47,14 +49,16 @@ class CListenMessage : public vzbase::noncopyable {
   bool SetDevInfo(const Json::Value &j_body); // 设置设备信息
 
  private:
-  TAG_SYS_INFO    sys_info_;    // 系统信息
+  Json::Value     hw_json_;       // 硬件参数json
 
+ private:
   DPPollHandle    dp_cli_;
-  CNetCtrl       *net_ctrl_;    // 网络控制
-  CHwclock       *hw_clock_;    // 时间设置
+  vzbase::Thread *thread_fast_;   // 快速线程
+  vzbase::Thread *thread_slow_;   // 耗时线程
 
-  vzbase::Thread *thread_fast_;  // 快速线程
-  vzbase::Thread *thread_slow_;  // 耗时线程
+ private:
+  CNetCtrl       *net_ctrl_;      // 网络控制
+  CHwclock       *hw_clock_;      // 时间设置
 };
 
 }  // namespace sys

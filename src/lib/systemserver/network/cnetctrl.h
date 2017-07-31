@@ -31,7 +31,7 @@ class CNetCtrl : public vzbase::MessageHandler,
   }
 
  protected:
-  virtual void OnMessage(vzbase::Message* msg);
+  virtual void  OnMessage(vzbase::Message* msg);
 
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
                                  const uint8      *p_data,
@@ -44,21 +44,16 @@ class CNetCtrl : public vzbase::MessageHandler,
   }
 
  public:
-  static bool SetNet(in_addr_t   ip,
-                     in_addr_t   netmask,
-                     in_addr_t   gateway,
-                     in_addr_t   dns);
+  bool IpAddrCompare(const char *ip_addr);
+  bool NetmaskCompare(const char *netmask);
+  bool GatewayCompare(const char *gateway);
+  bool DnsAddrCompare(const char *dns_addr);
+
+  bool ModityNetwork(const Json::Value &jnet);
 
  private:
   vzconn::CMCastSocket *mcast_sock_;
   vzbase::Thread       *thread_fast_;
-
- public:
-  static in_addr_t    ip_addr_;          // inet_addr() inet_ntoa
-  static in_addr_t    netmask_;     //
-  static in_addr_t    gateway_;     //
-  static in_addr_t    dns_addr_;         //
-  static std::string  phy_mac_;         // 12:23:34:45:56:67
 };
 
 }  // namespace sys

@@ -31,7 +31,7 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/table_pcnt.cpp
 )
 
-SOURCE_GROUP(listen_message FILES
+SOURCE_GROUP(message FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )

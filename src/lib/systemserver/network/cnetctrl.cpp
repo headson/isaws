@@ -8,6 +8,8 @@
 
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
+
+#include "systemserver/base/mysystem.h"
 #include "systemserver/clistenmessage.h"
 
 namespace sys {
@@ -16,14 +18,6 @@ namespace sys {
 
 #define DEF_GET_PHY_ADDR 0x123456
 
-in_addr_t    CNetCtrl::ip_addr_   = 0;
-in_addr_t    CNetCtrl::netmask_   = 0;
-in_addr_t    CNetCtrl::gateway_   = 0;
-in_addr_t    CNetCtrl::dns_addr_  = 0;
-
-std::string  CNetCtrl::phy_mac_   = "";
-
-//////////////////////////////////////////////////////////////////////////
 CNetCtrl::CNetCtrl(vzbase::Thread *thread_fast)
   : vzbase::MessageHandler()
   , thread_fast_(thread_fast)
@@ -167,22 +161,40 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
   return 0;
 }
 
-bool CNetCtrl::SetNet(in_addr_t   ip,
-                      in_addr_t   netmask,
-                      in_addr_t   gateway,
-                      in_addr_t   dns) {
-  system("killall dhcpc");
+bool CNetCtrl::IpAddrCompare(const char *ip_addr) {
+  return true;
+}
 
-  bool ip_change_ = false;
-  if (ip_addr_ != ip) {
-    ip_addr_ = ip;
+bool CNetCtrl::NetmaskCompare(const char *netmask) {
+  return true;
+}
+
+bool CNetCtrl::GatewayCompare(const char *gateway) {
+  return true;
+}
+
+bool CNetCtrl::DnsAddrCompare(const char *dns_addr) {
+  return true;
+}
+
+bool CNetCtrl::ModityNetwork(const Json::Value &jnet) {
+  const char *phy_addr = PHY_ETH_NAME;
+  if (1 == jnet["dhcp_en"].asInt()) {
+    system("udhcpc -i eth0 &");
+    return true;
+  }
+  
+  bool addr_modity = false;
+
+  std::string ip_addr = jnet["ip_addr"].asString();
+  if (!IpAddrCompare(ip_addr.c_str())) {
+    addr_modity = true;
+
 #ifdef _WIN32
-    LOG(L_WARNING) << "set ip addr "
-                   << inet_ntoa(*((struct in_addr*)&ip_addr_));
+    LOG(L_WARNING) << "set ip addr " << ip_addr;
 #else
-    net_set_ifaddr(PHY_IF_NAME, ip);
+    net_set_ifaddr(phy_addr, inet_addr(ip_addr.c_str());
 #endif
-    ip_change_ = true;
   }
 
   if (netmask_ != netmask) {
@@ -193,7 +205,7 @@ bool CNetCtrl::SetNet(in_addr_t   ip,
 #else
     net_set_netmask(PHY_IF_NAME, netmask);
 #endif
-    ip_change_ = true;
+    addr_modity = true;
   }
 
   if (gateway_ != gateway) {
@@ -205,7 +217,7 @@ bool CNetCtrl::SetNet(in_addr_t   ip,
     net_clean_gateway();
     net_set_gateway(gateway);
 #endif
-    ip_change_ = true;
+    addr_modity = true;
   }
 
   if (dns_addr_ != dns) {
@@ -216,13 +228,13 @@ bool CNetCtrl::SetNet(in_addr_t   ip,
 #else
     net_set_dns(inet_ntoa(*((struct in_addr*)&dns_addr_)));
 #endif
-    ip_change_ = true;
+    addr_modity = true;
   }
 
-  if (ip_change_) {
+  if (addr_modity) {
     DpClient_SendDpMessage(MSG_ADDR_CHANGE, 0, NULL, 0);
   }
-  return ip_change_;
+  return addr_modity;
 }
 
 }  // namespace sys

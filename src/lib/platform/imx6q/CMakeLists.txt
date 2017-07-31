@@ -67,7 +67,7 @@ SOURCE_GROUP(image FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/cimageencode.cpp
 )
 
-SOURCE_GROUP(listen_messge FILES
+SOURCE_GROUP(messge FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
