@@ -14,18 +14,7 @@
 namespace web {
 
 static struct mg_serve_http_opts s_web_def_opts_;
-
-/************************************************************************/
-/* Description : ×¢²á´¦Àíº¯Êý
-/* Parameters  :
-/* Return      :
-/************************************************************************/
-static void register_http_endpoint(struct mg_connection *nc) {
-  mg_register_http_endpoint(nc, "/login_req",     uri_hdl_login);
-  mg_register_http_endpoint(nc, "/upload",        uri_hdl_upload);
-  mg_register_http_endpoint(nc, "/httpflv",       uri_hdl_httpflv);
-  mg_register_http_endpoint(nc, "/dispatch",      uri_hdl_dispatch);
-}
+static struct mg_serve_http_opts s_web_log_opts_;
 
 CWebServer::CWebServer()
   : vzbase::Runnable()
@@ -39,7 +28,9 @@ CWebServer::~CWebServer() {
   Stop();
 }
 
-bool CWebServer::Start(const char *s_http_path, const char *s_http_port) {
+bool CWebServer::Start(const char *s_web_path,
+                       const char *s_log_path,
+                       const char *s_http_port) {
   mg_mgr_init(&c_web_srv_, this);
   p_web_conn_ = mg_bind(&c_web_srv_, (char*)s_http_port, web_ev_handler);
   if (p_web_conn_ == NULL) {
@@ -47,11 +38,13 @@ bool CWebServer::Start(const char *s_http_path, const char *s_http_port) {
     return false;
   }
 
-  register_http_endpoint(p_web_conn_);
   // Set up HTTP server parameters
   mg_set_protocol_http_websocket(p_web_conn_);
 
-  s_web_def_opts_.document_root = (char*)s_http_path;
+  s_web_log_opts_.document_root = (char*)s_log_path;
+  s_web_log_opts_.enable_directory_listing = "yes";
+
+  s_web_def_opts_.document_root = (char*)s_web_path;
   s_web_def_opts_.enable_directory_listing = "yes";
 
   // mg_set_timer(p_web_conn_, mg_time() + SESSION_CHECK_INTERVAL);
@@ -88,12 +81,28 @@ void CWebServer::Broadcast(const void* p_data, unsigned int n_data) {
   }
 }
 
+static void ev_http_request(struct mg_connection *nc, int ev, void *ev_data) {
+  struct http_message *hm = (struct http_message *) ev_data;
+
+  if (mg_vcmp(&hm->uri, "/login_req") == 0) {
+    uri_hdl_login(nc, ev, ev_data);
+  } else if (mg_vcmp(&hm->uri, "/dispatch") == 0) {
+    uri_hdl_dispatch(nc, ev, ev_data);
+  } else if (mg_vcmp(&hm->uri, "/httpflv") == 0) {
+    uri_hdl_httpflv(nc, ev, ev_data);
+  } else if (mg_vcmp(&hm->uri, "/upload") == 0) {
+    uri_hdl_upload(nc, ev, ev_data);
+  } else if (mg_vcmp(&hm->uri, "/syslog") == 0) {
+    mg_serve_http(nc, (struct http_message*)ev_data, s_web_log_opts_);
+  } else {
+    mg_serve_http(nc, (struct http_message*)ev_data, s_web_def_opts_);
+  }
+}
+
 void CWebServer::web_ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
-  // LOG(L_INFO) << "event "<<ev;
-  struct http_message *hm = (struct http_message*)ev_data;
   switch (ev) {
   case MG_EV_HTTP_REQUEST:
-    mg_serve_http(nc, (struct http_message*) ev_data, s_web_def_opts_);
+    ev_http_request(nc, ev, ev_data);
     break;
 
   case MG_EV_CLOSE:

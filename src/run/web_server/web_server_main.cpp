@@ -29,7 +29,9 @@ int main(int argc, char *argv[]) {
   Kvdb_Start(DEF_KVDB_SRV_IP, DEF_KVDB_SRV_PORT);
 
   bool b_ret = web::CListenMessage::Instance()->Start(
-                 DEF_WEB_SRV_PORT, DEF_WEB_SRV_PATH);
+                 DEF_WEB_SRV_PORT, 
+                 DEF_WEB_SRV_PATH,
+                 LOG_WEB_SRV_PATH);
   while (b_ret) {
     web::CListenMessage::Instance()->RunLoop();
   }

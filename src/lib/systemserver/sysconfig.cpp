@@ -82,12 +82,12 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
     hw_json_["dev_name"] = jbody["dev_name"].asString();
   }
 
-  if (jbody.isMember("dev_type") &&
-      jbody["dev_type"].isInt() &&
-      hw_json_["dev_type"].asInt() != jbody["dev_type"].asInt()) {
-    bsave++;
-    hw_json_["dev_type"] = jbody["dev_type"].asInt();
-  }
+  //if (jbody.isMember("dev_type") &&
+  //    jbody["dev_type"].isInt() &&
+  //    hw_json_["dev_type"].asInt() != jbody["dev_type"].asInt()) {
+  //  bsave++;
+  //  hw_json_["dev_type"] = jbody["dev_type"].asInt();
+  //}
 
   //if (jbody.isMember("dev_uuid") &&
   //    jbody["dev_uuid"].isString() &&
@@ -103,26 +103,26 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
     hw_json_["ins_addr"] = jbody["ins_addr"].asString();
   }
 
-  if (jbody.isMember("sw_version") &&
-      jbody["sw_version"].isString() &&
-      hw_json_["sw_version"].asString() != jbody["sw_version"].asString()) {
-    bsave++;
-    hw_json_["sw_version"] = jbody["sw_version"].asString();
-  }
+  //if (jbody.isMember("sw_version") &&
+  //    jbody["sw_version"].isString() &&
+  //    hw_json_["sw_version"].asString() != jbody["sw_version"].asString()) {
+  //  bsave++;
+  //  hw_json_["sw_version"] = jbody["sw_version"].asString();
+  //}
 
-  if (jbody.isMember("hw_version") &&
-      jbody["hw_version"].isString() &&
-      hw_json_["hw_version"].asString() != jbody["hw_version"].asString()) {
-    bsave++;
-    hw_json_["hw_version"] = jbody["hw_version"].asString();
-  }
+  //if (jbody.isMember("hw_version") &&
+  //    jbody["hw_version"].isString() &&
+  //    hw_json_["hw_version"].asString() != jbody["hw_version"].asString()) {
+  //  bsave++;
+  //  hw_json_["hw_version"] = jbody["hw_version"].asString();
+  //}
 
-  if (jbody.isMember("alg_version") &&
-      jbody["alg_version"].isString() &&
-      hw_json_["alg_version"].asString() != jbody["alg_version"].asString()) {
-    bsave++;
-    hw_json_["alg_version"] = jbody["alg_version"].asString();
-  }
+  //if (jbody.isMember("alg_version") &&
+  //    jbody["alg_version"].isString() &&
+  //    hw_json_["alg_version"].asString() != jbody["alg_version"].asString()) {
+  //  bsave++;
+  //  hw_json_["alg_version"] = jbody["alg_version"].asString();
+  //}
 
   //////////////////////////////////////////////////////////////////////////
   if (!jbody.isMember("net")) {
@@ -200,13 +200,12 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
 
   FILE *file = fopen("./system.json", "wt+");
   if (file) {
-    std::string ss = jbody.toStyledString();
+    std::string ss = hw_json_.toStyledString();
 
     fwrite(ss.c_str(), 1, ss.size(), file);
     fclose(file);
   }
-
-  GetHwInfo();
+  net_ctrl_->ModityNetwork(hw_json_["net"]);
   return true;
 }
 

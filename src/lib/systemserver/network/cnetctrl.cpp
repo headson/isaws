@@ -18,6 +18,14 @@ namespace sys {
 
 #define DEF_GET_PHY_ADDR 0x123456
 
+in_addr_t    CNetCtrl::ip_addr_   = 0;
+in_addr_t    CNetCtrl::netmask_   = 0;
+in_addr_t    CNetCtrl::gateway_   = 0;
+in_addr_t    CNetCtrl::dns_addr_  = 0;
+
+std::string  CNetCtrl::phy_mac_   = "";
+
+//////////////////////////////////////////////////////////////////////////
 CNetCtrl::CNetCtrl(vzbase::Thread *thread_fast)
   : vzbase::MessageHandler()
   , thread_fast_(thread_fast)
@@ -73,22 +81,22 @@ void CNetCtrl::OnMessage(vzbase::Message* msg) {
 #ifdef _WIN32
     // LOG(L_WARNING) << "get phy addr.";
 #else
-    in_addr_t ip = net_get_ifaddr(PHY_IF_NAME);
+    in_addr_t ip = net_get_ifaddr(PHY_ETH_NAME);
     if (0 == ip) {
       if (GetTickCount() > 30*1000)  {  // 30S
         LOG(L_INFO) << "set default address.";
-        net_set_ifaddr(PHY_IF_NAME, inet_addr("192.168.254.254"));
-        net_set_netmask(PHY_IF_NAME, inet_addr("255.255.0.0"));
+        net_set_ifaddr(PHY_ETH_NAME, inet_addr("192.168.254.254"));
+        net_set_netmask(PHY_ETH_NAME, inet_addr("255.255.0.0"));
         net_set_gateway(inet_addr("192.168.254.1"));
       }
     } else {
       if (ip_addr_ != ip) {
-        netmask_  = net_get_netmask(PHY_IF_NAME);
+        netmask_  = net_get_netmask(PHY_ETH_NAME);
         gateway_  = net_get_gateway();
         dns_addr_ = net_get_dns();
 
         unsigned char smac[20] = {0};
-        net_get_hwaddr(PHY_IF_NAME, smac); 
+        net_get_hwaddr(PHY_ETH_NAME, smac);
         phy_mac_ = (char*)smac;
       }
       ip_addr_ = ip;
@@ -100,6 +108,7 @@ void CNetCtrl::OnMessage(vzbase::Message* msg) {
       } else {
         // ÉÁµÆÆµÂÊ 1000ms
         if ((++i % 5) == 0) {
+
         }
       }
     }
@@ -161,80 +170,73 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
   return 0;
 }
 
-bool CNetCtrl::IpAddrCompare(const char *ip_addr) {
-  return true;
-}
-
-bool CNetCtrl::NetmaskCompare(const char *netmask) {
-  return true;
-}
-
-bool CNetCtrl::GatewayCompare(const char *gateway) {
-  return true;
-}
-
-bool CNetCtrl::DnsAddrCompare(const char *dns_addr) {
-  return true;
-}
-
 bool CNetCtrl::ModityNetwork(const Json::Value &jnet) {
-  const char *phy_addr = PHY_ETH_NAME;
+#ifdef _LINUX
+  net_nic_up(PHY_ETH_NAME);
+#endif
+
   if (1 == jnet["dhcp_en"].asInt()) {
-    system("udhcpc -i eth0 &");
+    my_system("udhcpc -i eth0");
     return true;
+  } else {
+    my_system("killall udhcpc");
   }
-  
-  bool addr_modity = false;
 
-  std::string ip_addr = jnet["ip_addr"].asString();
-  if (!IpAddrCompare(ip_addr.c_str())) {
-    addr_modity = true;
+  std::string ss;
+  bool addr_modify = false;
 
+  ss = jnet["ip_addr"].asString();
+  in_addr_t ip_addr = inet_addr(ss.c_str());
+  if (ip_addr_ != ip_addr) {
+    addr_modify = true;
+    ip_addr_ = ip_addr;
 #ifdef _WIN32
-    LOG(L_WARNING) << "set ip addr " << ip_addr;
+    LOG(L_WARNING) << "set ip addr " << ss;
 #else
-    net_set_ifaddr(phy_addr, inet_addr(ip_addr.c_str());
+    net_set_ifaddr(PHY_ETH_NAME, ip_addr_);
 #endif
   }
 
+  ss = jnet["netmask"].asString();
+  in_addr_t netmask = inet_addr(ss.c_str());
   if (netmask_ != netmask) {
+    addr_modify = true;
     netmask_ = netmask;
 #ifdef _WIN32
-    LOG(L_WARNING) << "set netmask "
-                   << inet_ntoa(*((struct in_addr*)&netmask_));
+    LOG(L_WARNING) << "set netmask " << ss;
 #else
-    net_set_netmask(PHY_IF_NAME, netmask);
+    net_set_netmask(PHY_ETH_NAME, netmask);
 #endif
-    addr_modity = true;
   }
 
+  ss = jnet["gateway"].asString();
+  in_addr_t gateway = inet_addr(ss.c_str());
   if (gateway_ != gateway) {
+    addr_modify = true;
     gateway_ = gateway;
 #ifdef _WIN32
-    LOG(L_WARNING) << "set gateway "
-                   << inet_ntoa(*((struct in_addr*)&gateway_));
+    LOG(L_WARNING) << "set gateway " << ss;
 #else
     net_clean_gateway();
     net_set_gateway(gateway);
 #endif
-    addr_modity = true;
   }
 
-  if (dns_addr_ != dns) {
-    dns_addr_ = dns;
+  ss = jnet["dns_addr"].asString();
+  in_addr_t dns_addr = inet_addr(ss.c_str());
+  if (dns_addr_ != dns_addr) {
+    dns_addr_ = dns_addr;
 #ifdef _WIN32
-    LOG(L_WARNING) << "set dns_1 "
-                   << inet_ntoa(*((struct in_addr*)&dns_addr_));
+    LOG(L_WARNING) << "set dns_1 " << ss;
 #else
     net_set_dns(inet_ntoa(*((struct in_addr*)&dns_addr_)));
 #endif
-    addr_modity = true;
   }
 
-  if (addr_modity) {
+  if (addr_modify) {
     DpClient_SendDpMessage(MSG_ADDR_CHANGE, 0, NULL, 0);
   }
-  return addr_modity;
+  return addr_modify;
 }
 
 }  // namespace sys

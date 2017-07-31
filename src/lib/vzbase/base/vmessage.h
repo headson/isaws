@@ -20,8 +20,10 @@
 #define DEF_WEB_SRV_PORT      8000
 #ifdef WIN32
 #define DEF_WEB_SRV_PATH      "c:\\tools\\web"
+#define LOG_WEB_SRV_PATH      "c:\\tools\\log"
 #else
 #define DEF_WEB_SRV_PATH      "./web"
+#define LOG_WEB_SRV_PATH      "./log"
 #endif
 
 #define DEF_MCAST_IP          "228.5.6.2"

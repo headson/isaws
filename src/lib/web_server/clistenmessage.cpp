@@ -6,15 +6,14 @@
 #include "vzbase/helper/stdafx.h"
 
 #include "json/json.h"
+#include "vzbase/base/vmessage.h"
 
 namespace web {
 
-static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
-  "TEST_MSG_TYPE_01",
-  "TEST_MSG_TYPE_02",
-  "TEST_MSG_TYPE_03",
+  MSG_ADDR_CHANGE
 };
+static int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
 
 CListenMessage::CListenMessage()
   : p_dp_cli_(NULL)
@@ -30,12 +29,13 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start(unsigned short  n_http_port,
-                           const char     *s_http_path) {
+bool CListenMessage::Start(unsigned short  n_web_port,
+                           const char     *s_web_path,
+                           const char     *s_log_path) {
   bool b_ret = false;
   char s_port[9] = {0};
-  snprintf(s_port, 8, "%d", n_http_port);
-  b_ret = c_web_srv_.Start(s_http_path, s_port);
+  snprintf(s_port, 8, "%d", n_web_port);
+  b_ret = c_web_srv_.Start(s_web_path, s_log_path, s_port);
   if (b_ret == false) {
     LOG(L_ERROR) << "start web server failed.";
     exit(EXIT_FAILURE);

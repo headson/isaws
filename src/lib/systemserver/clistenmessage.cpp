@@ -69,10 +69,7 @@ bool CListenMessage::Start() {
     LOG(L_ERROR) << "net ctrl start failed.";
     return false;
   }
-  net_ctrl_->ModityNetwork(inet_addr(hw_json_["net"]["ip_addr"].asCString()),
-                    inet_addr(hw_json_["net"]["netmask"].asCString()),
-                    inet_addr(hw_json_["net"]["gateway"].asCString()),
-                    inet_addr(hw_json_["net"]["dns_addr"].asCString()));
+  net_ctrl_->ModityNetwork(hw_json_["net"]);
 
   // hw clock
   hw_clock_ = CHwclock::Create(thread_slow_);

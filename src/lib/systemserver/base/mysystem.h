@@ -5,12 +5,14 @@
 #ifndef _MYSYSTEM_H_
 #define _MYSYSTEM_H_
 
+#include <stdio.h>
+
 int my_system(const char * cmd) {
   if (cmd == NULL) {
     printf("my_system cmd is NULL!\n");
     return -1;
   }
-
+#ifdef _LIMUX
   FILE * fp;
   if ((fp = popen(cmd, "r")) != NULL) {
     int res;
@@ -24,14 +26,15 @@ int my_system(const char * cmd) {
       return res;
     } else if (res == 0) {
       return res;
-    } else {
-      printf("popen res is :%d\n", res);
-      return res;
     }
+    printf("popen res is :%d\n", res);
+    return res;
   }
 
   perror("popen");
-  printf("popen error: %s/n", strerror(errno));
+  printf("popen error: %s error %s./n",
+         cmd, strerror(errno));
+#endif  // _LIMUX
   return -1;
 }
 

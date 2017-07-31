@@ -36,23 +36,28 @@
       </tr>
 
       <tr>
+        <th align="left"><label>安装地址:</label></th>
+        <th><input type="text" class="formText" id="ins_addr" /></th>
+      </tr>
+
+      <tr>
         <th align="left"><label>软件版本:</label></th>
-        <th><input type="text" class="formText" id="sw_ver" /></th>
+        <th><input type="text" class="formText" id="sw_version" /></th>
       </tr>
 
       <tr>
         <th align="left"><label>硬件版本:</label></th>
-        <th><input type="text" class="formText" id="hw_ver" /></th>
+        <th><input type="text" class="formText" id="hw_version" /></th>
       </tr>
 
       <tr>
         <th align="left"><label>算法版本:</label></th>
-        <th><input type="text" class="formText" id="iva_ver" /></th>
+        <th><input type="text" class="formText" id="alg_version" /></th>
       </tr>
 
       <tr>
         <th align="left"><label>WEB端口:</label></th>
-        <th><input type="text" class="formText" id="web_port" /></th>
+        <th><input type="text" class="formText" id="http_port" /></th>
       </tr>
 
       <tr>
@@ -117,28 +122,32 @@
         success: function (ajaxdata) {
           var jresp = eval('(' + ajaxdata + ')');
           if (jresp.state == 200) {
-            $('#dev_name').val(jresp.body.dev_name);
+            $('#dev_name').val(Utf8.decode(Base64.decode(jresp.body.dev_name)));
             $('#dev_type').val(jresp.body.dev_type);
-            $('#sw_ver').val(jresp.body.sw_ver);
-            $('#hw_ver').val(jresp.body.hw_ver);
-            $('#iva_ver').val(jresp.body.iva_ver);
-            $('#web_port').val(jresp.body.web_port);
-            $('#rtsp_port').val(jresp.body.rtsp_port);
+            $('#ins_addr').val(Utf8.decode(Base64.decode(jresp.body.ins_addr)));
+
+            $('#sw_version').val(jresp.body.sw_version);
+            $('#hw_version').val(jresp.body.hw_version);
+            $('#alg_version').val(jresp.body.alg_version);
+
+            $('#http_port').val(jresp.body.net.http_port);
+            $('#rtsp_port').val(jresp.body.net.rtsp_port);
             $('#disk_size').val(jresp.body.disk_size);
-            if (jresp.body.dhcp_en == 1) {
+
+            if (jresp.body.net.dhcp_en == 1) {
               $('#dhcp_en').attr('checked', 'true');
             } else {
               $('#dhcp_en').attr('checked', 'false');
             }
-            $('#ip_addr').val(jresp.body.ip_addr);
-            $('#netmask').val(jresp.body.netmask);
-            $('#gateway').val(jresp.body.gateway);
-            $('#dns_addr').val(jresp.body.dns_addr);
-            $('#phy_mac').val(jresp.body.phy_mac);
+            $('#ip_addr').val(jresp.body.net.ip_addr);
+            $('#netmask').val(jresp.body.net.netmask);
+            $('#gateway').val(jresp.body.net.gateway);
+            $('#dns_addr').val(jresp.body.net.dns_addr);
+            $('#phy_mac').val(jresp.body.net.phy_mac);
           } else {
             alert('获取设备参数错误!');
           }
-        },
+        }
       });
     }
 
@@ -147,24 +156,28 @@
       req.cmd = 'set_devinfo';
       req.id = 1;
       req.body = {};
-      req.body.dev_name = $('#dev_name').val();
+      req.body.dev_name = Base64.encode(Utf8.encode($('#dev_name').val()));
       req.body.dev_type = parseInt($('#dev_type').val());
-      //req.body.sw_ver = $('#sw_ver').val();
-      //req.body.hw_ver = $('#hw_ver').val();
-      //req.body.iva_ver = $('#iva_ver').val();
-      req.body.web_port = parseInt($('#web_port').val());
-      req.body.rtsp_port = parseInt($('#rtsp_port').val());
+      req.body.ins_addr = Base64.encode(Utf8.encode($('#ins_addr').val()));
+
+      //req.body.sw_version = $('#sw_version').val();
+      //req.body.hw_version = $('#hw_version').val();
+      //req.body.alg_version = $('#alg_version').val();
+
+      req.body.net = {};
+      req.body.net.http_port = parseInt($('#http_port').val());
+      req.body.net.rtsp_port = parseInt($('#rtsp_port').val());
       //req.body.disk_size = $('#disk_size').val();
       if ($('#dhcp_en').attr('checked') == true) {
-        req.body.dhcp_en = 1;
+        req.body.net.dhcp_en = 1;
       } else {
-        req.body.dhcp_en = 0;
+        req.body.net.dhcp_en = 0;
       }
-      req.body.ip_addr = $('#ip_addr').val();
-      req.body.netmask = $('#netmask').val();
-      req.body.gateway = $('#gateway').val();
-      req.body.dns_addr = $('#dns_addr').val();
-      //req.body.phy_mac = $('#phy_mac').val();
+      req.body.net.ip_addr = $('#ip_addr').val();
+      req.body.net.netmask = $('#netmask').val();
+      req.body.net.gateway = $('#gateway').val();
+      req.body.net.dns_addr = $('#dns_addr').val();
+      //req.body.net.phy_mac = $('#phy_mac').val();
 
       var jsonstr = JSON.stringify(req);
       $.ajax({

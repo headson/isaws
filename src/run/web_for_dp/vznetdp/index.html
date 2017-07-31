@@ -645,6 +645,7 @@
                     for(var i = 0;i < jsondata.length;i++){
                         var str_p = "<p class='animated bounceInLeft'> [INFO] "+ get_time() +" "+ jsondata[i] +"</p>";
                         $("#log_container").prepend(str_p);
+						
                         var id = jsondata[i].id;
                         var method = jsondata[i].method;
                         var time = get_time();
