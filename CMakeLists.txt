@@ -62,8 +62,9 @@ ADD_SUBDIRECTORY(src/run/live_stream)
 ADD_SUBDIRECTORY(src/run/web_for_dp)
 
 IF(WIN32)
+#ADD_SUBDIRECTORY(src/lib/avplayer)
 ADD_SUBDIRECTORY(src/run/icamera)
-#ADD_SUBDIRECTORY(src/run/pc_manage)
+ADD_SUBDIRECTORY(src/run/pc_manage)
 ENDIF()
 ADD_SUBDIRECTORY(src/web)
 
