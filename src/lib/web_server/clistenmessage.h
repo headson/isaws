@@ -25,9 +25,7 @@ class CListenMessage : public vzbase::noncopyable,
 public:
   static CListenMessage *Instance();
 
-  bool  Start(unsigned short  n_web_port,
-              const char     *s_web_path,
-              const char     *s_log_path);
+  bool  Start(unsigned short n_web_port, const char *s_web_path);
   void  Stop();
 
   void  RunLoop();

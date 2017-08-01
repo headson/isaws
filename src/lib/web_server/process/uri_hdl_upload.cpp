@@ -25,70 +25,6 @@ extern "C" {
 #define UPLOAD_FILENAME "/tmp/upload.tar.gz"
 #endif
 
-void file_remove(const char *filename) {
-  char scmd[256] = {0};
-  snprintf(scmd, 1023,
-           "rm -rf /tmp/bak; rm %s",
-           filename);
-
-  LOG(L_INFO) << scmd;
-  vzbase::my_system(scmd);
-}
-
-int uncompress(const char *filename) {
-  int nret = -3;
-
-  // uncompress
-  char scmd[256] = { 0 };
-  snprintf(scmd, 255,
-           "mkdir /tmp/bak;tar -zxf %s -C /tmp/bak",
-           filename);
-  LOG(L_INFO) << scmd;
-  if (vzbase::my_system(scmd)) {
-    LOG(L_ERROR) << "uncompress failed.";
-    return -1;
-  }
-
-  //update.sh
-  FILE* file = fopen("/tmp/bak/update.sh", "r");
-  if (file) {
-    memset(scmd, 0, 255);
-    if (fgets(scmd, 255, file) != NULL) {
-      std::string shw, suid;
-      vzbase::get_hardware(shw, suid);
-      int bcmp = strncmp(shw.c_str(), scmd, shw.size());
-      LOG(L_INFO) << "shw " << shw
-        << " scmd " << scmd << " cmp " << bcmp;
-      if (0 == bcmp) {
-        char *pcmd = NULL;
-        do {
-          memset(scmd, 0, 255);
-          char *pcmd = fgets(scmd, 255, file);
-          if (pcmd != NULL) {
-            
-            if (!vzbase::my_system(scmd)) {
-              LOG(L_INFO) <<"success " << scmd;
-              nret = 0;
-            } else {
-              LOG(L_ERROR) <<"failed " << scmd;
-            }
-          } else {
-            break;
-          }
-        } while (true);
-      } else {
-        LOG(L_ERROR) << "check hareware failed.\n";
-        nret = -2;
-      }
-    }
-
-    fclose(file);
-  }
-
-  vzbase::my_system("sync");
-  return nret;
-}
-
 void uri_hdl_upload(struct mg_connection *nc, int ev, void *p) {
   file_writer_data *data = (file_writer_data*)nc->user_data;
   struct mg_http_multipart_part *mp = (struct mg_http_multipart_part *) p;
@@ -127,8 +63,8 @@ void uri_hdl_upload(struct mg_connection *nc, int ev, void *p) {
       fclose(data->fp);
 
       // 处理接收完成
-      int nret = uncompress(UPLOAD_FILENAME);
-      file_remove(UPLOAD_FILENAME);
+      int nret = vzbase::update_file_uncompress(UPLOAD_FILENAME);
+      vzbase::file_remove(UPLOAD_FILENAME);
 
       char *pret = "upload success.";
       if (nret == -1) {

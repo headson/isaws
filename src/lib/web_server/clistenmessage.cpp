@@ -29,13 +29,11 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start(unsigned short  n_web_port,
-                           const char     *s_web_path,
-                           const char     *s_log_path) {
+bool CListenMessage::Start(unsigned short  n_web_port, const char *s_web_path) {
   bool b_ret = false;
   char s_port[9] = {0};
   snprintf(s_port, 8, "%d", n_web_port);
-  b_ret = c_web_srv_.Start(s_web_path, s_log_path, s_port);
+  b_ret = c_web_srv_.Start(s_web_path, s_port);
   if (b_ret == false) {
     LOG(L_ERROR) << "start web server failed.";
     exit(EXIT_FAILURE);

@@ -39,9 +39,7 @@ CWebServer::~CWebServer() {
   Stop();
 }
 
-bool CWebServer::Start(const char *s_web_path,
-                       const char *s_log_path,
-                       const char *s_http_port) {
+bool CWebServer::Start(const char *s_web_path, const char *s_http_port) {
   mg_mgr_init(&c_web_srv_, this);
   p_web_conn_ = mg_bind(&c_web_srv_, (char*)s_http_port, web_ev_handler);
   if (p_web_conn_ == NULL) {
@@ -52,12 +50,10 @@ bool CWebServer::Start(const char *s_web_path,
   register_http_endpoint(p_web_conn_);
   // Set up HTTP server parameters
   mg_set_protocol_http_websocket(p_web_conn_);
-
-  s_web_log_opts_.document_root = (char*)s_log_path;
-  s_web_log_opts_.enable_directory_listing = "yes";
-
+  
   s_web_def_opts_.document_root = (char*)s_web_path;
   s_web_def_opts_.enable_directory_listing = "yes";
+  s_web_def_opts_.index_files = "index.html";
 
   // mg_set_timer(p_web_conn_, mg_time() + SESSION_CHECK_INTERVAL);
 
@@ -75,7 +71,8 @@ void CWebServer::Stop() {
     b_runing_ = false;
     p_web_thread_->Release();
     p_web_thread_ = NULL;
-
+    
+    usleep(1000*1000);
     mg_mgr_free(&c_web_srv_);
   }
 }
@@ -93,20 +90,10 @@ void CWebServer::Broadcast(const void* p_data, unsigned int n_data) {
   }
 }
 
-static void ev_http_request(struct mg_connection *nc, int ev, void *ev_data) {
-  struct http_message *hm = (struct http_message *) ev_data;
-
-  if (mg_vcmp(&hm->uri, "/syslog") == 0) {
-    mg_serve_http(nc, (struct http_message*)ev_data, s_web_log_opts_);
-  } else {
-    mg_serve_http(nc, (struct http_message*)ev_data, s_web_def_opts_);
-  }
-}
-
 void CWebServer::web_ev_handler(struct mg_connection *nc, int ev, void *ev_data) {
   switch (ev) {
   case MG_EV_HTTP_REQUEST:
-    ev_http_request(nc, ev, ev_data);
+    mg_serve_http(nc, (struct http_message*)ev_data, s_web_def_opts_);
     break;
 
   case MG_EV_CLOSE:

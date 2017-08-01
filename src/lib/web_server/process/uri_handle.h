@@ -69,18 +69,14 @@ extern void uri_hdl_user_del(struct mg_connection *nc, int ev, void *ev_data);
 // 用户修改
 extern void uri_hdl_user_cfg(struct mg_connection *nc, int ev, void *ev_data);
 
-///时间配置////////////////////////////////////////////////////////////////
-// 手动矫正时间
-extern void uri_hdl_time_cfg(struct mg_connection *nc, int ev, void *ev_data);
-
 ///转发///////////////////////////////////////////////////////////////////
 extern void uri_hdl_dispatch(struct mg_connection *nc, int ev, void *ev_data);
 
 ///上传///////////////////////////////////////////////////////////////////////
-extern void uri_hdl_upload(struct mg_connection *nc, int ev, void *p);
+extern void uri_hdl_upload(struct mg_connection *nc, int ev, void *ev_data);
 
 ///HTTP_FLV///////////////////////////////////////////////////////////////////
-extern void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *p);
+extern void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *ev_data);
 extern void url_hdl_httpflv_release(struct mg_connection *nc);
 
 #ifdef __cplusplus
