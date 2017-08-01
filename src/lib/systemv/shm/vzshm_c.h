@@ -25,24 +25,24 @@
 #define SHM_HEAD_SIZE     128
 
 class CShareBuffer {
-public:
+ public:
   typedef struct {
-    unsigned int  n_w_sec;        // 写秒
-    unsigned int  n_w_usec;       // 写微妙
+    unsigned int  w_sec;        // 写秒
+    unsigned int  w_usec;       // 写微妙
 
-    unsigned int  n_width;
-    unsigned int  n_height;
+    unsigned int  width;
+    unsigned int  height;
 
-    unsigned int  n_head_1;       // SPS长度
-    unsigned int  n_head_2;       // PPS长度
-    unsigned char s_head[SHM_HEAD_SIZE]; // SPS_PPS
+    unsigned int  head_1;       // SPS长度
+    unsigned int  head_2;       // PPS长度
+    unsigned char shead[SHM_HEAD_SIZE]; // SPS_PPS
 
-    unsigned int  n_size;         // 数据buffer长度
-    unsigned int  n_data;         // 写长度
-    unsigned char p_data[0];      // 数据指针
+    unsigned int  nsize;         // 数据buffer长度
+    unsigned int  ndata;         // 写长度
+    unsigned char pdata[0];      // 数据指针
   } TAG_SHM_VDO;
 
-public:
+ public:
   CShareBuffer();
   ~CShareBuffer();
 
@@ -55,6 +55,10 @@ public:
   int Read(char* p_data, unsigned int n_data,
            unsigned int *n_sec, unsigned int *n_usec);
 
+  int ReadH264(char* p_data, unsigned int n_data,
+               unsigned int *n_sec, unsigned int *n_usec);
+
+  //////////////////////////////////////////////////////////////////////////
   int WriteSps(const char *p_data, unsigned int n_data);
   int WritePps(const char *p_data, unsigned int n_data);
 
@@ -65,7 +69,7 @@ public:
   void SetWidth(unsigned int w);
   void SetHeight(unsigned int h);
 
-private:
+ private:
   HANDLE        hdl_shm_;
   void         *mem_ptr_;
 

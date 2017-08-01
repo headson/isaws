@@ -13,21 +13,17 @@ enum FlvTagType {
 
 class CFlvMux {
  public:
-  static char *Packet(char *p_dst,
-                      const char *p_head, int n_head,
-                      const char *p_data, int n_data,
-                      int type, unsigned int timestamp);
+  int HeaderAndMetaDataTag(char *p_dst,
+                             int width, int height,
+                             int audiodatarate, int audiosamplerate, int audiosamplesize, int audiochannels);
 
-
-  static char *HeaderAndMetaDataTag(char *p_dst,
-                                    int width, int height,
-                                    int audiodatarate, int audiosamplerate, int audiosamplesize, int audiochannels);
-
-  static int   VdoHeadSize() {
+  int VdoHeadSize() {
     return 20;
   }
-  static char *PacketVideo(char *p_dst, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp);
-  static char *PacketAudio(char *p_dst, char *p_ado, int n_ado, unsigned int timestamp);
+
+  int MakeVideoTag0(char *p_dst);
+  int PacketVideo(char *p_dst, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp);
+  //char *PacketAudio(char *p_dst, char *p_ado, int n_ado, unsigned int timestamp);
 
  public:
   CFlvMux();

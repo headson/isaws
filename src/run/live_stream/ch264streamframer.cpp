@@ -35,11 +35,9 @@ void CH264VideoStreamFramer::doGetNextFrame() {
 
   int n_r_size = 0;
   if (shm_vdo_) {
-    int sps_size = 0, pps_size = 0;
-    n_r_size = shm_vdo_->ReadHead((char*)fTo, fMaxSize, &sps_size, &sps_size);
-    n_r_size = shm_vdo_->Read((char*)fTo+n_r_size, fMaxSize-n_r_size,
-                        (unsigned int*)&c_tm_capture_.tv_sec,
-                        (unsigned int*)&c_tm_capture_.tv_usec);
+    n_r_size = shm_vdo_->ReadH264((char*)fTo+n_r_size, fMaxSize-n_r_size,
+                                  (unsigned int*)&c_tm_capture_.tv_sec,
+                                  (unsigned int*)&c_tm_capture_.tv_usec);
   }
   if (n_r_size < 0) {
     n_r_size = 0;

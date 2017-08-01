@@ -61,27 +61,27 @@ unsigned int u(unsigned int BitCount, char *buf,unsigned int &nStartBit) {
 *              nal_start[OUT] nal前置长度
 *Return      : nal包含nal_start起始指针
 ************************************************************************/
-char *nal_split(const char *ppkg, unsigned int npkg, int *frm_type, int *nal_start) {
-  int   zero_count = 0;    // 0x00 个数
-  char *pnal = const_cast<char*>(ppkg);
+char *nal_split(const char *ph264, int nh264, int *frm_type, int *nal_start) {
+  int   n_0_cnt = 0;    // 0x00 个数
+  char *p_nal = const_cast<char*>(ph264);
   while (true) {
-    if ((pnal + 1) > (ppkg + npkg)) {
+    if ((p_nal + 1) > (ph264 + nh264)) {
       return NULL;
     }
 
-    if (*pnal == 0x01 && zero_count >= 2) {
-      pnal -= zero_count;
-      *frm_type = pnal[zero_count + 1] & 0x1f;
-      *nal_start = zero_count + 1;
-      return pnal;
+    if (*p_nal == 0x01 && n_0_cnt >= 2) {
+      p_nal -= n_0_cnt;
+      *frm_type = p_nal[n_0_cnt + 1] & 0x1f;
+      *nal_start = n_0_cnt + 1;
+      return p_nal;
     }
 
-    if (*pnal == 0x00) {
-      zero_count++;
+    if (*p_nal == 0x00) {
+      n_0_cnt++;
     } else {
-      zero_count = 0;
+      n_0_cnt = 0;
     }
-    pnal++;
+    p_nal++;
   }
   return NULL;
 }
