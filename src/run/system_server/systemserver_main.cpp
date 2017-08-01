@@ -13,10 +13,6 @@ void SignalHandle(int n_sig) {
 }
 
 int main(int argc, char *argv[]) {
-  signal(SIGINT,  SignalHandle);
-  signal(SIGTERM, SignalHandle);
-  //signal(SIGKILL, SignalHandle);
-
   InitVzLogging(argc, argv);
 #ifdef _WIN32
   ShowVzLoggingAlways();

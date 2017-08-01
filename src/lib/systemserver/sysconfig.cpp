@@ -13,17 +13,21 @@
 #include "vzbase/base/helper.h"
 #include "vzbase/base/base64.h"
 
+#include "vzbase/base/mysystem.h"
+
 namespace sys {
+
+#ifdef _WIN32
+#define SYS_CFG_PATH  "./system.json"
+#else  // _LINUX
+#define SYS_CFG_PATH  "/mnt/etc/system.json"
+#endif
 
 void CListenMessage::GetHwInfo() {
   Json::Reader jread;
 
   std::ifstream ifs;
-#ifdef _WIN32
-  ifs.open("./system.json");
-#else
-  ifs.open("/mnt/etc/system.json");
-#endif
+  ifs.open(SYS_CFG_PATH);
   if (!ifs.is_open() ||
       !jread.parse(ifs, hw_json_)) {
     LOG(L_ERROR) << "system json parse failed. create the default config";
@@ -31,7 +35,6 @@ void CListenMessage::GetHwInfo() {
     // 生成默认参数
     hw_json_["dev_name"] = "PC_001";
     hw_json_["dev_type"] = 100100;
-    hw_json_["dev_uuid"] = "PC000120170731184822";
     hw_json_["ins_addr"] = "";
     hw_json_["sw_version"] = "1.0.0.1001707310";
     hw_json_["hw_version"] = "1.0.0.1001707310";
@@ -62,6 +65,11 @@ void CListenMessage::GetHwInfo() {
   }
 
   // dev uuid\mac
+  std::string shw = "";
+  std::string suid = "";
+  vzbase::get_hardware(shw, suid);
+  hw_json_["dev_uuid"] = suid;
+  hw_json_["hw_version"] = shw;
 
   // save size
 
@@ -198,8 +206,10 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
     return true;
   }
 
-  FILE *file = fopen("./system.json", "wt+");
+  FILE *file = fopen(SYS_CFG_PATH, "wt+");
   if (file) {
+    hw_json_.removeMember("dev_uuid");
+    hw_json_.removeMember("hw_version");
     std::string ss = hw_json_.toStyledString();
 
     fwrite(ss.c_str(), 1, ss.size(), file);

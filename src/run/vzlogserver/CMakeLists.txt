@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 #########################################################################
 
 # Basic environment setting
-SET(BUILD_PROJECT_NAME "vzlogserverapp")
+SET(BUILD_PROJECT_NAME "watchdog")
 
 #########################################################################
 #INCLUDE_DIRECTORIES(${LIBVZNET_INCLUDE_DIR})

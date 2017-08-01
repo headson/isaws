@@ -9,7 +9,7 @@
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
 
-#include "systemserver/base/mysystem.h"
+#include "vzbase/base/mysystem.h"
 #include "systemserver/clistenmessage.h"
 
 namespace sys {
@@ -171,15 +171,18 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
 }
 
 bool CNetCtrl::ModityNetwork(const Json::Value &jnet) {
+  std::string snet = jnet.toStyledString();
+  LOG(L_INFO) << snet;
+
 #ifdef _LINUX
   net_nic_up(PHY_ETH_NAME);
 #endif
 
   if (1 == jnet["dhcp_en"].asInt()) {
-    my_system("udhcpc -i eth0");
+    vzbase::my_system("udhcpc -i eth0 &");
     return true;
   } else {
-    my_system("killall udhcpc");
+    vzbase::my_system("killall udhcpc");
   }
 
   std::string ss;

@@ -16,6 +16,17 @@ namespace web {
 static struct mg_serve_http_opts s_web_def_opts_;
 static struct mg_serve_http_opts s_web_log_opts_;
 
+/************************************************************************/
+/* Description : ×¢²á´¦Àíº¯Êý
+/* Parameters  :
+/* Return      :
+/************************************************************************/
+static void register_http_endpoint(struct mg_connection *nc) {
+  mg_register_http_endpoint(nc, "/login_req",     uri_hdl_login);
+  mg_register_http_endpoint(nc, "/upload",        uri_hdl_upload);
+  mg_register_http_endpoint(nc, "/httpflv",       uri_hdl_httpflv);
+  mg_register_http_endpoint(nc, "/dispatch",      uri_hdl_dispatch);
+}
 CWebServer::CWebServer()
   : vzbase::Runnable()
   , c_web_srv_()
@@ -38,6 +49,7 @@ bool CWebServer::Start(const char *s_web_path,
     return false;
   }
 
+  register_http_endpoint(p_web_conn_);
   // Set up HTTP server parameters
   mg_set_protocol_http_websocket(p_web_conn_);
 
@@ -84,15 +96,7 @@ void CWebServer::Broadcast(const void* p_data, unsigned int n_data) {
 static void ev_http_request(struct mg_connection *nc, int ev, void *ev_data) {
   struct http_message *hm = (struct http_message *) ev_data;
 
-  if (mg_vcmp(&hm->uri, "/login_req") == 0) {
-    uri_hdl_login(nc, ev, ev_data);
-  } else if (mg_vcmp(&hm->uri, "/dispatch") == 0) {
-    uri_hdl_dispatch(nc, ev, ev_data);
-  } else if (mg_vcmp(&hm->uri, "/httpflv") == 0) {
-    uri_hdl_httpflv(nc, ev, ev_data);
-  } else if (mg_vcmp(&hm->uri, "/upload") == 0) {
-    uri_hdl_upload(nc, ev, ev_data);
-  } else if (mg_vcmp(&hm->uri, "/syslog") == 0) {
+  if (mg_vcmp(&hm->uri, "/syslog") == 0) {
     mg_serve_http(nc, (struct http_message*)ev_data, s_web_log_opts_);
   } else {
     mg_serve_http(nc, (struct http_message*)ev_data, s_web_def_opts_);

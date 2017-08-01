@@ -29,24 +29,33 @@ endforeach()
 
 #########################################################################
 #Step 3 : Add code source
+IF(WIN32)
+	SET(WIN32_LOAD_FILE
+		${CMAKE_CURRENT_SOURCE_DIR}/index.html
+		${CMAKE_CURRENT_SOURCE_DIR}/main.html
+	
+		${CMAKE_CURRENT_SOURCE_DIR}/page/preview.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/pc_year.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/pc_month.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/pc_day.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/log_view_real.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/log_download.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_vdo_enc.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_http_send.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_set_time.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_valid_time.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_reset.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_devinfo.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_dev_update.html
+	)
+ELSEIF()
+	SET(WIN32_LOAD_FILE
+	)
+ENDIF()
+
 SET(SRC_LIST 
-	${CMAKE_CURRENT_SOURCE_DIR}/index.html
-	${CMAKE_CURRENT_SOURCE_DIR}/main.html
-	
-	${CMAKE_CURRENT_SOURCE_DIR}/page/preview.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/pc_year.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/pc_month.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/pc_day.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/log_view_real.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/log_download.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_vdo_enc.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_upload_srv.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_set_time.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_valid_time.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_reset.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_devinfo.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_dev_update.html
-	
+	${WIN32_LOAD_FILE}
+
 	${CMAKE_CURRENT_SOURCE_DIR}/web_main.cpp
 )
 
@@ -54,6 +63,7 @@ SOURCE_GROUP(main FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/web_main.cpp
 )
 
+IF(WIN32)
 SOURCE_GROUP(main_html FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/index.html
 	${CMAKE_CURRENT_SOURCE_DIR}/main.html
@@ -67,13 +77,14 @@ SOURCE_GROUP(page_html FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/page/log_view_real.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/log_download.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_vdo_enc.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_upload_srv.html
+	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_http_send.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_set_time.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_valid_time.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_reset.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_devinfo.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_dev_update.html
 )
+ENDIF()
 
 #########################################################################
 #Step 4 : Add PROJECT define 

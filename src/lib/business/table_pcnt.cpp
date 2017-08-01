@@ -3,6 +3,9 @@
 /* Description :
 /************************************************************************/
 #include "cdatabase.h"
+
+#include <string.h>
+
 #include "vzbase/helper/stdafx.h"
 
 #include "alg/basedefine.h"

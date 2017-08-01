@@ -130,7 +130,7 @@ REOPEN:
     }
     yuv_osd(nColor, (unsigned char*)v4l2_.sBuffer[v4l_buf.index].start,
             vpu_.nWidth, vpu_.nHeight,
-            (char*)vzbase::TimeToString(nTmNow).c_str(),
+            (char*)vzbase::SecToString(nTmNow).c_str(),
             nScale, asc8, 10, 10);
 
     // resize image

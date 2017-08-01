@@ -241,7 +241,7 @@ uint32 ToTimet(int32 year, int32 month, int32 day,
 }
 
 #ifdef __cplusplus
-std::string ToString(uint32 sec) {
+std::string SecToString(uint32 sec) {
   char str[32] = {0};
 
   struct tm* ptm;

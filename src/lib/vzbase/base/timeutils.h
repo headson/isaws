@@ -108,7 +108,7 @@ namespace vzbase {
                  int32 hour, int32 minute, int32 second);
 
 #ifdef __cplusplus
-  std::string ToString(uint32 sec);
+  std::string SecToString(uint32 sec);
 
   int32       GetMonthOfDays(int32 ny, int32 month);
 #endif
