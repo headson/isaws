@@ -168,7 +168,9 @@
       req.body.net.http_port = parseInt($('#http_port').val());
       req.body.net.rtsp_port = parseInt($('#rtsp_port').val());
       //req.body.disk_size = $('#disk_size').val();
-      if ($('#dhcp_en').attr('checked') == true) {
+
+      var hasChk = $('#dhcp_en').is(':checked');
+      if (hasChk) {
         req.body.net.dhcp_en = 1;
       } else {
         req.body.net.dhcp_en = 0;

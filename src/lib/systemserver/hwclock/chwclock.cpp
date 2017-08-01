@@ -73,7 +73,7 @@ bool CHwclock::ResetHwclock(Json::Value &jbody) {
       if ((now = mktime(tm)) >= 0) {
 #ifndef _WIN32
         stime(&now);
-        system("hwclock -uw");  // hwclock 还不能正常运行
+        system("hwclock -uw");
 #endif  // _WIN32
 
         DpClient_SendDpMessage(MSG_TIME_CHANGE, 0,

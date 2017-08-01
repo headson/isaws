@@ -78,6 +78,7 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vtls.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vtls.cpp
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/base/mysystem.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vmessage.h
 
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
@@ -133,6 +134,7 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vtls.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vtls.cpp
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/base/mysystem.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vmessage.h
 )
 

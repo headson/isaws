@@ -18,7 +18,7 @@ namespace vzbase {
 extern "C" {
 #endif
 
-int my_system(const char * cmd) {
+inline int my_system(const char * cmd) {
   if (cmd == NULL) {
     printf("my_system cmd is NULL!\n");
     return -1;
@@ -63,7 +63,7 @@ int my_system(const char * cmd) {
   return -1;
 }
 
-void get_hardware(std::string &hw, std::string &uuid) {
+inline void get_hardware(std::string &hw, std::string &uuid) {
   static std::string shw = "";
   static std::string suid = "";
 

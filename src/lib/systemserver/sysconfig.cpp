@@ -153,22 +153,22 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
   }
 
   if (jbody["net"].isMember("ip_addr") &&
-      jbody["net"]["ip_addr"].isUInt() &&
-      hw_json_["net"]["ip_addr"].asUInt() != jbody["net"]["ip_addr"].asUInt()) {
+      jbody["net"]["ip_addr"].isString() &&
+      hw_json_["net"]["ip_addr"].asString() != jbody["net"]["ip_addr"].asString()) {
     bsave++;
     hw_json_["net"]["ip_addr"] = jbody["net"]["ip_addr"].asString();
   }
 
   if (jbody["net"].isMember("netmask") &&
-      jbody["net"]["netmask"].isUInt() &&
-      hw_json_["net"]["netmask"].asUInt() != jbody["net"]["netmask"].asUInt()) {
+      jbody["net"]["netmask"].isString() &&
+      hw_json_["net"]["netmask"].asString() != jbody["net"]["netmask"].asString()) {
     bsave++;
     hw_json_["net"]["netmask"] = jbody["net"]["netmask"].asString();
   }
 
   if (jbody["net"].isMember("gateway") &&
-      jbody["net"]["gateway"].isUInt() &&
-      hw_json_["net"]["gateway"].asUInt() != jbody["net"]["gateway"].asUInt()) {
+      jbody["net"]["gateway"].isString() &&
+      hw_json_["net"]["gateway"].asString() != jbody["net"]["gateway"].asString()) {
     bsave++;
     hw_json_["net"]["gateway"] = jbody["net"]["gateway"].asString();
   }
@@ -181,8 +181,8 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
   //}
 
   if (jbody["net"].isMember("dns_addr") &&
-      jbody["net"]["dns_addr"].isUInt() &&
-      hw_json_["net"]["dns_addr"].asUInt() != jbody["net"]["dns_addr"].asUInt()) {
+      jbody["net"]["dns_addr"].isString() &&
+      hw_json_["net"]["dns_addr"].asString() != jbody["net"]["dns_addr"].asString()) {
     bsave++;
     hw_json_["net"]["dns_addr"] = jbody["net"]["dns_addr"].asString();
   }
@@ -208,8 +208,6 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
 
   FILE *file = fopen(SYS_CFG_PATH, "wt+");
   if (file) {
-    hw_json_.removeMember("dev_uuid");
-    hw_json_.removeMember("hw_version");
     std::string ss = hw_json_.toStyledString();
 
     fwrite(ss.c_str(), 1, ss.size(), file);

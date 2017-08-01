@@ -33,6 +33,9 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.h
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.cpp
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/module/cmodulecontrol.h
+	${CMAKE_CURRENT_SOURCE_DIR}/module/cmodulecontrol.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/sysconfig.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
@@ -45,6 +48,11 @@ SOURCE_GROUP(base FILES
 SOURCE_GROUP(hwclock FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.h
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.cpp
+)
+
+SOURCE_GROUP(module FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/module/cmodulecontrol.h
+	${CMAKE_CURRENT_SOURCE_DIR}/module/cmodulecontrol.cpp
 )
 
 SOURCE_GROUP(network FILES

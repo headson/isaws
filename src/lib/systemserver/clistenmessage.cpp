@@ -13,13 +13,16 @@
 #include "vzbase/base/helper.h"
 #include "vzbase/base/base64.h"
 
+#include "systemserver/module/cmodulecontrol.h"
+
 namespace sys {
 
 static const char  *K_METHOD_SET[] = {
   MSG_GET_DEVINFO,
   MSG_SET_DEVINFO,
   MSG_ADDR_CHANGE,
-  MSG_SET_HWCLOCK
+  MSG_SET_HWCLOCK,
+  MSG_SYSTEM_UPDATE,
 };
 
 CListenMessage::CListenMessage()
@@ -130,13 +133,13 @@ void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl,
                                        const DpMessage *dmp,
                                        void* p_usr_arg) {
   if (p_usr_arg) {
-    ((CListenMessage*)p_usr_arg)->OnDpCliMsg(p_hdl, dmp);
+    ((CListenMessage*)p_usr_arg)->OnDpMessage(p_hdl, dmp);
     return;
   }
   LOG(L_ERROR) << "param is error.";
 }
 
-void CListenMessage::OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp) {
+void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
   std::string   sjson;
   sjson.append(dmp->data, dmp->data_size);
 
@@ -165,8 +168,21 @@ void CListenMessage::OnDpCliMsg(DPPollHandle p_hdl, const DpMessage *dmp) {
       jresp[MSG_BODY] = jbody;
       jresp[MSG_STATE] = RET_SUCCESS;
     }
+  } else if (0 == strncmp(dmp->method, MSG_ADDR_CHANGE, dmp->method_size)) {
+    CModuleMonitor::ReStartModule();
+  } else if (0 == strncmp(dmp->method, MSG_SYSTEM_UPDATE, dmp->method_size)) {
+    breply = true;
+    jresp[MSG_STATE] = RET_SUCCESS;
+    CModuleMonitor::StopSomeModule();
   } else if (0 == strncmp(dmp->method, MSG_SET_HWCLOCK, dmp->method_size)) {
     breply = true;
+    if (hw_clock_) {
+      if (hw_clock_->ResetHwclock(jreq[MSG_BODY])) {
+        jresp[MSG_STATE] = RET_SUCCESS;
+      }
+    } else {
+      jresp[MSG_STATE] = RET_ERROR_HDL;
+    }
   }
 
   if (breply) {
@@ -182,11 +198,11 @@ void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl,
     unsigned int n_state,
     void* p_usr_arg) {
   if (p_usr_arg) {
-    ((CListenMessage*)p_usr_arg)->OnDpCliState(p_hdl, n_state);
+    ((CListenMessage*)p_usr_arg)->OnDpState(p_hdl, n_state);
   }
 }
 
-void CListenMessage::OnDpCliState(DPPollHandle p_hdl, unsigned int n_state) {
+void CListenMessage::OnDpState(DPPollHandle p_hdl, unsigned int n_state) {
   if (n_state == DP_CLIENT_DISCONNECT) {
     int32 n_ret = DpClient_HdlReConnect(p_hdl);
     if (n_ret == VZNETDP_SUCCEED) {

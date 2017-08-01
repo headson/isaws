@@ -179,7 +179,7 @@ bool CNetCtrl::ModityNetwork(const Json::Value &jnet) {
 #endif
 
   if (1 == jnet["dhcp_en"].asInt()) {
-    vzbase::my_system("udhcpc -i eth0 &");
+    vzbase::my_system("killall udhcpc; udhcpc -i eth0 &");
     return true;
   } else {
     vzbase::my_system("killall udhcpc");

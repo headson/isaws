@@ -64,6 +64,7 @@ typedef enum _MSG_RET {
   RET_SUCCESS       = 200,
   RET_FAILED        = -1000,
   RET_JSON_PARSE,
+  RET_ERROR_HDL,
   RET_USERNAME,
   RET_PASSWORD,
   RET_DP_REPLY_FAILED,
@@ -89,9 +90,10 @@ typedef enum _MSG_RET {
 
 #define MSG_CATCH_EVENT       "catch_event"       // 算法事件
 
-
 #define MSG_GET_PCOUNTS       "get_pcounts"       // 获取客流量
 #define MSG_CLEAR_PCOUNT      "clear_pcount"      // 清空pcount数据库
+
+#define MSG_SYSTEM_UPDATE     "system_update"     // 系统升级
 
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_KEY_USER         "key_user"     // kvdb获取用户
