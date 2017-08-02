@@ -87,6 +87,16 @@ static void PrintUsage() {
   exit(1);
 }
 
+#ifdef _WIN32
+inline void usleep(unsigned int us) {
+  if (us < 1000) {
+    ::Sleep(1);
+  } else {
+    ::Sleep(us / 1000);
+  }
+}
+#endif
+
 /************************************************************************/
 int main(int argc, char* argv[]) {
 #ifdef WIN32
@@ -97,13 +107,16 @@ int main(int argc, char* argv[]) {
   srand((unsigned int)time(NULL));
   srandom((unsigned int)time(NULL));
 #endif
-  system("killall watchdog");
+  // system("killall watchdog");
+  system("killall feeddog");
+  usleep(1000);
 
   VZ_ERROR("applet compile time: %s %s\n", __TIME__, __DATE__);
   memset(k_pro_heart, 0, sizeof(k_pro_heart));
 
   int ret = 0;
   // 传参到客户端,日志上传等级,上传端口号
+  unsigned int  b_wait_20s  = 0;
   unsigned int  n_snd_level = 3;
   unsigned int  n_recv_port = DEF_SERVER_PORT;
   // 转发服务器地址;格式[IP:PORT]
@@ -111,8 +124,16 @@ int main(int argc, char* argv[]) {
   char          s_log_path[64] = { 0 };
   strncpy(s_log_path, DEF_RECORD_PATH, 64);  // 默认路径
 
+  int cmd = 0;
+  if (argc >= 2) {
+    sscanf(argv[1], "%d", &cmd);
+    if (cmd == 1) {
+      b_wait_20s = 1;
+    }
+  }
+
   int opt = 0;
-  while ((opt = getopt(argc, argv, "v:V:p:P:s:S:dDhHfF")) != -1) {
+  while ((opt = getopt(argc, argv, "v:V:p:P:s:S:dDhHfFwW")) != -1) {
     switch (opt) {
     case 'v':   // 配置网络输出级别
     case 'V':
@@ -150,6 +171,16 @@ int main(int argc, char* argv[]) {
   if (k_en_watchdog == false) {
     VZ_ERROR("close watchdog.\n");
   }
+
+  int i = 0;
+  if (b_wait_20s == 1) {
+    VZ_ERROR("wait some time.\n");
+    for (i = 0; i < 18*1000; i+=5) { // 18s
+      callback_feeddog();
+      usleep(5*1000);
+    }
+  }
+  VZ_ERROR("monitor all modules.\n");
 
   // 共享参数
   k_shm_arg.Open();
@@ -404,7 +435,36 @@ int callback_timeout() {
 }
 
 /*喂狗回调*/
+#ifndef _WIN32
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
+#include <linux/watchdog.h>
+#endif
+static int wdt_fd = 0;
+static int feed_times = 0;
 int callback_feeddog() {
+#ifndef _WIN32
+  if (wdt_fd <= 0) {
+    wdt_fd = open("/dev/watchdog", O_WRONLY);
+    if (wdt_fd < 0) {
+      perror("open device /dev/watchdog");
+      exit(1);
+    }
+
+    ioctl(wdt_fd, WDIOC_SETOPTIONS, WDIOS_ENABLECARD);
+    ioctl(wdt_fd, WDIOC_SETTIMEOUT, 6);
+  }
+
+  if (wdt_fd > 0) {
+    feed_times += 5;  // 5ms
+    if (feed_times >= 1000) {   // 1S
+      feed_times = 0;
+      ioctl(wdt_fd, WDIOC_KEEPALIVE, 1);
+    }
+  }
+#endif
   return 0;
 }
 

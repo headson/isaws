@@ -112,7 +112,7 @@ void CHwclock::OnMessage(vzbase::Message* msg) {
     }
   }
 
-  if (thread_slow_) {
+  if (thread_slow_ && ntp_enable_) {
     thread_slow_->PostDelayed(30*60*1000, this);  // 30min
   }
 }

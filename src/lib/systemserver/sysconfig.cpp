@@ -14,6 +14,7 @@
 #include "vzbase/base/base64.h"
 
 #include "vzbase/base/mysystem.h"
+#include "systemserver/module/cmodulecontrol.h"
 
 namespace sys {
 
@@ -213,7 +214,10 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
     fwrite(ss.c_str(), 1, ss.size(), file);
     fclose(file);
   }
-  net_ctrl_->ModityNetwork(hw_json_["net"]);
+
+  if (net_ctrl_->ModityNetwork(hw_json_["net"])) {
+    CModuleMonitor::ReStartModule();
+  }
   return true;
 }
 

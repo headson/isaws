@@ -33,7 +33,7 @@ class CHwclock : public vzbase::MessageHandler {
  protected:
   vzbase::Thread *thread_slow_;   // 
 
-  unsigned int    ntp_enable_;
+  unsigned int    ntp_enable_;    // NTP获取时间
   std::string     ntp_srv_addr_;  // 
 };
 

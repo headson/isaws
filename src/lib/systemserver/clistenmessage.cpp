@@ -17,10 +17,10 @@
 
 namespace sys {
 
-static const char  *K_METHOD_SET[] = {
+static const char *K_METHOD_SET[] = {
   MSG_GET_DEVINFO,
   MSG_SET_DEVINFO,
-  MSG_ADDR_CHANGE,
+  /*MSG_ADDR_CHANGE,*/
   MSG_SET_HWCLOCK,
   MSG_SYSTEM_UPDATE,
 };
@@ -168,8 +168,6 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
       jresp[MSG_BODY] = jbody;
       jresp[MSG_STATE] = RET_SUCCESS;
     }
-  } else if (0 == strncmp(dmp->method, MSG_ADDR_CHANGE, dmp->method_size)) {
-    CModuleMonitor::ReStartModule();
   } else if (0 == strncmp(dmp->method, MSG_SYSTEM_UPDATE, dmp->method_size)) {
     breply = true;
     jresp[MSG_STATE] = RET_SUCCESS;

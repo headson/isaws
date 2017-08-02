@@ -13,6 +13,8 @@
 
 #include <json/json.h>
 
+#include "vzbase/helper/stdafx.h"
+
 #ifdef __cplusplus
 namespace vzbase {
 extern "C" {
