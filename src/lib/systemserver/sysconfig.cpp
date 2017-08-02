@@ -21,35 +21,53 @@ namespace sys {
 #ifdef _WIN32
 #define SYS_CFG_PATH  "./system.json"
 #else  // _LINUX
+#include "systemserver/network/net_cfg.h"
+
 #define SYS_CFG_PATH  "/mnt/etc/system.json"
 #endif
 
 void CListenMessage::GetHwInfo() {
   Json::Reader jread;
-
+  Json::Value  jinfo;
   std::ifstream ifs;
   ifs.open(SYS_CFG_PATH);
   if (!ifs.is_open() ||
-      !jread.parse(ifs, hw_json_)) {
+      !jread.parse(ifs, jinfo)) {
     LOG(L_ERROR) << "system json parse failed. create the default config";
 
     // 生成默认参数
-    hw_json_["dev_name"] = "PC_001";
-    hw_json_["dev_type"] = 100100;
-    hw_json_["ins_addr"] = "";
-    hw_json_["sw_version"] = "1.0.0.1001707310";
-    hw_json_["hw_version"] = "1.0.0.1001707310";
-    hw_json_["alg_version"] = "1.0.0.1001707310";
-    hw_json_["net"]["wifi_en"] = 0;
-    hw_json_["net"]["dhcp_en"] = 0;
-    hw_json_["net"]["ip_addr"] = "192.168.1.100";
-    hw_json_["net"]["netmask"] = "255.255.255.0";
-    hw_json_["net"]["gateway"] = "192.168.1.1";
-    hw_json_["net"]["phy_mac"] = "01:12:23:34:45:67";
-    hw_json_["net"]["dns_addr"] = "192.168.1.1";
-    hw_json_["net"]["http_port"] = 80;
-    hw_json_["net"]["rtsp_port"] = 554;
+    jinfo["dev_name"] = "PC_001";
+    jinfo["dev_type"] = 100100;
+    jinfo["ins_addr"] = "";
+    jinfo["sw_version"] = "1.0.0.1001707310";
+    jinfo["hw_version"] = "1.0.0.1001707310";
+    jinfo["alg_version"] = "1.0.0.1001707310";
+    jinfo["net"]["wifi_en"] = 0;
+    jinfo["net"]["dhcp_en"] = 0;
+    jinfo["net"]["ip_addr"] = "192.168.1.100";
+    jinfo["net"]["netmask"] = "255.255.255.0";
+    jinfo["net"]["gateway"] = "192.168.1.1";
+    jinfo["net"]["phy_mac"] = "01:12:23:34:45:67";
+    jinfo["net"]["dns_addr"] = "192.168.1.1";
+    jinfo["net"]["http_port"] = 80;
+    jinfo["net"]["rtsp_port"] = 554;
   }
+
+  sys_info_.dev_name = jinfo["dev_name"].asString();
+  sys_info_.dev_type = jinfo["dev_type"].asInt();
+  sys_info_.ins_addr = jinfo["ins_addr"].asString();
+  // sys_info_.sw_version
+  // sys_info_.hw_version
+  // sys_info_.alg_version
+  sys_info_.net.wifi_en = jinfo["net"]["wifi_en"].asInt();
+  sys_info_.net.dhcp_en = jinfo["net"]["dhcp_en"].asInt();
+  sys_info_.net.ip_addr = jinfo["net"]["ip_addr"].asString();
+  sys_info_.net.netmask = jinfo["net"]["netmask"].asString();
+  sys_info_.net.gateway = jinfo["net"]["gateway"].asString();
+  // sys_info_.net.phy_mac = jinfo["net"]["phy_mac"].asString();
+  sys_info_.net.dns_addr = jinfo["net"]["dns_addr"].asString();
+  sys_info_.net.http_port = jinfo["net"]["http_port"].asInt();
+  sys_info_.net.rtsp_port = jinfo["net"]["rtsp_port"].asInt();
 
   // dp获取算法信息
   std::string sresp = "";
@@ -62,22 +80,42 @@ void CListenMessage::GetHwInfo() {
     return;
   }
   if (jresp.isMember("version")) {
-    hw_json_["alg_version"] = jresp["version"].asString();
+    jinfo["alg_version"] = jresp["version"].asString();
   }
 
-  // dev uuid\mac
-  std::string shw = "";
-  std::string suid = "";
-  vzbase::get_hardware(shw, suid);
-  hw_json_["dev_uuid"] = suid;
-  hw_json_["hw_version"] = shw;
+  // software
+  vzbase::get_software(sys_info_.sw_version);
+
+  // hardware/uuid
+  vzbase::get_hardware(sys_info_.hw_version,
+                       sys_info_.dev_uuid);
+
+#ifdef _LINUX
+  char smac[20] = {0};
+  net_get_hwaddr(PHY_ETH_NAME, smac);
+  sys_info_.net.phy_mac = smac;
+#endif
 
   // save size
 
 }
 
 bool CListenMessage::GetDevInfo(Json::Value &jbody) {
-  jbody = hw_json_;
+  jbody["dev_name"] = sys_info_.dev_name;
+  jbody["dev_type"] = sys_info_.dev_type;
+  jbody["ins_addr"] = sys_info_.ins_addr;
+  jbody["sw_version"] = sys_info_.sw_version;
+  jbody["hw_version"] = sys_info_.hw_version;
+  jbody["alg_version"] = sys_info_.alg_version;
+  jbody["net"]["wifi_en"] = sys_info_.net.wifi_en;
+  jbody["net"]["dhcp_en"] = sys_info_.net.dhcp_en;
+  jbody["net"]["ip_addr"] = sys_info_.net.ip_addr;
+  jbody["net"]["netmask"] = sys_info_.net.netmask;
+  jbody["net"]["gateway"] = sys_info_.net.gateway;
+  jbody["net"]["phy_mac"] = sys_info_.net.phy_mac;
+  jbody["net"]["dns_addr"] = sys_info_.net.dns_addr;
+  jbody["net"]["http_port"] = sys_info_.net.http_port;
+  jbody["net"]["rtsp_port"] = sys_info_.net.rtsp_port;
   return true;
 }
 
@@ -86,52 +124,24 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
 
   if (jbody.isMember("dev_name") &&
       jbody["dev_name"].isString() &&
-      hw_json_["dev_name"].asString() != jbody["dev_name"].asString()) {
+      sys_info_.dev_name != jbody["dev_name"].asString()) {
     bsave++;
-    hw_json_["dev_name"] = jbody["dev_name"].asString();
+    sys_info_.dev_name = jbody["dev_name"].asString();
   }
 
-  //if (jbody.isMember("dev_type") &&
-  //    jbody["dev_type"].isInt() &&
-  //    hw_json_["dev_type"].asInt() != jbody["dev_type"].asInt()) {
-  //  bsave++;
-  //  hw_json_["dev_type"] = jbody["dev_type"].asInt();
-  //}
-
-  //if (jbody.isMember("dev_uuid") &&
-  //    jbody["dev_uuid"].isString() &&
-  //    hw_json_["dev_uuid"].asString() != jbody["dev_uuid"].asString()) {
-  //  bsave++;
-  //  hw_json_["dev_uuid"] = jbody["dev_uuid"].asString();
-  //}
+  // sys_info_.dev_type
+  // sys_info_.dev_uuid
 
   if (jbody.isMember("ins_addr") &&
       jbody["ins_addr"].isString() &&
-      hw_json_["ins_addr"].asString() != jbody["ins_addr"].asString()) {
+      sys_info_.ins_addr != jbody["ins_addr"].asString()) {
     bsave++;
-    hw_json_["ins_addr"] = jbody["ins_addr"].asString();
+    sys_info_.ins_addr  = jbody["ins_addr"].asString();
   }
 
-  //if (jbody.isMember("sw_version") &&
-  //    jbody["sw_version"].isString() &&
-  //    hw_json_["sw_version"].asString() != jbody["sw_version"].asString()) {
-  //  bsave++;
-  //  hw_json_["sw_version"] = jbody["sw_version"].asString();
-  //}
-
-  //if (jbody.isMember("hw_version") &&
-  //    jbody["hw_version"].isString() &&
-  //    hw_json_["hw_version"].asString() != jbody["hw_version"].asString()) {
-  //  bsave++;
-  //  hw_json_["hw_version"] = jbody["hw_version"].asString();
-  //}
-
-  //if (jbody.isMember("alg_version") &&
-  //    jbody["alg_version"].isString() &&
-  //    hw_json_["alg_version"].asString() != jbody["alg_version"].asString()) {
-  //  bsave++;
-  //  hw_json_["alg_version"] = jbody["alg_version"].asString();
-  //}
+  // sys_info_.sw_version
+  // sys_info_.hw_version
+  // sys_info_.alg_version
 
   //////////////////////////////////////////////////////////////////////////
   if (!jbody.isMember("net")) {
@@ -141,66 +151,50 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
 
   if (jbody["net"].isMember("wifi_en") &&
       jbody["net"]["wifi_en"].isUInt() &&
-      hw_json_["net"]["wifi_en"].asUInt() != jbody["net"]["wifi_en"].asUInt()) {
+      sys_info_.net.wifi_en != jbody["net"]["wifi_en"].asUInt()) {
     bsave++;
-    hw_json_["net"]["wifi_en"] = jbody["net"]["wifi_en"].asUInt();
+    sys_info_.net.wifi_en = jbody["net"]["wifi_en"].asUInt();
   }
 
   if (jbody["net"].isMember("dhcp_en") &&
       jbody["net"]["dhcp_en"].isUInt() &&
-      hw_json_["net"]["dhcp_en"].asUInt() != jbody["net"]["dhcp_en"].asUInt()) {
+      sys_info_.net.dhcp_en != jbody["net"]["dhcp_en"].asUInt()) {
     bsave++;
-    hw_json_["net"]["dhcp_en"] = jbody["net"]["dhcp_en"].asUInt();
+    sys_info_.net.dhcp_en = jbody["net"]["dhcp_en"].asUInt();
   }
 
   if (jbody["net"].isMember("ip_addr") &&
       jbody["net"]["ip_addr"].isString() &&
-      hw_json_["net"]["ip_addr"].asString() != jbody["net"]["ip_addr"].asString()) {
+      sys_info_.net.ip_addr != jbody["net"]["ip_addr"].asString()) {
     bsave++;
-    hw_json_["net"]["ip_addr"] = jbody["net"]["ip_addr"].asString();
+    sys_info_.net.ip_addr = jbody["net"]["ip_addr"].asString();
   }
 
   if (jbody["net"].isMember("netmask") &&
       jbody["net"]["netmask"].isString() &&
-      hw_json_["net"]["netmask"].asString() != jbody["net"]["netmask"].asString()) {
+      sys_info_.net.netmask != jbody["net"]["netmask"].asString()) {
     bsave++;
-    hw_json_["net"]["netmask"] = jbody["net"]["netmask"].asString();
+    sys_info_.net.netmask = jbody["net"]["netmask"].asString();
   }
 
   if (jbody["net"].isMember("gateway") &&
       jbody["net"]["gateway"].isString() &&
-      hw_json_["net"]["gateway"].asString() != jbody["net"]["gateway"].asString()) {
+      sys_info_.net.gateway != jbody["net"]["gateway"].asString()) {
     bsave++;
-    hw_json_["net"]["gateway"] = jbody["net"]["gateway"].asString();
+    sys_info_.net.gateway = jbody["net"]["gateway"].asString();
   }
 
-  //if (jbody["net"].isMember("phy_mac") &&
-  //    jbody["net"]["phy_mac"].isString() &&
-  //    hw_json_["net"]["phy_mac"].asString() != jbody["net"]["phy_mac"].asString()) {
-  //  bsave++;
-  //  hw_json_["net"]["phy_mac"] = jbody["net"]["phy_mac"].asString();
-  //}
+  // sys_info_.net.phy_mac
 
   if (jbody["net"].isMember("dns_addr") &&
       jbody["net"]["dns_addr"].isString() &&
-      hw_json_["net"]["dns_addr"].asString() != jbody["net"]["dns_addr"].asString()) {
+      sys_info_.net.dns_addr != jbody["net"]["dns_addr"].asString()) {
     bsave++;
-    hw_json_["net"]["dns_addr"] = jbody["net"]["dns_addr"].asString();
+    sys_info_.net.dns_addr = jbody["net"]["dns_addr"].asString();
   }
 
-  if (jbody["net"].isMember("http_port") &&
-      jbody["net"]["http_port"].isInt() &&
-      hw_json_["net"]["http_port"].asInt() != jbody["net"]["http_port"].asInt()) {
-    bsave++;
-    hw_json_["net"]["http_port"] = jbody["net"]["http_port"].asInt();
-  }
-
-  if (jbody["net"].isMember("rtsp_port") &&
-      jbody["net"]["rtsp_port"].isInt() &&
-      hw_json_["net"]["rtsp_port"].asInt() != jbody["net"]["rtsp_port"].asInt()) {
-    bsave++;
-    hw_json_["net"]["rtsp_port"] = jbody["net"]["rtsp_port"].asInt();
-  }
+  // sys_info_.net.http_port
+  // sys_info_.net.rtsp_port
 
   //////////////////////////////////////////////////////////////////////////
   if (bsave == 0) {
@@ -209,13 +203,14 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
 
   FILE *file = fopen(SYS_CFG_PATH, "wt+");
   if (file) {
-    std::string ss = hw_json_.toStyledString();
+    Json::FastWriter jfw;
+    std::string ss = jfw.write(jbody);
 
     fwrite(ss.c_str(), 1, ss.size(), file);
     fclose(file);
   }
 
-  if (net_ctrl_->ModityNetwork(hw_json_["net"])) {
+  if (net_ctrl_->ModityNetwork(sys_info_)) {
     CModuleMonitor::ReStartModule();
   }
   return true;

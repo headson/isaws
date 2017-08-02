@@ -7,6 +7,8 @@
 
 #include "vzbase/base/basictypes.h"
 
+#include "systemserver/base/pkghead.h"
+
 #include "json/json.h"
 #include "vzbase/thread/thread.h"
 #include "vzconn/multicast/cmcastsocket.h"
@@ -44,7 +46,7 @@ class CNetCtrl : public vzbase::MessageHandler,
   }
 
  public:
-  static bool ModityNetwork(const Json::Value &jnet);
+  static bool ModityNetwork(const TAG_SYS_INFO &sys_info);
 
  private:
   vzconn::CMCastSocket *mcast_sock_;

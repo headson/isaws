@@ -94,6 +94,29 @@ inline void get_hardware(std::string &hw, std::string &uuid) {
   uuid = suid;
 }
 
+inline void get_software(std::string &sw) {
+  static std::string tsw = "";
+
+  if (sw.empty()) {
+    Json::Reader jr;
+    Json::Value  jv;
+    std::ifstream ifs;
+#ifdef _WIN32
+    ifs.open("./software.json");
+#else
+    ifs.open("/mnt/etc/software.json");
+#endif
+    if (!ifs.is_open() ||
+        !jr.parse(ifs, jv)) {
+      tsw = jv["software"].asString();
+    }
+  }
+
+  if (tsw.empty()) {
+    tsw = "1.0.0.1001707310";
+  }
+  sw = tsw;
+}
 
 inline void file_remove(const char *filename) {
   char scmd[256] = {0};

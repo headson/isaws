@@ -29,7 +29,7 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start(unsigned short  n_web_port, const char *s_web_path) {
+bool CListenMessage::Start(unsigned short n_web_port, const char *s_web_path) {
   bool b_ret = false;
   char s_port[9] = {0};
   snprintf(s_port, 8, "%d", n_web_port);

@@ -74,7 +74,7 @@ bool CListenMessage::Start() {
     LOG(L_ERROR) << "net ctrl start failed.";
     return false;
   }
-  net_ctrl_->ModityNetwork(hw_json_["net"]);
+  net_ctrl_->ModityNetwork(sys_info_);
 
   // hw clock
   hw_clock_ = CHwclock::Create(thread_slow_);
