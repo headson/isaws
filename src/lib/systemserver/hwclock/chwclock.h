@@ -21,11 +21,18 @@ class CHwclock : public vzbase::MessageHandler {
 
   ~CHwclock();
 
-  bool Start(bool ntp_enable=false);
+  bool Start();
   void Stop();
 
-  bool ResetHwclock(Json::Value &jbody);
-  void UpdateNetServer();
+  // ntp
+  bool SetDevTime(const Json::Value &jbody);
+
+  bool SetTimeZone(int timezone);
+
+  // timezone/ntp
+  bool GetTimeInfo(Json::Value &jbody);
+  // timezone/ntp
+  bool SetTimeInfo(const Json::Value &jbody, bool bsave=true);
 
  protected:
   virtual void OnMessage(vzbase::Message* msg);
@@ -33,8 +40,13 @@ class CHwclock : public vzbase::MessageHandler {
  protected:
   vzbase::Thread *thread_slow_;   // 
 
-  unsigned int    ntp_enable_;    // NTP获取时间
-  std::string     ntp_srv_addr_;  // 
+  int             timezone_;
+
+  struct {
+    unsigned int  enable;         // NTP获取时间
+    std::string   server;         // ntp服务器
+    unsigned int  timeout;        // 超时MS
+  } ntp_;
 };
 
 }  // namespace sys

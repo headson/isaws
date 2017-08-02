@@ -15,8 +15,9 @@ namespace sys {
 
 CHwclock::CHwclock(vzbase::Thread *thread_slow)
   : thread_slow_(thread_slow)
-  , ntp_enable_(0)
-  , ntp_srv_addr_("cn.ntp.org.cn") {
+  , timezone_(8) {
+  ntp_.enable = 0;
+  ntp_.server = "cn.ntp.org.cn";
 }
 
 CHwclock * CHwclock::Create(vzbase::Thread *thread_slow) {
@@ -36,14 +37,28 @@ CHwclock::~CHwclock() {
   }
 }
 
-bool CHwclock::Start(bool ntp_enable) {
-  if (ntp_enable) {
-    ntp_enable_ = 1;
+bool CHwclock::Start() {
+  Json::Value  jtime;
+  Json::Reader jread;
 
-    UpdateNetServer();
+  std::string time_info = "";
+  Kvdb_GetKeyToString(KVDB_TIME_INFO,
+                      strlen(KVDB_TIME_INFO),
+                      &time_info);
+  if (!time_info.empty() &&
+      jread.parse(time_info, jtime)) {
+  } else {
+    LOG(L_WARNING) << "use default timeinfo.";
+    jtime["timezone"] = 8;
+    jtime["ntp"]["enable"] = 1;
+    jtime["ntp"]["server"] = "cn.ntp.org.cn";
+    jtime["ntp"]["timeout"] = 30 * 60 * 1000; // 30min
+  }
 
+  SetTimeInfo(jtime, false);
+  if (0 < ntp_.enable) {
     if (thread_slow_) {
-      thread_slow_->PostDelayed(1*1000, this);
+      thread_slow_->PostDelayed(1 * 1000, this);
     }
   }
   return true;
@@ -52,7 +67,8 @@ bool CHwclock::Start(bool ntp_enable) {
 void CHwclock::Stop() {
 }
 
-bool CHwclock::ResetHwclock(Json::Value &jbody) {
+
+bool CHwclock::SetDevTime(const Json::Value &jbody) {
   int year, month, day, hour, min, sec;
   if (!jbody["datetime"].isString()) {
     std::string str = jbody["datetime"].asString();
@@ -85,18 +101,59 @@ bool CHwclock::ResetHwclock(Json::Value &jbody) {
   return false;
 }
 
-void CHwclock::UpdateNetServer() {
+bool CHwclock::SetTimeZone(int timezone) {
+  timezone_ = timezone;
+
+  // 设置系统时区
+
+  return true;
+}
+
+bool CHwclock::GetTimeInfo(Json::Value &jbody) {
+  jbody["datetime"] = vzbase::SecToString(time(NULL));
+
+  jbody["timezone"]       = timezone_;
+  jbody["ntp"]["enable"]  = ntp_.enable;
+  jbody["ntp"]["server"]  = ntp_.server;
+  jbody["ntp"]["timeout"] = ntp_.timeout;
+  return true;
+}
+
+bool CHwclock::SetTimeInfo(const Json::Value &jbody, bool bsave) {
+  if (jbody.isMember("timezone") &&
+      jbody.isMember("ntp") &&
+      jbody["ntp"].isMember("enable") &&
+      jbody["ntp"].isMember("server")) {
+
+    timezone_ = jbody["timezone"].asInt();
+    SetTimeZone(timezone_);
+
+    ntp_.enable = jbody["ntp"]["enable"].asInt();
+    ntp_.server = jbody["ntp"]["server"].asString();
+    ntp_.timeout= jbody["ntp"]["timeout"].asInt();
+
+    if (bsave) {
+      Json::FastWriter jfw;
+      std::string stime = jfw.write(jbody);
+      int res = Kvdb_SetKey(KVDB_TIME_INFO,
+                            strlen(KVDB_TIME_INFO),
+                            stime.c_str(), stime.size());
+      return (res == KVDB_RET_SUCCEED);
+    }
+    return true;
+  }
+  return false;
 }
 
 void CHwclock::OnMessage(vzbase::Message* msg) {
   // ntp
   char cmd[256] = {0};
-  snprintf(cmd, 255, "ntpclient -h %s -c 1 -i 10 -s", ntp_srv_addr_.c_str());
-
+  snprintf(cmd, 255,
+           "ntpclient -h %s -c 1 -i 10 -s",
+           ntp_.server.c_str());
   LOG(L_INFO) << cmd;
   clock_t c_begin = clock();
   time_t t_begin = time(NULL);
-
   int ret = system(cmd);
   LOG(L_INFO) << "ret=" << ret
               <<",t_begin=" << t_begin
@@ -112,7 +169,7 @@ void CHwclock::OnMessage(vzbase::Message* msg) {
     }
   }
 
-  if (thread_slow_ && ntp_enable_) {
+  if (thread_slow_ && ntp_.enable > 0) {
     thread_slow_->PostDelayed(30*60*1000, this);  // 30min
   }
 }

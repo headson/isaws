@@ -76,7 +76,9 @@ typedef enum _MSG_RET {
 #define MSG_GET_DEVINFO       "get_devinfo"       // 获取设备信息
 #define MSG_SET_DEVINFO       "set_devinfo"       // 设置设备信息
 
-#define MSG_SET_HWCLOCK       "set_hwclock"       // 设置硬件时间
+#define MSG_SET_DEVTIME       "set_devtime"       // 设置设备时间
+#define MSG_GET_TIMEINFO      "get_timeinfo"      // 获取时间信息
+#define MSG_SET_TIMEINFO      "set_timeinfo"      // 设置时间信息
 
 #define MSG_GET_I_FRAME       "get_i_frame"       // 请求I帧
 #define MSG_GET_ENC_CFG       "get_enc_cfg"       // 获取编码配置
@@ -96,5 +98,6 @@ typedef enum _MSG_RET {
 #define MSG_SYSTEM_UPDATE     "system_update"     // 系统升级
 
 //////////////////////////////////////////////////////////////////////////
-#define KVDB_KEY_USER         "key_user"     // kvdb获取用户
+#define KVDB_USER_LIST        "user_list"        // 登录用户;username\password
+#define KVDB_TIME_INFO        "time_info"        // 设备时间;timezone ntp[enable\server]
 #endif  // VMESSAGE_H

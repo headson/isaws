@@ -21,7 +21,9 @@ static const char *K_METHOD_SET[] = {
   MSG_GET_DEVINFO,
   MSG_SET_DEVINFO,
   /*MSG_ADDR_CHANGE,*/
-  MSG_SET_HWCLOCK,
+  MSG_SET_DEVTIME,
+  MSG_GET_TIMEINFO,
+  MSG_SET_TIMEINFO,
   MSG_SYSTEM_UPDATE,
 };
 
@@ -172,19 +174,32 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     breply = true;
     jresp[MSG_STATE] = RET_SUCCESS;
     CModuleMonitor::StopSomeModule();
-  } else if (0 == strncmp(dmp->method, MSG_SET_HWCLOCK, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_GET_TIMEINFO, dmp->method_size)) {
     breply = true;
     if (hw_clock_) {
-      if (hw_clock_->ResetHwclock(jreq[MSG_BODY])) {
+      if (hw_clock_->GetTimeInfo(jresp[MSG_BODY])) {
         jresp[MSG_STATE] = RET_SUCCESS;
       }
-    } else {
-      jresp[MSG_STATE] = RET_ERROR_HDL;
+    }
+  } else if (0 == strncmp(dmp->method, MSG_SET_TIMEINFO, dmp->method_size)) {
+    breply = true;
+    if (hw_clock_) {
+      if (hw_clock_->SetTimeInfo(jreq[MSG_BODY])) {
+        jresp[MSG_STATE] = RET_SUCCESS;
+      }
+    }
+  } else if (0 == strncmp(dmp->method, MSG_SET_DEVTIME, dmp->method_size)) {
+    breply = true;
+    if (hw_clock_) {
+      if (hw_clock_->SetDevTime(jreq[MSG_BODY])) {
+        jresp[MSG_STATE] = RET_SUCCESS;
+      }
     }
   }
 
   if (breply) {
-    sjson = jresp.toStyledString();
+    Json::FastWriter jfw;
+    sjson = jfw.write(jresp);
     DpClient_SendDpReply(dmp->method,
                          dmp->channel_id,
                          dmp->id,

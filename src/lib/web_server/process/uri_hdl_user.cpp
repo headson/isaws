@@ -42,7 +42,7 @@ void uri_hdl_login(struct mg_connection *nc, int ev, void *ev_data) {
   Json::Value  juser(Json::arrayValue);
 
   std::string suser = "";
-  int nuser = Kvdb_GetKeyToString(KVDB_KEY_USER, strlen(KVDB_KEY_USER),
+  int nuser = Kvdb_GetKeyToString(KVDB_USER_LIST, strlen(KVDB_USER_LIST),
                                   &suser);
   if (nuser <= 0 || suser.empty()) {
     // 生成默认用户
@@ -50,11 +50,11 @@ void uri_hdl_login(struct mg_connection *nc, int ev, void *ev_data) {
     juser[0]["password"] = vzbase::Base64::Encode("admin");
     suser = juser.toStyledString();
 
-    Kvdb_SetKey(KVDB_KEY_USER, strlen(KVDB_KEY_USER),
+    Kvdb_SetKey(KVDB_USER_LIST, strlen(KVDB_USER_LIST),
                 suser.c_str(), suser.size());
 
     suser = "";
-    nuser = Kvdb_GetKeyToString(KVDB_KEY_USER, strlen(KVDB_KEY_USER),
+    nuser = Kvdb_GetKeyToString(KVDB_USER_LIST, strlen(KVDB_USER_LIST),
                                 &suser);
   }
 

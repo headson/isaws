@@ -51,6 +51,7 @@ ADD_SUBDIRECTORY(src/lib/web_for_dp)
 ## add run
 #ADD_SUBDIRECTORY(src/run/onvif)
 ADD_SUBDIRECTORY(src/run/web_server)
+ADD_SUBDIRECTORY(src/run/feeddog)
 ADD_SUBDIRECTORY(src/run/vzlogserver)
 ADD_SUBDIRECTORY(src/run/system_server)
 ADD_SUBDIRECTORY(src/run/dispatcherserver)
