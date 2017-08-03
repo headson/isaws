@@ -8,7 +8,7 @@
 #include <time.h>
 
 #ifndef _WIN32
-#include <unistd.h> 
+#include <unistd.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <linux/watchdog.h>
@@ -16,10 +16,13 @@
 #endif
 
 int main() {
-#ifndef _WIN32
   system("killall watchdog");
+
   sleep(1);
+
   int fd;
+
+#if 0
   fd = open("/dev/watchdog", O_WRONLY);
   if (fd < 0) {
     printf("open error!!\n");
@@ -31,6 +34,34 @@ int main() {
     ioctl(fd, WDIOC_KEEPALIVE, 1);
     sleep(1);
   }
+  close(fd);
+#endif
+
+#ifdef IMX6Q
+  typedef struct {
+    int eType;     // 类型
+    int nState;    // 状态
+    int nParam;    // 占空比
+  } TAG_EXT_GPIO;
+
+  TAG_EXT_GPIO cExt;
+  fd = open("/dev/ihs_gpio", O_RDWR);
+  if (fd < 0) {
+    perror("open");
+    return -1;
+  }
+
+  while (1) {
+    static int nWatchdog = 0;
+    nWatchdog = ((nWatchdog>0) ? 0 : 1);
+
+    cExt.eType = 106;
+    cExt.nState = nWatchdog;
+
+    write(fd, &cExt, sizeof(cExt));
+    usleep(500);
+  }
+
   close(fd);
 #endif
 

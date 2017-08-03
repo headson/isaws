@@ -9,6 +9,8 @@
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
 
+#include "vzbase/base/mysystem.h"
+
 #include "dispatcher/sync/dpclient_c.h"
 
 namespace sys {
@@ -70,11 +72,14 @@ void CHwclock::Stop() {
 
 bool CHwclock::SetDevTime(const Json::Value &jbody) {
   int year, month, day, hour, min, sec;
-  if (!jbody["datetime"].isString()) {
+  if (jbody["datetime"].isString()) {
     std::string str = jbody["datetime"].asString();
-    if (6 == sscanf(str.c_str(),
-                    "%4d-%2d-%2d %2d:%2d:%2d",
-                    &year, &month, &day, &hour, &min, &sec)) {
+    int res = sscanf(str.c_str(),
+                     "%4d-%2d-%2d %2d:%2d:%2d",
+                     &year, &month, &day, &hour, &min, &sec);
+    if (6 == res) {
+      LOG(L_INFO) << str;
+
       time_t now = time(NULL);
       struct tm *tm  = localtime(&now);
       year = (year > 1900) ? year-1900 : 0;
@@ -86,10 +91,14 @@ bool CHwclock::SetDevTime(const Json::Value &jbody) {
       tm->tm_min  = min;
       tm->tm_sec  = sec;
 
-      if ((now = mktime(tm)) >= 0) {
-#ifndef _WIN32
-        stime(&now);
-        system("hwclock -uw");
+      if (abs(now - mktime(tm)) > 5) {
+#ifdef _LINUX
+        char scmd[1024] = {0};
+        snprintf(scmd, 1023,
+                 "date -s \"%s\"; hwclock -uw",
+                 str.c_str());
+        LOG(L_INFO) << scmd;
+        vzbase::my_system(scmd);
 #endif  // _WIN32
 
         DpClient_SendDpMessage(MSG_TIME_CHANGE, 0,

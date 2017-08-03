@@ -31,7 +31,7 @@ ADD_SUBDIRECTORY(cmake)
 
 ## add third sdk
 ADD_SUBDIRECTORY(src/third_part/json)
-ADD_SUBDIRECTORY(src/third_part/live555)
+#ADD_SUBDIRECTORY(src/third_part/live555)
 ADD_SUBDIRECTORY(src/third_part/sqlite3)
 
 ADD_SUBDIRECTORY(src/lib/vzbase)
@@ -46,7 +46,7 @@ ADD_SUBDIRECTORY(src/lib/dispatcher)
 ADD_SUBDIRECTORY(src/lib/platform/imx6q)
 ADD_SUBDIRECTORY(src/lib/alg)
 ADD_SUBDIRECTORY(src/lib/business)
-ADD_SUBDIRECTORY(src/lib/web_for_dp)
+#ADD_SUBDIRECTORY(src/lib/web_for_dp)
 
 ## add run
 #ADD_SUBDIRECTORY(src/run/onvif)
@@ -59,8 +59,8 @@ ADD_SUBDIRECTORY(src/run/dispatcherserver)
 ADD_SUBDIRECTORY(src/run/imx6q)
 ADD_SUBDIRECTORY(src/run/alg)
 ADD_SUBDIRECTORY(src/run/business)
-ADD_SUBDIRECTORY(src/run/live_stream)
-ADD_SUBDIRECTORY(src/run/web_for_dp)
+#ADD_SUBDIRECTORY(src/run/live_stream)
+#ADD_SUBDIRECTORY(src/run/web_for_dp)
 
 IF(WIN32)
 #ADD_SUBDIRECTORY(src/lib/avplayer)

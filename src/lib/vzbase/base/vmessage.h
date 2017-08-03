@@ -21,9 +21,11 @@
 #ifdef WIN32
 #define DEF_WEB_SRV_PATH      "c:\\tools\\web"
 #define DEF_SYS_LOG_PATH      "c:\\tools\\web\log"
+#define DEF_UPLOAD_FILENAME    "c:\\tools\\upload.tar"
 #else
 #define DEF_WEB_SRV_PATH      "/mnt/web"
 #define DEF_SYS_LOG_PATH      "/mnt/web/log"
+#define DEF_UPLOAD_FILENAME   "/tmp/upload.tar"
 #endif
 
 #define DEF_MCAST_IP          "228.5.6.2"
@@ -96,6 +98,7 @@ typedef enum _MSG_RET {
 #define MSG_CLEAR_PCOUNT      "clear_pcount"      // 清空pcount数据库
 
 #define MSG_SYSTEM_UPDATE     "system_update"     // 系统升级
+#define MSG_UPDATE_SUCCESS    "update_success"    // 升级成功
 
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_USER_LIST        "user_list"        // 登录用户;username\password

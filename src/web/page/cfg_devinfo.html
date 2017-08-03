@@ -107,6 +107,15 @@
   </div>
 
   <script>
+    jQuery.fn.check_val = function (value) {
+      if (arguments.length) {
+        this.attr('checked', value);
+      }
+      else {
+        return this.is(':checked');
+      }
+    }
+
     function get_devinfo() {
       var req = {};
       req.cmd = 'get_devinfo';
@@ -134,15 +143,13 @@
             $('#rtsp_port').val(jresp.body.net.rtsp_port);
             $('#disk_size').val(jresp.body.disk_size);
 
-            if (jresp.body.net.dhcp_en == 1) {
-              $('#dhcp_en').attr('checked', 'true');
-            } else {
-              $('#dhcp_en').attr('checked', 'false');
-            }
+            $('#dhcp_en').check_val(jresp.body.net.dhcp_en == 1);
+
             $('#ip_addr').val(jresp.body.net.ip_addr);
             $('#netmask').val(jresp.body.net.netmask);
             $('#gateway').val(jresp.body.net.gateway);
             $('#dns_addr').val(jresp.body.net.dns_addr);
+
             $('#phy_mac').val(jresp.body.net.phy_mac);
           } else {
             alert('获取设备参数错误!');

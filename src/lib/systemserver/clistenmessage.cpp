@@ -9,6 +9,7 @@
 
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
+#include "vzbase/base/mysystem.h"
 
 #include "vzbase/base/helper.h"
 #include "vzbase/base/base64.h"
@@ -174,6 +175,8 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     breply = true;
     jresp[MSG_STATE] = RET_SUCCESS;
     CModuleMonitor::StopSomeModule();
+  } else if (0 == strncmp(dmp->method, MSG_SYSTEM_UPDATE, dmp->method_size)) {
+    vzbase::my_system("sleep 5; reboot &");
   } else if (0 == strncmp(dmp->method, MSG_GET_TIMEINFO, dmp->method_size)) {
     breply = true;
     if (hw_clock_) {

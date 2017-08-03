@@ -8,6 +8,7 @@
 
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/mysystem.h"
+#include "vzbase/base/vmessage.h"
 
 typedef struct _file_writer_data {
   FILE      *fp;
@@ -19,12 +20,6 @@ namespace web {
 extern "C" {
 #endif
 
-#ifdef _WIN32
-#define UPLOAD_FILENAME "./upload.tar.gz"
-#else  // _LINUX
-#define UPLOAD_FILENAME "/tmp/upload.tar.gz"
-#endif
-
 void uri_hdl_upload(struct mg_connection *nc, int ev, void *p) {
   file_writer_data *data = (file_writer_data*)nc->user_data;
   struct mg_http_multipart_part *mp = (struct mg_http_multipart_part *) p;
@@ -33,7 +28,7 @@ void uri_hdl_upload(struct mg_connection *nc, int ev, void *p) {
   case MG_EV_HTTP_PART_BEGIN:
     if (data == NULL) {
       data = (file_writer_data*)calloc(1, sizeof(file_writer_data));
-      data->fp = fopen(UPLOAD_FILENAME, "wb+");
+      data->fp = fopen(DEF_UPLOAD_FILENAME, "wb+");
       data->bytes_written = 0;
 
       if (data->fp == NULL) {
@@ -63,11 +58,13 @@ void uri_hdl_upload(struct mg_connection *nc, int ev, void *p) {
       fclose(data->fp);
 
       // 处理接收完成
-      int nret = vzbase::update_file_uncompress(UPLOAD_FILENAME);
-      vzbase::file_remove(UPLOAD_FILENAME);
+      int nret = vzbase::update_file_uncompress(DEF_UPLOAD_FILENAME);
+      vzbase::file_remove(DEF_UPLOAD_FILENAME);
 
-      char *pret = "upload success.";
-      if (nret == -1) {
+      const char *pret = "upload success.";
+      if (nret == 0) {
+        DpClient_SendDpMessage(MSG_UPDATE_SUCCESS, 0, NULL, 0);
+      } else if (nret == -1) {
         pret = "uncompress failed.";
       } else if (nret == -2) {
         pret = "hardware compare failed.";

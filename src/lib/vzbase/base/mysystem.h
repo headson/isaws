@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <string>
 #include <fstream>
@@ -134,7 +135,7 @@ inline int update_file_uncompress(const char *filename) {
   // uncompress
   char scmd[256] = {0};
   snprintf(scmd, 255,
-           "mkdir /tmp/bak;tar -zxf %s -C /tmp/bak",
+           "mkdir /tmp/bak;tar -xf %s -C /tmp/bak",
            filename);
   LOG(L_INFO) << scmd;
   if (vzbase::my_system(scmd)) {

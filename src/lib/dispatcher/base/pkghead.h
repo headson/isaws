@@ -37,7 +37,7 @@ enum {
 };
 
 #define MAX_CLIS_PER_PROC  6              // 一个进程最多链接数
-#define DEF_TIMEOUT_MSEC   1000           // 默认超时 1S
+#define DEF_TIMEOUT_MSEC   5000           // 默认超时 1S
 
 typedef struct _TagDpMsg {
   unsigned char type;                     // 消息类型[8bits]

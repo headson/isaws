@@ -176,10 +176,10 @@ bool CNetCtrl::ModityNetwork(const TAG_SYS_INFO &sys_info) {
 #endif
 
   if (1 == sys_info.net.dhcp_en) {
-    vzbase::my_system("killall udhcpc; udhcpc -i eth0 &");
+    vzbase::my_system("killall -9 udhcpc; udhcpc -i eth0 &");
     return true;
   } else {
-    vzbase::my_system("killall udhcpc");
+    vzbase::my_system("killall -9 udhcpc");
   }
 
   bool addr_modify = false;
@@ -188,9 +188,9 @@ bool CNetCtrl::ModityNetwork(const TAG_SYS_INFO &sys_info) {
   if (ip_addr_ != ip_addr) {
     addr_modify = true;
     ip_addr_ = ip_addr;
-#ifdef _WIN32
-    LOG(L_WARNING) << "set ip addr " << sys_info.ins_addr;
-#else
+
+    LOG(L_WARNING) << "set ip addr " << sys_info.net.ip_addr;
+#ifdef _LINUX
     net_set_ifaddr(PHY_ETH_NAME, ip_addr_);
 #endif
   }
@@ -199,9 +199,9 @@ bool CNetCtrl::ModityNetwork(const TAG_SYS_INFO &sys_info) {
   if (netmask_ != netmask) {
     addr_modify = true;
     netmask_ = netmask;
-#ifdef _WIN32
+
     LOG(L_WARNING) << "set netmask " << sys_info.net.netmask;
-#else
+#ifdef _LINUX
     net_set_netmask(PHY_ETH_NAME, netmask);
 #endif
   }
@@ -210,9 +210,9 @@ bool CNetCtrl::ModityNetwork(const TAG_SYS_INFO &sys_info) {
   if (gateway_ != gateway) {
     addr_modify = true;
     gateway_ = gateway;
-#ifdef _WIN32
+
     LOG(L_WARNING) << "set gateway " << sys_info.net.gateway;
-#else
+#ifdef _LINUX
     net_clean_gateway();
     net_set_gateway(gateway);
 #endif
@@ -221,9 +221,9 @@ bool CNetCtrl::ModityNetwork(const TAG_SYS_INFO &sys_info) {
   in_addr_t dns_addr = inet_addr(sys_info.net.dns_addr.c_str());
   if (dns_addr_ != dns_addr) {
     dns_addr_ = dns_addr;
-#ifdef _WIN32
+
     LOG(L_WARNING) << "set dns_1 " << sys_info.net.dns_addr;
-#else
+#ifdef _LINUX
     net_set_dns(inet_ntoa(*((struct in_addr*)&dns_addr_)));
 #endif
   }

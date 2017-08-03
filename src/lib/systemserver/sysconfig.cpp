@@ -91,9 +91,9 @@ void CListenMessage::GetHwInfo() {
                        sys_info_.dev_uuid);
 
 #ifdef _LINUX
-  char smac[20] = {0};
+  unsigned char smac[20] = {0};
   net_get_hwaddr(PHY_ETH_NAME, smac);
-  sys_info_.net.phy_mac = smac;
+  sys_info_.net.phy_mac = (char*)smac;
 #endif
 
   // save size
@@ -157,11 +157,12 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
   }
 
   if (jbody["net"].isMember("dhcp_en") &&
-      jbody["net"]["dhcp_en"].isUInt() &&
-      sys_info_.net.dhcp_en != jbody["net"]["dhcp_en"].asUInt()) {
+      jbody["net"]["dhcp_en"].isInt() &&
+      sys_info_.net.dhcp_en != jbody["net"]["dhcp_en"].asInt()) {
     bsave++;
-    sys_info_.net.dhcp_en = jbody["net"]["dhcp_en"].asUInt();
+    sys_info_.net.dhcp_en = jbody["net"]["dhcp_en"].asInt();
   }
+  LOG(L_INFO) << "dhcp enable " << sys_info_.net.dhcp_en;
 
   if (jbody["net"].isMember("ip_addr") &&
       jbody["net"]["ip_addr"].isString() &&
@@ -198,6 +199,7 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
 
   //////////////////////////////////////////////////////////////////////////
   if (bsave == 0) {
+    LOG(L_INFO) << "don't save config file.";
     return true;
   }
 

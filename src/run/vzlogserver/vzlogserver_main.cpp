@@ -445,7 +445,7 @@ int callback_timeout() {
 static int wdt_fd = 0;
 static int feed_times = 0;
 int callback_feeddog() {
-#ifndef _WIN32
+#if 0
   if (wdt_fd <= 0) {
     wdt_fd = open("/dev/watchdog", O_WRONLY);
     if (wdt_fd < 0) {
@@ -462,6 +462,36 @@ int callback_feeddog() {
     if (feed_times >= 1000) {   // 1S
       feed_times = 0;
       ioctl(wdt_fd, WDIOC_KEEPALIVE, 1);
+    }
+  }
+#endif
+
+#ifdef IMX6Q
+  if (0 == wdt_fd) {
+    wdt_fd = open("/dev/ihs_gpio", O_RDWR);
+    if (wdt_fd < 0) {
+      perror("open");
+      return -1;
+    }
+  }
+
+  if (wdt_fd > 0) {
+    feed_times += 5;  // 5ms
+    if (feed_times >= 1000) {   // 1S
+      feed_times = 0;
+
+      static int nWatchdog = 0;
+      nWatchdog = ((nWatchdog>0) ? 0 : 1);
+
+      struct {
+        int eType;     // 类型
+        int nState;    // 状态
+        int nParam;    // 占空比
+      } cExt;
+      cExt.eType = 106;
+      cExt.nState = nWatchdog;
+
+      write(wdt_fd, &cExt, sizeof(cExt));
     }
   }
 #endif

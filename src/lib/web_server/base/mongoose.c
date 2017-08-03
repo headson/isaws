@@ -3146,6 +3146,7 @@ int mg_socket_if_listen_tcp(struct mg_connection *nc,
   if (sock == INVALID_SOCKET) {
     return (mg_get_errno() ? mg_get_errno() : 1);
   }
+
   mg_sock_set(nc, sock);
   return 0;
 }
@@ -3153,7 +3154,10 @@ int mg_socket_if_listen_tcp(struct mg_connection *nc,
 int mg_socket_if_listen_udp(struct mg_connection *nc,
                             union socket_address *sa) {
   sock_t sock = mg_open_listening_socket(sa, SOCK_DGRAM, 0);
-  if (sock == INVALID_SOCKET) return (mg_get_errno() ? mg_get_errno() : 1);
+  if (sock == INVALID_SOCKET) {
+    return (mg_get_errno() ? mg_get_errno() : 1);
+  }
+
   mg_sock_set(nc, sock);
   return 0;
 }
@@ -3236,7 +3240,7 @@ static sock_t mg_open_listening_socket(union socket_address *sa, int type,
                   sizeof(on)) &&
 #endif
 
-#if !defined(_WIN32) || !defined(SO_EXCLUSIVEADDRUSE)
+// #if !defined(_WIN32) || !defined(SO_EXCLUSIVEADDRUSE)
       /*
        * SO_RESUSEADDR is not enabled on Windows because the semantics of
        * SO_REUSEADDR on UNIX and Windows is different. On Windows,
@@ -3247,7 +3251,7 @@ static sock_t mg_open_listening_socket(union socket_address *sa, int type,
        * SO_EXCLUSIVEADDRUSE is supported and set on a socket.
        */
       !setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void *) &on, sizeof(on)) &&
-#endif
+// #endif
 #endif /* !MG_LWIP */
 
       !bind(sock, &sa->sa, sa_len) &&
@@ -3261,7 +3265,6 @@ static sock_t mg_open_listening_socket(union socket_address *sa, int type,
     closesocket(sock);
     sock = INVALID_SOCKET;
   }
-
   return sock;
 }
 
