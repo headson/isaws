@@ -26,6 +26,7 @@ static const char *K_METHOD_SET[] = {
   MSG_GET_TIMEINFO,
   MSG_SET_TIMEINFO,
   MSG_SYSTEM_UPDATE,
+  MSG_UPDATE_SUCCESS,
 };
 
 CListenMessage::CListenMessage()
@@ -175,7 +176,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     breply = true;
     jresp[MSG_STATE] = RET_SUCCESS;
     CModuleMonitor::StopSomeModule();
-  } else if (0 == strncmp(dmp->method, MSG_SYSTEM_UPDATE, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_UPDATE_SUCCESS, dmp->method_size)) {
     vzbase::my_system("sleep 5; reboot &");
   } else if (0 == strncmp(dmp->method, MSG_GET_TIMEINFO, dmp->method_size)) {
     breply = true;
