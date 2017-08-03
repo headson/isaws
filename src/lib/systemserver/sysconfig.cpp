@@ -90,12 +90,6 @@ void CListenMessage::GetHwInfo() {
   vzbase::get_hardware(sys_info_.hw_version,
                        sys_info_.dev_uuid);
 
-#ifdef _LINUX
-  unsigned char smac[20] = {0};
-  net_get_hwaddr(PHY_ETH_NAME, smac);
-  sys_info_.net.phy_mac = (char*)smac;
-#endif
-
   // save size
 
 }
@@ -103,17 +97,23 @@ void CListenMessage::GetHwInfo() {
 bool CListenMessage::GetDevInfo(Json::Value &jbody) {
   jbody["dev_name"] = sys_info_.dev_name;
   jbody["dev_type"] = sys_info_.dev_type;
+  
   jbody["ins_addr"] = sys_info_.ins_addr;
+  
   jbody["sw_version"] = sys_info_.sw_version;
   jbody["hw_version"] = sys_info_.hw_version;
   jbody["alg_version"] = sys_info_.alg_version;
+  
   jbody["net"]["wifi_en"] = sys_info_.net.wifi_en;
   jbody["net"]["dhcp_en"] = sys_info_.net.dhcp_en;
-  jbody["net"]["ip_addr"] = sys_info_.net.ip_addr;
-  jbody["net"]["netmask"] = sys_info_.net.netmask;
-  jbody["net"]["gateway"] = sys_info_.net.gateway;
-  jbody["net"]["phy_mac"] = sys_info_.net.phy_mac;
-  jbody["net"]["dns_addr"] = sys_info_.net.dns_addr;
+  
+  jbody["net"]["ip_addr"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::ip_addr_));
+  jbody["net"]["netmask"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::netmask_));
+  jbody["net"]["gateway"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::gateway_));
+  jbody["net"]["phy_mac"]  = CNetCtrl::phy_mac_;
+
+  jbody["net"]["dns_addr"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::dns_addr_));
+
   jbody["net"]["http_port"] = sys_info_.net.http_port;
   jbody["net"]["rtsp_port"] = sys_info_.net.rtsp_port;
   return true;
