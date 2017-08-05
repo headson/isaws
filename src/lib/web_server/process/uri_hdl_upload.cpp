@@ -63,7 +63,7 @@ void uri_hdl_upload(struct mg_connection *nc, int ev, void *p) {
 
       const char *pret = "upload success.";
       if (nret == 0) {
-        DpClient_SendDpMessage(MSG_UPDATE_SUCCESS, 0, NULL, 0);
+        DpClient_SendDpMessage(MSG_REBOOT_DEVICE, 0, NULL, 0);
       } else if (nret == -1) {
         pret = "uncompress failed.";
       } else if (nret == -2) {
@@ -71,6 +71,8 @@ void uri_hdl_upload(struct mg_connection *nc, int ev, void *p) {
       } else if (nret == -3) {
         pret = "have no command success.";
       }
+      LOG(L_ERROR) << pret;
+
       mg_printf(nc,
                 "HTTP/1.1 200 OK\r\n"
                 "Content-Type: text/plain\r\n"

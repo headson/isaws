@@ -38,13 +38,11 @@ IF(WIN32)
 		${CMAKE_CURRENT_SOURCE_DIR}/page/pc_year.html
 		${CMAKE_CURRENT_SOURCE_DIR}/page/pc_month.html
 		${CMAKE_CURRENT_SOURCE_DIR}/page/pc_day.html
-		${CMAKE_CURRENT_SOURCE_DIR}/page/log_view_real.html
 		${CMAKE_CURRENT_SOURCE_DIR}/page/log_download.html
 		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_vdo_enc.html
 		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_http_send.html
 		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_set_time.html
-		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_valid_time.html
-		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_reset.html
+		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_people_count.html
 		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_devinfo.html
 		${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_dev_update.html
 	)
@@ -74,13 +72,11 @@ SOURCE_GROUP(page_html FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/page/pc_year.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/pc_month.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/pc_day.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/log_view_real.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/log_download.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_vdo_enc.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_http_send.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_set_time.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_valid_time.html
-	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_pc_reset.html
+	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_people_count.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_devinfo.html
 	${CMAKE_CURRENT_SOURCE_DIR}/page/cfg_dev_update.html
 )

@@ -8,6 +8,9 @@
 
 int main(int argc, char* argv[]) {
   InitVzLogging(argc, argv);
+#ifdef _WIN32
+  ShowVzLoggingAlways();
+#endif
 
   DpClient_Init(DEF_DP_SRV_IP,
                 DEF_DP_SRV_PORT);

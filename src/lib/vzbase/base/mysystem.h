@@ -14,6 +14,7 @@
 
 #include <json/json.h>
 
+#include "vmessage.h"
 #include "vzbase/helper/stdafx.h"
 
 #ifdef __cplusplus
@@ -74,24 +75,29 @@ inline void get_hardware(std::string &hw, std::string &uuid) {
     Json::Reader jr;
     Json::Value  jv;
     std::ifstream ifs;
-#ifdef _WIN32
-    ifs.open("./hareware.json");
-#else
-    ifs.open("/mnt/etc/hareware.json");
-#endif
-    if (!ifs.is_open() ||
-        !jr.parse(ifs, jv)) {
+    ifs.open(DEF_HARDWARE_FILE);
+    if (ifs.is_open() && jr.parse(ifs, jv)) {
       shw = jv["hardware"].asString();
+      suid = jv["dev_uuid"].asString();
+    } else {
+      shw = "1.0.0.1001707310";
+      suid = "PC001170801220030";
+
+      jv["hardware"] = shw;
+      jv["dev_uuid"] = suid;
+
+      FILE *file = fopen(DEF_HARDWARE_FILE, "wt+");
+      if (file) {
+        Json::FastWriter jfw;
+        std::string ss = jfw.write(jv);
+
+        fwrite(ss.c_str(), 1, ss.size(), file);
+        fclose(file);
+      }
     }
   }
 
-  if (shw.empty()) {
-    shw = "1.0.0.1001707310";
-  }
-  if (suid.empty()) {
-    suid = "PC001170801220030";
-  }
-  hw   = shw; 
+  hw   = shw;
   uuid = suid;
 }
 
@@ -102,19 +108,12 @@ inline void get_software(std::string &sw) {
     Json::Reader jr;
     Json::Value  jv;
     std::ifstream ifs;
-#ifdef _WIN32
-    ifs.open("./software.json");
-#else
-    ifs.open("/mnt/etc/software.json");
-#endif
-    if (!ifs.is_open() ||
-        !jr.parse(ifs, jv)) {
+    ifs.open(DEF_SOFTWARE_FILE);
+    if (ifs.is_open() && jr.parse(ifs, jv)) {
       tsw = jv["software"].asString();
+    } else {
+      tsw = "1.0.0.1001707310";
     }
-  }
-
-  if (tsw.empty()) {
-    tsw = "1.0.0.1001707310";
   }
   sw = tsw;
 }
@@ -152,7 +151,7 @@ inline int update_file_uncompress(const char *filename) {
       vzbase::get_hardware(shw, suid);
       int bcmp = strncmp(shw.c_str(), scmd, shw.size());
       LOG(L_INFO) << "shw " << shw
-        << " scmd " << scmd << " cmp " << bcmp;
+                  << " scmd " << scmd << " cmp " << bcmp;
       if (0 == bcmp) {
         char *pcmd = NULL;
         do {
@@ -163,17 +162,14 @@ inline int update_file_uncompress(const char *filename) {
             if (!vzbase::my_system(scmd)) {
               LOG(L_INFO) << "success " << scmd;
               nret = 0;
-            }
-            else {
+            } else {
               LOG(L_ERROR) << "failed " << scmd;
             }
-          }
-          else {
+          } else {
             break;
           }
         } while (true);
-      }
-      else {
+      } else {
         LOG(L_ERROR) << "check hareware failed.\n";
         nret = -2;
       }

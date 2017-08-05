@@ -21,11 +21,17 @@
 #ifdef WIN32
 #define DEF_WEB_SRV_PATH      "c:\\tools\\web"
 #define DEF_SYS_LOG_PATH      "c:\\tools\\web\log"
-#define DEF_UPLOAD_FILENAME    "c:\\tools\\upload.tar"
+#define DEF_UPLOAD_FILENAME   "c:\\tools\\upload.tar"
+#define DEF_HARDWARE_FILE     "c:\\tools\\hardware.json"
+#define DEF_SOFTWARE_FILE     "c:\\tools\\software.json"
+#define DB_PCOUNT_FILEPATH    "c:\\tools\\pcount.db"
 #else
 #define DEF_WEB_SRV_PATH      "/mnt/web"
 #define DEF_SYS_LOG_PATH      "/mnt/web/log"
 #define DEF_UPLOAD_FILENAME   "/tmp/upload.tar"
+#define DEF_HARDWARE_FILE     "/mnt/etc/hardware.json"
+#define DEF_SOFTWARE_FILE     "/mnt/etc/software.json"
+#define DB_PCOUNT_FILEPATH    "/mnt/usr/pcount.db"
 #endif
 
 #define DEF_MCAST_IP          "228.5.6.2"
@@ -90,7 +96,7 @@ typedef enum _MSG_RET {
 #define MSG_GET_IVAINFO       "get_ivainfo"       // 获取算法信息
 #define MSG_SET_IVAINFO       "set_ivainfo"       // 设置算法信息
 
-#define MSG_RESET_COUNT       "reset_count"       // 重置计数
+#define MSG_RESET_PCNUM       "reset_pcnum"       // 重置计数
 
 #define MSG_CATCH_EVENT       "catch_event"       // 算法事件
 
@@ -98,7 +104,8 @@ typedef enum _MSG_RET {
 #define MSG_CLEAR_PCOUNT      "clear_pcount"      // 清空pcount数据库
 
 #define MSG_SYSTEM_UPDATE     "system_update"     // 系统升级
-#define MSG_UPDATE_SUCCESS    "update_success"    // 升级成功
+
+#define MSG_REBOOT_DEVICE     "reboot_device"     // 重启设备
 
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_USER_LIST        "user_list"        // 登录用户;username\password

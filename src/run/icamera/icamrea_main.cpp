@@ -17,6 +17,10 @@
 #define VIDEO_WIDTH   SHM_IMAGE_0_W
 #define VIDEO_HEIGHT  SHM_IMAGE_0_H
 
+#include "asc8.h"
+#include "yuv420.h"
+#include "vzbase/base/timeutils.h"
+
 inline int gettimeofday(struct timeval *tp, void *tzp) {
   time_t clock;
   struct tm tm;
@@ -92,6 +96,9 @@ int main() {
   shm_vdo.SetWidth(VIDEO_WIDTH);
   shm_vdo.SetHeight(VIDEO_HEIGHT);
 
+  time_t nTmOld = 0;
+  unsigned char nColor = 0;
+  char pc_num_osd[64] = {0};
   while (true) {
     Sleep(30);
 
@@ -101,16 +108,41 @@ int main() {
     // 获取最新视频帧,YUV
     unsigned char *p_img = p_cam->QueryFrame();
     if (p_img) {
+      int ret = 0;
+
       // 可以优化为m_pic中保存一个指针,直接执行szYUVFrame
       memcpy(pic_in.img.plane[0], p_img, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
       shm_img.Write((char*)p_img, 
                     VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2,
                     tv.tv_sec, tv.tv_usec);
 
+#if 1
+      time_t nTmNow = time(NULL);
+      if (nTmOld != nTmNow) {
+        nTmOld = nTmNow;
+        nColor = nColor ? 0 : 255;
+      }
+      yuv_osd(nColor, (unsigned char*)pic_in.img.plane[0],
+              VIDEO_WIDTH, VIDEO_HEIGHT,
+              (char*)vzbase::SecToString(nTmNow).c_str(),
+              1, asc8, 10, 10);
+
+      ret = snprintf(pc_num_osd, 63, 
+               "入:%d 出:%d", 
+               5, 8);
+      if (ret < 64) {
+        pc_num_osd[ret] = '\0';
+      }
+      yuv_osd(nColor, (unsigned char*)pic_in.img.plane[0],
+              VIDEO_WIDTH, VIDEO_HEIGHT,
+              pc_num_osd,
+              1, asc8, 10, VIDEO_HEIGHT-10);
+#endif
+
       int iNal = 0;
       x264_nal_t* pNals = NULL;
       //pic_in.i_type = X264_TYPE_IDR;
-      int ret = x264_encoder_encode(x264, &pNals, &iNal, &pic_in, &pic_out);
+      ret = x264_encoder_encode(x264, &pNals, &iNal, &pic_in, &pic_out);
 
       int n_data = 0;
       for (int j = 0; j < iNal; ++j) {

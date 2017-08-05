@@ -8,13 +8,16 @@
 
 #include "json/json.h"
 
+#include "alg/basedefine.h"
+
 namespace imx6q {
 
 static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
   MSG_GET_I_FRAME,
   MSG_GET_ENC_CFG,
-  MSG_SET_ENC_CFG
+  MSG_SET_ENC_CFG,
+  MSG_CATCH_EVENT
 };
 
 CListenMessage::CListenMessage()
@@ -109,7 +112,23 @@ void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp,
 }
 
 void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
+  Json::Value jreq;
+  Json::Reader jread;
+  if (!jread.parse(dmp->data,
+    dmp->data + dmp->data_size,
+    jreq)) {
+    LOG(L_ERROR) << "Json parse failed.";
+    return;
+  }
+  Json::Value jresp;
+  jresp[MSG_CMD] = jreq[MSG_CMD].asString();
+  jresp[MSG_ID] = jreq[MSG_ID].asInt();
 
+  bool res = false;
+  if (0 == strncmp(dmp->method, MSG_CATCH_EVENT, MAX_METHOD_SIZE)) {
+    jreq[MSG_BODY][ALG_POSITIVE_NUMBER].asInt();
+    jreq[MSG_BODY][ALG_NEGATIVE_NUMBER].asInt();
+  }
 }
 
 void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl, unsigned int n_state, void* p_usr_arg) {

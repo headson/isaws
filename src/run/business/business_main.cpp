@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
   Kvdb_Start(DEF_KVDB_SRV_IP, 
              DEF_KVDB_SRV_PORT);
 
-  if (!bs::CListenMessage::Instance()->Start("./pcount.db")) {
+  if (!bs::CListenMessage::Instance()->Start(DB_PCOUNT_FILEPATH)) {
     return -1;
   }
 

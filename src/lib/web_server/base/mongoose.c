@@ -3240,7 +3240,7 @@ static sock_t mg_open_listening_socket(union socket_address *sa, int type,
                   sizeof(on)) &&
 #endif
 
-// #if !defined(_WIN32) || !defined(SO_EXCLUSIVEADDRUSE)
+#if !defined(_WIN32) || !defined(SO_EXCLUSIVEADDRUSE)
       /*
        * SO_RESUSEADDR is not enabled on Windows because the semantics of
        * SO_REUSEADDR on UNIX and Windows is different. On Windows,
@@ -3251,7 +3251,7 @@ static sock_t mg_open_listening_socket(union socket_address *sa, int type,
        * SO_EXCLUSIVEADDRUSE is supported and set on a socket.
        */
       !setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void *) &on, sizeof(on)) &&
-// #endif
+#endif
 #endif /* !MG_LWIP */
 
       !bind(sock, &sa->sa, sa_len) &&

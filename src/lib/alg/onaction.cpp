@@ -22,9 +22,11 @@ void alg::CListenMessage::AlgActionCallback(sdk_iva_output_info *paction) {
       return;
     }
 
-    jroot[MSG_BODY][ALG_EVT_OUT_TIME_MS] = vzbase::CurrentTimet();
+    jroot[MSG_BODY][ALG_EVT_OUT_TIMET] = vzbase::CurrentTimet();
     jroot[MSG_BODY][ALG_POSITIVE_NUMBER] = paction->positive_number;
+    jroot[MSG_BODY][ALG_POSITIVE_ADD_NUM] = paction->positive_number - last_positive_number;
     jroot[MSG_BODY][ALG_NEGATIVE_NUMBER] = paction->negative_number;
+    jroot[MSG_BODY][ALG_NEGATIVE_ADD_NUM] = paction->negative_number - last_negative_number;
 
     Json::FastWriter jfw;
     std::string sjson = jfw.write(jroot);

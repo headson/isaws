@@ -75,12 +75,12 @@ void CListenMessage::GetHwInfo() {
                              NULL, 0, &sresp,
                              DEF_TIMEOUT_MSEC);
   Json::Value jresp;
-  if (!jread.parse(sresp, jresp)) {
+  if (jread.parse(sresp, jresp)) {
+    if (jresp.isMember("version")) {
+      jinfo["alg_version"] = jresp["version"].asString();
+    }    
+  } else {
     LOG(L_ERROR) << "MSG_GET_IVAINFO failed.";
-    return;
-  }
-  if (jresp.isMember("version")) {
-    jinfo["alg_version"] = jresp["version"].asString();
   }
 
   // software

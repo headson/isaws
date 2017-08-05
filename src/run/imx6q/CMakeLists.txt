@@ -53,6 +53,7 @@ else()
 		vzconn
 		vzbase
 		systemv
+		jsoncpp
 		asound 
 		ipu 
 		iconv 

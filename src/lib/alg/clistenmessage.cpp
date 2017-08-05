@@ -19,12 +19,12 @@ namespace alg {
 #define IVA_CFG_FILE    "./config/cfg_file_iva.xml"
 #define IVA_AUX_FILE    "./config/cfg_file_aux.xml"
 
-static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
   MSG_GET_IVAINFO,
   MSG_SET_IVAINFO,
-  MSG_RESET_COUNT
+  MSG_RESET_PCNUM
 };
+static const unsigned int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
@@ -151,7 +151,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
   } else if (strncmp(dmp->method, MSG_SET_IVAINFO, MAX_METHOD_SIZE) == 0) {
     // 配置算法参数
 
-  } else if (strncmp(dmp->method, MSG_RESET_COUNT, MAX_METHOD_SIZE) == 0) {
+  } else if (strncmp(dmp->method, MSG_RESET_PCNUM, MAX_METHOD_SIZE) == 0) {
     // 重置统计数
     if (alg_handle_) {
       nret = sdk_iva_set_control_command(alg_handle_,

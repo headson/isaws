@@ -9,14 +9,50 @@
 </head>
 
 <body>
-  <div class="center">
-    <form method="POST" action="/upload" enctype="multipart/form-data">
-      <input type="file" name="uploadfile" id="uploadfile" value="选择文件" />
-      <input type="submit" value="上传" />
-    </form>
-  </div>
+  <table>
+    <tr>
+      <td>
+        <form method="POST" action="/upload" enctype="multipart/form-data">
+          <input type="file" name="uploadfile" id="uploadfile" value="选择文件" />
+          <input type="submit" value="上传" />
+        </form>
+      </td>
+    </tr>
+
+    <tr>
+      <td align="right"><input type="button" class="btn" id="reboot_btn" value="设备重启" /></td>
+    </tr>
+  </table>
 
   <script>
+    function reboot_device() {
+      var req = {};
+      req.cmd = 'reboot_device';
+      req.id = 1;
+      req.body = {};
+      var jsonstr = JSON.stringify(req);
+      $.ajax({
+        type: 'POST',
+        url: '/dispatch',
+        dataType: 'text',
+        data: jsonstr,
+        success: function (ajaxdata) {
+          var jresp = eval('(' + ajaxdata + ')');
+          if (jresp.state == 200) {
+            
+          } else {
+            alert('参数配置错误' + jresp.state);
+            get_devinfo();
+          }
+        },
+      });
+    }
+
+    $(document).ready(function () {
+      $('#reboot_btn').click(function () {
+        reboot_device();
+      });
+    });
   </script>
 
 </body>

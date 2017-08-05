@@ -23,6 +23,8 @@
 CVideoEncode::CVideoEncode()
   : v4l2_()
   , vpu_() {
+  POSITIVE_NUMBER = 0;
+  NEGATIVE_NUMBER = 0;
 }
 
 CVideoEncode::~CVideoEncode() {
@@ -77,6 +79,7 @@ void CVideoEncode::Run(vzbase::Thread* thread) {
     nScale = 4;
 
   int nseqs = 0;
+  char pc_num_osd[64] ={0};
 
   // start capture
   struct v4l2_buffer v4l_buf;
@@ -132,6 +135,17 @@ REOPEN:
             vpu_.nWidth, vpu_.nHeight,
             (char*)vzbase::SecToString(nTmNow).c_str(),
             nScale, asc8, 10, 10);
+
+    nRet = snprintf(pc_num_osd, 63,
+                   "entry:%d exit:%d",
+                   POSITIVE_NUMBER, NEGATIVE_NUMBER);
+    if (nRet < 64) {
+      pc_num_osd[nRet] = '\0';
+    }
+    yuv_osd(nColor, (unsigned char*)v4l2_.sBuffer[v4l_buf.index].start,
+            vpu_.nWidth, vpu_.nHeight,
+            pc_num_osd,
+            1, asc8, 10, vpu_.nHeight - 10);
 
     // resize image
     if ((v4l2_.nWidth != vpu_.nWidth) || (v4l2_.nHeight != vpu_.nHeight)) {

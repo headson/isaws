@@ -18,11 +18,11 @@
 int main() {
   system("killall watchdog");
 
-  sleep(1);
-
   int fd;
 
 #if 0
+  sleep(1);
+
   fd = open("/dev/watchdog", O_WRONLY);
   if (fd < 0) {
     printf("open error!!\n");
@@ -30,7 +30,7 @@ int main() {
   ioctl(fd, WDIOC_SETOPTIONS, WDIOS_ENABLECARD);
   ioctl(fd, WDIOC_SETTIMEOUT, 6);
 
-  while (1) {
+  while (true) {
     ioctl(fd, WDIOC_KEEPALIVE, 1);
     sleep(1);
   }
@@ -38,6 +38,8 @@ int main() {
 #endif
 
 #ifdef IMX6Q
+  sleep(1);
+
   typedef struct {
     int eType;     // ÀàÐÍ
     int nState;    // ×´Ì¬
@@ -51,7 +53,7 @@ int main() {
     return -1;
   }
 
-  while (1) {
+  while (true) {
     static int nWatchdog = 0;
     nWatchdog = ((nWatchdog>0) ? 0 : 1);
 
@@ -59,7 +61,7 @@ int main() {
     cExt.nState = nWatchdog;
 
     write(fd, &cExt, sizeof(cExt));
-    usleep(500);
+    usleep(500 * 1000);
   }
 
   close(fd);

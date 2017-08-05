@@ -35,7 +35,7 @@ typedef struct _TAG_WEB_SESSION {
 #define SESSION_COUNT 10
 extern TAG_WEB_SESSION k_session[SESSION_COUNT];
 
-extern TAG_WEB_SESSION *create_session(const char *usernmae,
+extern TAG_WEB_SESSION *create_session(const char *username,
                                        const struct http_message *hm);
 extern void             destroy_session(TAG_WEB_SESSION *s);
 

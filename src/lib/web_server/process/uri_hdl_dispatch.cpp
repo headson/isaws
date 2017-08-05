@@ -26,6 +26,8 @@ void uri_hdl_dispatch(struct mg_connection *nc, int ev, void *ev_data) {
   unsigned int nid = 0;
   Json::Value jreq, jresp;
 
+  TAG_WEB_SESSION *pses = get_session((struct http_message*)ev_data);
+
   if (!parse_request(smsg, nid, jreq, (struct http_message *)ev_data)) {
     LOG(L_ERROR) << "parse body data failed.";
     return;

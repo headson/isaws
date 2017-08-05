@@ -66,7 +66,7 @@ IF(WIN32)
 #ADD_SUBDIRECTORY(src/lib/avplayer)
 ADD_SUBDIRECTORY(src/run/icamera)
 #ADD_SUBDIRECTORY(src/run/pc_manage)
-ENDIF()
+
 ADD_SUBDIRECTORY(src/web)
 
 ## add test
@@ -80,4 +80,5 @@ ADD_SUBDIRECTORY(src/web)
 #ADD_SUBDIRECTORY(src/test/test_curl/test_curl_event)
 #ADD_SUBDIRECTORY(src/test/test_vzconn/test_vzconn_client)
 #ADD_SUBDIRECTORY(src/test/test_vzconn/test_vzconn_server)
-
+ADD_SUBDIRECTORY(src/test/test_catch_event)
+ENDIF()

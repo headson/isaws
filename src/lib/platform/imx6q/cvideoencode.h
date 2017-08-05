@@ -71,5 +71,14 @@ class CVideoEncode : public vzbase::Runnable {
 
   CShareBuffer  shm_vdo_;   // 共享编码数据
   CShareBuffer  shm_img_;   // 共享原始数据
+
+ public:
+  void SetPCount(unsigned int pnum, unsigned int nnum) {
+    POSITIVE_NUMBER = pnum;
+    NEGATIVE_NUMBER = nnum;
+  }
+
+  unsigned int  POSITIVE_NUMBER;
+  unsigned int  NEGATIVE_NUMBER;
 };
 #endif  // LIBPLATFORM_CVIDEOENCODE_H
