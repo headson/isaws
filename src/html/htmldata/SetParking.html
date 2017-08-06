@@ -1,0 +1,83 @@
+<div class="animated fadeInRight">
+    <div class="row">
+        <div class="col-sm-7">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>车位预留</h5>
+                </div>
+                <div class="ibox-content">
+                    <table id="sp_info_tb" class="table">
+                        <thead>
+                            <tr>
+                                <th><i class="fa fa-plus"></i></th>
+                                <th>车位</th>
+                                <th>车牌号</th>
+                                <th>开始时间</th>
+                                <th>结束时间</th>
+                                <th>占用告警</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" align="right">
+                                    <button type="button" id="submit_parking_btn">保存</button>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-5">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>预留信息</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border" id="cur_parking_tb">
+                        <tr>
+                            <td>车位</td>
+                            <td colspan="3">
+                                <select id="sp_stall_sel">
+
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>预留车牌</td>
+                            <td colspan="3">
+                                <input type="text" class="text" id="sp_op_txt"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>预留时间段</td>
+                            <td>
+                                <input type="text" class="datepicker text" id="start_time_pic">
+                            </td>
+                            <td>
+                                至
+                            </td>
+                            <td>
+                                <input type="text" class="datepicker text" id="end_time_pic">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>占用告警</td>
+                            <td>
+                                <input type="checkbox" class="i-checks" id="sp_occupy_cb"><label for="sp_occupy_cb">开启</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" align="right">
+                                <button type="button" id="cur_parking_btn">修改</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

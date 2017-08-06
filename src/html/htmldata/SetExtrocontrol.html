@@ -1,0 +1,61 @@
+<div class="animated fadeInRight">
+    <div class="row">
+        <div class="col-md-8 col-lg-5">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>外控设置</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-m">启用外控</td>
+                            <td>
+                                <input type="checkbox" id="ck_ext_device"/><label for="ck_ext_device">启用</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>IP地址</td>
+                            <td>
+                                <input type="text" id="ext_device_ip"/>
+                            </td>
+                            <td class="w-s" align="right">
+                                <button type="button" id="check_controled_btn">检测</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td id="error_msg"></td>
+                            <td></td>
+                            <td>
+                                <button type="button" class="pull-right" id="set_ext_btn">保存</button>
+                            </td>
+                        </tr>
+                    </table>
+                    <table id="ext_control_log_tb" class="table table-no-border">
+                        <tr>
+                            <td colspan="4">
+                                <h5>主控日志</h5>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                受控设备
+                            </td>
+                            <td>
+                                控制时间
+                            </td>
+                            <td>
+                                消息
+                            </td>
+                            <td>
+                                状态
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,150 @@
+<div class="animated fadeInRight">
+    <div class="row">
+        <div class="col-md-6 col-lg-5">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>串口设置</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-m">
+                                波特率
+                            </td>
+                            <td>
+                                <select id="baudrate_sel">
+                                    <option value="2400">2400</option>
+                                    <option value="4800">4800</option>
+                                    <option value="9600">9600</option>
+                                    <option value="19200">19200</option>
+                                    <option value="38400">38400</option>
+                                    <!--<option value="57600">57600</option>-->
+                                    <option value="115200">115200</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                效验位
+                            </td>
+                            <td>
+                                <select id="checkbit_sel">
+                                    <option value="0">无校验</option>
+                                    <option value="1">奇校验</option>
+                                    <option value="2">偶校验</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                停止位
+                            </td>
+                            <td>
+                                <select id="stopbit_sel">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                数据位
+                            </td>
+                            <td>
+                                <select id="databit_sel">
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <button type="button" class="pull-right" id="submit_serial_btn">保存</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-5">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>显示屏设置</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-m">
+                                协议类型
+                            </td>
+                            <td>
+                                <select id="protocol_sel">
+                                    <option value="0">协议1</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="w-m">
+                                直行显示屏
+                            </td>
+                            <td>
+                                <input type="checkbox" class="i-checks" id="f_enable_cb"><label for="f_enable_cb">启用</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="w-m">
+                                直行显示屏地址
+                            </td>
+                            <td>
+                                <input type="text" id="f_addr_txt"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="w-m">
+                                右转显示屏
+                            </td>
+                            <td>
+                                <input type="checkbox" class="i-checks" id="r_enable_cb"><label for="r_enable_cb">启用</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="w-m">
+                                右转显示屏地址
+                            </td>
+                            <td>
+                                <input type="text" id="r_addr_txt"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="w-m">
+                                左转显示屏
+                            </td>
+                            <td>
+                                <input type="checkbox" class="i-checks" id="l_enable_cb"><label for="l_enable_cb">启用</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="w-m">
+                                左转显示屏地址
+                            </td>
+                            <td>
+                                <input type="text" id="l_addr_txt"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <button type="button" class="pull-right" id="submit_ext_btn">保存</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

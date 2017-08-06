@@ -1,0 +1,93 @@
+<div class="animated fadeInRight">
+    <div class="row">
+        <div class="col-md-6 col-lg-5">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>基本参数</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-m">IP地址</td>
+                            <td>
+                                <input type="text" class="text" id="netip_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>子网掩码</td>
+                            <td>
+                                <input type="text" class="text" id="netmask_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>默认网关</td>
+                            <td>
+                                <input type="text" class="text" id="gateway_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>DNS服务器</td>
+                            <td>
+                                <input type="text" class="text" id="dnsserver_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <button type="button" class="pull-right" id="submit_basic_btn">保存</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" id="warning_text"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-5">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>TCP1</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-m">启用连接</td>
+                            <td>
+                                <input type="checkbox" id="connect_enable"/><label for="connect_enable">启用</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>服务器地址</td>
+                            <td>
+                                <input type="text" class="text" id="tcp_ip_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>端口号</td>
+                            <td>
+                                <input type="text" class="text" id="tcp_port_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>连接状态</td>
+                            <td id="status_txt">
+                                状态检测中...
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <button type="button" class="pull-right" id="submit_tcp_btn">保存</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

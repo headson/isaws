@@ -1,0 +1,60 @@
+<div class="animated fadeInRight">
+    <div class="row">
+        <div class="col-md-6 col-lg-8">
+            <div class="video_outer">
+                <img src="" id="ic_video"/>
+                <div id="canvas_container">
+                    <canvas id="myCanvas"></canvas>
+                    <div class="circle c1" pointx='pointx1' pointy='pointy1' index="0"></div>
+                    <div class="circle c2" pointx='pointx2' pointy='pointy2' index="0"></div>
+                    <div class="circle c3" pointx='pointx3' pointy='pointy3' index="0"></div>
+                    <div class="circle c4" pointx='pointx4' pointy='pointy4' index="0"></div>
+                    <div class="circle c1" pointx='pointx1' pointy='pointy1' index="1"></div>
+                    <div class="circle c2" pointx='pointx2' pointy='pointy2' index="1"></div>
+                    <div class="circle c3" pointx='pointx3' pointy='pointy3' index="1"></div>
+                    <div class="circle c4" pointx='pointx4' pointy='pointy4' index="1"></div>
+                    <div class="circle c1" pointx='pointx1' pointy='pointy1' index="2"></div>
+                    <div class="circle c2" pointx='pointx2' pointy='pointy2' index="2"></div>
+                    <div class="circle c3" pointx='pointx3' pointy='pointy3' index="2"></div>
+                    <div class="circle c4" pointx='pointx4' pointy='pointy4' index="2"></div>
+                    <div class="circle c5" pointx='parkinglotlineX1' pointy='parkinglotlineY1' index="3"></div>
+                    <div class="circle c6" pointx='parkinglotlineX2' pointy='parkinglotlineY2' index="3"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+           <div class="ibox float-e-margins">
+               <div class="ibox-title">
+                   <h5>设备名称</h5>
+               </div>
+               <div class="ibox-content">
+                   <table class="table table-no-border">
+                       <tr>
+                           <td class="w-m">设备名称</td>
+                           <td>
+                               <input type="text" class="text" id="devicename_text" maxlength="20"/>
+                           </td>
+                       </tr>
+                   </table>
+               </div>
+               <div class="ibox-title">
+                   <h5>识别区域</h5>
+               </div>
+               <div class="ibox-content">
+                   <table class="table table-no-border" id="area_tb">
+                       <tr id="null_tr">
+                           <td></td>
+                       </tr>
+                       <tr>
+                           <td colspan="2" align="center">
+                               <button type="button" class="pull-left" id="back_default">恢复默认设置</button>
+                               <button type="button" id="submit_area_btn">下一步</button>
+                               <button type="button" class="pull-right" id="save_area">保存</button>
+                           </td>
+                       </tr>
+                   </table>
+               </div>
+           </div>
+       </div>
+    </div>
+</div>

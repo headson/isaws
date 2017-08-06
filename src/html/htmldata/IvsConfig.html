@@ -1,0 +1,75 @@
+<div class="animated fadeInRight">
+    <div class="row">
+        <div class="col-md-6 col-lg-8">
+            <div class="video_outer">
+                <img src="" id="ic_video"/>
+                <div id="canvas_container">
+                    <canvas id="myCanvas"></canvas>
+                    <div class="circle c1" pointx='pointx1' pointy='pointy1' index="0"></div>
+                    <div class="circle c2" pointx='pointx2' pointy='pointy2' index="0"></div>
+                    <div class="circle c3" pointx='pointx3' pointy='pointy3' index="0"></div>
+                    <div class="circle c4" pointx='pointx4' pointy='pointy4' index="0"></div>
+                    <div class="circle c1" pointx='pointx1' pointy='pointy1' index="1"></div>
+                    <div class="circle c2" pointx='pointx2' pointy='pointy2' index="1"></div>
+                    <div class="circle c3" pointx='pointx3' pointy='pointy3' index="1"></div>
+                    <div class="circle c4" pointx='pointx4' pointy='pointy4' index="1"></div>
+                    <div class="circle c1" pointx='pointx1' pointy='pointy1' index="2"></div>
+                    <div class="circle c2" pointx='pointx2' pointy='pointy2' index="2"></div>
+                    <div class="circle c3" pointx='pointx3' pointy='pointy3' index="2"></div>
+                    <div class="circle c4" pointx='pointx4' pointy='pointy4' index="2"></div>
+                    <div class="circle c5" pointx='parkinglotlineX1' pointy='parkinglotlineY1' index="3"></div>
+                    <div class="circle c6" pointx='parkinglotlineX2' pointy='parkinglotlineY2' index="3"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+           <div class="ibox float-e-margins">
+               <div class="ibox-title">
+                   <h5>识别区域</h5>
+               </div>
+               <div class="ibox-content">
+                   <table class="table table-no-border">
+                       <tr index="0">
+                           <td>
+                               <input type="checkbox" class="i-checks area-cb" id="ivs_stall_area_cb0"><label for="ivs_stall_area_cb0">车位区域1</label>
+                           </td>
+                           <td>
+                               <input type="text" class="text area-txt" id="stall_area_text0" maxlength="20"/>
+                           </td>
+                       </tr>
+                       <tr index="1">
+                           <td>
+                               <input type="checkbox" class="i-checks area-cb" id="ivs_stall_area_cb1"><label for="ivs_stall_area_cb1">车位区域2</label>
+                           </td>
+                           <td>
+                               <input type="text" class="text area-txt" id="stall_area_text1" maxlength="20"/>
+                           </td>
+                       </tr>
+                       <tr index="2">
+                           <td>
+                               <input type="checkbox" class="i-checks area-cb" id="ivs_stall_area_cb2"><label for="ivs_stall_area_cb2">车位区域3</label>
+                           </td>
+                           <td>
+                               <input type="text" class="text area-txt" id="stall_area_text2" maxlength="20"/>
+                           </td>
+                       </tr>
+                       <!--<tr>-->
+                           <!--<td>-->
+                               <!--<input type="checkbox" class="i-checks" id="ivs_busy_cb"><label for="ivs_busy_cb">占线</label>-->
+                           <!--</td>-->
+                       <!--</tr>-->
+                       <tr>
+                           <td></td>
+                       </tr>
+                       <tr>
+                           <td colspan="2">
+                               <button type="button" id="get_img_btn">更新图片</button>
+                               <button type="button" class="pull-right" id="submit_area_btn">保存</button>
+                           </td>
+                       </tr>
+                   </table>
+               </div>
+           </div>
+       </div>
+    </div>
+</div>

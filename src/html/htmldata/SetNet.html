@@ -1,0 +1,66 @@
+<div>
+    <div class="row">
+        <div class="col-md-6 col-lg-8" id="live">
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>设备名称</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-m">设备名称</td>
+                            <td>
+                                <input type="text" class="text" id="devicename_text" maxlength="20"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="ibox-title">
+                    <h5>网络参数</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-m">IP地址</td>
+                            <td>
+                                <input type="text" class="text" id="netip_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>子网掩码</td>
+                            <td>
+                                <input type="text" class="text" id="netmask_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>默认网关</td>
+                            <td>
+                                <input type="text" class="text" id="gateway_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>DNS服务器</td>
+                            <td>
+                                <input type="text" class="text" id="dnsserver_text"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <button type="button" class="pull-right" id="submit_net_btn">保存</button>
+                                <button type="button" id="last_step_btn">上一步</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" id="warning_text"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

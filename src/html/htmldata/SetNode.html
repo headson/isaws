@@ -1,0 +1,68 @@
+<div class="animated fadeInRight">
+    <div class="row">
+        <div class="col-md-6 col-lg-5">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>目的节点设置</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-m">
+                                当前设备IP
+                            </td>
+                            <td id="device_ip">
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                目的节点
+                            </td>
+                            <td>
+                                <input type="text" id="dis_addr"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                节点类型
+                            </td>
+                            <td>
+                                <select id="pos">
+                                    <option value="0">直行设备</option>
+                                    <option value="1">左转向设备</option>
+                                    <option value="2">右转向设备</option>
+                                </select>
+                            </td>
+                            <td>
+                                <button type="button" id="insert_node">添加节点</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>节点列表</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <table id="node_list" class="table">
+                                    <tr>
+                                        <th>目的节点地址</th>
+                                        <th>目的节点地址</th>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <button type="button" id="delete_node">删除节点</button>
+                                <button type="button" class="pull-right" id="submit_node_btn">保存配置</button>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

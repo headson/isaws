@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <title>车位引导</title>
+    <style type="text/css">
+        body {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrapper">
+        <div class="navbar-default navbar-static-side" role="navigation" id="leftNav">
+            <div class="sidebar-collapse">
+                <ul class="nav" id="side-menu">
+                    <li class="nav-header">
+                        <div class="dropdown profile-element">
+                                <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                                <span class="clear"> <span class="block m-t-xs"> <strong class="font-bold">车位引导</strong>
+                                 </span> </span> </a>
+                        </div>
+                        <div class="logo-element">
+                            VZ
+                        </div>
+                    </li>
+                    <li id="li1">
+                        <a href="javascript:void(0);" onclick="onLinkClick('LiveVideo.html')"><i class="fa fa-camera"></i> <span class="nav-label">实时预览</span></a>
+                    </li>
+                    <li id="li2">
+                        <a href="javascript:void(0);"><i class="fa fa-gear"></i> <span class="nav-label">快速配置</span><span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level" style="z-index: 9999;">
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('DrawArea.html')" id="dn_area">名称和识别区域</a></li>
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('SetIndLight.html')" id="ex_light">外控和指示灯</a></li>
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('SetDateTime.html')" id="set_dt">时间设置</a></li>
+                        </ul>
+                        <iframe src="Null.html" class="nav nav-second-level" frameborder="0" width="140" style="border: none;position: absolute;overflow:hidden;"></iframe>
+                    </li>
+                    <li class="">
+                        <a href="javascript:void(0);"><i class="fa fa-desktop"></i> <span class="nav-label">设备参数</span><span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level" style="z-index: 9999;">
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('SetNetport.html')">网络参数</a></li>
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('SetHttpPush.html')">HTTP推送</a></li>
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('SetVideo.html')">相机设置</a></li>
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('SetSerial.html')">串口设置</a></li>
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('SetNode.html')">节点设置</a></li>
+                        </ul>
+                        <iframe src="Null.html" class="nav nav-second-level" frameborder="0" width="140" style="border: none;position: absolute;overflow:hidden;"></iframe>
+                    </li>
+                    <li class="">
+                        <a href="javascript:void(0);"><i class="fa fa-wrench"></i> <span class="nav-label">系统维护</span> <span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level" style="z-index: 9999">
+                            <li ><a href="javascript:void(0);" onclick="onLinkClick('Support.html')">固件升级</a></li>
+                        </ul>
+                        <iframe src="Null.html" class="nav nav-second-level" frameborder="0" width="140" style="border: none;position: absolute;overflow:hidden;"></iframe>
+                    </li>
+                </ul>
+
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="page-wrapper" class="gray-bg">
+                    <div class="row border-bottom" id="mainHeader">
+                        <div class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
+                            <div class="navbar-header">
+                                <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
+                            </div>
+                            <ul class="nav navbar-top-links navbar-right" style="visibility: hidden">
+                                <li>
+                                    <a href="javascript:void(0);" id="logout">
+                                        <i class="fa fa-sign-out"></i> 退出
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row wrapper-content" id="mainContent">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="text/javascript" src="../js/LAB.min.js"></script>
+<script type="text/javascript">
+    $LAB.script("../js/launch.js?version=" + new Date().getTime()).wait(function () {
+        init(function () {
+            $.ajaxSetup({
+                global: false,
+                timeout:10000
+            });
+
+            function get_window_size(){
+                //获取窗口宽度
+                if (window.innerWidth)
+                    winWidth = window.innerWidth;
+                else if ((document.body) && (document.body.clientWidth))
+                    winWidth = document.body.clientWidth;
+                //获取窗口高度
+                if (window.innerHeight)
+                    winHeight = window.innerHeight;
+                else if ((document.body) && (document.body.clientHeight))
+                    winHeight = document.body.clientHeight;
+                //通过深入Document内部对body进行检测，获取窗口大小
+                if (document.documentElement && document.documentElement.clientHeight && document.documentElement.clientWidth) {
+                    winHeight = document.documentElement.clientHeight;
+                    winWidth = document.documentElement.clientWidth;
+                }
+                return {w:winWidth,h:winHeight}
+            }
+            // Full height of sidebar
+            function fix_height() {
+                var heightWithoutNavbar = $("body > #wrapper").height() - 61;
+                $(".sidebard-panel").css("min-height", heightWithoutNavbar + "px");
+
+                var navbarHeigh = $('div.navbar-default').height();
+                var wrapperHeigh = $('#page-wrapper').height();
+
+                if(navbarHeigh > wrapperHeigh && !$('body').hasClass('body-small')){
+                    $('#page-wrapper').css("min-height", navbarHeigh + "px");
+                }
+
+                if(navbarHeigh < wrapperHeigh){
+                    $('#page-wrapper').css("min-height", $(window).height()  + "px");
+                }
+
+            }
+            function changeFrameHeight(){
+                var size = get_window_size();
+                var content = get_boundary($("#mainContent"),false);
+                $("#page-wrapper").height(size.h);
+                $("#mainContent").height(size.h - 70 - content.h);
+            }
+            // Minimalize menu when screen is less than 768px
+            $(window).on("resize", function () {
+                if ($(this).width() < 769) {
+                    $('body').addClass('body-small');
+                    $("#mainContent").removeClass("row");
+                } else {
+                    $('body').removeClass('body-small');
+                    $("#mainContent").addClass("row");
+                }
+                changeFrameHeight();
+                fix_height();
+            });
+
+            function SmoothlyMenu() {
+                if (!$('body').hasClass('mini-navbar') || $('body').hasClass('body-small')) {
+                    // Hide menu in order to smoothly turn on when maximize menu
+                    $('#side-menu').hide();
+                    // For smoothly turn on menu
+                    setTimeout(
+                            function () {
+                                $('#side-menu').fadeIn(500);
+                            }, 100);
+                } else if ($('body').hasClass('fixed-sidebar')) {
+                    $('#side-menu').hide();
+                    setTimeout(
+                            function () {
+                                $('#side-menu').fadeIn(500);
+                            }, 300);
+                } else {
+                    // Remove all inline style from jquery fadeIn function to reset menu state
+                    $('#side-menu').removeAttr('style');
+                }
+            }
+            function logOut(){
+                $.ajax({
+                    type:"POST",
+                    url: '/logout.php',
+                    success: function(ajaxdata) {
+                        location.href = "Login.html";
+                    }
+                });
+            }
+            $(function () {
+                // Add body-small class if window less than 768px
+                if ($(this).width() < 769) {
+                    $('body').addClass('body-small');
+                    $("#mainContent").removeClass("row");
+                } else {
+                    $('body').removeClass('body-small');
+                    $("#mainContent").addClass("row");
+                }
+
+                // 初始化菜单
+                $('#side-menu').metisMenu();
+
+                // 收起菜单
+                $('.navbar-minimalize').click(function () {
+                    $("body").toggleClass("mini-navbar");
+                    SmoothlyMenu();
+                    window.onresize();
+                });
+
+                // Fixed Sidebar
+                $(window).bind("load", function () {
+                    if ($("body").hasClass('fixed-sidebar')) {
+                        $('.sidebar-collapse').slimScroll({
+                            height: '100%',
+                            railOpacity: 0.9
+                        });
+                    }
+                });
+                $("#logout").click(logOut);
+                $(document).bind("load resize scroll", function() {
+//                    if(!$("body").hasClass('body-small')) {
+                        fix_height();
+//                    }
+                });
+
+                // Add slimscroll to element
+                $('.full-height-scroll').slimscroll({
+                    height: '100%'
+                });
+                fix_height();
+                changeFrameHeight();
+                var url = window.location.href;
+                if(url.match(/tool/)){
+                    $("body").addClass("mini-navbar");
+                    onLinkClick('DrawArea.html');
+                    $("#li2").addClass("active");
+                }else{
+                    onLinkClick("LiveVideo.html");
+                    $("#li1").addClass("active");
+                }
+            });
+        });
+    });
+</script>
+<script>
+    var close_arr = [];
+    function onLinkClick(url) {
+        $("#mainContent").load(url + "?version=" + version.web,function(){
+            for(var i=0;i<close_arr.length;i++){
+                close_arr[i]();
+            }
+            init_element();
+            var name = url.split(".")[0];
+            if(name == "Null"){
+                return;
+            }
+            eval(name + ".init();");
+            $("button,input:button,input:submit").focus(function(){
+                $(this).blur();
+            });
+        });
+    }
+</script>
+</html>

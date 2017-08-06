@@ -1,0 +1,263 @@
+<div>
+    <div class="row">
+        <div class="col-md-6 col-lg-8" id="live">
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#tab-1">图像参数</a></li>
+                <!--<li><a data-toggle="tab" href="#tab-2">编码参数</a></li>-->
+                <li><a data-toggle="tab" href="#tab-3">OSD参数</a></li>
+            </ul>
+            <div class="tab-content">
+                <div id="tab-1" class="tab-pane active">
+                    <div class="ibox-content">
+                        <table class="table table-no-border">
+                            <tr>
+                                <td style="width: 100px">
+                                    亮度
+                                </td>
+                                <td>
+                                    <div id="brightness" class="rangeSlider"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    色调
+                                </td>
+                                <td>
+                                    <div id="hue" class="rangeSlider"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    对比度
+                                </td>
+                                <td>
+                                    <div id="contrast" class="rangeSlider"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    饱和度
+                                </td>
+                                <td>
+                                    <div id="saturation" class="rangeSlider"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    最大曝光
+                                </td>
+                                <td>
+                                    <div id="max_expose" class="rangeSlider"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    最大增益
+                                </td>
+                                <td>
+                                    <div id="max_gain" class="rangeSlider"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td align="right" colspan="3">
+                                    <button type="button" id="back_default_btn">恢复默认</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <!--<div id="tab-2" class="tab-pane">-->
+                <!--<div class="ibox-content">-->
+                <!--<table class="table table-no-border">-->
+                <!--<tr>-->
+                <!--<td>-->
+                <!--分辨率-->
+                <!--</td>-->
+                <!--<td>-->
+                <!--<select id="resolution_sel">-->
+
+                <!--</select>-->
+                <!--</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                <!--<td>-->
+                <!--帧率-->
+                <!--</td>-->
+                <!--<td>-->
+                <!--<select id="frame_rate_sel">-->
+
+                <!--</select>-->
+                <!--</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                <!--<td>-->
+                <!--编码方式-->
+                <!--</td>-->
+                <!--<td>-->
+                <!--<select id="encode_type_sel">-->
+
+                <!--</select>-->
+                <!--</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                <!--<td>-->
+                <!--码流控制-->
+                <!--</td>-->
+                <!--<td>-->
+                <!--<select id="rate_type_sel">-->
+
+                <!--</select>-->
+                <!--</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                <!--<td>-->
+                <!--图像质量-->
+                <!--</td>-->
+                <!--<td>-->
+                <!--<select id="video_quality_sel">-->
+
+                <!--</select>-->
+                <!--</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                <!--<td>-->
+                <!--码流上限-->
+                <!--</td>-->
+                <!--<td>-->
+                <!--<input type="text" id="data_rate"/>-->
+                <!--</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                <!--<td>&nbsp;</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                <!--<td align="right" colspan="3">-->
+                <!--<button type="button" id="submit_encode_btn">保存</button>-->
+                <!--</td>-->
+                <!--</tr>-->
+                <!--</table>-->
+                <!--</div>-->
+                <!--</div>-->
+                <div id="tab-3" class="tab-pane">
+                    <div class="ibox-content">
+                        <table class="table table-no-border">
+                            <tr>
+                                <td class="w-s">
+                                    <input type="checkbox" class="i-checks" id="ivs_date_cb"><label for="ivs_date_cb">日期</label>
+                                </td>
+                                <td class="w-s">
+                                    格式:
+                                </td>
+                                <td colspan="8">
+                                    <select name="" id="ivs_date_sel">
+                                        <option value="0">YYYY/MM/DD</option>
+                                        <option value="1">MM/DD/YYYY</option>
+                                        <option value="2">DD/MM/YYYY</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    坐标百分比
+                                </td>
+                                <td>
+                                    x:
+                                </td>
+                                <td>
+                                    <input type="text" class="text" id="date_coordinatex"/>
+                                </td>
+                                <td> % </td>
+                                <td>
+                                    y:
+                                </td>
+                                <td>
+                                    <input type="text" class="text" id="date_coordinatey"/>
+                                </td>
+                                <td> % </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="i-checks" id="ivs_time_cb"><label for="ivs_time_cb">时间</label>
+                                </td>
+                                <td>
+                                    格式:
+                                </td>
+                                <td colspan="8">
+                                    <select name="" id="ivs_time_sel">
+                                        <option value="0">12hours</option>
+                                        <option value="1">24hours</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    坐标百分比
+                                </td>
+                                <td>
+                                    x:
+                                </td>
+                                <td>
+                                    <input type="text" class="text" id="time_coordinatex"/>
+                                </td>
+                                <td> % </td>
+                                <td>
+                                    y:
+                                </td>
+                                <td>
+                                    <input type="text" class="text" id="time_coordinatey"/>
+                                </td>
+                                <td> % </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="checkbox" class="i-checks" id="ivs_text_cb"><label for="ivs_text_cb">文字</label>
+                                </td>
+                                <td>
+                                    文字:
+                                </td>
+                                <td colspan="8">
+                                    <input type="text" class="text" id="ivs_text" maxlength="16"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td>
+                                    坐标百分比
+                                </td>
+                                <td>
+                                    x:
+                                </td>
+                                <td>
+                                    <input type="text" class="text" id="text_coordinatex"/>
+                                </td>
+                                <td> % </td>
+                                <td>
+                                    y:
+                                </td>
+                                <td>
+                                    <input type="text" class="text" id="text_coordinatey"/>
+                                </td>
+                                <td> % </td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td align="right" colspan="10">
+                                    <button type="button" id="submit_area_btn">保存</button>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

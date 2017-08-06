@@ -1,0 +1,75 @@
+<div class="animated fadeInRight">
+    <div class="row">
+        <div class="col-md-8 col-lg-5">
+            <div class="ibox float-e-margins plateresult">
+                <div class="ibox-title">
+                    <h5>系统维护</h5>
+                </div>
+                <div class="ibox-content">
+                    <table class="table table-no-border">
+                        <tr>
+                            <td class="w-l">系统版本</td>
+                            <td id="software_version_td">
+                            </td>
+                            <td class="w-s"></td>
+                        </tr>
+                        <tr>
+                            <td>硬件版本</td>
+                            <td id="system_version_td">
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>算法版本</td>
+                            <td id="algorithm_version_td">
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>设备序列号</td>
+                            <td id="device_serialno_td">
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>MAC地址</td>
+                            <td id="device_mac_td">
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td>选择本地升级文件</td>
+                            <td>
+                                <form id="frmUpdate" method="post" enctype="multipart/form-data" action="/upload" target="hidden_frame">
+                                    <input id="file_input" type="file" name="file" style="height:25px;width:100%;" />
+                                </form>
+                            </td>
+                            <td align="right">
+                                <input type="submit" id="update" value="升级" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" align="right">
+                                <input type="submit" id="restart" value="重启服务器" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">
+                                <div id="txt">
+                                    &nbsp;
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <iframe name='hidden_frame' id="hidden_frame" style="visibility:hidden;width:1px;height:1px;"></iframe>
+        </div>
+    </div>
+</div>

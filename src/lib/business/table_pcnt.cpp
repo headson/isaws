@@ -227,8 +227,8 @@ static void CreateNumber(Json::Value &jret, sqlite3 *db,
                &negative_number_last, &negative_add_num_last);
   if (positive_number_first == positive_number_last &&
       negative_number_first == negative_number_last) {
-    positive_number_last = 0; positive_add_num_last = 0;
-    negative_number_last = 0; negative_add_num_last = 0;
+    positive_number_last = 0; positive_add_num_last = positive_add_num_first;
+    negative_number_last = 0; negative_add_num_last = negative_add_num_first;
   }
   LOG(L_INFO) <<" number " << nnum
               << " \npositive_number_last " << positive_number_last
@@ -238,10 +238,8 @@ static void CreateNumber(Json::Value &jret, sqlite3 *db,
 
   Json::Value jone;
   jone["number"] = nnum;
-  jone["positive"] = positive_number_first - positive_number_last +
-                     ((positive_number_last > 0) ? positive_add_num_last : 0);
-  jone["negative"] = negative_number_first - negative_number_last +
-                     ((negative_number_last > 0) ? negative_add_num_last : 0);
+  jone["positive"] = positive_number_first - positive_number_last + positive_add_num_last;
+  jone["negative"] = negative_number_first - negative_number_last + negative_add_num_last;
   jret.append(jone);
 }
 
