@@ -193,18 +193,60 @@ static bool GetNum(sqlite3 *db, const char *fmt,
 
   res = sqlite3_step(stmt);
   if (res == SQLITE_ROW) {
-    *positive_number = sqlite3_column_int(stmt, 0);
+    *positive_number  = sqlite3_column_int(stmt, 0);
     *positive_add_num = sqlite3_column_int(stmt, 1);
-    *negative_number = sqlite3_column_int(stmt, 2);
+    *negative_number  = sqlite3_column_int(stmt, 2);
     *negative_add_num = sqlite3_column_int(stmt, 3);
   }
   sqlite3_finalize(stmt);
   return true;
 }
 
+static void CreateNumber(Json::Value &jret, sqlite3 *db,
+                         int nnum,
+                         unsigned int nbng, unsigned int nend) {
+  int positive_number_first = 0, positive_number_last = 0;
+  int positive_add_num_first = 0, positive_add_num_last = 0;
+  int negative_number_first = 0, negative_number_last = 0;
+  int negative_add_num_first = 0, negative_add_num_last = 0;
+
+  bool res = false;
+
+  // fisrt
+  res = GetNum(db, SELECT_STMT_SQL_FIRST, nbng, nend,
+               &positive_number_first, &positive_add_num_first,
+               &negative_number_first, &negative_add_num_first);
+  LOG(L_INFO) <<" number " << nnum
+              << " \npositive_number_first "<<positive_number_first
+              << " positive_add_num_first " << positive_add_num_first
+              << " \nnegative_number_first " << negative_number_first
+              << " negative_add_num_first " << negative_add_num_first;
+  // last
+  res = GetNum(db, SELECT_STMT_SQL_LAST, nbng, nend,
+               &positive_number_last, &positive_add_num_last,
+               &negative_number_last, &negative_add_num_last);
+  if (positive_number_first == positive_number_last &&
+      negative_number_first == negative_number_last) {
+    positive_number_last = 0; positive_add_num_last = 0;
+    negative_number_last = 0; negative_add_num_last = 0;
+  }
+  LOG(L_INFO) <<" number " << nnum
+              << " \npositive_number_last " << positive_number_last
+              << " positive_add_num_last " << positive_add_num_last
+              << " \nnegative_number_last " << negative_number_last
+              << " negative_add_num_last " << negative_add_num_last;
+
+  Json::Value jone;
+  jone["number"] = nnum;
+  jone["positive"] = positive_number_first - positive_number_last +
+                     ((positive_number_last > 0) ? positive_add_num_last : 0);
+  jone["negative"] = negative_number_first - negative_number_last +
+                     ((negative_number_last > 0) ? negative_add_num_last : 0);
+  jret.append(jone);
+}
+
 static bool SelectPCountOfDay(Json::Value &jresp, sqlite3 *db,
                               int year, int month, int day) {
-  bool res;
   sqlite3_stmt *stmt = NULL;
   char sql[1024] = {0};
   unsigned int nbng = 0, nend = 0;
@@ -215,28 +257,7 @@ static bool SelectPCountOfDay(Json::Value &jresp, sqlite3 *db,
     nbng = vzbase::ToTimet(year, month, day, hour, 0, 0);
     nend = vzbase::ToTimet(year, month, day, hour, 59, 59);
 
-    int positive_number_first = 0, positive_number_last = 0;
-    int positive_add_num_first = 0, positive_add_num_last = 0;
-    int negative_number_first = 0, negative_number_last = 0;
-    int negative_add_num_first = 0, negative_add_num_last = 0;
-
-    // fisrt
-    res = GetNum(db, SELECT_STMT_SQL_FIRST, nbng, nend,
-                 &positive_number_first, &positive_add_num_first,
-                 &negative_number_first, &negative_add_num_first);
-
-    // last
-    res = GetNum(db, SELECT_STMT_SQL_LAST, nbng, nend,
-                 &positive_number_last, &positive_add_num_last,
-                 &negative_number_last, &negative_add_num_last);
-
-    Json::Value jone;
-    jone["number"]   = hour;
-    jone["positive"] = positive_number_first - positive_number_last +
-                       ((positive_number_last > 0) ? positive_add_num_first : 0);
-    jone["negative"] = negative_number_first - negative_number_last +
-                       ((negative_number_last > 0) ? negative_add_num_first : 0);
-    jret.append(jone);
+    CreateNumber(jret, db, hour, nbng, nend);
   }
   sqlite3_exec(db, "COMMIT", 0, 0, NULL);
 
@@ -246,7 +267,6 @@ static bool SelectPCountOfDay(Json::Value &jresp, sqlite3 *db,
 
 static bool SelectPCountOfMonth(Json::Value &jresp, sqlite3 *db,
                                 int year, int month) {
-  int res;
   sqlite3_stmt *stmt = NULL;
   char sql[1024] = {0};
   unsigned int nbng = 0, nend = 0;
@@ -258,28 +278,7 @@ static bool SelectPCountOfMonth(Json::Value &jresp, sqlite3 *db,
     nbng = vzbase::ToTimet(year, month, day, 0, 0, 0);
     nend = vzbase::ToTimet(year, month, day, 23, 59, 59);
 
-    int positive_number_first = 0, positive_number_last = 0;
-    int positive_add_num_first = 0, positive_add_num_last = 0;
-    int negative_number_first = 0, negative_number_last = 0;
-    int negative_add_num_first = 0, negative_add_num_last = 0;
-
-    // fisrt
-    res = GetNum(db, SELECT_STMT_SQL_FIRST, nbng, nend,
-                 &positive_number_first, &positive_add_num_first,
-                 &negative_number_first, &negative_add_num_first);
-
-    // last
-    res = GetNum(db, SELECT_STMT_SQL_LAST, nbng, nend,
-                 &positive_number_last, &positive_add_num_last,
-                 &negative_number_last, &negative_add_num_last);
-
-    Json::Value jone;
-    jone["number"] = day;
-    jone["positive"] = positive_number_first - positive_number_last +
-                       ((positive_number_last > 0) ? positive_add_num_first : 0);
-    jone["negative"] = negative_number_first - negative_number_last +
-                       ((negative_number_last > 0) ? negative_add_num_first : 0);
-    jret.append(jone);
+    CreateNumber(jret, db, day, nbng, nend);
   }
   sqlite3_exec(db, "COMMIT", 0, 0, NULL);
 
@@ -290,7 +289,6 @@ static bool SelectPCountOfMonth(Json::Value &jresp, sqlite3 *db,
 
 static bool SelectPCountOfYear(Json::Value &jresp, sqlite3 *db,
                                int year) {
-  int res;
   sqlite3_stmt *stmt = NULL;
   char sql[1024] = {0};
   unsigned int nbng = 0, nend = 0;
@@ -298,31 +296,11 @@ static bool SelectPCountOfYear(Json::Value &jresp, sqlite3 *db,
   sqlite3_exec(db, "BEGIN", 0, 0, NULL);
   for (int month = 1; month <= 12; month++) {
     nbng = vzbase::ToTimet(year, month, 1, 0, 0, 0);
+
     const int days = vzbase::GetMonthOfDays(year, month);
     nend = vzbase::ToTimet(year, month, days, 23, 59, 59);
 
-    int positive_number_first = 0, positive_number_last = 0;
-    int positive_add_num_first = 0, positive_add_num_last = 0;
-    int negative_number_first = 0, negative_number_last = 0;
-    int negative_add_num_first = 0, negative_add_num_last = 0;
-
-    // fisrt
-    res = GetNum(db, SELECT_STMT_SQL_FIRST, nbng, nend,
-                 &positive_number_first, &positive_add_num_first,
-                 &negative_number_first, &negative_add_num_first);
-
-    // last
-    res = GetNum(db, SELECT_STMT_SQL_LAST, nbng, nend,
-                 &positive_number_last, &positive_add_num_last,
-                 &negative_number_last, &negative_add_num_last);
-
-    Json::Value jone;
-    jone["number"] = month;
-    jone["positive"] = positive_number_first - positive_number_last +
-                       ((positive_number_last > 0) ? positive_add_num_first : 0);
-    jone["negative"] = negative_number_first - negative_number_last +
-                       ((negative_number_last > 0) ? negative_add_num_first : 0);
-    jret.append(jone);
+    CreateNumber(jret, db, month, nbng, nend);
   }
   sqlite3_exec(db, "COMMIT", 0, 0, NULL);
 

@@ -35,8 +35,8 @@ CListenMessage *CListenMessage::Instance() {
   return &listen_message;
 }
 
-bool CListenMessage::Start() {
-  vdo_enc_.SetVideo("/dev/video0");
+bool CListenMessage::Start(const char *dev_vdo) {
+  vdo_enc_.SetVideo(dev_vdo);
   vdo_enc_.SetInput(0);
   vdo_enc_.SetViSize(SHM_VIDEO_0_W, SHM_VIDEO_0_H);
   vdo_enc_.SetEncSize(SHM_VIDEO_0_W, SHM_VIDEO_0_H);
