@@ -60,8 +60,6 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/include/hi_common.h
 
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/common/authfile.h
-	${CMAKE_CURRENT_SOURCE_DIR}/common/authfile.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_audio.c
@@ -73,8 +71,6 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vi.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vo.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vpss.c
-	
-	${CMAKE_CURRENT_SOURCE_DIR}/sample_venc.c
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
@@ -111,8 +107,6 @@ SOURCE_GROUP(mpp_include FILES
 
 SOURCE_GROUP(common FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/common/authfile.h
-	${CMAKE_CURRENT_SOURCE_DIR}/common/authfile.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_audio.c
@@ -127,8 +121,6 @@ SOURCE_GROUP(common FILES
 )
 
 SOURCE_GROUP(audio_video FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/sample_venc.c
-	
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h
@@ -139,7 +131,7 @@ MESSAGE(STATUS "Step 4 : Add project define")
 ADD_DEFINITIONS(
 	-Dhi3518ev200
 	-DHICHIP=0x3518E200
-	-DSENSOR_TYPE=F02_1080P_30FPS
+	-DSENSOR_TYPE=APTINA_AR0130_DC_720P_30FPS
 	-DCHIP_ID=CHIP_HI3518E_V200
 	-DHI_DEBUG 
 	-DHI_XXXX 

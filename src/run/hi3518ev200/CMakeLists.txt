@@ -60,7 +60,7 @@ else()
 		libupvqe.a 
 		libdnvqe.a
 		libisp.a
-		libsns_f02.a 
+		libsns_ar0130.a
 		lib_cmoscfg.a
 		lib_iniparser.a
 		lib_hiae.a 

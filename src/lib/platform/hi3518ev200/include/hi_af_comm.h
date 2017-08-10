@@ -7,7 +7,7 @@
   Version       : Initial Draft
   Author        : Hisilicon multimedia software group
   Created       : 2012/12/20
-  Description   : 
+  Description   :
   History       :
   1.Date        : 2012/12/20
     Author      : n00168968
@@ -21,7 +21,7 @@
 
 #ifdef __cplusplus
 #if __cplusplus
-extern "C"{
+extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
 

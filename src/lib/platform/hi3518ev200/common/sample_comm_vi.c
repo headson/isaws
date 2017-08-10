@@ -344,44 +344,6 @@ VI_DEV_ATTR_S DEV_ATTR_OV9732_DC_720P_BASE = {
 };
 
 
-VI_DEV_ATTR_S DEV_ATTR_F02_1080P_BASE = {
-  /* interface mode */
-  VI_MODE_DIGITAL_CAMERA,
-  /* multiplex mode */
-  VI_WORK_MODE_1Multiplex,
-  /* r_mask    g_mask    b_mask*/
-  {0xFFC0000,    0x0},
-  /* progessive or interleaving */
-  VI_SCAN_PROGRESSIVE,
-  /*AdChnId*/
-  {-1, -1, -1, -1},
-  /*enDataSeq, only support yuv*/
-  VI_INPUT_DATA_YUYV,
-
-  /* synchronization information */
-  {
-    /*port_vsync   port_vsync_neg     port_hsync        port_hsync_neg        */
-    VI_VSYNC_PULSE, VI_VSYNC_NEG_HIGH, VI_HSYNC_VALID_SINGNAL,VI_HSYNC_NEG_HIGH,VI_VSYNC_VALID_SINGAL,VI_VSYNC_VALID_NEG_HIGH,
-
-    /*hsync_hfb    hsync_act    hsync_hhb*/
-    {
-      0,            1920,        0,
-      /*vsync0_vhb vsync0_act vsync0_hhb*/
-      0,            1080,        0,
-      /*vsync1_vhb vsync1_act vsync1_hhb*/
-      0,            0,            0
-    }
-  },
-  /* use interior ISP */
-  VI_PATH_ISP,
-  /* input data type */
-  VI_DATA_TYPE_RGB,
-  /* bRevert */
-  HI_FALSE,
-  /* stDevRect */
-  {0, 0, 1920, 1080}
-};
-
 /*mt9p006 DC 12bit input*/
 VI_DEV_ATTR_S DEV_ATTR_MT9P006_DC_1080P = {
   /* interface mode */
@@ -1529,8 +1491,7 @@ HI_S32 SAMPLE_COMM_VI_StartDev(VI_DEV ViDev, SAMPLE_VI_MODE_E enViMode) {
   HI_S32 s32IspDev = 0;
   ISP_WDR_MODE_S stWdrMode;
   VI_DEV_ATTR_S  stViDevAttr;
-  VI_DEV_ATTR_EX_S stViDevAttrEx;
-  RECT_S rect;
+
   memset(&stViDevAttr,0,sizeof(stViDevAttr));
 
   switch (enViMode) {
@@ -1582,13 +1543,7 @@ HI_S32 SAMPLE_COMM_VI_StartDev(VI_DEV ViDev, SAMPLE_VI_MODE_E enViMode) {
     stViDevAttr.stDevRect.u32Width  = 1280;
     stViDevAttr.stDevRect.u32Height = 720;
     break;
-  case F02_1080P_30FPS:
-    memcpy(&stViDevAttr,&DEV_ATTR_F02_1080P_BASE,sizeof(stViDevAttr));
-    stViDevAttr.stDevRect.s32X = 0;
-    stViDevAttr.stDevRect.s32Y = 0;
-    stViDevAttr.stDevRect.u32Width  = 1920;
-    stViDevAttr.stDevRect.u32Height = 1080;
-    break;
+
   case OMNIVISION_OV9750_MIPI_720P_30FPS:
   case OMNIVISION_OV9752_MIPI_720P_30FPS:
     memcpy(&stViDevAttr,&DEV_ATTR_MIPI_BASE,sizeof(stViDevAttr));
@@ -1613,53 +1568,6 @@ HI_S32 SAMPLE_COMM_VI_StartDev(VI_DEV ViDev, SAMPLE_VI_MODE_E enViMode) {
   s32Ret = HI_MPI_VI_SetDevAttr(ViDev, &stViDevAttr);
   if (s32Ret != HI_SUCCESS) {
     SAMPLE_PRT("HI_MPI_VI_SetDevAttr failed with %#x!\n", s32Ret);
-    return HI_FAILURE;
-  }
-
-  stViDevAttrEx.enInputMode = VI_INPUT_MODE_DIGITAL_CAMERA;
-  stViDevAttrEx.enWorkMode = 0;
-  stViDevAttrEx.enScanMode = VI_SCAN_PROGRESSIVE;
-  stViDevAttrEx.s32AdChnId[0] = -1;
-  stViDevAttrEx.s32AdChnId[1] = -1;
-  stViDevAttrEx.s32AdChnId[2] = -1;
-  stViDevAttrEx.s32AdChnId[3] = -1;
-  stViDevAttrEx.stSynCfg.enVsync = VI_VSYNC_PULSE;
-  stViDevAttrEx.stSynCfg.enVsyncNeg = VI_VSYNC_NEG_HIGH;
-  stViDevAttrEx.stSynCfg.enHsync = VI_HSYNC_VALID_SINGNAL;
-  stViDevAttrEx.stSynCfg.enHsyncNeg = VI_HSYNC_NEG_HIGH;
-  stViDevAttrEx.stSynCfg.enVsyncValid = VI_VSYNC_NORM_PULSE;
-  stViDevAttrEx.stSynCfg.enVsyncValidNeg =VI_VSYNC_VALID_NEG_HIGH ;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32HsyncAct = 1920;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32HsyncHbb = 0;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32HsyncHfb = 0;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32VsyncVact = 1080;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32VsyncVbact = 0;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32VsyncVbb = 0;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32VsyncVbbb = 0;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32VsyncVbfb = 0;
-  stViDevAttrEx.stSynCfg.stTimingBlank.u32VsyncVfb = 0;
-  stViDevAttrEx.stBT656SynCfg.enFieldPolar = 0;
-  stViDevAttrEx.stBT656SynCfg.enFixCode = 0;
-  stViDevAttrEx.enDataSeq = VI_INPUT_DATA_YUYV;
-  stViDevAttrEx.enDataPath = VI_PATH_ISP;
-  stViDevAttrEx.enInputDataType = VI_DATA_TYPE_RGB;
-  stViDevAttrEx.bDataRev = HI_FALSE;
-  rect.s32X = 0;
-  rect.s32Y = 0;
-  rect.u32Height = 1080;
-  rect.u32Width = 1920;
-  stViDevAttrEx.stDevRect = rect;
-  stViDevAttrEx.enCombineMode = VI_COMBINE_COMPOSITE ;
-  stViDevAttrEx.enCompMode = VI_COMP_MODE_SINGLE;
-  stViDevAttrEx.enClkEdge  = VI_CLK_EDGE_SINGLE_DOWN;
-//	stViDevAttrEx.au32CompMask[0] = 0X1Ff80000;
-  stViDevAttrEx.au32CompMask[0] = 0xFFC0000;
-  //stViDevAttrEx.au32CompMask[0] = 0x3FF00000;
-
-  stViDevAttrEx.au32CompMask[1] = 0;
-  s32Ret = HI_MPI_VI_SetDevAttrEx(ViDev,&stViDevAttrEx);
-  if (s32Ret != HI_SUCCESS) {
-    SAMPLE_PRT("HI_MPI_VI_SetDevAttrEx failed with %#x!\n", s32Ret);
     return HI_FAILURE;
   }
 
@@ -2037,9 +1945,7 @@ HI_S32 SAMPLE_COMM_VI_SetMipiAttr(SAMPLE_VI_CONFIG_S* pstViConfig) {
        || (pstViConfig->enViMode == SONY_IMX222_DC_1080P_30FPS)
        || (pstViConfig->enViMode == SONY_IMX222_DC_720P_30FPS)
        || (pstViConfig->enViMode == OMNIVISION_OV9712_DC_720P_30FPS)
-       || (pstViConfig->enViMode == OMNIVISION_OV9732_DC_720P_30FPS)
-       ||  (pstViConfig->enViMode == F02_1080P_30FPS)
-     ) {
+       || (pstViConfig->enViMode == OMNIVISION_OV9732_DC_720P_30FPS) ) {
     pstcomboDevAttr = &MIPI_CMOS3V3_ATTR;
   }
 
@@ -2216,7 +2122,6 @@ HI_S32 SAMPLE_COMM_VI_StartVi(SAMPLE_VI_CONFIG_S* pstViConfig) {
   } else {
     s32Ret = SAMPLE_COMM_VI_StartIspAndVi(pstViConfig);
   }
-
 
   return s32Ret;
 }
@@ -3052,9 +2957,7 @@ HI_S32 SAMPLE_COMM_VI_GetSizeBySensor(PIC_SIZE_E *penSize) {
   case OMNIVISION_OV2718_MIPI_1080P_25FPS:
     *penSize = PIC_HD1080;
     break;
-  case F02_1080P_30FPS:
-    *penSize = PIC_HD1080;
-    break;
+
   default:
     printf("not support this sensor\n");
     break;

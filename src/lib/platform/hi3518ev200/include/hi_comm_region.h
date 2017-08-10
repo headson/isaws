@@ -13,7 +13,7 @@
 *
 *
 *  History:
-* 
+*
 *       1.  Date         : 2010/12/13
 *           Author       : j00169368
 *           Modification : Created file
@@ -32,206 +32,179 @@
 
 #ifdef __cplusplus
 #if __cplusplus
-extern "C"{
+extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
-
-
-
-
 
 typedef HI_U32 RGN_HANDLE;
 
 /* type of video regions */
-typedef enum hiRGN_TYPE_E
-{
-    OVERLAY_RGN = 0,     /* video overlay region */
-    COVER_RGN,
-    COVEREX_RGN,
-    OVERLAYEX_RGN,
-    RGN_BUTT
+typedef enum hiRGN_TYPE_E {
+  OVERLAY_RGN = 0,     /* video overlay region */
+  COVER_RGN,
+  COVEREX_RGN,
+  OVERLAYEX_RGN,
+  RGN_BUTT
 } RGN_TYPE_E;
 
-typedef enum hiINVERT_COLOR_MODE_E
-{
-    LESSTHAN_LUM_THRESH = 0,   /* the lum of the video is less than the lum threshold which is set by u32LumThresh  */ 
-    MORETHAN_LUM_THRESH,       /* the lum of the video is more than the lum threshold which is set by u32LumThresh  */
-    INVERT_COLOR_BUTT
-}INVERT_COLOR_MODE_E;
+typedef enum hiINVERT_COLOR_MODE_E {
+  LESSTHAN_LUM_THRESH = 0,   /* the lum of the video is less than the lum threshold which is set by u32LumThresh  */
+  MORETHAN_LUM_THRESH,       /* the lum of the video is more than the lum threshold which is set by u32LumThresh  */
+  INVERT_COLOR_BUTT
+} INVERT_COLOR_MODE_E;
 
-typedef struct hiOVERLAY_QP_INFO_S
-{
-    HI_BOOL 	bAbsQp;
-    HI_S32 		s32Qp;
-	HI_BOOL		bQpDisable;
-}OVERLAY_QP_INFO_S;
+typedef struct hiOVERLAY_QP_INFO_S {
+  HI_BOOL 	bAbsQp;
+  HI_S32 		s32Qp;
+  HI_BOOL		bQpDisable;
+} OVERLAY_QP_INFO_S;
 
-typedef struct hiOVERLAY_INVERT_COLOR_S
-{
-    SIZE_S stInvColArea;                //It must be multipe of 16 but not more than 64.
-    HI_U32 u32LumThresh;                //The threshold to decide whether invert the OSD's color or not.
-    INVERT_COLOR_MODE_E enChgMod;      
-    HI_BOOL bInvColEn;                  //The switch of inverting color.
-}OVERLAY_INVERT_COLOR_S;
+typedef struct hiOVERLAY_INVERT_COLOR_S {
+  SIZE_S stInvColArea;                //It must be multipe of 16 but not more than 64.
+  HI_U32 u32LumThresh;                //The threshold to decide whether invert the OSD's color or not.
+  INVERT_COLOR_MODE_E enChgMod;
+  HI_BOOL bInvColEn;                  //The switch of inverting color.
+} OVERLAY_INVERT_COLOR_S;
 
-typedef struct hiOVERLAY_ATTR_S
-{
-    /* bitmap pixel format,now only support ARGB1555 or ARGB4444 */
-    PIXEL_FORMAT_E enPixelFmt;
+typedef struct hiOVERLAY_ATTR_S {
+  /* bitmap pixel format,now only support ARGB1555 or ARGB4444 */
+  PIXEL_FORMAT_E enPixelFmt;
 
-    /* background color, pixel format depends on "enPixelFmt" */
-    HI_U32 u32BgColor;
+  /* background color, pixel format depends on "enPixelFmt" */
+  HI_U32 u32BgColor;
 
-    /* region size,W:[4,4096],align:2,H:[4,4096],align:2 */
-    SIZE_S stSize;
-}OVERLAY_ATTR_S;
+  /* region size,W:[4,4096],align:2,H:[4,4096],align:2 */
+  SIZE_S stSize;
+} OVERLAY_ATTR_S;
 
-typedef struct hiOVERLAY_CHN_ATTR_S
-{
-    /* X:[0,4096],align:4,Y:[0,4096],align:4 */
-    POINT_S stPoint;
-    
-    /* background an foreground transparence when pixel format is ARGB1555 
-      * the pixel format is ARGB1555,when the alpha bit is 1 this alpha is value!
-      * range:[0,128]
-      */
-    HI_U32 u32FgAlpha;
+typedef struct hiOVERLAY_CHN_ATTR_S {
+  /* X:[0,4096],align:4,Y:[0,4096],align:4 */
+  POINT_S stPoint;
 
-	/* background an foreground transparence when pixel format is ARGB1555 
+  /* background an foreground transparence when pixel format is ARGB1555
+    * the pixel format is ARGB1555,when the alpha bit is 1 this alpha is value!
+    * range:[0,128]
+    */
+  HI_U32 u32FgAlpha;
+
+  /* background an foreground transparence when pixel format is ARGB1555
       * the pixel format is ARGB1555,when the alpha bit is 0 this alpha is value!
       * range:[0,128]
       */
-    HI_U32 u32BgAlpha;
+  HI_U32 u32BgAlpha;
 
-    HI_U32 u32Layer;   /* OVERLAY region layer range:[0,7]*/
+  HI_U32 u32Layer;   /* OVERLAY region layer range:[0,7]*/
 
-    OVERLAY_QP_INFO_S stQpInfo;
+  OVERLAY_QP_INFO_S stQpInfo;
 
-    OVERLAY_INVERT_COLOR_S stInvertColor;
-}OVERLAY_CHN_ATTR_S;
+  OVERLAY_INVERT_COLOR_S stInvertColor;
+} OVERLAY_CHN_ATTR_S;
 
-typedef enum hiRGN_AREA_TYPE_E
-{
-    AREA_RECT = 0,
-    AREA_QUAD_RANGLE,
-    AREA_BUTT
+typedef enum hiRGN_AREA_TYPE_E {
+  AREA_RECT = 0,
+  AREA_QUAD_RANGLE,
+  AREA_BUTT
 } RGN_AREA_TYPE_E;
 
-typedef struct hiRGN_QUADRANGLE_S
-{
-    HI_BOOL bSolid;            /* whether solid or dashed quadrangle */
-    HI_U32 u32Thick;           /* Line Width of quadrangle, valid when dashed quadrangle */
-    POINT_S stPoint[4];        /* points of quadrilateral */
+typedef struct hiRGN_QUADRANGLE_S {
+  HI_BOOL bSolid;            /* whether solid or dashed quadrangle */
+  HI_U32 u32Thick;           /* Line Width of quadrangle, valid when dashed quadrangle */
+  POINT_S stPoint[4];        /* points of quadrilateral */
 } RGN_QUADRANGLE_S;
 
-typedef struct hiCOVER_CHN_ATTR_S
-{
-	RGN_AREA_TYPE_E     enCoverType;        /* rect or arbitary quadrilateral COVER */
-    union
-    {
-        RECT_S              stRect;        	/* config of rect */
-        RGN_QUADRANGLE_S    stQuadRangle;  	/* config of arbitary quadrilateral COVER */
-    };
-    HI_U32 u32Color;
-    HI_U32 u32Layer;   						/* COVER region layer */
-}COVER_CHN_ATTR_S;
+typedef struct hiCOVER_CHN_ATTR_S {
+  RGN_AREA_TYPE_E     enCoverType;        /* rect or arbitary quadrilateral COVER */
+  union {
+    RECT_S              stRect;        	/* config of rect */
+    RGN_QUADRANGLE_S    stQuadRangle;  	/* config of arbitary quadrilateral COVER */
+  };
+  HI_U32 u32Color;
+  HI_U32 u32Layer;   						/* COVER region layer */
+} COVER_CHN_ATTR_S;
 
-typedef struct hiCOVEREX_CHN_ATTR_S
-{
-	RGN_AREA_TYPE_E     enCoverType;       /* rect or arbitary quadrilateral COVER */
-    union
-    {
-        RECT_S              stRect;        /* config of rect */
-        RGN_QUADRANGLE_S    stQuadRangle;  /* config of arbitary quadrilateral COVER */
-    };
-    HI_U32 u32Color;
-    HI_U32 u32Layer;   /* COVEREX region layer range */
-}COVEREX_CHN_ATTR_S;
+typedef struct hiCOVEREX_CHN_ATTR_S {
+  RGN_AREA_TYPE_E     enCoverType;       /* rect or arbitary quadrilateral COVER */
+  union {
+    RECT_S              stRect;        /* config of rect */
+    RGN_QUADRANGLE_S    stQuadRangle;  /* config of arbitary quadrilateral COVER */
+  };
+  HI_U32 u32Color;
+  HI_U32 u32Layer;   /* COVEREX region layer range */
+} COVEREX_CHN_ATTR_S;
 
-typedef struct hiOVERLAYEX_COMM_ATTR_S
-{
-    PIXEL_FORMAT_E enPixelFmt;
+typedef struct hiOVERLAYEX_COMM_ATTR_S {
+  PIXEL_FORMAT_E enPixelFmt;
 
-    /* background color, pixel format depends on "enPixelFmt" */
-    HI_U32 u32BgColor;
+  /* background color, pixel format depends on "enPixelFmt" */
+  HI_U32 u32BgColor;
 
-    /* region size,W:[4,1920],align:2,H:[4,1080],align:2 */
-    SIZE_S stSize;
-}OVERLAYEX_ATTR_S;
+  /* region size,W:[4,1920],align:2,H:[4,1080],align:2 */
+  SIZE_S stSize;
+} OVERLAYEX_ATTR_S;
 
-typedef struct hiOVERLAYEX_CHN_ATTR_S
-{
-    /* X:[0,4096],align:4,Y:[0,4636],align:4 */
-    POINT_S stPoint;
-    
-    /* background an foreground transparence when pixel format is ARGB1555 
-      * the pixel format is ARGB1555,when the alpha bit is 1 this alpha is value!
-      * range:[0,255]
-      */
-    HI_U32 u32FgAlpha;
+typedef struct hiOVERLAYEX_CHN_ATTR_S {
+  /* X:[0,4096],align:4,Y:[0,4636],align:4 */
+  POINT_S stPoint;
 
-	/* background an foreground transparence when pixel format is ARGB1555 
+  /* background an foreground transparence when pixel format is ARGB1555
+    * the pixel format is ARGB1555,when the alpha bit is 1 this alpha is value!
+    * range:[0,255]
+    */
+  HI_U32 u32FgAlpha;
+
+  /* background an foreground transparence when pixel format is ARGB1555
       * the pixel format is ARGB1555,when the alpha bit is 0 this alpha is value!
       * range:[0,255]
       */
-    HI_U32 u32BgAlpha;
+  HI_U32 u32BgAlpha;
 
-    HI_U32 u32Layer;   /* OVERLAYEX region layer range:[0,15]*/
-}OVERLAYEX_CHN_ATTR_S;
+  HI_U32 u32Layer;   /* OVERLAYEX region layer range:[0,15]*/
+} OVERLAYEX_CHN_ATTR_S;
 
-typedef union hiRGN_ATTR_U
-{
-    OVERLAY_ATTR_S      stOverlay;      /* attribute of overlay region */
-    OVERLAYEX_ATTR_S    stOverlayEx;    /* attribute of overlayex region */ 
+typedef union hiRGN_ATTR_U {
+  OVERLAY_ATTR_S      stOverlay;      /* attribute of overlay region */
+  OVERLAYEX_ATTR_S    stOverlayEx;    /* attribute of overlayex region */
 } RGN_ATTR_U;
 
-typedef union hiRGN_CHN_ATTR_U
-{
-    OVERLAY_CHN_ATTR_S      stOverlayChn;      /* attribute of overlay region */
-    COVER_CHN_ATTR_S        stCoverChn;        /* attribute of cover region */
-    COVEREX_CHN_ATTR_S      stCoverExChn;      /* attribute of coverex region */
-    OVERLAYEX_CHN_ATTR_S    stOverlayExChn;    /* attribute of overlayex region */
+typedef union hiRGN_CHN_ATTR_U {
+  OVERLAY_CHN_ATTR_S      stOverlayChn;      /* attribute of overlay region */
+  COVER_CHN_ATTR_S        stCoverChn;        /* attribute of cover region */
+  COVEREX_CHN_ATTR_S      stCoverExChn;      /* attribute of coverex region */
+  OVERLAYEX_CHN_ATTR_S    stOverlayExChn;    /* attribute of overlayex region */
 } RGN_CHN_ATTR_U;
 
 /* attribute of a region */
-typedef struct hiRGN_ATTR_S
-{
-    RGN_TYPE_E enType;  /* region type */
-    RGN_ATTR_U unAttr;  /* region attribute */
+typedef struct hiRGN_ATTR_S {
+  RGN_TYPE_E enType;  /* region type */
+  RGN_ATTR_U unAttr;  /* region attribute */
 } RGN_ATTR_S;
 
 /* attribute of a region */
-typedef struct hiRGN_CHN_ATTR_S
-{
-    HI_BOOL           bShow;
-    RGN_TYPE_E        enType;     /* region type */
-    RGN_CHN_ATTR_U    unChnAttr;  /* region attribute */
+typedef struct hiRGN_CHN_ATTR_S {
+  HI_BOOL           bShow;
+  RGN_TYPE_E        enType;     /* region type */
+  RGN_CHN_ATTR_U    unChnAttr;  /* region attribute */
 } RGN_CHN_ATTR_S;
-
-
 
 #define RGN_MAX_BMP_UPDATE_NUM 16
 
-typedef struct hiRGN_BMP_UPDATE_S
-{
-    POINT_S             stPoint;
-    BITMAP_S            stBmp;
-    HI_U32              u32Stride;
+typedef struct hiRGN_BMP_UPDATE_S {
+  POINT_S             stPoint;
+  BITMAP_S            stBmp;
+  HI_U32              u32Stride;
 } RGN_BMP_UPDATE_S;
 
-typedef struct hiRGN_BMP_UPDATE_CFG_S
-{
-    HI_U32              u32BmpCnt;
-    RGN_BMP_UPDATE_S    astBmpUpdate[RGN_MAX_BMP_UPDATE_NUM];
+typedef struct hiRGN_BMP_UPDATE_CFG_S {
+  HI_U32              u32BmpCnt;
+  RGN_BMP_UPDATE_S    astBmpUpdate[RGN_MAX_BMP_UPDATE_NUM];
 } RGN_BMP_UPDATE_CFG_S;
 
-typedef struct hiRGN_CANVAS_INFO_S
-{
-    HI_U32         u32PhyAddr;
-    HI_U32         u32VirtAddr;
-    SIZE_S         stSize;              
-    HI_U32         u32Stride;
-    PIXEL_FORMAT_E enPixelFmt;  
+typedef struct hiRGN_CANVAS_INFO_S {
+  HI_U32         u32PhyAddr;
+  HI_U32         u32VirtAddr;
+  SIZE_S         stSize;
+  HI_U32         u32Stride;
+  PIXEL_FORMAT_E enPixelFmt;
 } RGN_CANVAS_INFO_S;
 
 /* PingPong buffer change when set attr, it needs to remap memory in mpi interface */

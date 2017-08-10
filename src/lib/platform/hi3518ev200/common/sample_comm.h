@@ -49,12 +49,12 @@
 
 #ifdef __cplusplus
 #if __cplusplus
-extern "C"{
+extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
 
 /*******************************************************
-    macro define 
+    macro define
 *******************************************************/
 #define FILE_NAME_LEN               128
 #define ALIGN_UP(x, a)              ((x+a-1)&(~(a-1)))
@@ -89,7 +89,7 @@ extern "C"{
 #define TLV320_FILE "/dev/tlv320aic31"
 
 
-#if (HICHIP == HI3518E_V200) 
+#if (HICHIP == HI3518E_V200)
 #define SAMPLE_VO_DEV_DSD1 0
 #define SAMPLE_VO_DEV_DSD0 SAMPLE_VO_DEV_DSD1
 #else
@@ -119,7 +119,7 @@ do{\
                          printf("---------------press the Enter key to exit!---------------\n");\
                          getchar();\
                      } while (0)
-                     
+
 
 #define SAMPLE_PRT(fmt...)   \
     do {\
@@ -142,14 +142,14 @@ do{\
 #define WIDTH_LCD           240
 #define HEIGHT_LCD          320
 #endif
-        
+
 #ifdef LCD_ILI9342
 #define INTF_LCD            VO_INTF_LCD_6BIT
 #define SYNC_LCD            VO_OUTPUT_320X240_50
 #define WIDTH_LCD           320
 #define HEIGHT_LCD          240
 #endif
-        
+
 #ifdef LCD_OTA5182
 #define INTF_LCD            VO_INTF_LCD_8BIT
 #define SYNC_LCD            VO_OUTPUT_320X240_60
@@ -163,138 +163,125 @@ do{\
 #define CHIP_HI3518E_V201   0x3518E201
 
 #if (CHIP_ID == CHIP_HI3516C_V200)
-    #define VB_CNT  8
+#define VB_CNT  8
 #elif (CHIP_ID == CHIP_HI3518E_V200)
-    #define VB_CNT  6
+#define VB_CNT  6
 #elif (CHIP_ID == CHIP_HI3518E_V201)
-    #define VB_CNT  4
+#define VB_CNT  4
 #else
-    #error CHIP_ID is not defined
+#error CHIP_ID is not defined
 #endif
 
 
 /*******************************************************
-    enum define 
+    enum define
 *******************************************************/
 
-typedef enum sample_ispcfg_opt_e
-{
-    CFG_OPT_NONE    = 0,
-    CFG_OPT_SAVE    = 1,
-    CFG_OPT_LOAD    = 2,
-    CFG_OPT_BUTT
-}SAMPLE_CFG_OPT_E;
+typedef enum sample_ispcfg_opt_e {
+  CFG_OPT_NONE    = 0,
+  CFG_OPT_SAVE    = 1,
+  CFG_OPT_LOAD    = 2,
+  CFG_OPT_BUTT
+} SAMPLE_CFG_OPT_E;
 
-typedef enum sample_vi_mode_e
-{   
-    APTINA_AR0130_DC_720P_30FPS = 0,
-    APTINA_9M034_DC_720P_30FPS,
-    APTINA_AR0230_HISPI_1080P_30FPS,
-    SONY_IMX222_DC_1080P_30FPS,
-    SONY_IMX222_DC_720P_30FPS,
-    PANASONIC_MN34222_MIPI_1080P_30FPS,
-    OMNIVISION_OV9712_DC_720P_30FPS,
-    OMNIVISION_OV9732_DC_720P_30FPS,
-    OMNIVISION_OV9750_MIPI_720P_30FPS,
-    OMNIVISION_OV9752_MIPI_720P_30FPS,
-    OMNIVISION_OV2718_MIPI_1080P_25FPS,
-    SAMPLE_VI_MODE_1_D1,
-    SAMPLE_VI_MODE_BT1120_720P,
-    SAMPLE_VI_MODE_BT1120_1080P,
-    F02_1080P_30FPS,
-}SAMPLE_VI_MODE_E;
+typedef enum sample_vi_mode_e {
+  APTINA_AR0130_DC_720P_30FPS = 0,
+  APTINA_9M034_DC_720P_30FPS,
+  APTINA_AR0230_HISPI_1080P_30FPS,
+  SONY_IMX222_DC_1080P_30FPS,
+  SONY_IMX222_DC_720P_30FPS,
+  PANASONIC_MN34222_MIPI_1080P_30FPS,
+  OMNIVISION_OV9712_DC_720P_30FPS,
+  OMNIVISION_OV9732_DC_720P_30FPS,
+  OMNIVISION_OV9750_MIPI_720P_30FPS,
+  OMNIVISION_OV9752_MIPI_720P_30FPS,
+  OMNIVISION_OV2718_MIPI_1080P_25FPS,
+  SAMPLE_VI_MODE_1_D1,
+  SAMPLE_VI_MODE_BT1120_720P,
+  SAMPLE_VI_MODE_BT1120_1080P,
+} SAMPLE_VI_MODE_E;
 
-typedef enum 
-{
-    VI_DEV_BT656_D1_1MUX = 0,
-    VI_DEV_BT656_D1_4MUX,
-    VI_DEV_BT656_960H_1MUX,
-    VI_DEV_BT656_960H_4MUX,
-    VI_DEV_720P_HD_1MUX,
-    VI_DEV_1080P_HD_1MUX,
-    VI_DEV_BUTT
-}SAMPLE_VI_DEV_TYPE_E;
+typedef enum {
+  VI_DEV_BT656_D1_1MUX = 0,
+  VI_DEV_BT656_D1_4MUX,
+  VI_DEV_BT656_960H_1MUX,
+  VI_DEV_BT656_960H_4MUX,
+  VI_DEV_720P_HD_1MUX,
+  VI_DEV_1080P_HD_1MUX,
+  VI_DEV_BUTT
+} SAMPLE_VI_DEV_TYPE_E;
 
-typedef enum sample_vi_chn_set_e
-{
-    VI_CHN_SET_NORMAL = 0,      /* mirror, flip close */
-    VI_CHN_SET_MIRROR,          /* open MIRROR */
-    VI_CHN_SET_FLIP,            /* open filp */
-    VI_CHN_SET_FLIP_MIRROR      /* mirror, flip */
-}SAMPLE_VI_CHN_SET_E;
+typedef enum sample_vi_chn_set_e {
+  VI_CHN_SET_NORMAL = 0,      /* mirror, flip close */
+  VI_CHN_SET_MIRROR,          /* open MIRROR */
+  VI_CHN_SET_FLIP,            /* open filp */
+  VI_CHN_SET_FLIP_MIRROR      /* mirror, flip */
+} SAMPLE_VI_CHN_SET_E;
 
-typedef enum sample_vo_mode_e
-{
-    VO_MODE_1MUX = 0,
-    VO_MODE_2MUX = 1,
-    VO_MODE_BUTT
-}SAMPLE_VO_MODE_E;
-    
-typedef enum sample_rc_e
-{
-    SAMPLE_RC_CBR = 0,
-    SAMPLE_RC_VBR,
-    SAMPLE_RC_FIXQP
-}SAMPLE_RC_E;
+typedef enum sample_vo_mode_e {
+  VO_MODE_1MUX = 0,
+  VO_MODE_2MUX = 1,
+  VO_MODE_BUTT
+} SAMPLE_VO_MODE_E;
 
-typedef enum sample_rgn_change_type_e
-{
-    RGN_CHANGE_TYPE_FGALPHA = 0,
-    RGN_CHANGE_TYPE_BGALPHA,
-    RGN_CHANGE_TYPE_LAYER
-}SAMPLE_RGN_CHANGE_TYPE_EN;
+typedef enum sample_rc_e {
+  SAMPLE_RC_CBR = 0,
+  SAMPLE_RC_VBR,
+  SAMPLE_RC_FIXQP
+} SAMPLE_RC_E;
+
+typedef enum sample_rgn_change_type_e {
+  RGN_CHANGE_TYPE_FGALPHA = 0,
+  RGN_CHANGE_TYPE_BGALPHA,
+  RGN_CHANGE_TYPE_LAYER
+} SAMPLE_RGN_CHANGE_TYPE_EN;
 
 
 /*******************************************************
-    structure define 
+    structure define
 *******************************************************/
-typedef struct sample_vi_param_s
-{
-    HI_S32 s32ViDevCnt;         // VI Dev Total Count
-    HI_S32 s32ViDevInterval;    // Vi Dev Interval
-    HI_S32 s32ViChnCnt;         // Vi Chn Total Count
-    HI_S32 s32ViChnInterval;    // VI Chn Interval
-}SAMPLE_VI_PARAM_S;
+typedef struct sample_vi_param_s {
+  HI_S32 s32ViDevCnt;         // VI Dev Total Count
+  HI_S32 s32ViDevInterval;    // Vi Dev Interval
+  HI_S32 s32ViChnCnt;         // Vi Chn Total Count
+  HI_S32 s32ViChnInterval;    // VI Chn Interval
+} SAMPLE_VI_PARAM_S;
 
-typedef struct sample_video_loss_s
-{
-    HI_BOOL bStart;
-    pthread_t Pid;
-    SAMPLE_VI_MODE_E enViMode;
+typedef struct sample_video_loss_s {
+  HI_BOOL bStart;
+  pthread_t Pid;
+  SAMPLE_VI_MODE_E enViMode;
 } SAMPLE_VIDEO_LOSS_S;
 
 
-typedef struct sample_vi_frame_info_s
-{
-    VB_BLK VbBlk;    
-    VIDEO_FRAME_INFO_S stVideoFrame;
-    HI_U32 u32FrmSize;
-}SAMPLE_VI_FRAME_INFO_S;
+typedef struct sample_vi_frame_info_s {
+  VB_BLK VbBlk;
+  VIDEO_FRAME_INFO_S stVideoFrame;
+  HI_U32 u32FrmSize;
+} SAMPLE_VI_FRAME_INFO_S;
 
 
-typedef struct sample_venc_getstream_s
-{
-     HI_BOOL bThreadStart;
-     HI_S32  s32Cnt;
-     void*   p_usr_arg;
-}SAMPLE_VENC_GETSTREAM_PARA_S;
+typedef struct sample_venc_getstream_s {
+  HI_BOOL  bThreadStart;
+  HI_S32   s32Cnt;
+  HI_VOID *p_usr_arg;
+} SAMPLE_VENC_GETSTREAM_PARA_S;
 
-typedef struct sample_vi_config_s
-{
-    SAMPLE_VI_MODE_E enViMode;
-    VIDEO_NORM_E enNorm;           /*DC: VIDEO_ENCODING_MODE_AUTO */    
-    ROTATE_E enRotate;
-    SAMPLE_VI_CHN_SET_E enViChnSet; 
-    WDR_MODE_E  enWDRMode;
-}SAMPLE_VI_CONFIG_S;
+typedef struct sample_vi_config_s {
+  SAMPLE_VI_MODE_E enViMode;
+  VIDEO_NORM_E enNorm;           /*DC: VIDEO_ENCODING_MODE_AUTO */
+  ROTATE_E enRotate;
+  SAMPLE_VI_CHN_SET_E enViChnSet;
+  WDR_MODE_E  enWDRMode;
+} SAMPLE_VI_CONFIG_S;
 
 
 /*******************************************************
-    function announce  
+    function announce
 *******************************************************/
 HI_S32 SAMPLE_COMM_SYS_GetPicSize(VIDEO_NORM_E enNorm, PIC_SIZE_E enPicSize, SIZE_S *pstSize);
 HI_U32 SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_NORM_E enNorm, PIC_SIZE_E enPicSize, PIXEL_FORMAT_E enPixFmt, HI_U32 u32AlignWidth);
-HI_U32 VI_COMM_SYS_CalcPicVbBlkSize(VIDEO_NORM_E enNorm,HI_U32  u32Width ,HI_U32  u32Height, PIXEL_FORMAT_E enPixFmt, HI_U32 u32AlignWidth);
+HI_U32 VI_COMM_SYS_CalcPicVbBlkSize(VIDEO_NORM_E enNorm,HI_U32  u32Width,HI_U32  u32Height, PIXEL_FORMAT_E enPixFmt, HI_U32 u32AlignWidth);
 HI_S32 SAMPLE_COMM_SYS_MemConfig(HI_VOID);
 HI_VOID SAMPLE_COMM_SYS_Exit(void);
 HI_S32 SAMPLE_COMM_SYS_Init(VB_CONF_S *pstVbConf);
@@ -328,33 +315,33 @@ HI_S32 SAMPLE_COMM_VI_ChangeCapSize(VI_CHN ViChn, HI_U32 u32CapWidth, HI_U32 u32
 HI_S32 SAMPLE_COMM_VI_StartVi(SAMPLE_VI_CONFIG_S* pstViConfig);
 HI_S32 SAMPLE_COMM_VI_StopVi(SAMPLE_VI_CONFIG_S* pstViConfig);
 HI_S32 SAMPLE_COMM_VI_SwitchResParam( SAMPLE_VI_CONFIG_S* pstViConfig,
-                                               ISP_PUB_ATTR_S *pstPubAttr, 
-                                               RECT_S *pstCapRect );
+                                      ISP_PUB_ATTR_S *pstPubAttr,
+                                      RECT_S *pstCapRect );
 
 
 HI_S32 SAMPLE_COMM_VI_StartMIPI_BT1120(SAMPLE_VI_MODE_E enViMode);
 
 HI_S32 SAMPLE_COMM_VI_FPN_CALIBRATE_CONFIG(const char* fpn_file,    /* fpn file name */
-                                           ISP_FPN_TYPE_E enFpnType, /* line/frame */
-                                           PIXEL_FORMAT_E enPixelFormat,
-                                           COMPRESS_MODE_E	enCompressMode,
-                                           HI_U32 u32FrmNum,
-                                           HI_U32 u32Threshold);
+    ISP_FPN_TYPE_E enFpnType, /* line/frame */
+    PIXEL_FORMAT_E enPixelFormat,
+    COMPRESS_MODE_E	enCompressMode,
+    HI_U32 u32FrmNum,
+    HI_U32 u32Threshold);
 
 HI_S32 SAMPLE_COMM_VI_CORRECTION_CONFIG(const char* fpn_file,     /* fpn file_name */
                                         ISP_FPN_TYPE_E enFpnType, /* line/frame */
                                         ISP_OP_TYPE_E  enOpType,  /* auto/manual */
-                                        HI_U32 u32Strength,       /* strength */                                       
+                                        HI_U32 u32Strength,       /* strength */
                                         PIXEL_FORMAT_E enPixelFormat);
-	
+
 HI_S32 SAMPLE_COMM_VPSS_MemConfig();
 HI_S32 SAMPLE_COMM_VPSS_Start(HI_S32 s32GrpCnt, SIZE_S *pstSize, HI_S32 s32ChnCnt,VPSS_GRP_ATTR_S *pstVpssGrpAttr);
 HI_S32 SAMPLE_COMM_VPSS_Stop(HI_S32 s32GrpCnt, HI_S32 s32ChnCnt) ;
 HI_S32 SAMPLE_COMM_VPSS_StartGroup(VPSS_GRP VpssGrp, VPSS_GRP_ATTR_S *pstVpssGrpAttr);
-HI_S32 SAMPLE_COMM_VPSS_EnableChn(VPSS_GRP VpssGrp, VPSS_CHN VpssChn, 
-                                                  VPSS_CHN_ATTR_S *pstVpssChnAttr,
-                                                  VPSS_CHN_MODE_S *pstVpssChnMode,
-                                                  VPSS_EXT_CHN_ATTR_S *pstVpssExtChnAttr);
+HI_S32 SAMPLE_COMM_VPSS_EnableChn(VPSS_GRP VpssGrp, VPSS_CHN VpssChn,
+                                  VPSS_CHN_ATTR_S *pstVpssChnAttr,
+                                  VPSS_CHN_MODE_S *pstVpssChnMode,
+                                  VPSS_EXT_CHN_ATTR_S *pstVpssExtChnAttr);
 HI_S32 SAMPLE_COMM_VPSS_StopGroup(VPSS_GRP VpssGrp);
 HI_S32 SAMPLE_COMM_VPSS_DisableChn(VPSS_GRP VpssGrp, VPSS_CHN VpssChn);
 
@@ -377,11 +364,11 @@ HI_S32 SAMPLE_COMM_VENC_Stop(VENC_CHN VencChn);
 HI_S32 SAMPLE_COMM_VENC_SnapStart(VENC_CHN VencChn, SIZE_S *pstSize, HI_BOOL bSupportDCF);
 HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_CHN VencChn, HI_BOOL bSaveJpg, HI_BOOL bSaveThm);
 HI_S32 SAMPLE_COMM_VENC_SnapStop(VENC_CHN VencChn);
-HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt, void* p);
+HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt);
 HI_S32 SAMPLE_COMM_VENC_StopGetStream();
 HI_S32 SAMPLE_COMM_VENC_BindVpss(VENC_CHN VencChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn);
 HI_S32 SAMPLE_COMM_VENC_UnBindVpss(VENC_CHN VencChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn);
-HI_S32 SAMPLE_COMM_VENC_StartGetStream_Svc_t(HI_S32 s32Cnt, void* p);
+HI_S32 SAMPLE_COMM_VENC_StartGetStream_Svc_t(HI_S32 s32Cnt);
 
 
 HI_S32 SAMPLE_COMM_VDA_MdStart(VDA_CHN VdaChn, HI_U32 u32Chn, SIZE_S *pstSize);

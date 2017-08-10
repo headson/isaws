@@ -29,9 +29,6 @@ extern "C" {
 
 #include "sample_comm.h"
 
-#include <fcntl.h>
-#include <string.h>
-#include <stdbool.h>
 const HI_U8 g_SOI[2] = {0xFF, 0xD8};
 const HI_U8 g_EOI[2] = {0xFF, 0xD9};
 static pthread_t gs_VencPid;
@@ -687,7 +684,7 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_CHN VencChn, PAYLOAD_TYPE_E enType, VIDEO_NOR
       stH264Cbr.u32Gop            = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
       stH264Cbr.u32StatTime       = 1; /* stream rate statics time(s) */
       stH264Cbr.u32SrcFrmRate      = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* input (vi) frame rate */
-      stH264Cbr.fr32DstFrmRate =  (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* target frame rate */
+      stH264Cbr.fr32DstFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* target frame rate */
 
       switch (enSize) {
       case PIC_QCIF:
@@ -704,10 +701,10 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_CHN VencChn, PAYLOAD_TYPE_E enType, VIDEO_NOR
         stH264Cbr.u32BitRate = 1024*2;
         break;
       case PIC_HD720:   /* 1280 * 720 */
-        stH264Cbr.u32BitRate = 1024*1;
+        stH264Cbr.u32BitRate = 1024*2;
         break;
       case PIC_HD1080:  /* 1920 * 1080 */
-        stH264Cbr.u32BitRate = 1024*2;
+        stH264Cbr.u32BitRate = 1024*4;
         break;
       case PIC_5M:  /* 2592 * 1944 */
         stH264Cbr.u32BitRate = 1024*8;
@@ -1193,22 +1190,15 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
   struct timeval TimeoutVal;
   fd_set read_fds;
   HI_S32 VencFd[VENC_MAX_CHN_NUM];
+  HI_CHAR aszFileName[VENC_MAX_CHN_NUM][64];
+  FILE *pFile[VENC_MAX_CHN_NUM];
+  char szFilePostfix[10];
   VENC_CHN_STAT_S stStat;
   VENC_STREAM_S stStream;
-  int total = 0;
   HI_S32 s32Ret;
   VENC_CHN VencChn;
   PAYLOAD_TYPE_E enPayLoadType[VENC_MAX_CHN_NUM];
-  HI_U32 ts = 0;
-  HI_U32 buflen = 0;
-  HI_S32 ipack;
-  char buffer[400*1024];
-  char configPara[256];
-  char useMain[4];
-  int intUseMain = 0;
-  //buffer = (char*)malloc(200*1024);
-  //if(!buffer)
-  //	printf("Malloc memory for rtmp failed\n");
+
   pstPara = (SAMPLE_VENC_GETSTREAM_PARA_S*)p;
   s32ChnTotal = pstPara->s32Cnt;
 
@@ -1229,6 +1219,20 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
       return NULL;
     }
     enPayLoadType[i] = stVencChnAttr.stVeAttr.enType;
+
+    s32Ret = SAMPLE_COMM_VENC_GetFilePostfix(enPayLoadType[i], szFilePostfix);
+    if(s32Ret != HI_SUCCESS) {
+      SAMPLE_PRT("SAMPLE_COMM_VENC_GetFilePostfix [%d] failed with %#x!\n", \
+                 stVencChnAttr.stVeAttr.enType, s32Ret);
+      return NULL;
+    }
+    sprintf(aszFileName[i], "stream_chn%d%s", i, szFilePostfix);
+    pFile[i] = fopen(aszFileName[i], "wb");
+    if (!pFile[i]) {
+      SAMPLE_PRT("open file[%s] failed!\n",
+                 aszFileName[i]);
+      return NULL;
+    }
 
     /* Set Venc Fd. */
     VencFd[i] = HI_MPI_VENC_GetFd(i);
@@ -1310,8 +1314,7 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
           /*******************************************************
            step 2.5 : save frame to file
           *******************************************************/
-#if 1
-          //s32Ret = SAMPLE_COMM_VENC_SaveStream(enPayLoadType[i], pFile[i], &stStream);
+          // s32Ret = SAMPLE_COMM_VENC_SaveStream(enPayLoadType[i], pFile[i], &stStream);
           s32Ret = HisiPutH264DataToBuffer(i, &stStream, pstPara->p_usr_arg);
           if (HI_SUCCESS != s32Ret) {
             free(stStream.pstPack);
@@ -1319,36 +1322,7 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
             SAMPLE_PRT("save stream failed!\n");
             break;
           }
-#else
 
-          if(i == 0) {
-
-            int x = 0;
-            for (ipack = 0; ipack < stStream.u32PackCount; ipack++) {
-              x+= stStream.pstPack[ipack].u32Len-stStream.pstPack[ipack].u32Offset;
-            }
-            //printf("x is %d\n",x);
-            if(x > 400*1024)
-              printf("frame too big\n");
-            else {
-              buflen = 0;
-
-              for (ipack = 0; ipack < stStream.u32PackCount; ipack++) {
-                memcpy(buffer + buflen,stStream.pstPack[ipack].pu8Addr+stStream.pstPack[ipack].u32Offset,\
-                       stStream.pstPack[ipack].u32Len-stStream.pstPack[ipack].u32Offset);
-                //printf("e\n");
-                buflen += (stStream.pstPack[ipack].u32Len-stStream.pstPack[ipack].u32Offset);
-              }
-
-              //printf("x\n");
-              rtmp_sender_write_video_frame(prtmp,buffer, buflen, ts, 0);
-
-              //printf("t\n");
-              ts += 66;
-            }
-          }
-
-#endif
           /*******************************************************
            step 2.6 : release stream
           *******************************************************/
@@ -1366,6 +1340,13 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
         }
       }
     }
+  }
+
+  /*******************************************************
+  * step 3 : close save-file
+  *******************************************************/
+  for (i = 0; i < s32ChnTotal; i++) {
+    fclose(pFile[i]);
   }
 
   return NULL;
@@ -1514,8 +1495,8 @@ HI_VOID *SAMPLE_COMM_VENC_GetVencStreamProc_Svc_t(void *p) {
            step 2.5 : save frame to file
           *******************************************************/
 #if 1
-#if 0
           for(s32Cnt=0; s32Cnt<3; s32Cnt++) {
+
             switch(s32Cnt) {
             case 0:
               if(BASE_IDRSLICE == stStream.stH264Info.enRefType ||
@@ -1544,14 +1525,6 @@ HI_VOID *SAMPLE_COMM_VENC_GetVencStreamProc_Svc_t(void *p) {
               SAMPLE_PRT("save stream failed!\n");
               break;
             }
-          }
-#endif
-          s32Ret = HisiPutH264DataToBuffer(i, &stStream, pstPara->p_usr_arg);
-          if (HI_SUCCESS != s32Ret) {
-            free(stStream.pstPack);
-            stStream.pstPack = NULL;
-            SAMPLE_PRT("save stream failed!\n");
-            break;
           }
 #else
 
@@ -1625,10 +1598,9 @@ HI_VOID *SAMPLE_COMM_VENC_GetVencStreamProc_Svc_t(void *p) {
 /******************************************************************************
 * funciton : start get venc stream process thread
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt, void* p) {
+HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt) {
   gs_stPara.bThreadStart = HI_TRUE;
   gs_stPara.s32Cnt = s32Cnt;
-  gs_stPara.p_usr_arg = p;
 
   return pthread_create(&gs_VencPid, 0, SAMPLE_COMM_VENC_GetVencStreamProc, (HI_VOID*)&gs_stPara);
 }
@@ -1636,10 +1608,9 @@ HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt, void* p) {
 /******************************************************************************
 * funciton : start get venc svc-t stream process thread
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_StartGetStream_Svc_t(HI_S32 s32Cnt, void* p) {
+HI_S32 SAMPLE_COMM_VENC_StartGetStream_Svc_t(HI_S32 s32Cnt) {
   gs_stPara.bThreadStart = HI_TRUE;
   gs_stPara.s32Cnt = s32Cnt;
-  gs_stPara.p_usr_arg = p;
 
   return pthread_create(&gs_VencPid, 0, SAMPLE_COMM_VENC_GetVencStreamProc_Svc_t, (HI_VOID*)&gs_stPara);
 }

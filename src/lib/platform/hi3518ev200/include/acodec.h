@@ -4,101 +4,101 @@
 #define IOC_TYPE_ACODEC 'A'
 
 typedef enum hiACODEC_FS_E {
-	ACODEC_FS_48000 =   0x1a,
-	ACODEC_FS_24000 =   0x19,
-	ACODEC_FS_12000 =   0x18,
+  ACODEC_FS_48000 =   0x1a,
+  ACODEC_FS_24000 =   0x19,
+  ACODEC_FS_12000 =   0x18,
 
-	ACODEC_FS_44100 =   0x1a,
-	ACODEC_FS_22050 =   0x19,
-	ACODEC_FS_11025 =   0x18,
+  ACODEC_FS_44100 =   0x1a,
+  ACODEC_FS_22050 =   0x19,
+  ACODEC_FS_11025 =   0x18,
 
-	ACODEC_FS_32000 =   0x1a,
-	ACODEC_FS_16000 =   0x19,
-	ACODEC_FS_8000  =   0x18,
+  ACODEC_FS_32000 =   0x1a,
+  ACODEC_FS_16000 =   0x19,
+  ACODEC_FS_8000  =   0x18,
 
-	ACODEC_FS_64000 =   0x1b,
+  ACODEC_FS_64000 =   0x1b,
 
-	ACODEC_FS_96000 =   0x1b,
+  ACODEC_FS_96000 =   0x1b,
 
-	ACODEC_FS_BUTT = 0x1c,
+  ACODEC_FS_BUTT = 0x1c,
 } ACODEC_FS_E;
 
 typedef enum hiACODEC_MIXER_E {
-    /*select IN or IN_D*/
-	ACODEC_MIXER_IN    = 0x3,
-	ACODEC_MIXER_IN_D  = 0x4,
-	ACODEC_MIXER_BUTT,
+  /*select IN or IN_D*/
+  ACODEC_MIXER_IN    = 0x3,
+  ACODEC_MIXER_IN_D  = 0x4,
+  ACODEC_MIXER_BUTT,
 } ACODEC_MIXER_E;
 
 
 typedef struct {
-	/*volume control, 0x00~0x7e, 0x7F:mute*/
-	unsigned int vol_ctrl;
-	/*adc/dac mute control, 1:mute, 0:unmute*/
-	unsigned int vol_ctrl_mute;
+  /*volume control, 0x00~0x7e, 0x7F:mute*/
+  unsigned int vol_ctrl;
+  /*adc/dac mute control, 1:mute, 0:unmute*/
+  unsigned int vol_ctrl_mute;
 } ACODEC_VOL_CTRL;
 
 typedef enum hiACODEC_IOCTL_E {
-	IOC_NR_SOFT_RESET_CTRL = 0x0,
-	/******************************************************************************************
-	The input volume range is [-87, +86]. Both the analog gain and digital gain are adjusted.
-	A larger value indicates higher volume. 
-	For example, the value 86 indicates the maximum volume of 86 dB, 
-	and the value -87 indicates the minimum volume (muted status). 
-	The volume adjustment takes effect simultaneously in the audio-left and audio-right channels. 
-	The recommended volume range is [+10, +56]. 
-	Within this range, the noises are lowest because only the analog gain is adjusted, 
-	and the voice quality can be guaranteed.
-	*******************************************************************************************/
-	IOC_NR_SET_INPUT_VOL ,
-	/*******************************************************************************************
-	The output volume range is [-121, +6]. A larger value indicates higher volume. 
-	For example, the value 6 indicates the maximum volume of 6 dB, 
-	and the value -121 indicates the minimum volume (muted status). 
-	The volume adjustment takes effect simultaneously in the audio-left and audio-right channels. 
-	The digital gain is adjusted by calling this interface. 
-	It is recommended that a small value is assigned to avoid noises.
-	*******************************************************************************************/
-	IOC_NR_SET_OUTPUT_VOL,
-	IOC_NR_GET_INPUT_VOL,
-	IOC_NR_GET_OUTPUT_VOL,
-	/***********************/
-	IOC_NR_SET_I2S1_FS,
-	IOC_NR_SET_MIXER_MIC,
-	IOC_NR_SEL_DAC_CLK,
-	IOC_NR_SEL_ANA_MCLK,
-	IOC_NR_SET_GAIN_MICL,
-	IOC_NR_SET_GAIN_MICR,
-	IOC_NR_SET_DACL_VOL,
-	IOC_NR_SET_DACR_VOL,
-	IOC_NR_SET_ADCL_VOL,
-	IOC_NR_SET_ADCR_VOL,
-	IOC_NR_SET_MICL_MUTE,
-	IOC_NR_SET_MICR_MUTE,
-	IOC_NR_SET_DACL_MUTE,
-	IOC_NR_SET_DACR_MUTE,
+  IOC_NR_SOFT_RESET_CTRL = 0x0,
+  /******************************************************************************************
+  The input volume range is [-87, +86]. Both the analog gain and digital gain are adjusted.
+  A larger value indicates higher volume.
+  For example, the value 86 indicates the maximum volume of 86 dB,
+  and the value -87 indicates the minimum volume (muted status).
+  The volume adjustment takes effect simultaneously in the audio-left and audio-right channels.
+  The recommended volume range is [+10, +56].
+  Within this range, the noises are lowest because only the analog gain is adjusted,
+  and the voice quality can be guaranteed.
+  *******************************************************************************************/
+  IOC_NR_SET_INPUT_VOL,
+  /*******************************************************************************************
+  The output volume range is [-121, +6]. A larger value indicates higher volume.
+  For example, the value 6 indicates the maximum volume of 6 dB,
+  and the value -121 indicates the minimum volume (muted status).
+  The volume adjustment takes effect simultaneously in the audio-left and audio-right channels.
+  The digital gain is adjusted by calling this interface.
+  It is recommended that a small value is assigned to avoid noises.
+  *******************************************************************************************/
+  IOC_NR_SET_OUTPUT_VOL,
+  IOC_NR_GET_INPUT_VOL,
+  IOC_NR_GET_OUTPUT_VOL,
+  /***********************/
+  IOC_NR_SET_I2S1_FS,
+  IOC_NR_SET_MIXER_MIC,
+  IOC_NR_SEL_DAC_CLK,
+  IOC_NR_SEL_ANA_MCLK,
+  IOC_NR_SET_GAIN_MICL,
+  IOC_NR_SET_GAIN_MICR,
+  IOC_NR_SET_DACL_VOL,
+  IOC_NR_SET_DACR_VOL,
+  IOC_NR_SET_ADCL_VOL,
+  IOC_NR_SET_ADCR_VOL,
+  IOC_NR_SET_MICL_MUTE,
+  IOC_NR_SET_MICR_MUTE,
+  IOC_NR_SET_DACL_MUTE,
+  IOC_NR_SET_DACR_MUTE,
 
-	IOC_NR_GET_GAIN_MICL,
-	IOC_NR_GET_GAIN_MICR,
-	IOC_NR_GET_DACL_VOL,
-	IOC_NR_GET_DACR_VOL,
-	IOC_NR_GET_ADCL_VOL,
-	IOC_NR_GET_ADCR_VOL,
+  IOC_NR_GET_GAIN_MICL,
+  IOC_NR_GET_GAIN_MICR,
+  IOC_NR_GET_DACL_VOL,
+  IOC_NR_GET_DACR_VOL,
+  IOC_NR_GET_ADCL_VOL,
+  IOC_NR_GET_ADCR_VOL,
 
-	IOC_NR_SET_PD_DACL,
-	IOC_NR_SET_PD_DACR,
-	IOC_NR_SET_PD_ADCL,
-	IOC_NR_SET_PD_ADCR,
+  IOC_NR_SET_PD_DACL,
+  IOC_NR_SET_PD_DACR,
+  IOC_NR_SET_PD_ADCL,
+  IOC_NR_SET_PD_ADCR,
 
-	IOC_NR_SET_DAC_DE_EMPHASIS,
-	IOC_NR_SET_ADC_HP_FILTER,  
+  IOC_NR_SET_DAC_DE_EMPHASIS,
+  IOC_NR_SET_ADC_HP_FILTER,
 
-	IOC_NR_SET_I2S1_DATAWIDTH,
+  IOC_NR_SET_I2S1_DATAWIDTH,
 } ACODEC_IOCTL_E;
 
 /*reset the audio code to the default config*/
 #define ACODEC_SOFT_RESET_CTRL \
-	_IO(IOC_TYPE_ACODEC, IOC_NR_SOFT_RESET_CTRL)	
+	_IO(IOC_TYPE_ACODEC, IOC_NR_SOFT_RESET_CTRL)
 /*ACODEC_FS_E*/
 #define ACODEC_SET_I2S1_FS \
 	_IOWR(IOC_TYPE_ACODEC, IOC_NR_SET_I2S1_FS, unsigned int)
@@ -162,7 +162,7 @@ typedef enum hiACODEC_IOCTL_E {
 /*set adcr power, 0: power up, 1: power down*/
 #define  ACODEC_SET_PD_ADCR \
         _IOWR(IOC_TYPE_ACODEC, IOC_NR_SET_PD_ADCR, unsigned int)
-	
+
 /* Don't need to set, the driver will set a default value */
 /*clock of dac and adc is reverse or obverse*/
 #define ACODEC_SEL_DAC_CLK \

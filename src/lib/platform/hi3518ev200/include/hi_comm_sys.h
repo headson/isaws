@@ -40,63 +40,56 @@ extern "C" {
 #endif /* End of #ifdef __cplusplus */
 
 #define HI_TRACE_SYS(level, fmt...) HI_TRACE(level, HI_ID_SYS,##fmt)
-typedef struct hiMPP_SYS_CONF_S
-{
-    /* stride of picture buffer must be aligned with this value.
-     * you can choose a value from 1 to 1024, and it must be multiple of 16.
-     */
-    HI_U32 u32AlignWidth;
+typedef struct hiMPP_SYS_CONF_S {
+  /* stride of picture buffer must be aligned with this value.
+   * you can choose a value from 1 to 1024, and it must be multiple of 16.
+   */
+  HI_U32 u32AlignWidth;
 
 } MPP_SYS_CONF_S;
 
-typedef struct hiSYS_VIRMEM_INFO_S
-{
-    HI_U32  u32PhyAddr;
-    HI_BOOL bCached;
+typedef struct hiSYS_VIRMEM_INFO_S {
+  HI_U32  u32PhyAddr;
+  HI_BOOL bCached;
 } SYS_VIRMEM_INFO_S;
 
-typedef enum hiSCALE_RANGE_E
-{
-    SCALE_RANGE_0 = 0,      /* scale range <  1/4 */
-    SCALE_RANGE_1,          /* scale range >= 1/4 */
-    SCALE_RANGE_2,          /* scale range >= 1/3 */
-    SCALE_RANGE_3,          /* scale range >= 1/2 */
-    SCALE_RANGE_4,          /* scale range >= 3/4 */
-    SCALE_RANGE_5,          /* scale range == 1/1 */
-    SCALE_RANGE_6,          /* scale range >  1   */
-    SCALE_RANGE_BUTT,
+typedef enum hiSCALE_RANGE_E {
+  SCALE_RANGE_0 = 0,      /* scale range <  1/4 */
+  SCALE_RANGE_1,          /* scale range >= 1/4 */
+  SCALE_RANGE_2,          /* scale range >= 1/3 */
+  SCALE_RANGE_3,          /* scale range >= 1/2 */
+  SCALE_RANGE_4,          /* scale range >= 3/4 */
+  SCALE_RANGE_5,          /* scale range == 1/1 */
+  SCALE_RANGE_6,          /* scale range >  1   */
+  SCALE_RANGE_BUTT,
 } SCALE_RANGE_E;
 
-typedef enum hiCOEFF_LEVEL_E
-{
-    COEFF_LEVEL_0 = 0,      /* coefficient level 0 */
-    COEFF_LEVEL_1,          /* coefficient level 1 */
-    COEFF_LEVEL_2,          /* coefficient level 2 */
-    COEFF_LEVEL_3,          /* coefficient level 3 */
-    COEFF_LEVEL_4,          /* coefficient level 4 */
-    COEFF_LEVEL_5,          /* coefficient level 5 */
-    COEFF_LEVEL_6,          /* coefficient level 6 */
-    COEFF_LEVEL_BUTT,
+typedef enum hiCOEFF_LEVEL_E {
+  COEFF_LEVEL_0 = 0,      /* coefficient level 0 */
+  COEFF_LEVEL_1,          /* coefficient level 1 */
+  COEFF_LEVEL_2,          /* coefficient level 2 */
+  COEFF_LEVEL_3,          /* coefficient level 3 */
+  COEFF_LEVEL_4,          /* coefficient level 4 */
+  COEFF_LEVEL_5,          /* coefficient level 5 */
+  COEFF_LEVEL_6,          /* coefficient level 6 */
+  COEFF_LEVEL_BUTT,
 } COEFF_LEVEL_E;
 
-typedef struct hiSCALE_COEFF_LEVEL_S
-{
-    COEFF_LEVEL_E enHorLum; /* horizontal luminance   coefficient level */    
-    COEFF_LEVEL_E enHorChr; /* horizontal chrominance coefficient level */    
-    COEFF_LEVEL_E enVerLum; /* vertical   luminance   coefficient level */    
-    COEFF_LEVEL_E enVerChr; /* vertical   chrominance coefficient level */    
+typedef struct hiSCALE_COEFF_LEVEL_S {
+  COEFF_LEVEL_E enHorLum; /* horizontal luminance   coefficient level */
+  COEFF_LEVEL_E enHorChr; /* horizontal chrominance coefficient level */
+  COEFF_LEVEL_E enVerLum; /* vertical   luminance   coefficient level */
+  COEFF_LEVEL_E enVerChr; /* vertical   chrominance coefficient level */
 } SCALE_COEFF_LEVEL_S;
 
-typedef struct hiSCALE_RANGE_S
-{
-    SCALE_RANGE_E enHorizontal;
-    SCALE_RANGE_E enVertical;   
+typedef struct hiSCALE_RANGE_S {
+  SCALE_RANGE_E enHorizontal;
+  SCALE_RANGE_E enVertical;
 } SCALE_RANGE_S;
 
-typedef struct hiSCALE_COEFF_INFO_S
-{
-    SCALE_RANGE_S stScaleRange;
-    SCALE_COEFF_LEVEL_S stScaleCoeffLevel;   
+typedef struct hiSCALE_COEFF_INFO_S {
+  SCALE_RANGE_S stScaleRange;
+  SCALE_COEFF_LEVEL_S stScaleCoeffLevel;
 } SCALE_COEFF_INFO_S;
 
 #define HI_ERR_SYS_NULL_PTR         HI_DEF_ERR(HI_ID_SYS, EN_ERR_LEVEL_ERROR, EN_ERR_NULL_PTR)

@@ -41,10 +41,11 @@ class CVideoCatch {
   static void* GetYUVThread(void* pArg);
 
  private:
-  pthread_t p_enc_id_;
-  pthread_t p_yuv_id_;
+  pthread_t      p_enc_id_;
+  pthread_t      p_yuv_id_;
   
-  CShmVdo   shm_video_;
+  CShareBuffer   shm_video_;
+  CShareBuffer   shm_image_;
 };
 
 #endif  // LIBPLATFORM_CVIDEO_H

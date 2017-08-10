@@ -43,7 +43,6 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   SIZE_S stSize;
   char c;
 
-
   /******************************************
    step  1: init sys variable
   ******************************************/
@@ -57,13 +56,13 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
 
   /*video buffer*/
   if(s32ChnNum >= 1) {
-    u32BlkSize = SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_ENCODING_MODE_NTSC,\
+    u32BlkSize = SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_ENCODING_MODE_PAL,\
                  enSize[0], SAMPLE_PIXEL_FORMAT, SAMPLE_SYS_ALIGN_WIDTH);
     stVbConf.astCommPool[0].u32BlkSize = u32BlkSize;
     stVbConf.astCommPool[0].u32BlkCnt = 2;
   }
   if(s32ChnNum >= 2) {
-    u32BlkSize = SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_ENCODING_MODE_NTSC,\
+    u32BlkSize = SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_ENCODING_MODE_PAL,\
                  enSize[1], SAMPLE_PIXEL_FORMAT, SAMPLE_SYS_ALIGN_WIDTH);
     stVbConf.astCommPool[1].u32BlkSize = u32BlkSize;
     stVbConf.astCommPool[1].u32BlkCnt  = 2;
@@ -74,7 +73,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   ******************************************/
   s32Ret = SAMPLE_COMM_SYS_Init(&stVbConf);
   if (HI_SUCCESS != s32Ret) {
-    SAMPLE_PRT("system init failed with %d!\n", s32Ret);
+    printf("system init failed with %d!\n", s32Ret);
     goto END_VENC_1080P_CLASSIC_0;
   }
 
@@ -88,16 +87,16 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   stViConfig.enWDRMode  = WDR_MODE_NONE;
   s32Ret = SAMPLE_COMM_VI_StartVi(&stViConfig);
   if (HI_SUCCESS != s32Ret) {
-    SAMPLE_PRT("start vi failed!\n");
+    printf("start vi failed!\n");
     goto END_VENC_1080P_CLASSIC_1;
   }
 
   /******************************************
    step 4: start vpss and vi bind vpss
   ******************************************/
-  s32Ret = SAMPLE_COMM_SYS_GetPicSize(VIDEO_ENCODING_MODE_NTSC, enSize[0], &stSize);
+  s32Ret = SAMPLE_COMM_SYS_GetPicSize(VIDEO_ENCODING_MODE_PAL, enSize[0], &stSize);
   if (HI_SUCCESS != s32Ret) {
-    SAMPLE_PRT("SAMPLE_COMM_SYS_GetPicSize failed!\n");
+    printf("SAMPLE_COMM_SYS_GetPicSize failed!\n");
     goto END_VENC_1080P_CLASSIC_1;
   }
   if(s32ChnNum >= 1) {
@@ -113,13 +112,13 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
 
     s32Ret = SAMPLE_COMM_VPSS_StartGroup(VpssGrp, &stVpssGrpAttr);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("Start Vpss failed!\n");
+      printf("Start Vpss failed!\n");
       goto END_VENC_1080P_CLASSIC_2;
     }
 
     s32Ret = SAMPLE_COMM_VI_BindVpss(stViConfig.enViMode);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("Vi bind Vpss failed!\n");
+      printf("Vi bind Vpss failed!\n");
       goto END_VENC_1080P_CLASSIC_2;
     }
 
@@ -135,15 +134,15 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     stVpssChnAttr.s32DstFrameRate = 15;
     s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr,&stVpssChnMode, HI_NULL);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("Enable vpss chn failed!\n");
+      printf("Enable vpss chn failed!\n");
       goto END_VENC_1080P_CLASSIC_4;
     }
   }
 
   if(s32ChnNum >= 2) {
-    s32Ret = SAMPLE_COMM_SYS_GetPicSize(VIDEO_ENCODING_MODE_NTSC, enSize[1], &stSize);
+    s32Ret = SAMPLE_COMM_SYS_GetPicSize(VIDEO_ENCODING_MODE_PAL, enSize[1], &stSize);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("SAMPLE_COMM_SYS_GetPicSize failed!\n");
+      printf("SAMPLE_COMM_SYS_GetPicSize failed!\n");
       goto END_VENC_1080P_CLASSIC_4;
     }
     VpssChn = 1;
@@ -157,7 +156,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     stVpssChnAttr.s32DstFrameRate = 15;
     s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr, &stVpssChnMode, HI_NULL);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("Enable vpss chn failed!\n");
+      printf("Enable vpss chn failed!\n");
       goto END_VENC_1080P_CLASSIC_4;
     }
   }
@@ -176,15 +175,15 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     VpssChn = 0;
     VencChn = 0;
     s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[0],\
-                                    VIDEO_ENCODING_MODE_NTSC, enSize[0], enRcMode,u32Profile);
+                                    VIDEO_ENCODING_MODE_PAL, enSize[0], enRcMode,u32Profile);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("Start Venc failed!\n");
+      printf("Start Venc failed!\n");
       goto END_VENC_1080P_CLASSIC_5;
     }
 
     s32Ret = SAMPLE_COMM_VENC_BindVpss(VencChn, VpssGrp, VpssChn);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("Start Venc failed!\n");
+      printf("Start Venc failed!\n");
       goto END_VENC_1080P_CLASSIC_5;
     }
   }
@@ -194,15 +193,15 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     VpssChn = 1;
     VencChn = 1;
     s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[1], \
-                                    VIDEO_ENCODING_MODE_NTSC, enSize[1], enRcMode,u32Profile);
+                                    VIDEO_ENCODING_MODE_PAL, enSize[1], enRcMode,u32Profile);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("Start Venc failed!\n");
+      printf("Start Venc failed!\n");
       goto END_VENC_1080P_CLASSIC_5;
     }
 
     s32Ret = SAMPLE_COMM_VENC_BindVpss(VencChn, VpssGrp, VpssChn);
     if (HI_SUCCESS != s32Ret) {
-      SAMPLE_PRT("Start Venc failed!\n");
+      printf("Start Venc failed!\n");
       goto END_VENC_1080P_CLASSIC_5;
     }
   }
@@ -212,7 +211,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   ******************************************/
   /*s32Ret = SAMPLE_COMM_VENC_StartGetStream(s32ChnNum, p);
   if (HI_SUCCESS != s32Ret) {
-  SAMPLE_PRT("Start Venc failed!\n");
+  printf("Start Venc failed!\n");
   goto END_VENC_1080P_CLASSIC_5;
   }*/
 
@@ -222,7 +221,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   gs_stPara.p_usr_arg     = p;
   SAMPLE_COMM_VENC_GetVencStreamProc((HI_VOID*)&gs_stPara);
   /*if (HI_SUCCESS != s32Ret) {
-    SAMPLE_PRT("Start Venc failed!\n");
+    printf("Start Venc failed!\n");
     goto END_VENC_1080P_CLASSIC_5;
   }*/
 
@@ -275,11 +274,23 @@ END_VENC_1080P_CLASSIC_0:	//system exit
 }
 
 int32 CVideoCatch::Start() {
-  bool b_ret = shm_video_.Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+  bool b_ret = false;
+
+  b_ret = shm_video_.Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
   if (b_ret == false) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
   }
+  shm_video_.SetWidth(352);
+  shm_video_.SetHeight(288);
+
+  b_ret = shm_image_.Create(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
+  if (b_ret == false) {
+    LOG(L_ERROR) << "can't open share memory.";
+    return -1;
+  }
+  shm_image_.SetWidth(352);
+  shm_image_.SetHeight(288);
 
   pthread_create(&p_enc_id_, NULL, VideoVencClassic, this);
 
@@ -308,9 +319,9 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream) {
                p_nal[2] == 0x00 && p_nal[3] == 0x01) {
       n_frm_type = p_nal[4] & 0x1f;
     }
-    printf("------------------------ frame %d. length %d.\n", 
-           n_frm_type,
-           p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
+    //printf("------------------------ frame %d. length %d.\n",
+    //       n_frm_type,
+    //       p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
 
     if (n_frm_type == 7) {
       shm_video_.WriteSps((char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
@@ -403,6 +414,12 @@ void* CVideoCatch::GetYUVThread(void* pArg) {
     //printf("Get frame\t%d\t%d\t%d\t0x%x\t0x%x\n",
     //       nSeq++, stFrame.stVFrame.u32Width, stFrame.stVFrame.u32Height,
     //       stFrame.stVFrame.u32PhyAddr[0], stFrame.stVFrame.pVirAddr[0]);
+
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    ((CVideoCatch*)pArg)->shm_image_.Write((const char*)pUserPageAddr[0],
+                                           stFrame.stVFrame.u32Width * stFrame.stVFrame.u32Height * 3 / 2,
+                                           tv.tv_sec, tv.tv_usec);
 
     HI_MPI_SYS_Munmap(pUserPageAddr[0], nSize);
     HI_MPI_VPSS_ReleaseChnFrame(vGrp, vChn, &stFrame);

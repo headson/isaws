@@ -13,7 +13,7 @@
 *
 *
 *  History:
-* 
+*
 *       1.  Date         : 2011/1/7
 *           Author       : j00169368,l64467
 *           Modification : Created file
@@ -32,59 +32,53 @@
 
 #ifdef __cplusplus
 #if __cplusplus
-extern "C"{
+extern "C" {
 #endif
 #endif /* End of #ifdef __cplusplus */
 
 
 /*Motion Region Data*/
-typedef struct hiVDA_OBJ_S
-{
-    HI_U16 u16Left;
-	HI_U16 u16Top;
-	HI_U16 u16Right;
-	HI_U16 u16Bottom;
-}VDA_OBJ_S;
+typedef struct hiVDA_OBJ_S {
+  HI_U16 u16Left;
+  HI_U16 u16Top;
+  HI_U16 u16Right;
+  HI_U16 u16Bottom;
+} VDA_OBJ_S;
 
 /*reference pictrue mode*/
-typedef enum hiVDA_REF_MODE_E
-{
-	VDA_REF_MODE_DYNAMIC = 0,   /*reference pictrue dynamic*/
-	VDA_REF_MODE_STATIC,	    /*reference pictrue static*/
-    VDA_REF_MODE_USER,          /*reference pictrue user*/
-	VDA_REF_MODE_BUTT           /*reserve*/
-}VDA_REF_MODE_E;
+typedef enum hiVDA_REF_MODE_E {
+  VDA_REF_MODE_DYNAMIC = 0,   /*reference pictrue dynamic*/
+  VDA_REF_MODE_STATIC,	    /*reference pictrue static*/
+  VDA_REF_MODE_USER,          /*reference pictrue user*/
+  VDA_REF_MODE_BUTT           /*reserve*/
+} VDA_REF_MODE_E;
 
 /*VDA algorithm*/
-typedef enum hiVDA_ALG_E
-{
-	VDA_ALG_BG = 0,		/*base on background pictrue*/
-	VDA_ALG_REF,	    /*base on reference pictrue*/
-	VDA_ALG_BUTT
-}VDA_ALG_E;
+typedef enum hiVDA_ALG_E {
+  VDA_ALG_BG = 0,		/*base on background pictrue*/
+  VDA_ALG_REF,	    /*base on reference pictrue*/
+  VDA_ALG_BUTT
+} VDA_ALG_E;
 
 /*MB size*/
-typedef enum hiVDA_MB_SIZE_E
-{
-	VDA_MB_8PIXEL,      /* 8*8 */          
-	VDA_MB_16PIXEL,     /* 16*16 */
-	VDA_MB_BUTT	
-}VDA_MB_SIZE_E;
+typedef enum hiVDA_MB_SIZE_E {
+  VDA_MB_8PIXEL,      /* 8*8 */
+  VDA_MB_16PIXEL,     /* 16*16 */
+  VDA_MB_BUTT
+} VDA_MB_SIZE_E;
 
 /*SAD bits*/
-typedef enum hiVDA_MB_SADBITS_E
-{
-    VDA_MB_SAD_8BIT = 0,  /*SAD precision 8bits*/
-    VDA_MB_SAD_16BIT,     /*SAD precision 16bits*/
-    VDA_MB_SAD_BUTT       /*reserve*/
+typedef enum hiVDA_MB_SADBITS_E {
+  VDA_MB_SAD_8BIT = 0,  /*SAD precision 8bits*/
+  VDA_MB_SAD_16BIT,     /*SAD precision 16bits*/
+  VDA_MB_SAD_BUTT       /*reserve*/
 } VDA_MB_SADBITS_E;
 
 
 /*OD region attribute*/
-typedef struct hiVDA_OD_RGN_ATTR_S
-{
-    /*static attribute*/
-    RECT_S stRect;            /*region rect
+typedef struct hiVDA_OD_RGN_ATTR_S {
+  /*static attribute*/
+  RECT_S stRect;            /*region rect
                                *X:[0,VDA_MAX_WIDTH),align:16
                                *Y:[0,VDA_MAX_HEIGHT)
                                *W:[16,VDA_MAX_WIDTH],align:16
@@ -93,154 +87,142 @@ typedef struct hiVDA_OD_RGN_ATTR_S
                                *Y+H <= chunnel height
                                */
 
-    /*dynamic attribute*/
-    HI_U32 u32SadTh;          /*SAD threshold,range:[0,4080]*/
-    HI_U32 u32AreaTh;         /*alarm area threshold,range:[0,100]*/
-	HI_U32 u32OccCntTh;	      /*alarm frame count threshold,range:[1,256]*/
-    HI_U32 u32UnOccCntTh;	  /*The max uncover count,range:[0,256]*/
-}VDA_OD_RGN_ATTR_S;
+  /*dynamic attribute*/
+  HI_U32 u32SadTh;          /*SAD threshold,range:[0,4080]*/
+  HI_U32 u32AreaTh;         /*alarm area threshold,range:[0,100]*/
+  HI_U32 u32OccCntTh;	      /*alarm frame count threshold,range:[1,256]*/
+  HI_U32 u32UnOccCntTh;	  /*The max uncover count,range:[0,256]*/
+} VDA_OD_RGN_ATTR_S;
 
 /*MD attribute*/
-typedef struct hiVDA_MD_ATTR_S
-{
-    /*static attribute*/
-	VDA_ALG_E		 enVdaAlg;	    /*arithmetic*/
-    VDA_MB_SIZE_E    enMbSize;      /*MB size*/
-    VDA_MB_SADBITS_E enMbSadBits;   /*MB SAD size*/
-    VDA_REF_MODE_E   enRefMode;     /*reference picture mode*/
-    HI_U32           u32MdBufNum;   /*Result buffer number,range:[1,16]*/ 
-    
-    /*dynamic attribute*/
-    HI_U32           u32VdaIntvl;   /*VDA interval,range:[0,256]*/
-    
-    HI_U32           u32BgUpSrcWgt;  /*the source picture weight,
+typedef struct hiVDA_MD_ATTR_S {
+  /*static attribute*/
+  VDA_ALG_E		 enVdaAlg;	    /*arithmetic*/
+  VDA_MB_SIZE_E    enMbSize;      /*MB size*/
+  VDA_MB_SADBITS_E enMbSadBits;   /*MB SAD size*/
+  VDA_REF_MODE_E   enRefMode;     /*reference picture mode*/
+  HI_U32           u32MdBufNum;   /*Result buffer number,range:[1,16]*/
+
+  /*dynamic attribute*/
+  HI_U32           u32VdaIntvl;   /*VDA interval,range:[0,256]*/
+
+  HI_U32           u32BgUpSrcWgt;  /*the source picture weight,
                                       *back ground updata totle weight 256,
                                       *range:[1,255],recommendatory value:128
                                       */
-                                      
-    HI_U32			 u32SadTh;      /*SAD threshold,range:[0,4080],recommendatory value:100*/
-    HI_U32           u32ObjNumMax;  /*max OBJ number,range:[1,128]*/
-}VDA_MD_ATTR_S;
+
+  HI_U32			 u32SadTh;      /*SAD threshold,range:[0,4080],recommendatory value:100*/
+  HI_U32           u32ObjNumMax;  /*max OBJ number,range:[1,128]*/
+} VDA_MD_ATTR_S;
 
 
 #define VDA_OD_RGN_NUM_MAX 4
 
 /*OD attribute*/
-typedef struct hiVDA_OD_ATTR_S
-{
-    HI_U32           u32RgnNum;     /*region number*/
-    VDA_OD_RGN_ATTR_S astOdRgnAttr[VDA_OD_RGN_NUM_MAX]; /*region attribute*/
-    
-    /*static attribute*/
-	VDA_ALG_E		 enVdaAlg;		/*arithmetic*/
-    VDA_MB_SIZE_E    enMbSize;      /*MB size*/
-    VDA_MB_SADBITS_E enMbSadBits;   /*MB SAD size*/
-    VDA_REF_MODE_E   enRefMode;     /*reference picture mode*/
-        
-    /*dynamic attribute*/
-    HI_U32           u32VdaIntvl;   /*VDA interval,[0,256]*/
-    HI_U32           u32BgUpSrcWgt;  /*back ground updata totle weight 256,the source picture weight,[1,255]*/
+typedef struct hiVDA_OD_ATTR_S {
+  HI_U32           u32RgnNum;     /*region number*/
+  VDA_OD_RGN_ATTR_S astOdRgnAttr[VDA_OD_RGN_NUM_MAX]; /*region attribute*/
 
-    
-}VDA_OD_ATTR_S;
+  /*static attribute*/
+  VDA_ALG_E		 enVdaAlg;		/*arithmetic*/
+  VDA_MB_SIZE_E    enMbSize;      /*MB size*/
+  VDA_MB_SADBITS_E enMbSadBits;   /*MB SAD size*/
+  VDA_REF_MODE_E   enRefMode;     /*reference picture mode*/
+
+  /*dynamic attribute*/
+  HI_U32           u32VdaIntvl;   /*VDA interval,[0,256]*/
+  HI_U32           u32BgUpSrcWgt;  /*back ground updata totle weight 256,the source picture weight,[1,255]*/
+
+
+} VDA_OD_ATTR_S;
 
 
 /*work mode*/
-typedef enum hiVDA_WORK_MODE_E
-{
-	VDA_WORK_MODE_MD = 0, /*motion detection*/
-    VDA_WORK_MODE_OD,     /*Occlusion detection*/
-    VDA_WORK_MODE_BUTT    
-}VDA_WORK_MODE_E;
+typedef enum hiVDA_WORK_MODE_E {
+  VDA_WORK_MODE_MD = 0, /*motion detection*/
+  VDA_WORK_MODE_OD,     /*Occlusion detection*/
+  VDA_WORK_MODE_BUTT
+} VDA_WORK_MODE_E;
 
 
 /*work mode attribute*/
-typedef union hiVDA_WORK_MODE_ATTR_U
-{
-    VDA_MD_ATTR_S stMdAttr;  /*MD attribute*/
-    VDA_OD_ATTR_S stOdAttr;  /*OD attribute*/
-}VDA_WORK_MODE_ATTR_U;
+typedef union hiVDA_WORK_MODE_ATTR_U {
+  VDA_MD_ATTR_S stMdAttr;  /*MD attribute*/
+  VDA_OD_ATTR_S stOdAttr;  /*OD attribute*/
+} VDA_WORK_MODE_ATTR_U;
 
 
 /*VDA CHN attribute*/
-typedef struct hiVDA_CHN_ATTR_S
-{
-    VDA_WORK_MODE_E enWorkMode;  /*work mode*/
-    VDA_WORK_MODE_ATTR_U unAttr; /*work mode attribute*/
-    HI_U32 u32Width;             /*the width of CHNL,[16,VDA_MAX_WIDTH]*/
-    HI_U32 u32Height;            /*the height of CHNL,[16,VDA_MAX_HEIGHT]*/
-}VDA_CHN_ATTR_S;
+typedef struct hiVDA_CHN_ATTR_S {
+  VDA_WORK_MODE_E enWorkMode;  /*work mode*/
+  VDA_WORK_MODE_ATTR_U unAttr; /*work mode attribute*/
+  HI_U32 u32Width;             /*the width of CHNL,[16,VDA_MAX_WIDTH]*/
+  HI_U32 u32Height;            /*the height of CHNL,[16,VDA_MAX_HEIGHT]*/
+} VDA_CHN_ATTR_S;
 
 
 /*MB SAD data*/
-typedef struct hiVDA_MB_SAD_DATA_S
-{
-    HI_VOID	   *pAddr;             /*address*/
-    HI_U32		u32Stride;         /*stride*/
-    VDA_MB_SADBITS_E enMbSadBits;  /*the MB SAD size*/
-}VDA_MB_SAD_DATA_S;
+typedef struct hiVDA_MB_SAD_DATA_S {
+  HI_VOID	   *pAddr;             /*address*/
+  HI_U32		u32Stride;         /*stride*/
+  VDA_MB_SADBITS_E enMbSadBits;  /*the MB SAD size*/
+} VDA_MB_SAD_DATA_S;
 
 /*OBJ data*/
-typedef struct hiVDA_OBJ_DATA_S
-{
-    HI_U32 u32ObjNum;              /*OBJ number*/
-    VDA_OBJ_S	*pstAddr;          /*OBJ data address*/
-    
-    HI_U32 u32IndexOfMaxObj;       /*index of max OBJ*/
-    HI_U32 u32SizeOfMaxObj;        /*size of max OBJ*/
-	HI_U32 u32SizeOfTotalObj;      /*total size of all OBJ*/
-}VDA_OBJ_DATA_S;
+typedef struct hiVDA_OBJ_DATA_S {
+  HI_U32 u32ObjNum;              /*OBJ number*/
+  VDA_OBJ_S	*pstAddr;          /*OBJ data address*/
+
+  HI_U32 u32IndexOfMaxObj;       /*index of max OBJ*/
+  HI_U32 u32SizeOfMaxObj;        /*size of max OBJ*/
+  HI_U32 u32SizeOfTotalObj;      /*total size of all OBJ*/
+} VDA_OBJ_DATA_S;
 
 
 /*MD data*/
-typedef struct hiVDA_MD_DATA_S
-{
-    HI_BOOL           bMbSadValid;     /*SAD data is valid?*/
-    VDA_MB_SAD_DATA_S stMbSadData;    /*MB SAD data*/
-    
-    HI_BOOL           bObjValid;       /*OBJ data is valid?*/
-    VDA_OBJ_DATA_S    stObjData;      /*OBJ data*/
+typedef struct hiVDA_MD_DATA_S {
+  HI_BOOL           bMbSadValid;     /*SAD data is valid?*/
+  VDA_MB_SAD_DATA_S stMbSadData;    /*MB SAD data*/
 
-    HI_BOOL           bPelsNumValid;   /*alarm pixel number data is valid?*/
-	HI_U32 			  u32AlarmPixCnt;/*motion pix of picture*/
-}VDA_MD_DATA_S;
+  HI_BOOL           bObjValid;       /*OBJ data is valid?*/
+  VDA_OBJ_DATA_S    stObjData;      /*OBJ data*/
+
+  HI_BOOL           bPelsNumValid;   /*alarm pixel number data is valid?*/
+  HI_U32 			  u32AlarmPixCnt;/*motion pix of picture*/
+} VDA_MD_DATA_S;
 
 
 /*OD data*/
-typedef struct hiVDA_OD_DATA_S
-{
-    HI_U32  u32RgnNum;                      /*region number*/
-    HI_BOOL abRgnAlarm[VDA_OD_RGN_NUM_MAX]; /*HI_TRUE:alarm*/
-}VDA_OD_DATA_S;
+typedef struct hiVDA_OD_DATA_S {
+  HI_U32  u32RgnNum;                      /*region number*/
+  HI_BOOL abRgnAlarm[VDA_OD_RGN_NUM_MAX]; /*HI_TRUE:alarm*/
+} VDA_OD_DATA_S;
 
 
 
-typedef union hiVDA_DATA_U
-{
-    VDA_MD_DATA_S stMdData; /*MD data*/
-    VDA_OD_DATA_S stOdData; /*OD data*/
-}VDA_DATA_U;
+typedef union hiVDA_DATA_U {
+  VDA_MD_DATA_S stMdData; /*MD data*/
+  VDA_OD_DATA_S stOdData; /*OD data*/
+} VDA_DATA_U;
 
 
 /*VDA data*/
-typedef struct hiVDA_DATA_S
-{
-    VDA_WORK_MODE_E enWorkMode;  /*work mode*/
-    VDA_DATA_U      unData;      /*VDA data*/
-    VDA_MB_SIZE_E   enMbSize;    /*MB size*/
-    HI_U32          u32MbWidth;  /*VDA channle width in MB*/
-    HI_U32          u32MbHeight; /*VDA channle height in MB*/
-    HI_U64          u64Pts;      /*time*/    
-}VDA_DATA_S;
+typedef struct hiVDA_DATA_S {
+  VDA_WORK_MODE_E enWorkMode;  /*work mode*/
+  VDA_DATA_U      unData;      /*VDA data*/
+  VDA_MB_SIZE_E   enMbSize;    /*MB size*/
+  HI_U32          u32MbWidth;  /*VDA channle width in MB*/
+  HI_U32          u32MbHeight; /*VDA channle height in MB*/
+  HI_U64          u64Pts;      /*time*/
+} VDA_DATA_S;
 
 
 /*chnnel state*/
-typedef struct hiVDA_CHN_STAT_S
-{
-    HI_BOOL bStartRecvPic; /*start receive picture*/
-	HI_U32 u32LeftPic;     /*left picture*/
-	HI_U32 u32LeftRst;     /*left data*/   
-}VDA_CHN_STAT_S;
+typedef struct hiVDA_CHN_STAT_S {
+  HI_BOOL bStartRecvPic; /*start receive picture*/
+  HI_U32 u32LeftPic;     /*left picture*/
+  HI_U32 u32LeftRst;     /*left data*/
+} VDA_CHN_STAT_S;
 
 /* invlalid device ID */
 #define HI_ERR_VDA_INVALID_DEVID     HI_DEF_ERR(HI_ID_VDA, EN_ERR_LEVEL_ERROR, EN_ERR_INVALID_DEVID)
