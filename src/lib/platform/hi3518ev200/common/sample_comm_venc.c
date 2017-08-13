@@ -1190,9 +1190,7 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
   struct timeval TimeoutVal;
   fd_set read_fds;
   HI_S32 VencFd[VENC_MAX_CHN_NUM];
-  HI_CHAR aszFileName[VENC_MAX_CHN_NUM][64];
-  FILE *pFile[VENC_MAX_CHN_NUM];
-  char szFilePostfix[10];
+
   VENC_CHN_STAT_S stStat;
   VENC_STREAM_S stStream;
   HI_S32 s32Ret;
@@ -1219,20 +1217,6 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
       return NULL;
     }
     enPayLoadType[i] = stVencChnAttr.stVeAttr.enType;
-
-    s32Ret = SAMPLE_COMM_VENC_GetFilePostfix(enPayLoadType[i], szFilePostfix);
-    if(s32Ret != HI_SUCCESS) {
-      SAMPLE_PRT("SAMPLE_COMM_VENC_GetFilePostfix [%d] failed with %#x!\n", \
-                 stVencChnAttr.stVeAttr.enType, s32Ret);
-      return NULL;
-    }
-    sprintf(aszFileName[i], "stream_chn%d%s", i, szFilePostfix);
-    pFile[i] = fopen(aszFileName[i], "wb");
-    if (!pFile[i]) {
-      SAMPLE_PRT("open file[%s] failed!\n",
-                 aszFileName[i]);
-      return NULL;
-    }
 
     /* Set Venc Fd. */
     VencFd[i] = HI_MPI_VENC_GetFd(i);
@@ -1306,15 +1290,13 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
           if (HI_SUCCESS != s32Ret) {
             free(stStream.pstPack);
             stStream.pstPack = NULL;
-            SAMPLE_PRT("HI_MPI_VENC_GetStream failed with %#x!\n", \
-                       s32Ret);
+            SAMPLE_PRT("HI_MPI_VENC_GetStream failed with %#x!\n", s32Ret);
             break;
           }
 
           /*******************************************************
            step 2.5 : save frame to file
           *******************************************************/
-          // s32Ret = SAMPLE_COMM_VENC_SaveStream(enPayLoadType[i], pFile[i], &stStream);
           s32Ret = HisiPutH264DataToBuffer(i, &stStream, pstPara->p_usr_arg);
           if (HI_SUCCESS != s32Ret) {
             free(stStream.pstPack);
@@ -1341,18 +1323,8 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
       }
     }
   }
-
-  /*******************************************************
-  * step 3 : close save-file
-  *******************************************************/
-  for (i = 0; i < s32ChnTotal; i++) {
-    fclose(pFile[i]);
-  }
-
   return NULL;
 }
-
-
 
 /******************************************************************************
 * funciton : get svc_t stream from h264 channels and save them

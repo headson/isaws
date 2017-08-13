@@ -209,21 +209,11 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   /******************************************
    step 6: stream venc process -- get stream, then save it to file.
   ******************************************/
-  /*s32Ret = SAMPLE_COMM_VENC_StartGetStream(s32ChnNum, p);
-  if (HI_SUCCESS != s32Ret) {
-  printf("Start Venc failed!\n");
-  goto END_VENC_1080P_CLASSIC_5;
-  }*/
-
   SAMPLE_VENC_GETSTREAM_PARA_S gs_stPara;
   gs_stPara.bThreadStart  = HI_TRUE;
   gs_stPara.s32Cnt        = s32ChnNum;
   gs_stPara.p_usr_arg     = p;
   SAMPLE_COMM_VENC_GetVencStreamProc((HI_VOID*)&gs_stPara);
-  /*if (HI_SUCCESS != s32Ret) {
-    printf("Start Venc failed!\n");
-    goto END_VENC_1080P_CLASSIC_5;
-  }*/
 
   printf("please press twice ENTER to exit this sample\n");
   getchar();
