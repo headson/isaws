@@ -74,11 +74,10 @@ void CListenMessage::GetHwInfo() {
   DpClient_SendDpReqToString(MSG_GET_IVAINFO, 0,
                              NULL, 0, &sresp,
                              DEF_TIMEOUT_MSEC);
+  LOG(L_INFO) << sresp;
   Json::Value jresp;
   if (jread.parse(sresp, jresp)) {
-    if (jresp.isMember("version")) {
-      jinfo["alg_version"] = jresp["version"].asString();
-    }    
+    sys_info_.alg_version = jresp[MSG_BODY]["version"].asString();
   } else {
     LOG(L_ERROR) << "MSG_GET_IVAINFO failed.";
   }
@@ -87,26 +86,25 @@ void CListenMessage::GetHwInfo() {
   vzbase::get_software(sys_info_.sw_version);
 
   // hardware/uuid
-  vzbase::get_hardware(sys_info_.hw_version,
-                       sys_info_.dev_uuid);
+  vzbase::get_hardware(sys_info_.hw_version, sys_info_.dev_uuid);
 
   // save size
-
+  
 }
 
 bool CListenMessage::GetDevInfo(Json::Value &jbody) {
   jbody["dev_name"] = sys_info_.dev_name;
   jbody["dev_type"] = sys_info_.dev_type;
-  
+
   jbody["ins_addr"] = sys_info_.ins_addr;
-  
+
   jbody["sw_version"] = sys_info_.sw_version;
   jbody["hw_version"] = sys_info_.hw_version;
   jbody["alg_version"] = sys_info_.alg_version;
-  
+
   jbody["net"]["wifi_en"] = sys_info_.net.wifi_en;
   jbody["net"]["dhcp_en"] = sys_info_.net.dhcp_en;
-  
+
   jbody["net"]["ip_addr"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::ip_addr_));
   jbody["net"]["netmask"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::netmask_));
   jbody["net"]["gateway"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::gateway_));
@@ -205,8 +203,7 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
 
   FILE *file = fopen(SYS_CFG_PATH, "wt+");
   if (file) {
-    Json::FastWriter jfw;
-    std::string ss = jfw.write(jbody);
+    std::string ss = jbody.toStyledString();
 
     fwrite(ss.c_str(), 1, ss.size(), file);
     fclose(file);

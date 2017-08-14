@@ -88,8 +88,7 @@ inline void get_hardware(std::string &hw, std::string &uuid) {
 
       FILE *file = fopen(DEF_HARDWARE_FILE, "wt+");
       if (file) {
-        Json::FastWriter jfw;
-        std::string ss = jfw.write(jv);
+        std::string ss = jv.toStyledString();
 
         fwrite(ss.c_str(), 1, ss.size(), file);
         fclose(file);

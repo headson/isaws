@@ -143,11 +143,17 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
 
   Json::Value jresp;
   jresp[MSG_CMD]  = dmp->method;
-  jresp[MSG_BODY] = "";
+  //jresp[MSG_BODY] = "";
 
   if (strncmp(dmp->method, MSG_GET_IVAINFO, MAX_METHOD_SIZE) == 0) {
     // 获取算法参数
+    char sver[64] = {0};
+    if (IVA_ERROR_NO_ERROR == sdk_iva_get_version(sver)) {
+      nret = RET_SUCCESS;
 
+      std::string ss = sver;
+      jresp[MSG_BODY]["version"] = ss;
+    }
   } else if (strncmp(dmp->method, MSG_SET_IVAINFO, MAX_METHOD_SIZE) == 0) {
     // 配置算法参数
 
@@ -197,13 +203,13 @@ static unsigned char chn_cmd_byte(int ch) {
 
 static int chn_value(int fd, int nreg) {
   if (write(fd, &nreg, 1) != 1) {
-    LOG_ERROR("write i2c reg %d failed.\n", nreg);
+    // LOG_ERROR("write i2c reg %d failed.\n", nreg);
     return -1;
   }
 
   unsigned char aval[2] = { 0 };
   if (read(fd, aval, 2) != 2) {
-    LOG_ERROR("read i2c reg %d failed.\n", nreg);
+    // LOG_ERROR("read i2c reg %d failed.\n", nreg);
     return -1;
   }
 
@@ -217,12 +223,12 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
 
     int nlen = share_image_.Read(image_buffer_, SHM_IMAGE_0_SIZE,
                                  &last_read_sec_, &last_read_usec_);
-    //LOG_INFO("get one frame image. length %d, %u %u.",
-    //         nlen,
-    //         last_read_sec_, last_read_usec_);
     if (nlen <= 0) {
       return;
     }
+    //LOG_INFO("get one frame image. length %d, %u %u.",
+    //         nlen,
+    //         last_read_sec_, last_read_usec_);
 
     iva_frame_t frame;
 

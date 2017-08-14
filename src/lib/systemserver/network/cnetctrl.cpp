@@ -51,6 +51,25 @@ bool CNetCtrl::Start() {
     return false;
   }
 
+#ifndef _WIN32
+  ip_addr_ = net_get_ifaddr(PHY_ETH_NAME);
+  LOG(L_INFO) << "ip_addr_ " << inet_ntoa(*((struct in_addr*)&ip_addr_));
+
+  netmask_ = net_get_netmask(PHY_ETH_NAME);
+  LOG(L_INFO) << "netmask_ " << inet_ntoa(*((struct in_addr*)&netmask_));
+
+  gateway_ = net_get_gateway();
+  LOG(L_INFO) << "gateway_ " << inet_ntoa(*((struct in_addr*)&gateway_));
+
+  dns_addr_ = net_get_dns();
+  LOG(L_INFO) << "dns_addr_ " << inet_ntoa(*((struct in_addr*)&dns_addr_));
+
+  unsigned char smac[20] = { 0 };
+  net_get_hwaddr(PHY_ETH_NAME, smac);
+  phy_mac_ = (char*)smac;
+  LOG(L_INFO) << "phy_mac_ " << phy_mac_;
+#endif
+
   mcast_sock_ = vzconn::CMCastSocket::Create(
                   thread_fast_->socketserver()->GetEvtService(),
                   this);
@@ -94,10 +113,6 @@ void CNetCtrl::OnMessage(vzbase::Message* msg) {
         netmask_  = net_get_netmask(PHY_ETH_NAME);
         gateway_  = net_get_gateway();
         dns_addr_ = net_get_dns();
-
-        unsigned char smac[20] = {0};
-        net_get_hwaddr(PHY_ETH_NAME, smac);
-        phy_mac_ = (char*)smac;
       }
       ip_addr_ = ip;
 

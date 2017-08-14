@@ -20,8 +20,9 @@ extern "C"
 #define IVA_ERROR_NULL_HANDLE					2
 #define IVA_ERROR_NULL_POINTER					3
 #define IVA_ERROR_INVALID_COMMAND				4
-#define IVA_ERROR_FRAME_BUFFER_IS_FULL			5
-#define IVA_ERROR_INVALID_IMAGE_SIZE			6
+#define IVA_ERROR_SET_COMMAND_TIMEDOUT			5
+#define IVA_ERROR_FRAME_BUFFER_IS_FULL			6
+#define IVA_ERROR_INVALID_IMAGE_SIZE			7
 
 //句柄
 typedef void* iva_count_handle;
@@ -29,13 +30,17 @@ typedef void* iva_count_handle;
 //控制指令
 typedef enum
 {
-	CONTROL_COMMAND_RESET_COUNTER = 0,		//计数复位
+	CONTROL_COMMAND_RESET_COUNTER = 0,				//计数复位
+	CONTROL_COMMAND_SET_COUNTING_DIRECTION,			//设置计数方向（正向）
+	CONTROL_COMMAND_REVERSE_COUNTING_DIRECTION,		//反转计数方向（反向）
 }iva_control_command;
 
 //事件类型
 typedef enum
 {
 	IVA_EVENT_COUTING = 0,					//计数
+	IVA_EVENT_SET_DAY_MODE,					//设置白天模式
+	IVA_EVENT_SET_NIGHT_MODE,				//设置夜间模式
 }iva_event_type;
 
 //数据帧格式
@@ -98,6 +103,8 @@ ALG_DLL_API int sdk_iva_destroy(iva_count_handle handle);
 ALG_DLL_API int sdk_iva_process(iva_count_handle handle, iva_frame_t *frame);
 
 ALG_DLL_API int sdk_iva_set_control_command(iva_count_handle handle, iva_control_command command);
+
+ALG_DLL_API int sdk_iva_get_version(char *version);
 
 #ifdef __cplusplus
 };

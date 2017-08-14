@@ -22,9 +22,9 @@ class CFlvOverHttp {
 
   void Close();
 
-  int WriteHeader(const void *p_resp, unsigned int n_resp);
+  int AsyncHeader(const void *p_resp, unsigned int n_resp);
 
-  int WritePacket(const void *p_data, unsigned int n_data);
+  int AsyncWrite(const void *p_data, unsigned int n_data);
 
  protected:
   static int EvtSend(SOCKET fd,
@@ -38,7 +38,8 @@ class CFlvOverHttp {
   int32 OnTimer();
 
   char *nal_parse(const char *ph264, int nh264, int *frm_type, int *nal_bng);
-  
+
+
  private:
   unsigned int           exit_flag_;
 
@@ -62,6 +63,9 @@ class CFlvOverHttp {
   CFlvMux                flv_shm_;
   char                  *flv_data_;
   int                    flv_data_size_;
+
+  int                    avcc_data_size_;
+  char                   avcc_data_[1024];
 
   FILE                  *file;
 };

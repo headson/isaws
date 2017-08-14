@@ -71,8 +71,8 @@ void CFlvOverHttp::Close() {
   // sock_.SetSocket(INVALID_SOCKET);
 }
 
-int CFlvOverHttp::WriteHeader(const void *phead, unsigned int nhead) {
-  WritePacket(phead, nhead);
+int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead) {
+  AsyncWrite(phead, nhead);
 
   unsigned int width=0, height=0;
   shm_vdo_.GetVdoSize(&width, &height);
@@ -86,40 +86,44 @@ int CFlvOverHttp::WriteHeader(const void *phead, unsigned int nhead) {
     return -1;
   }
 
+  int ndata = 0;
   char sdata[2048] = {0};
-  int  n_sps = 0, n_pps = 0;
-  int  ndata = shm_vdo_.ReadHead(sdata, 2048, &n_sps, &n_pps);
-  LOG(L_INFO) << "sps length " << n_sps
-    << " pps length " << n_pps
-    << " width " << width
-    << " height " << height;
-  ndata = flv_shm_.MakeAVCc(sdata, n_sps, n_pps);
-
-  // tag metadata
-  ndata = flv_shm_.HeaderAndMetaDataTag(sdata,
+  char *p_dst = NULL;
+  p_dst = flv_shm_.HeaderAndMetaDataTag(sdata,
                                         width, height,
                                         16000, 8000, 16, 1);
-  WritePacket(sdata, ndata);
+  ndata = p_dst - sdata;
+  AsyncWrite(sdata, ndata);
   if (file) {
     fwrite(sdata, 1, ndata, file);
   }
-  
-  // video tag0
-  ndata = flv_shm_.MakeVideoTag0(sdata);
-  WritePacket(sdata, ndata);
+
+  int n_sps = 0, n_pps = 0;
+  ndata = shm_vdo_.ReadHead(sdata, 2048, &n_sps, &n_pps);
+  LOG(L_INFO)<<"sps length "<<n_sps
+             <<" pps length "<<n_pps
+             <<" width " << width
+             <<" height "<< height;
+
+  ndata = flv_shm_.MakeAVCc(sdata, n_sps, n_pps);
+  p_dst = flv_shm_.Packet(avcc_data_, NULL, 0,
+                          flv_shm_.avcc_, flv_shm_.avcc_size_,
+                          0x09, 0);
+  avcc_data_size_ = p_dst - avcc_data_;
+  AsyncWrite(avcc_data_, avcc_data_size_);
   if (file) {
-    fwrite(sdata, 1, ndata, file);
+    fwrite(avcc_data_, 1, avcc_data_size_, file);
   }
 
   int nret = evt_timer_.Start(5, 5);   //
-  if (0 != nret) {
+  if (nret != RET_SUCCESS) {
     LOG(L_ERROR) << "evt timer open failed.";
     return -1;
   }
   return 0;
 }
 
-int CFlvOverHttp::WritePacket(const void *p_data, unsigned int n_data) {
+int CFlvOverHttp::AsyncWrite(const void *p_data, unsigned int n_data) {
   send_data_.WriteBytes((const uint8_t*)p_data, n_data);
 
   // 打开事件
@@ -191,22 +195,25 @@ int32 CFlvOverHttp::OnTimer() {
                               &w_sec_, &w_usec_);
     if (ndata > 0) {
       uint32 pts = vzbase::CurrentSystemTicket() - pts_;
-      // LOG(L_INFO) << "pts "<< pts;
+      LOG(L_INFO) << "pts "<< pts;
 
       int   nal_bng = 0, frm_type = 0;
       char *p_nal = nal_parse(flv_data_+flv_shm_.VdoHeadSize(), ndata, &frm_type, &nal_bng);
 
       int n_flv = 0;
       if (frm_type == 5) {
-        n_flv = flv_shm_.PacketVideo(flv_data_+nal_bng,
+        AsyncWrite(avcc_data_, avcc_data_size_);
+        char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
                                            p_nal + nal_bng, ndata - nal_bng,
                                            true, pts);
+        n_flv = p_dst - (flv_data_ + nal_bng);
       } else if (frm_type == 1) {
-        n_flv = flv_shm_.PacketVideo(flv_data_+nal_bng,
+        char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
                                            p_nal + nal_bng, ndata - nal_bng,
                                            false, pts);
+        n_flv = p_dst - (flv_data_ + nal_bng);
       }
-      WritePacket(flv_data_+nal_bng, n_flv);
+      AsyncWrite(flv_data_+nal_bng, n_flv);
       if (file) {
         fwrite(flv_data_+nal_bng, 1, n_flv, file);
       }

@@ -113,22 +113,16 @@ typedef enum {
   AMF_DATA_TYPE_UNSUPPORTED = 0x0d,
 } AMFDataType;
 
-#define QWORD_BE(val) (((val>>56)&0xFF) | (((val>>48)&0xFF)<<8) |       \
-                      (((val>>40)&0xFF)<<16) | (((val>>32)&0xFF)<<24) | \
-                      (((val>>24)&0xFF)<<32) | (((val>>16)&0xFF)<<40) | \
-                      (((val>>8)&0xFF)<<48) | ((val&0xFF)<<56))
-
-#define DWORD_BE(val) (((val>>24)&0xFF) | (((val>>16)&0xFF)<<8) | \
-                      (((val>>8)&0xFF)<<16) | ((val&0xFF)<<24))
-
+#define QWORD_BE(val) (((val>>56)&0xFF) | (((val>>48)&0xFF)<<8) | (((val>>40)&0xFF)<<16) | (((val>>32)&0xFF)<<24) | \
+  (((val>>24)&0xFF)<<32) | (((val>>16)&0xFF)<<40) | (((val>>8)&0xFF)<<48) | ((val&0xFF)<<56))
+#define DWORD_BE(val) (((val>>24)&0xFF) | (((val>>16)&0xFF)<<8) | (((val>>8)&0xFF)<<16) | ((val&0xFF)<<24))
 #define WORD_BE(val)  (((val>>8)&0xFF) | ((val&0xFF)<<8))
 
-unsigned int fast_htonl(unsigned int dw) {
+unsigned int fastHtonl(unsigned int dw) {
   return DWORD_BE(dw);
 }
-
-unsigned short fast_htons(unsigned short  w) {
-  return WORD_BE(w);
+unsigned short fastHtons(unsigned short  w) {
+  return  WORD_BE(w);
 }
 
 char *AMF_EncodeInt8(char *output, char nVal) {
@@ -226,7 +220,7 @@ char *AMF_EncodeNamedBoolean(char *output, const char *strName, int bVal) {
   return AMF_EncodeBoolean(output, bVal);
 }
 
-int CFlvMux::HeaderAndMetaDataTag(char *ppacket,
+char *CFlvMux::HeaderAndMetaDataTag(char *p_packet,
                                     int width, int height,
                                     int audiodatarate, int audiosamplerate, int audiosamplesize, int audiochannels) {
   // write the file header
@@ -239,114 +233,110 @@ int CFlvMux::HeaderAndMetaDataTag(char *ppacket,
   };
   static unsigned int header_size = 13;
 
-  char *pstart = ppacket;
-
-  memcpy(pstart, header, header_size);
-  pstart += header_size;
+  memcpy(p_packet, header, header_size);
+  p_packet += header_size;
 
   char  metaData[2048] = {0};
-  char *pdst = metaData;
+  char *dst = metaData;
   /* first event name as a string */
-  pdst = AMF_EncodeString(pdst, "onMetaData");
+  dst = AMF_EncodeString(dst, "onMetaData");
 
   /* mixed array (hash) with size and string/type/data tuples */
-  *pdst++ = AMF_DATA_TYPE_MIXEDARRAY;
-  pdst = AMF_EncodeInt32(pdst, 13);    // 1 + 1 + 4 + 6 + 1
+  *dst++ = AMF_DATA_TYPE_MIXEDARRAY;
+  dst = AMF_EncodeInt32(dst, 13);    // 1 + 1 + 4 + 6 + 1
 
-  pdst = AMF_EncodeNamedNumber(pdst, "duration",        0.0);
-  pdst = AMF_EncodeNamedNumber(pdst, "filesize",        0.0);
-  pdst = AMF_EncodeNamedNumber(pdst, "width",           width);
-  pdst = AMF_EncodeNamedNumber(pdst, "height",          height);
+  dst = AMF_EncodeNamedNumber(dst, "duration",        0.0);
+  dst = AMF_EncodeNamedNumber(dst, "filesize",        0.0);
+  dst = AMF_EncodeNamedNumber(dst, "width",           width);
+  dst = AMF_EncodeNamedNumber(dst, "height",          height);
 
-  pdst = AMF_EncodeNamedNumber(pdst, "videocodecid",    FLV_CODECID_H264);
+  dst = AMF_EncodeNamedNumber(dst, "videocodecid",    FLV_CODECID_H264);
 
-  pdst = AMF_EncodeNamedNumber(pdst, "videodatarate",   4000);
+  dst = AMF_EncodeNamedNumber(dst, "videodatarate",   4000);
 
-  pdst = AMF_EncodeNamedNumber(pdst, "audiocodecid",    FLV_CODECID_PCM_MULAW);
+  dst = AMF_EncodeNamedNumber(dst, "audiocodecid",    FLV_CODECID_PCM_MULAW);
 
-  pdst = AMF_EncodeNamedNumber(pdst, "audiodatarate",   audiodatarate);
-  pdst = AMF_EncodeNamedNumber(pdst, "audiosamplerate", audiosamplerate);
-  pdst = AMF_EncodeNamedNumber(pdst, "audiosamplesize", audiosamplesize);
-  pdst = AMF_EncodeNamedNumber(pdst, "audiochannels",   audiochannels);
+  dst = AMF_EncodeNamedNumber(dst, "audiodatarate",   audiodatarate);
+  dst = AMF_EncodeNamedNumber(dst, "audiosamplerate", audiosamplerate);
+  dst = AMF_EncodeNamedNumber(dst, "audiosamplesize", audiosamplesize);
+  dst = AMF_EncodeNamedNumber(dst, "audiochannels",   audiochannels);
 
-  pdst = AMF_EncodeNamedBoolean(pdst, "stereo", audiochannels == 2);
+  dst = AMF_EncodeNamedBoolean(dst, "stereo", audiochannels == 2);
 
-  pdst = AMF_EncodeNamedString(pdst, "encoder", "desktopwebshare 1.0");
+  dst = AMF_EncodeNamedString(dst, "encoder", "desktopwebshare 1.0");
 
-  *pdst++ = 0;
-  *pdst++ = 0;
-  *pdst++ = AMF_END_OF_OBJECT;
-  int metaDataSize = pdst - metaData;
+  *dst++ = 0;
+  *dst++ = 0;
+  *dst++ = AMF_END_OF_OBJECT;
 
-  // packet
-  *pstart++ = 0x12;
-  pstart = AMF_EncodeInt24(pstart, metaDataSize);
-  pstart += 3;// timestramp
-  pstart += 1;// timestramp_ext
-  pstart += 3;// stream id
-  memcpy(pstart, metaData, metaDataSize);
-  pstart += metaDataSize;
-  pdst = AMF_EncodeInt32(pstart, metaDataSize + 11);;
-  return (pdst - ppacket);
+  return Packet(p_packet, NULL, 0, metaData, dst - metaData, 0x12, 0);
 }
 
-int CFlvMux::MakeVideoTag0(char *ppacket) {
-  char *pdst = ppacket;
+char * CFlvMux::PacketVideo(char *p_packet, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp) {
+  char *p_enc = p_packet;
 
-  *pdst++ = 0x09;
-
-  pdst = AMF_EncodeInt24(pdst, avcc_size_);
-
-  memset(pdst, 0, 3);      // timestramp
-  pdst += 3;
-
-  memset(pdst, 0, 1);      // timestramp
-  pdst += 1;
-
-  memset(pdst, 0, 3);      // stream id
-  pdst += 3;
-
-  memcpy(pdst, avcc_, avcc_size_);
-  pdst += avcc_size_;
-
-  pdst = AMF_EncodeInt32(pdst, avcc_size_ + 11);
-  return (pdst - ppacket);
-}
-
-int CFlvMux::PacketVideo(char *ppacket, char *p_vdo, int n_vdo, bool is_key_frame, unsigned int timestamp) {
-  char *pdst = ppacket;
-
-  *pdst++ = 0x09;
+  *p_enc++ = 0x09;
   
-  pdst = AMF_EncodeInt24(pdst, n_vdo+5+4); //3
+  p_enc = AMF_EncodeInt24(p_enc, n_vdo+5+4); //3
 
-  unsigned long netTimestamp = fast_htonl(timestamp);
-  memcpy(pdst, ((char*)(&netTimestamp)) + 1, 3);
-  pdst += 3;
+  unsigned long netTimestamp = fastHtonl(timestamp);
+  memcpy(p_enc, ((char*)(&netTimestamp)) + 1, 3);
+  p_enc += 3;
 
-  memcpy(pdst, &netTimestamp, 1);
-  pdst += 1;
+  memcpy(p_enc, &netTimestamp, 1);
+  p_enc += 1;
 
   unsigned int  streamID = 0;
-  memcpy(pdst, &streamID, 3);
-  pdst += 3;
+  memcpy(p_enc, &streamID, 3);
+  p_enc += 3;
 
   if (is_key_frame) {
-    *pdst++ = 0x17;
+    *p_enc++ = 0x17;
   } else {
-    *pdst++ = 0x27;
+    *p_enc++ = 0x27;
   }
 
-  *pdst++ = 0x01;
-  pdst = AMF_EncodeInt24(pdst, 0);
+  *p_enc++ = 0x01;
+  p_enc = AMF_EncodeInt24(p_enc, 0);
 
-  pdst = AMF_EncodeInt32(pdst, n_vdo);
+  p_enc = AMF_EncodeInt32(p_enc, n_vdo);
 
   // memcpy(p_enc, p_vdo, n_vdo);
-  pdst += n_vdo;
+  p_enc += n_vdo;
 
-  pdst = AMF_EncodeInt32(pdst, n_vdo + 11 + 9);
-  return (pdst - ppacket);
+  return AMF_EncodeInt32(p_enc, n_vdo + 11 + 9);
+}
+
+char* CFlvMux::Packet(char *p_packet,
+                      const char *p_head, int n_head,
+                      const char *p_data, int n_data,
+                      int type, unsigned int timestamp) {
+  char *p_enc = p_packet;
+
+  *p_enc++ = type;
+
+  p_enc = AMF_EncodeInt24(p_enc, n_head+n_data); //3
+
+  //time tamp-> [time tamp 3b,time tamp ex 1b]
+  unsigned long netTimestamp = fastHtonl(timestamp);
+  memcpy(p_enc, ((char*)(&netTimestamp)) + 1, 3);
+  p_enc += 3;
+
+  memcpy(p_enc, &netTimestamp, 1);
+  p_enc += 1;
+
+  unsigned int  streamID = 0;
+  memcpy(p_enc, &streamID, 3);
+  p_enc += 3;
+
+  if (p_head) {
+    memcpy(p_enc, p_head, n_head);
+    p_enc += n_head;
+  }
+  memcpy(p_enc, p_data, n_data);
+  p_enc += n_data;
+
+  return AMF_EncodeInt32(p_enc, n_head + n_data + 11);
 }
 
 CFlvMux::CFlvMux() {
@@ -366,7 +356,7 @@ int CFlvMux::MakeAVCc(char* sps_pps, int sps_size, int pps_size) {
   char *p_sps = sps_pps;
   char *p_pps = sps_pps + sps_size;
 
-  char *p_out = avcc_;
+  char* p_out = avcc_;
 
   p_out[0] = 0x17;
   p_out[1] = 0;
@@ -382,7 +372,7 @@ int CFlvMux::MakeAVCc(char* sps_pps, int sps_size, int pps_size) {
   p_out += 11;
 
   unsigned short size = 0;
-  size = fast_htons(sps_size - 4);
+  size = fastHtons(sps_size - 4);
   memcpy(p_out, &size, 2);
   p_out += 2;
 
@@ -392,7 +382,7 @@ int CFlvMux::MakeAVCc(char* sps_pps, int sps_size, int pps_size) {
   p_out[0] = 1;
   p_out += 1;
 
-  size = fast_htons(pps_size - 4);
+  size = fastHtons(pps_size - 4);
   memcpy(p_out, &size, 2);
   p_out += 2;
 
