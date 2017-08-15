@@ -21,7 +21,6 @@ extern "C"
 
 #include "common/sample_comm.h"
 
-extern HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p);
 #ifdef __cplusplus
 };
 #endif
@@ -40,12 +39,17 @@ class CVideoCatch {
   HI_S32 GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream);
   static void* GetYUVThread(void* pArg);
 
+ protected:
+   HI_S32 RGN_CreateCover();
+
  private:
-  pthread_t      p_enc_id_;
-  pthread_t      p_yuv_id_;
-  
-  CShareBuffer   shm_video_;
-  CShareBuffer   shm_image_;
+  pthread_t     enc_pid_;
+  pthread_t     yuv_pid_;
+
+  RGN_HANDLE    rgn_hdl_;  
+
+  CShareBuffer  shm_video_;
+  CShareBuffer  shm_image_;
 };
 
 #endif  // LIBPLATFORM_CVIDEO_H

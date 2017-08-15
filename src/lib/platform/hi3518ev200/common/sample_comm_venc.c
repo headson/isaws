@@ -1178,153 +1178,6 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_CHN VencChn, HI_BOOL bSaveJpg, HI_BOOL 
   return HI_SUCCESS;
 }
 
-/******************************************************************************
-* funciton : get stream from each channels and save them
-******************************************************************************/
-HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
-  HI_S32 i;
-  HI_S32 s32ChnTotal;
-  VENC_CHN_ATTR_S stVencChnAttr;
-  SAMPLE_VENC_GETSTREAM_PARA_S *pstPara;
-  HI_S32 maxfd = 0;
-  struct timeval TimeoutVal;
-  fd_set read_fds;
-  HI_S32 VencFd[VENC_MAX_CHN_NUM];
-
-  VENC_CHN_STAT_S stStat;
-  VENC_STREAM_S stStream;
-  HI_S32 s32Ret;
-  VENC_CHN VencChn;
-  PAYLOAD_TYPE_E enPayLoadType[VENC_MAX_CHN_NUM];
-
-  pstPara = (SAMPLE_VENC_GETSTREAM_PARA_S*)p;
-  s32ChnTotal = pstPara->s32Cnt;
-
-  /******************************************
-   step 1:  check & prepare save-file & venc-fd
-  ******************************************/
-  if (s32ChnTotal >= VENC_MAX_CHN_NUM) {
-    SAMPLE_PRT("input count invaild\n");
-    return NULL;
-  }
-  for (i = 0; i < s32ChnTotal; i++) {
-    /* decide the stream file name, and open file to save stream */
-    VencChn = i;
-    s32Ret = HI_MPI_VENC_GetChnAttr(VencChn, &stVencChnAttr);
-    if(s32Ret != HI_SUCCESS) {
-      SAMPLE_PRT("HI_MPI_VENC_GetChnAttr chn[%d] failed with %#x!\n", \
-                 VencChn, s32Ret);
-      return NULL;
-    }
-    enPayLoadType[i] = stVencChnAttr.stVeAttr.enType;
-
-    /* Set Venc Fd. */
-    VencFd[i] = HI_MPI_VENC_GetFd(i);
-    if (VencFd[i] < 0) {
-      SAMPLE_PRT("HI_MPI_VENC_GetFd failed with %#x!\n",
-                 VencFd[i]);
-      return NULL;
-    }
-    if (maxfd <= VencFd[i]) {
-      maxfd = VencFd[i];
-    }
-  }
-
-  /******************************************
-   step 2:  Start to get streams of each channel.
-  ******************************************/
-  while (HI_TRUE == pstPara->bThreadStart) {
-    FD_ZERO(&read_fds);
-    for (i = 0; i < s32ChnTotal; i++) {
-      FD_SET(VencFd[i], &read_fds);
-    }
-
-    TimeoutVal.tv_sec  = 2;
-    TimeoutVal.tv_usec = 0;
-    s32Ret = select(maxfd + 1, &read_fds, NULL, NULL, &TimeoutVal);
-    if (s32Ret < 0) {
-      SAMPLE_PRT("select failed!\n");
-      break;
-    } else if (s32Ret == 0) {
-      SAMPLE_PRT("get venc stream time out, exit thread\n");
-      continue;
-    } else {
-      for (i = 0; i < s32ChnTotal; i++) {
-        if (FD_ISSET(VencFd[i], &read_fds)) {
-          /*******************************************************
-           step 2.1 : query how many packs in one-frame stream.
-          *******************************************************/
-          memset(&stStream, 0, sizeof(stStream));
-          s32Ret = HI_MPI_VENC_Query(i, &stStat);
-          if (HI_SUCCESS != s32Ret) {
-            SAMPLE_PRT("HI_MPI_VENC_Query chn[%d] failed with %#x!\n", i, s32Ret);
-            break;
-          }
-
-          /*******************************************************
-          step 2.2 :suggest to check both u32CurPacks and u32LeftStreamFrames at the same time,for example:
-           if(0 == stStat.u32CurPacks || 0 == stStat.u32LeftStreamFrames)
-           {
-          	SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
-          	continue;
-           }
-          *******************************************************/
-          if(0 == stStat.u32CurPacks) {
-            SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
-            continue;
-          }
-          /*******************************************************
-           step 2.3 : malloc corresponding number of pack nodes.
-          *******************************************************/
-          stStream.pstPack = (VENC_PACK_S*)malloc(sizeof(VENC_PACK_S) * stStat.u32CurPacks);
-          if (NULL == stStream.pstPack) {
-            SAMPLE_PRT("malloc stream pack failed!\n");
-            break;
-          }
-
-          /*******************************************************
-           step 2.4 : call mpi to get one-frame stream
-          *******************************************************/
-          stStream.u32PackCount = stStat.u32CurPacks;
-          s32Ret = HI_MPI_VENC_GetStream(i, &stStream, HI_TRUE);
-          if (HI_SUCCESS != s32Ret) {
-            free(stStream.pstPack);
-            stStream.pstPack = NULL;
-            SAMPLE_PRT("HI_MPI_VENC_GetStream failed with %#x!\n", s32Ret);
-            break;
-          }
-
-          /*******************************************************
-           step 2.5 : save frame to file
-          *******************************************************/
-          s32Ret = HisiPutH264DataToBuffer(i, &stStream, pstPara->p_usr_arg);
-          if (HI_SUCCESS != s32Ret) {
-            free(stStream.pstPack);
-            stStream.pstPack = NULL;
-            SAMPLE_PRT("save stream failed!\n");
-            break;
-          }
-
-          /*******************************************************
-           step 2.6 : release stream
-          *******************************************************/
-          s32Ret = HI_MPI_VENC_ReleaseStream(i, &stStream);
-          if (HI_SUCCESS != s32Ret) {
-            free(stStream.pstPack);
-            stStream.pstPack = NULL;
-            break;
-          }
-          /*******************************************************
-           step 2.7 : free pack nodes
-          *******************************************************/
-          free(stStream.pstPack);
-          stStream.pstPack = NULL;
-        }
-      }
-    }
-  }
-  return NULL;
-}
 
 /******************************************************************************
 * funciton : get svc_t stream from h264 channels and save them
@@ -1568,16 +1421,6 @@ HI_VOID *SAMPLE_COMM_VENC_GetVencStreamProc_Svc_t(void *p) {
 }
 
 /******************************************************************************
-* funciton : start get venc stream process thread
-******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt) {
-  gs_stPara.bThreadStart = HI_TRUE;
-  gs_stPara.s32Cnt = s32Cnt;
-
-  return pthread_create(&gs_VencPid, 0, SAMPLE_COMM_VENC_GetVencStreamProc, (HI_VOID*)&gs_stPara);
-}
-
-/******************************************************************************
 * funciton : start get venc svc-t stream process thread
 ******************************************************************************/
 HI_S32 SAMPLE_COMM_VENC_StartGetStream_Svc_t(HI_S32 s32Cnt) {
@@ -1586,8 +1429,6 @@ HI_S32 SAMPLE_COMM_VENC_StartGetStream_Svc_t(HI_S32 s32Cnt) {
 
   return pthread_create(&gs_VencPid, 0, SAMPLE_COMM_VENC_GetVencStreamProc_Svc_t, (HI_VOID*)&gs_stPara);
 }
-
-
 
 /******************************************************************************
 * funciton : stop get venc stream process.

@@ -35,6 +35,9 @@ endforeach()
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/include/acodec.h
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/include/mpi_region.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/include/hi_ae_comm.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/hi_af_comm.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/hi_awb_comm.h
@@ -60,8 +63,8 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/include/hi_common.h
 
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.h
-	${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.c
+	#${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_audio.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_isp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_ive.h
@@ -79,6 +82,8 @@ SET(PROJECT_SOURCE_LIST
 )
 
 SOURCE_GROUP(mpp_include FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/include/mpi_region.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/include/acodec.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/hi_ae_comm.h
 	${CMAKE_CURRENT_SOURCE_DIR}/include/hi_af_comm.h
@@ -107,8 +112,8 @@ SOURCE_GROUP(mpp_include FILES
 
 SOURCE_GROUP(common FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm.h
-	${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.h
-	${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.c
+	#${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/common/loadbmp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_audio.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_isp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_ive.h

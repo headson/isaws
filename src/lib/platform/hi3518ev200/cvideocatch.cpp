@@ -19,6 +19,154 @@ CVideoCatch::CVideoCatch()
 CVideoCatch::~CVideoCatch() {
 }
 
+/******************************************************************************
+* funciton : get stream from each channels and save them
+******************************************************************************/
+HI_VOID SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
+  HI_S32 i;
+  HI_S32 s32ChnTotal;
+  VENC_CHN_ATTR_S stVencChnAttr;
+  SAMPLE_VENC_GETSTREAM_PARA_S *pstPara;
+  HI_S32 maxfd = 0;
+  struct timeval TimeoutVal;
+  fd_set read_fds;
+  HI_S32 VencFd[VENC_MAX_CHN_NUM];
+
+  VENC_CHN_STAT_S stStat;
+  VENC_STREAM_S stStream;
+  HI_S32 s32Ret;
+  VENC_CHN VencChn;
+  PAYLOAD_TYPE_E enPayLoadType[VENC_MAX_CHN_NUM];
+
+  pstPara = (SAMPLE_VENC_GETSTREAM_PARA_S*)p;
+  s32ChnTotal = pstPara->s32Cnt;
+
+  /******************************************
+   step 1:  check & prepare save-file & venc-fd
+  ******************************************/
+  if (s32ChnTotal >= VENC_MAX_CHN_NUM) {
+    SAMPLE_PRT("input count invaild\n");
+    return;
+  }
+  for (i = 0; i < s32ChnTotal; i++) {
+    /* decide the stream file name, and open file to save stream */
+    VencChn = i;
+    s32Ret = HI_MPI_VENC_GetChnAttr(VencChn, &stVencChnAttr);
+    if(s32Ret != HI_SUCCESS) {
+      SAMPLE_PRT("HI_MPI_VENC_GetChnAttr chn[%d] failed with %#x!\n", \
+                 VencChn, s32Ret);
+      return;
+    }
+    enPayLoadType[i] = stVencChnAttr.stVeAttr.enType;
+
+    /* Set Venc Fd. */
+    VencFd[i] = HI_MPI_VENC_GetFd(i);
+    if (VencFd[i] < 0) {
+      SAMPLE_PRT("HI_MPI_VENC_GetFd failed with %#x!\n",
+                 VencFd[i]);
+      return;
+    }
+    if (maxfd <= VencFd[i]) {
+      maxfd = VencFd[i];
+    }
+  }
+
+  /******************************************
+   step 2:  Start to get streams of each channel.
+  ******************************************/
+  while (HI_TRUE == pstPara->bThreadStart) {
+    FD_ZERO(&read_fds);
+    for (i = 0; i < s32ChnTotal; i++) {
+      FD_SET(VencFd[i], &read_fds);
+    }
+
+    TimeoutVal.tv_sec  = 2;
+    TimeoutVal.tv_usec = 0;
+    s32Ret = select(maxfd + 1, &read_fds, NULL, NULL, &TimeoutVal);
+    if (s32Ret < 0) {
+      SAMPLE_PRT("select failed!\n");
+      break;
+    } else if (s32Ret == 0) {
+      SAMPLE_PRT("get venc stream time out, exit thread\n");
+      continue;
+    } else {
+      for (i = 0; i < s32ChnTotal; i++) {
+        if (FD_ISSET(VencFd[i], &read_fds)) {
+          /*******************************************************
+           step 2.1 : query how many packs in one-frame stream.
+          *******************************************************/
+          memset(&stStream, 0, sizeof(stStream));
+          s32Ret = HI_MPI_VENC_Query(i, &stStat);
+          if (HI_SUCCESS != s32Ret) {
+            SAMPLE_PRT("HI_MPI_VENC_Query chn[%d] failed with %#x!\n", i, s32Ret);
+            break;
+          }
+
+          /*******************************************************
+          step 2.2 :suggest to check both u32CurPacks and u32LeftStreamFrames at the same time,for example:
+           if(0 == stStat.u32CurPacks || 0 == stStat.u32LeftStreamFrames)
+           {
+          	SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
+          	continue;
+           }
+          *******************************************************/
+          if(0 == stStat.u32CurPacks) {
+            SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
+            continue;
+          }
+          /*******************************************************
+           step 2.3 : malloc corresponding number of pack nodes.
+          *******************************************************/
+          stStream.pstPack = (VENC_PACK_S*)malloc(sizeof(VENC_PACK_S) * stStat.u32CurPacks);
+          if (NULL == stStream.pstPack) {
+            SAMPLE_PRT("malloc stream pack failed!\n");
+            break;
+          }
+
+          /*******************************************************
+           step 2.4 : call mpi to get one-frame stream
+          *******************************************************/
+          stStream.u32PackCount = stStat.u32CurPacks;
+          s32Ret = HI_MPI_VENC_GetStream(i, &stStream, HI_TRUE);
+          if (HI_SUCCESS != s32Ret) {
+            free(stStream.pstPack);
+            stStream.pstPack = NULL;
+            SAMPLE_PRT("HI_MPI_VENC_GetStream failed with %#x!\n", s32Ret);
+            break;
+          }
+
+          /*******************************************************
+           step 2.5 : save frame to file
+          *******************************************************/
+          s32Ret = HisiPutH264DataToBuffer(i, &stStream, pstPara->p_usr_arg);
+          if (HI_SUCCESS != s32Ret) {
+            free(stStream.pstPack);
+            stStream.pstPack = NULL;
+            SAMPLE_PRT("save stream failed!\n");
+            break;
+          }
+
+          /*******************************************************
+           step 2.6 : release stream
+          *******************************************************/
+          s32Ret = HI_MPI_VENC_ReleaseStream(i, &stStream);
+          if (HI_SUCCESS != s32Ret) {
+            free(stStream.pstPack);
+            stStream.pstPack = NULL;
+            break;
+          }
+          /*******************************************************
+           step 2.7 : free pack nodes
+          *******************************************************/
+          free(stStream.pstPack);
+          stStream.pstPack = NULL;
+        }
+      }
+    }
+  }
+  return;
+}
+
 HI_VOID *VideoVencClassic(HI_VOID *p) {
   PAYLOAD_TYPE_E enPayLoad[3]= {PT_H264, PT_H264, PT_H264};
   PIC_SIZE_E enSize[3] = {PIC_HD1080, PIC_CIF, PIC_QVGA};
@@ -282,10 +430,10 @@ int32 CVideoCatch::Start() {
   shm_image_.SetWidth(352);
   shm_image_.SetHeight(288);
 
-  pthread_create(&p_enc_id_, NULL, VideoVencClassic, this);
+  pthread_create(&enc_pid_, NULL, VideoVencClassic, this);
 
   usleep(5*1000*1000);
-  pthread_create(&p_yuv_id_, NULL, GetYUVThread, this);
+  pthread_create(&yuv_pid_, NULL, GetYUVThread, this);
   return 0;
 }
 
@@ -418,4 +566,62 @@ void* CVideoCatch::GetYUVThread(void* pArg) {
   MEM_DEV_CLOSE();
   return NULL;
 }
+
+HI_S32 CVideoCatch::RGN_CreateCover() {
+  HI_S32 s32Ret = HI_FAILURE;
+  RGN_ATTR_S stRgnAttr;
+
+  /****************************************
+  step 1: create overlay regions
+  ****************************************/
+  stRgnAttr.enType = OVERLAY_RGN;
+  stRgnAttr.unAttr.stOverlay.enPixelFmt = PIXEL_FORMAT_RGB_1555;//PIXEL_FORMAT_RGB_565
+  stRgnAttr.unAttr.stOverlay.stSize.u32Width  = 288;
+  stRgnAttr.unAttr.stOverlay.stSize.u32Height = 128;
+  stRgnAttr.unAttr.stOverlay.u32BgColor = 0xffffff;
+
+  rgn_hdl_ = 0;
+  s32Ret = HI_MPI_RGN_Create(rgn_hdl_, &stRgnAttr);
+  if(HI_SUCCESS != s32Ret) {
+    printf("HI_MPI_RGN_Create (%d) failed with %#x!\n",
+           rgn_hdl_, s32Ret);
+    return HI_FAILURE;
+  }
+  printf("the handle:%d,creat success!\n", rgn_hdl_);
+
+  MPP_CHN_S stChn;
+  stChn.enModId = HI_ID_GROUP;
+  stChn.s32DevId = 0;
+  stChn.s32ChnId = 0;
+
+  printf("%s:[%d] stChn.s32ChnId is %d ,\n", __FUNCTION__, __LINE__, stChn.s32ChnId);
+
+  RGN_CHN_ATTR_S stChnAttr;
+  memset(&stChnAttr, 0, sizeof(stChnAttr));
+  stChnAttr.bShow  = HI_TRUE;
+  stChnAttr.enType = OVERLAY_RGN;
+
+  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32X    = 16;
+  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y    = 32;
+  stChnAttr.unChnAttr.stOverlayChn.u32BgAlpha      = 128;
+  stChnAttr.unChnAttr.stOverlayChn.u32FgAlpha      = 0;
+  stChnAttr.unChnAttr.stOverlayChn.u32Layer        = 0;
+
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.bAbsQp = HI_FALSE;
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.s32Qp  = 0;
+
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Height = 32;
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Width  = 16;
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.u32LumThresh           = 64;
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.bInvColEn              = HI_TRUE;
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.enChgMod               = LESSTHAN_LUM_THRESH;
+
+  s32Ret = HI_MPI_RGN_AttachToChn(rgn_hdl_, &stChn, &stChnAttr);
+  if (HI_SUCCESS != s32Ret) {
+    printf("HI_MPI_RGN_AttachToChn (%d) failed with %#x!\n", rgn_hdl_, s32Ret);
+    return HI_FAILURE;
+  }
+  printf("display region to s32DevId %d chn success!\n", stChn.s32DevId);
+}
+
 #endif
