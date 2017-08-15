@@ -17,6 +17,7 @@ static const char *METHOD_SET[] = {
 };
 static const unsigned int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
 
+#define MSG_HDL_CHECK_DATABASE  0x123456
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
   , main_thread_(NULL)
@@ -58,6 +59,8 @@ bool CListenMessage::Start(const char *db_path) {
 
     DpClient_HdlAddListenMessage(dp_cli_, METHOD_SET, METHOD_SET_SIZE);
   }
+
+  vzbase::Thread::Current()->PostDelayed(2*1000, this, MSG_HDL_CHECK_DATABASE);
   return true;
 }
 
@@ -102,13 +105,13 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
   jresp[MSG_CMD] = jreq[MSG_CMD].asString();
   jresp[MSG_ID] = jreq[MSG_ID].asInt();
 
-  bool res = false;  
+  bool res = false;
   if (0 == strncmp(dmp->method, MSG_CATCH_EVENT, MAX_METHOD_SIZE)) {
     res = database_.ReplacePCount(jreq);
   } else if (0 == strncmp(dmp->method, MSG_GET_PCOUNTS, MAX_METHOD_SIZE)) {
     res = database_.SelectPCount(jresp, jreq);
   } else if (0 == strncmp(dmp->method, MSG_CLEAR_PCOUNT, MAX_METHOD_SIZE)) {
-    res = database_.DeletePCount(jresp);
+    res = database_.ClearPCount(jresp);
   }
 
   if (dmp->type != TYPE_REQUEST) {
@@ -144,13 +147,14 @@ void CListenMessage::OnDpState(DPPollHandle p_hdl, unsigned int n_state) {
 }
 
 void CListenMessage::OnMessage(vzbase::Message* p_msg) {
-  //if (p_msg->message_id == THREAD_MSG_SET_DEV_ADDR) {
-  /*vzbase::TypedMessageData<std::string>::Ptr msg_ptr =
-    boost::static_pointer_cast<vzbase::TypedMessageData< std::string >> (p_msg->pdata);*/
+  if (p_msg->message_id == MSG_HDL_CHECK_DATABASE) {
+    /*vzbase::TypedMessageData<std::string>::Ptr msg_ptr =
+      boost::static_pointer_cast<vzbase::TypedMessageData< std::string >> (p_msg->pdata);*/
 
-  //Restart("127.0.0.1", 5291);
-  //vzbase::Thread::Current()->PostDelayed(2*1000, this, THREAD_MSG_SET_DEV_ADDR);
-  //}
+    database_.RemovePCount(90);
+
+    vzbase::Thread::Current()->PostDelayed(2*1000, this, 0);
+  }
 }
 
 }  // namespace bs

@@ -41,6 +41,8 @@ class CVideoCatch {
 
  protected:
    HI_S32 RGN_CreateCover();
+   HI_S32 RGN_SetBitmap_TimeStamp();
+   HI_S32 RGN_DestoryCover();
 
  private:
   pthread_t     enc_pid_;

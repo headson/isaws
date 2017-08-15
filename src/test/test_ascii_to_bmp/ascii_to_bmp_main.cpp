@@ -11,6 +11,7 @@ typedef struct tagBITMAPFILEHEADER {
   short bfReserved2;
   int bfOffBits;
 } BITMAPFILEHEADER;
+
 typedef struct tagBITMAPINFOHEADER {
   int biSize;
   int biWidth;
@@ -24,16 +25,19 @@ typedef struct tagBITMAPINFOHEADER {
   int biClrUsed;
   int biClrImportant;
 } BITMAPINFOHEADER;
+
 typedef struct tagRGBQUAD {
   char rgbBlue;
   char rgbGreen;
   char rgbRed;
   char rgbReserved;
 } RGBQUAD;
+
 typedef struct tagBITMAPINFO {
   BITMAPINFOHEADER bmiHeader;
   RGBQUAD bmiColors[1];
 } BITMAPINFO;
+
 typedef struct tagBITMAP {
   BITMAPFILEHEADER bfHeader;
   BITMAPINFO biInfo;
