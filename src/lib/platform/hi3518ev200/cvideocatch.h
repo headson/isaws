@@ -38,14 +38,10 @@ class CVideoCatch {
  public:
   HI_S32 GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream);
   static void* GetYUVThread(void* pArg);
-
- protected:
-   HI_S32 RGN_CreateCover();
-   HI_S32 RGN_SetBitmap_TimeStamp();
-   HI_S32 RGN_DestoryCover();
-
+  
  private:
   pthread_t     enc_pid_;
+  pthread_t     osd_pid_;
   pthread_t     yuv_pid_;
 
   RGN_HANDLE    rgn_hdl_;  

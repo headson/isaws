@@ -75,6 +75,10 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vo.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vpss.c
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/rgn_cover.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cencuserdata.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cencuserdata.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h
@@ -126,6 +130,10 @@ SOURCE_GROUP(common FILES
 )
 
 SOURCE_GROUP(audio_video FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/rgn_cover.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cencuserdata.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cencuserdata.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h

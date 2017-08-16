@@ -5,6 +5,8 @@
 
 #include "vzbase/helper/stdafx.h"
 
+extern void *API_OSD_DisplayProcess(void * arg);
+
 HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_usr_arg) {
   if (p_usr_arg) {
     return ((CVideoCatch*)p_usr_arg)->GetOneFrame(n_chn, p_stream);
@@ -169,7 +171,7 @@ HI_VOID SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
 
 HI_VOID *VideoVencClassic(HI_VOID *p) {
   PAYLOAD_TYPE_E enPayLoad[3]= {PT_H264, PT_H264, PT_H264};
-  PIC_SIZE_E enSize[3] = {PIC_HD1080, PIC_CIF, PIC_QVGA};
+  PIC_SIZE_E enSize[3] = {PIC_HD720, PIC_CIF, PIC_CIF};
   HI_U32 u32Profile = 2;
 
   VB_CONF_S stVbConf;
@@ -197,7 +199,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   memset(&stVbConf, 0, sizeof(VB_CONF_S));
   memset(&stViConfig, 0, sizeof(stViConfig));
 
-  s32ChnNum = 2;
+  s32ChnNum = 3;
   printf("s32ChnNum = %d\n",s32ChnNum);
 
   stVbConf.u32MaxPoolCnt = 128;
@@ -214,6 +216,12 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
                  enSize[1], SAMPLE_PIXEL_FORMAT, SAMPLE_SYS_ALIGN_WIDTH);
     stVbConf.astCommPool[1].u32BlkSize = u32BlkSize;
     stVbConf.astCommPool[1].u32BlkCnt  = 2;
+  }
+  if (s32ChnNum >= 3) {
+    u32BlkSize = SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_ENCODING_MODE_PAL, \
+                 enSize[2], SAMPLE_PIXEL_FORMAT, SAMPLE_SYS_ALIGN_WIDTH);
+    stVbConf.astCommPool[2].u32BlkSize = u32BlkSize;
+    stVbConf.astCommPool[2].u32BlkCnt = 2;
   }
 
   /******************************************
@@ -309,6 +317,30 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     }
   }
 
+  if (s32ChnNum >= 3) {
+    s32Ret = SAMPLE_COMM_SYS_GetPicSize(VIDEO_ENCODING_MODE_PAL, enSize[2], &stSize);
+    if (HI_SUCCESS != s32Ret) {
+      printf("SAMPLE_COMM_SYS_GetPicSize failed!\n");
+      goto END_VENC_1080P_CLASSIC_4;
+    }
+    VpssChn = 2;
+    stVpssChnMode.enChnMode = VPSS_CHN_MODE_USER;
+    stVpssChnMode.bDouble = HI_FALSE;
+    stVpssChnMode.enPixelFormat = PIXEL_FORMAT_YUV_SEMIPLANAR_420;
+    stVpssChnMode.u32Width = stSize.u32Width;
+    stVpssChnMode.u32Height = stSize.u32Height;
+    stVpssChnMode.enCompressMode = COMPRESS_MODE_NONE;
+
+    stVpssChnAttr.s32SrcFrameRate = -1;
+    stVpssChnAttr.s32DstFrameRate = -1;
+
+    s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr, &stVpssChnMode, HI_NULL);
+    if (HI_SUCCESS != s32Ret) {
+      printf("Enable vpss chn failed!\n");
+      goto END_VENC_1080P_CLASSIC_4;
+    }
+  }
+
   /******************************************
    step 5: start stream venc
   ******************************************/
@@ -354,6 +386,24 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     }
   }
 
+  /*** enSize[2] **/
+  if (s32ChnNum >= 3) {
+    VpssChn = 2;
+    VencChn = 2;
+    s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[2], \
+                                    VIDEO_ENCODING_MODE_PAL, enSize[2], enRcMode, u32Profile);
+    if (HI_SUCCESS != s32Ret) {
+      printf("Start Venc failed!\n");
+      goto END_VENC_1080P_CLASSIC_5;
+    }
+
+    //s32Ret = SAMPLE_COMM_VENC_BindVpss(VencChn, VpssGrp, VpssChn);
+    //if (HI_SUCCESS != s32Ret) {
+    //  printf("Start Venc failed!\n");
+    //  goto END_VENC_1080P_CLASSIC_5;
+    //}
+  }
+
   /******************************************
    step 6: stream venc process -- get stream, then save it to file.
   ******************************************/
@@ -375,6 +425,11 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
 END_VENC_1080P_CLASSIC_5:
   VpssGrp = 0;
   switch(s32ChnNum) {
+  case 3:
+    VpssChn = 2;
+    VencChn = 2;
+    // SAMPLE_COMM_VENC_UnBindVpss(VencChn, VpssGrp, VpssChn);
+    SAMPLE_COMM_VENC_Stop(VencChn);
   case 2:
     VpssChn = 1;
     VencChn = 1;
@@ -393,6 +448,9 @@ END_VENC_1080P_CLASSIC_5:
 END_VENC_1080P_CLASSIC_4:	//vpss stop
   VpssGrp = 0;
   switch(s32ChnNum) {
+  case 3:
+    VpssChn = 2;
+    // SAMPLE_COMM_VPSS_DisableChn(VpssGrp, VpssChn);
   case 2:
     VpssChn = 1;
     SAMPLE_COMM_VPSS_DisableChn(VpssGrp, VpssChn);
@@ -402,11 +460,13 @@ END_VENC_1080P_CLASSIC_4:	//vpss stop
     break;
   }
 
-END_VENC_1080P_CLASSIC_2:    //vpss stop
+END_VENC_1080P_CLASSIC_3:     // vpss stop       
+  SAMPLE_COMM_VI_UnBindVpss(stViConfig.enViMode);
+END_VENC_1080P_CLASSIC_2:     // vpss stop
   SAMPLE_COMM_VPSS_StopGroup(VpssGrp);
-END_VENC_1080P_CLASSIC_1:	//vi stop
+END_VENC_1080P_CLASSIC_1:     // vi stop
   SAMPLE_COMM_VI_StopVi(&stViConfig);
-END_VENC_1080P_CLASSIC_0:	//system exit
+END_VENC_1080P_CLASSIC_0:     // system exit
   SAMPLE_COMM_SYS_Exit();
   return NULL;
 }
@@ -432,7 +492,10 @@ int32 CVideoCatch::Start() {
 
   pthread_create(&enc_pid_, NULL, VideoVencClassic, this);
 
-  usleep(5*1000*1000);
+  usleep(2*1000*1000);
+  pthread_create(&osd_pid_, NULL, API_OSD_DisplayProcess, this);
+
+  usleep(2*1000*1000);
   pthread_create(&yuv_pid_, NULL, GetYUVThread, this);
   return 0;
 }
@@ -441,12 +504,6 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream) {
   if (n_chn != 1) {
     return 0;
   }
-
-  bool b_i_frame = false;
-  if (H264E_NALU_SPS == p_stream->pstPack[0].DataType.enH264EType) {
-    b_i_frame = true;
-  }
-
 
   for (uint32 i = 0; i < p_stream->u32PackCount; i++) {
     int n_frm_type = 0;
@@ -474,10 +531,6 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream) {
                        p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset,
                        tv.tv_sec, tv.tv_usec);
     }
-
-    /*memcpy(s_vdo_data+n_vdo_data, (char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
-           p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
-    n_vdo_data += p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset;*/
   }
   return 0;
 }
@@ -565,63 +618,6 @@ void* CVideoCatch::GetYUVThread(void* pArg) {
 
   MEM_DEV_CLOSE();
   return NULL;
-}
-
-HI_S32 CVideoCatch::RGN_CreateCover() {
-  HI_S32 s32Ret = HI_FAILURE;
-  RGN_ATTR_S stRgnAttr;
-
-  /****************************************
-  step 1: create overlay regions
-  ****************************************/
-  stRgnAttr.enType = OVERLAY_RGN;
-  stRgnAttr.unAttr.stOverlay.enPixelFmt = PIXEL_FORMAT_RGB_1555;//PIXEL_FORMAT_RGB_565
-  stRgnAttr.unAttr.stOverlay.stSize.u32Width  = 288;
-  stRgnAttr.unAttr.stOverlay.stSize.u32Height = 128;
-  stRgnAttr.unAttr.stOverlay.u32BgColor = 0xffffff;
-
-  rgn_hdl_ = 0;
-  s32Ret = HI_MPI_RGN_Create(rgn_hdl_, &stRgnAttr);
-  if(HI_SUCCESS != s32Ret) {
-    printf("HI_MPI_RGN_Create (%d) failed with %#x!\n",
-           rgn_hdl_, s32Ret);
-    return HI_FAILURE;
-  }
-  printf("the handle:%d,creat success!\n", rgn_hdl_);
-
-  MPP_CHN_S stChn;
-  stChn.enModId = HI_ID_GROUP;
-  stChn.s32DevId = 0;
-  stChn.s32ChnId = 0;
-
-  printf("%s:[%d] stChn.s32ChnId is %d ,\n", __FUNCTION__, __LINE__, stChn.s32ChnId);
-
-  RGN_CHN_ATTR_S stChnAttr;
-  memset(&stChnAttr, 0, sizeof(stChnAttr));
-  stChnAttr.bShow  = HI_TRUE;
-  stChnAttr.enType = OVERLAY_RGN;
-
-  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32X    = 16;
-  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y    = 32;
-  stChnAttr.unChnAttr.stOverlayChn.u32BgAlpha      = 128;
-  stChnAttr.unChnAttr.stOverlayChn.u32FgAlpha      = 0;
-  stChnAttr.unChnAttr.stOverlayChn.u32Layer        = 0;
-
-  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.bAbsQp = HI_FALSE;
-  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.s32Qp  = 0;
-
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Height = 32;
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Width  = 16;
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.u32LumThresh           = 64;
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.bInvColEn              = HI_TRUE;
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.enChgMod               = LESSTHAN_LUM_THRESH;
-
-  s32Ret = HI_MPI_RGN_AttachToChn(rgn_hdl_, &stChn, &stChnAttr);
-  if (HI_SUCCESS != s32Ret) {
-    printf("HI_MPI_RGN_AttachToChn (%d) failed with %#x!\n", rgn_hdl_, s32Ret);
-    return HI_FAILURE;
-  }
-  printf("display region to s32DevId %d chn success!\n", stChn.s32DevId);
 }
 
 #endif
