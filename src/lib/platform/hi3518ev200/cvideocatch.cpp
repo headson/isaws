@@ -5,6 +5,8 @@
 
 #include "vzbase/helper/stdafx.h"
 
+extern void *API_OSD_DisplayProcess(void * arg);
+
 HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_usr_arg) {
   if (p_usr_arg) {
     return ((CVideoCatch*)p_usr_arg)->GetOneFrame(n_chn, p_stream);
@@ -19,9 +21,157 @@ CVideoCatch::CVideoCatch()
 CVideoCatch::~CVideoCatch() {
 }
 
+/******************************************************************************
+* funciton : get stream from each channels and save them
+******************************************************************************/
+HI_VOID SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
+  HI_S32 i;
+  HI_S32 s32ChnTotal;
+  VENC_CHN_ATTR_S stVencChnAttr;
+  SAMPLE_VENC_GETSTREAM_PARA_S *pstPara;
+  HI_S32 maxfd = 0;
+  struct timeval TimeoutVal;
+  fd_set read_fds;
+  HI_S32 VencFd[VENC_MAX_CHN_NUM];
+
+  VENC_CHN_STAT_S stStat;
+  VENC_STREAM_S stStream;
+  HI_S32 s32Ret;
+  VENC_CHN VencChn;
+  PAYLOAD_TYPE_E enPayLoadType[VENC_MAX_CHN_NUM];
+
+  pstPara = (SAMPLE_VENC_GETSTREAM_PARA_S*)p;
+  s32ChnTotal = pstPara->s32Cnt;
+
+  /******************************************
+   step 1:  check & prepare save-file & venc-fd
+  ******************************************/
+  if (s32ChnTotal >= VENC_MAX_CHN_NUM) {
+    SAMPLE_PRT("input count invaild\n");
+    return;
+  }
+  for (i = 0; i < s32ChnTotal; i++) {
+    /* decide the stream file name, and open file to save stream */
+    VencChn = i;
+    s32Ret = HI_MPI_VENC_GetChnAttr(VencChn, &stVencChnAttr);
+    if(s32Ret != HI_SUCCESS) {
+      SAMPLE_PRT("HI_MPI_VENC_GetChnAttr chn[%d] failed with %#x!\n", \
+                 VencChn, s32Ret);
+      return;
+    }
+    enPayLoadType[i] = stVencChnAttr.stVeAttr.enType;
+
+    /* Set Venc Fd. */
+    VencFd[i] = HI_MPI_VENC_GetFd(i);
+    if (VencFd[i] < 0) {
+      SAMPLE_PRT("HI_MPI_VENC_GetFd failed with %#x!\n",
+                 VencFd[i]);
+      return;
+    }
+    if (maxfd <= VencFd[i]) {
+      maxfd = VencFd[i];
+    }
+  }
+
+  /******************************************
+   step 2:  Start to get streams of each channel.
+  ******************************************/
+  while (HI_TRUE == pstPara->bThreadStart) {
+    FD_ZERO(&read_fds);
+    for (i = 0; i < s32ChnTotal; i++) {
+      FD_SET(VencFd[i], &read_fds);
+    }
+
+    TimeoutVal.tv_sec  = 2;
+    TimeoutVal.tv_usec = 0;
+    s32Ret = select(maxfd + 1, &read_fds, NULL, NULL, &TimeoutVal);
+    if (s32Ret < 0) {
+      SAMPLE_PRT("select failed!\n");
+      break;
+    } else if (s32Ret == 0) {
+      SAMPLE_PRT("get venc stream time out, exit thread\n");
+      continue;
+    } else {
+      for (i = 0; i < s32ChnTotal; i++) {
+        if (FD_ISSET(VencFd[i], &read_fds)) {
+          /*******************************************************
+           step 2.1 : query how many packs in one-frame stream.
+          *******************************************************/
+          memset(&stStream, 0, sizeof(stStream));
+          s32Ret = HI_MPI_VENC_Query(i, &stStat);
+          if (HI_SUCCESS != s32Ret) {
+            SAMPLE_PRT("HI_MPI_VENC_Query chn[%d] failed with %#x!\n", i, s32Ret);
+            break;
+          }
+
+          /*******************************************************
+          step 2.2 :suggest to check both u32CurPacks and u32LeftStreamFrames at the same time,for example:
+           if(0 == stStat.u32CurPacks || 0 == stStat.u32LeftStreamFrames)
+           {
+          	SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
+          	continue;
+           }
+          *******************************************************/
+          if(0 == stStat.u32CurPacks) {
+            SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
+            continue;
+          }
+          /*******************************************************
+           step 2.3 : malloc corresponding number of pack nodes.
+          *******************************************************/
+          stStream.pstPack = (VENC_PACK_S*)malloc(sizeof(VENC_PACK_S) * stStat.u32CurPacks);
+          if (NULL == stStream.pstPack) {
+            SAMPLE_PRT("malloc stream pack failed!\n");
+            break;
+          }
+
+          /*******************************************************
+           step 2.4 : call mpi to get one-frame stream
+          *******************************************************/
+          stStream.u32PackCount = stStat.u32CurPacks;
+          s32Ret = HI_MPI_VENC_GetStream(i, &stStream, HI_TRUE);
+          if (HI_SUCCESS != s32Ret) {
+            free(stStream.pstPack);
+            stStream.pstPack = NULL;
+            SAMPLE_PRT("HI_MPI_VENC_GetStream failed with %#x!\n", s32Ret);
+            break;
+          }
+
+          /*******************************************************
+           step 2.5 : save frame to file
+          *******************************************************/
+          s32Ret = HisiPutH264DataToBuffer(i, &stStream, pstPara->p_usr_arg);
+          if (HI_SUCCESS != s32Ret) {
+            free(stStream.pstPack);
+            stStream.pstPack = NULL;
+            SAMPLE_PRT("save stream failed!\n");
+            break;
+          }
+
+          /*******************************************************
+           step 2.6 : release stream
+          *******************************************************/
+          s32Ret = HI_MPI_VENC_ReleaseStream(i, &stStream);
+          if (HI_SUCCESS != s32Ret) {
+            free(stStream.pstPack);
+            stStream.pstPack = NULL;
+            break;
+          }
+          /*******************************************************
+           step 2.7 : free pack nodes
+          *******************************************************/
+          free(stStream.pstPack);
+          stStream.pstPack = NULL;
+        }
+      }
+    }
+  }
+  return;
+}
+
 HI_VOID *VideoVencClassic(HI_VOID *p) {
   PAYLOAD_TYPE_E enPayLoad[3]= {PT_H264, PT_H264, PT_H264};
-  PIC_SIZE_E enSize[3] = {PIC_HD1080, PIC_CIF, PIC_QVGA};
+  PIC_SIZE_E enSize[3] = {PIC_HD720, PIC_CIF, PIC_CIF};
   HI_U32 u32Profile = 2;
 
   VB_CONF_S stVbConf;
@@ -49,7 +199,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   memset(&stVbConf, 0, sizeof(VB_CONF_S));
   memset(&stViConfig, 0, sizeof(stViConfig));
 
-  s32ChnNum = 2;
+  s32ChnNum = 3;
   printf("s32ChnNum = %d\n",s32ChnNum);
 
   stVbConf.u32MaxPoolCnt = 128;
@@ -66,6 +216,12 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
                  enSize[1], SAMPLE_PIXEL_FORMAT, SAMPLE_SYS_ALIGN_WIDTH);
     stVbConf.astCommPool[1].u32BlkSize = u32BlkSize;
     stVbConf.astCommPool[1].u32BlkCnt  = 2;
+  }
+  if (s32ChnNum >= 3) {
+    u32BlkSize = SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_ENCODING_MODE_PAL, \
+                 enSize[2], SAMPLE_PIXEL_FORMAT, SAMPLE_SYS_ALIGN_WIDTH);
+    stVbConf.astCommPool[2].u32BlkSize = u32BlkSize;
+    stVbConf.astCommPool[2].u32BlkCnt = 2;
   }
 
   /******************************************
@@ -161,6 +317,30 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     }
   }
 
+  if (s32ChnNum >= 3) {
+    s32Ret = SAMPLE_COMM_SYS_GetPicSize(VIDEO_ENCODING_MODE_PAL, enSize[2], &stSize);
+    if (HI_SUCCESS != s32Ret) {
+      printf("SAMPLE_COMM_SYS_GetPicSize failed!\n");
+      goto END_VENC_1080P_CLASSIC_4;
+    }
+    VpssChn = 2;
+    stVpssChnMode.enChnMode = VPSS_CHN_MODE_USER;
+    stVpssChnMode.bDouble = HI_FALSE;
+    stVpssChnMode.enPixelFormat = PIXEL_FORMAT_YUV_SEMIPLANAR_420;
+    stVpssChnMode.u32Width = stSize.u32Width;
+    stVpssChnMode.u32Height = stSize.u32Height;
+    stVpssChnMode.enCompressMode = COMPRESS_MODE_NONE;
+
+    stVpssChnAttr.s32SrcFrameRate = -1;
+    stVpssChnAttr.s32DstFrameRate = -1;
+
+    s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr, &stVpssChnMode, HI_NULL);
+    if (HI_SUCCESS != s32Ret) {
+      printf("Enable vpss chn failed!\n");
+      goto END_VENC_1080P_CLASSIC_4;
+    }
+  }
+
   /******************************************
    step 5: start stream venc
   ******************************************/
@@ -206,6 +386,24 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     }
   }
 
+  /*** enSize[2] **/
+  if (s32ChnNum >= 3) {
+    VpssChn = 2;
+    VencChn = 2;
+    s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[2], \
+                                    VIDEO_ENCODING_MODE_PAL, enSize[2], enRcMode, u32Profile);
+    if (HI_SUCCESS != s32Ret) {
+      printf("Start Venc failed!\n");
+      goto END_VENC_1080P_CLASSIC_5;
+    }
+
+    //s32Ret = SAMPLE_COMM_VENC_BindVpss(VencChn, VpssGrp, VpssChn);
+    //if (HI_SUCCESS != s32Ret) {
+    //  printf("Start Venc failed!\n");
+    //  goto END_VENC_1080P_CLASSIC_5;
+    //}
+  }
+
   /******************************************
    step 6: stream venc process -- get stream, then save it to file.
   ******************************************/
@@ -227,6 +425,11 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
 END_VENC_1080P_CLASSIC_5:
   VpssGrp = 0;
   switch(s32ChnNum) {
+  case 3:
+    VpssChn = 2;
+    VencChn = 2;
+    // SAMPLE_COMM_VENC_UnBindVpss(VencChn, VpssGrp, VpssChn);
+    SAMPLE_COMM_VENC_Stop(VencChn);
   case 2:
     VpssChn = 1;
     VencChn = 1;
@@ -245,6 +448,9 @@ END_VENC_1080P_CLASSIC_5:
 END_VENC_1080P_CLASSIC_4:	//vpss stop
   VpssGrp = 0;
   switch(s32ChnNum) {
+  case 3:
+    VpssChn = 2;
+    // SAMPLE_COMM_VPSS_DisableChn(VpssGrp, VpssChn);
   case 2:
     VpssChn = 1;
     SAMPLE_COMM_VPSS_DisableChn(VpssGrp, VpssChn);
@@ -254,11 +460,13 @@ END_VENC_1080P_CLASSIC_4:	//vpss stop
     break;
   }
 
-END_VENC_1080P_CLASSIC_2:    //vpss stop
+END_VENC_1080P_CLASSIC_3:     // vpss stop       
+  SAMPLE_COMM_VI_UnBindVpss(stViConfig.enViMode);
+END_VENC_1080P_CLASSIC_2:     // vpss stop
   SAMPLE_COMM_VPSS_StopGroup(VpssGrp);
-END_VENC_1080P_CLASSIC_1:	//vi stop
+END_VENC_1080P_CLASSIC_1:     // vi stop
   SAMPLE_COMM_VI_StopVi(&stViConfig);
-END_VENC_1080P_CLASSIC_0:	//system exit
+END_VENC_1080P_CLASSIC_0:     // system exit
   SAMPLE_COMM_SYS_Exit();
   return NULL;
 }
@@ -282,10 +490,13 @@ int32 CVideoCatch::Start() {
   shm_image_.SetWidth(352);
   shm_image_.SetHeight(288);
 
-  pthread_create(&p_enc_id_, NULL, VideoVencClassic, this);
+  pthread_create(&enc_pid_, NULL, VideoVencClassic, this);
 
-  usleep(5*1000*1000);
-  pthread_create(&p_yuv_id_, NULL, GetYUVThread, this);
+  usleep(2*1000*1000);
+  pthread_create(&osd_pid_, NULL, API_OSD_DisplayProcess, this);
+
+  usleep(2*1000*1000);
+  pthread_create(&yuv_pid_, NULL, GetYUVThread, this);
   return 0;
 }
 
@@ -293,12 +504,6 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream) {
   if (n_chn != 1) {
     return 0;
   }
-
-  bool b_i_frame = false;
-  if (H264E_NALU_SPS == p_stream->pstPack[0].DataType.enH264EType) {
-    b_i_frame = true;
-  }
-
 
   for (uint32 i = 0; i < p_stream->u32PackCount; i++) {
     int n_frm_type = 0;
@@ -326,10 +531,6 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream) {
                        p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset,
                        tv.tv_sec, tv.tv_usec);
     }
-
-    /*memcpy(s_vdo_data+n_vdo_data, (char*)p_stream->pstPack[i].pu8Addr + p_stream->pstPack[i].u32Offset,
-           p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset);
-    n_vdo_data += p_stream->pstPack[i].u32Len - p_stream->pstPack[i].u32Offset;*/
   }
   return 0;
 }
@@ -418,4 +619,5 @@ void* CVideoCatch::GetYUVThread(void* pArg) {
   MEM_DEV_CLOSE();
   return NULL;
 }
+
 #endif

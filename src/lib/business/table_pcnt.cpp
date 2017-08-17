@@ -29,7 +29,9 @@ static const char REPLACE_STMT_SQL[] = "REPLACE INTO "
                                        " main_srv_send_flag, minor_srv_send_flag) "
                                        " VALUES (?, datetime(CURRENT_TIMESTAMP,'localtime'), ?, ?, ?, ?, 0, 0);";
 
-static const char DELETE_STMT_SQL[] = "DELETE FROM pcount";
+static const char CLEAR_STMT_SQL[] = "DELETE FROM pcount";
+
+static const char DELETE_STMT_SQL[] = "DELETE FROM pcount WHERE ident_timet < %d";
 
 #define  SELECT_STMT_SQL_NOT_SEND "SELECT ident_timet, positive_number, negative_number " \
   " main_srv_send_flag, minor_srv_send_flag "                   \
@@ -47,7 +49,7 @@ static const char DELETE_STMT_SQL[] = "DELETE FROM pcount";
   " ORDER BY ident_timet ASC LIMIT 0, 1"
 
 bool CDataBase::CreatePCount() {
-  char *sqlite_error_msg = 0;
+  char *sqlite_error_msg = NULL;
   int res = sqlite3_exec(db_instance_, PCOUNT_SQL, NULL, 0, &sqlite_error_msg);
   if (res != SQLITE_OK) {
     LOG(L_ERROR) << "Failure to create exec this command" << PCOUNT_SQL;
@@ -70,12 +72,12 @@ bool CDataBase::InitPCountStmt() {
   }
 
   res = sqlite3_prepare_v2(db_instance_,
-                           DELETE_STMT_SQL,
-                           strlen(DELETE_STMT_SQL),
+                           CLEAR_STMT_SQL,
+                           strlen(CLEAR_STMT_SQL),
                            &pcount_.delete_stmt_,
                            0);
   if (res != SQLITE_OK) {
-    LOG(L_ERROR) << DELETE_STMT_SQL;
+    LOG(L_ERROR) << CLEAR_STMT_SQL;
     return false;
   }
 
@@ -164,7 +166,20 @@ bool CDataBase::ReplacePCount(const Json::Value &jreq) {
   return true;
 }
 
-bool CDataBase::DeletePCount(const Json::Value &jreq) {
+bool CDataBase::RemovePCount(unsigned int some_days_ago) {
+  char *sqlite_error_msg = 0;
+  char sql[1024] = {0};
+  snprintf(sql, 1023, DELETE_STMT_SQL, time(NULL) - 90*24*60*60);
+  int res = sqlite3_exec(db_instance_, sql, NULL, 0, &sqlite_error_msg);
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "Failure to create exec this command" << PCOUNT_SQL;
+    sqlite3_free(sqlite_error_msg);
+    return false;
+  }
+  return true;
+}
+
+bool CDataBase::ClearPCount(const Json::Value &jreq) {
   int res = -1;
   res = sqlite3_step(pcount_.delete_stmt_);
   if (res != SQLITE_DONE) {
