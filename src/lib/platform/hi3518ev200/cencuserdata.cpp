@@ -3,13 +3,17 @@
 *Description :
 ************************************************************************/
 #include "cencuserdata.h"
+#include "vzlogging/logging/vzloggingcpp.h"
 
 CEncUserData::CEncUserData(VENC_CHN chn)
   : venc_chn_(chn) {
+  w_sec_ = 0; w_usec_ = 0;
+
+  u32PhyAddr = 0;
+  pVirAddr = NULL;
 }
 
 CEncUserData::~CEncUserData() {
-
 }
 
 int CEncUserData::Start(const char* skey, int shm_size,
@@ -52,13 +56,24 @@ int CEncUserData::Start(const char* skey, int shm_size,
     return false;
   }
 
+  // image 0 to alg
+  bool bres = shm_dbg_img_.Open(SHM_IMAGE_1, SHM_IMAGE_1_SIZE);
+  if (bres == false) {
+    LOG(L_ERROR) << "can't open share memory.";
+    return -1;
+  }
+
   printf("pool id :%d, phyAddr:%x,virAddr:%x\n", vdo_frm_info_.u32PoolId, u32PhyAddr, (int)pVirAddr);
 
+  pthread_create(&dbg_yuv_pid_, NULL, ThreadProcess, this);
   return true;
 }
 
 void CEncUserData::Stop() {
-
+  if (dbg_yuv_pid_) {
+    pthread_join(dbg_yuv_pid_);
+    dbg_yuv_pid_ = 0;
+  }
 }
 
 void * CEncUserData::ThreadProcess(void *pArg) {
@@ -82,14 +97,21 @@ void CEncUserData::OnProcess() {
   u32ChrmSize = (u32CStride * u32Height) >> 2;/* YUV 420 */
   u32Size = u32LumaSize + (u32ChrmSize << 1);
 
+  int res = 0;
   while (true) {
+    res = shm_dbg_img_.Read((char*)pVirAddr, u32Size, &w_sec_, &w_sec_);
+    if (res <= 0) {
+      usleep(5 * 1000);
+      continue;
+    }
+
     vdo_frm_info_.stVFrame.u32PhyAddr[0] = u32PhyAddr;
     vdo_frm_info_.stVFrame.u32PhyAddr[1] = vdo_frm_info_.stVFrame.u32PhyAddr[0] + u32LumaSize;
     vdo_frm_info_.stVFrame.u32PhyAddr[2] = vdo_frm_info_.stVFrame.u32PhyAddr[1] + u32ChrmSize;
 
     vdo_frm_info_.stVFrame.pVirAddr[0] = pVirAddr;
-    vdo_frm_info_.stVFrame.pVirAddr[1] = vdo_frm_info_.stVFrame.pVirAddr[0] + u32LumaSize;
-    vdo_frm_info_.stVFrame.pVirAddr[2] = vdo_frm_info_.stVFrame.pVirAddr[1] + u32ChrmSize;
+    vdo_frm_info_.stVFrame.pVirAddr[1] = (char*)vdo_frm_info_.stVFrame.pVirAddr[0] + u32LumaSize;
+    vdo_frm_info_.stVFrame.pVirAddr[2] = (char*)vdo_frm_info_.stVFrame.pVirAddr[1] + u32ChrmSize;
 
     vdo_frm_info_.stVFrame.u32Width = u32Width;
     vdo_frm_info_.stVFrame.u32Height = u32Height;
@@ -100,6 +122,8 @@ void CEncUserData::OnProcess() {
     vdo_frm_info_.stVFrame.u32Field = VIDEO_FIELD_INTERLACED;/* Intelaced D1,otherwise VIDEO_FIELD_FRAME */
 
     HI_MPI_VENC_SendFrame(venc_chn_, &vdo_frm_info_, 1);
+
+    usleep(5 * 1000);
   }
 }
 

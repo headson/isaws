@@ -472,24 +472,45 @@ END_VENC_1080P_CLASSIC_0:     // system exit
 }
 
 int32 CVideoCatch::Start() {
-  bool b_ret = false;
+  bool bres = false;
 
-  b_ret = shm_video_.Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
-  if (b_ret == false) {
+  // video_0
+  bres = shm_video_[0].Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+  if (bres == false) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
   }
-  shm_video_.SetWidth(352);
-  shm_video_.SetHeight(288);
+  shm_video_[0].SetWidth(SHM_VIDEO_0_W);
+  shm_video_[0].SetHeight(SHM_VIDEO_0_H);
 
-  b_ret = shm_image_.Create(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
-  if (b_ret == false) {
+  // video_1
+  bres = shm_video_[1].Create(SHM_VIDEO_1, SHM_VIDEO_1_SIZE);
+  if (bres == false) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
   }
-  shm_image_.SetWidth(352);
-  shm_image_.SetHeight(288);
+  shm_video_[1].SetWidth(SHM_VIDEO_1_W);
+  shm_video_[1].SetHeight(SHM_VIDEO_1_H);
 
+  // video_2
+  bres = shm_video_[2].Create(SHM_VIDEO_2, SHM_VIDEO_2_SIZE);
+  if (bres == false) {
+    LOG(L_ERROR) << "can't open share memory.";
+    return -1;
+  }
+  shm_video_[2].SetWidth(SHM_VIDEO_2_W);
+  shm_video_[2].SetHeight(SHM_VIDEO_2_H);
+
+  // image 0 to alg
+  bres = shm_image_.Create(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
+  if (bres == false) {
+    LOG(L_ERROR) << "can't open share memory.";
+    return -1;
+  }
+  shm_image_.SetWidth(SHM_IMAGE_0_W);
+  shm_image_.SetHeight(SHM_IMAGE_0_H);
+
+  // 
   pthread_create(&enc_pid_, NULL, VideoVencClassic, this);
 
   usleep(2*1000*1000);

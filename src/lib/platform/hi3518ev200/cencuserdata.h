@@ -43,6 +43,7 @@ class CEncUserData {
   pthread_t         dbg_yuv_pid_;
 
   CShareBuffer      shm_dbg_img_;
+  unsigned int      w_sec_, w_usec_;
 
   VB_BLK            VbBlk;
   HI_U32            u32PhyAddr;

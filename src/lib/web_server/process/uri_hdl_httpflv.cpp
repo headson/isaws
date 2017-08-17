@@ -49,10 +49,20 @@ void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *p) {
   vzconn::EVT_LOOP *evt_loop =
     CListenMessage::Instance()->MainThread()->socketserver()->GetEvtService();
 
-  //mg_get_http_var(&hm->query_string, "chn");
+  char chn[128] = {0};
+  mg_get_http_var(&hm->query_string, "chn", chn, 123);
 
-  bool bret = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_0, 320 * 240 + 1024);
-  if (bret == false) {
+  bool bres = false;
+  if (0 == strncmp(chn, "video0", 7)) {
+    bres = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+  } else if (0 == strncmp(chn, "video1", 7)) {
+    bres = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_1, SHM_VIDEO_1_SIZE);
+  } else if (0 == strncmp(chn, "video2", 7)) {
+    bres = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_2, SHM_VIDEO_2_SIZE);
+  } else {
+    bres = false;
+  }
+  if (bres == false) {
     delete pflv;
     pflv = NULL;
 

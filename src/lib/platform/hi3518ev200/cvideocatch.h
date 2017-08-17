@@ -46,7 +46,7 @@ class CVideoCatch {
 
   RGN_HANDLE    rgn_hdl_;  
 
-  CShareBuffer  shm_video_;
+  CShareBuffer  shm_video_[3];
   CShareBuffer  shm_image_;
 };
 
