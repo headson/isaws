@@ -225,14 +225,23 @@ typedef void(*Kvdb_GetKeyCallback)(const char *p_key,
 EXPORT_DLL int Kvdb_Start(const char *server, unsigned short port);
 EXPORT_DLL int Kvdb_Stop();
 
-// SetKey, if the key not exist, then create the key
-// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
+/************************************************************************
+*Description : 存储参数;if the key not exist, then create the key
+*Parameters  : p_key[IN] 存储参数名称
+*              n_key[IN] 存储参数名称长度
+*              p_value[IN] 存储参数数据
+*              n_value[IN] 存储参数数据长度
+*Return      : KVDB_RET_FAILURE, KVDB_RET_SUCCEED
+************************************************************************/
 EXPORT_DLL int Kvdb_SetKey(const char *p_key, int n_key,
                            const char *p_value, int n_value);
 
 /************************************************************************
 *Description : 通过键值获取数据
-*Parameters  :
+*Parameters  : p_key[IN] 获取参数名称
+*              n_key[IN] 获取参数名称长度
+*              p_callback[IN] 获取参数到的参数从回调中返回
+*              p_usr_arg[IN] 回调是返回此用户参数
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
 EXPORT_DLL int Kvdb_GetKey(const char *p_key, int n_key,
@@ -241,7 +250,10 @@ EXPORT_DLL int Kvdb_GetKey(const char *p_key, int n_key,
 
 /************************************************************************
 *Description : 通过键值获取数据
-*Parameters  :
+*Parameters  : p_key[IN] 获取参数名称
+*              n_key[IN] 获取参数名称长度
+*              p_callback[IN] 获取参数到的参数从回调中返回
+*              p_usr_arg[IN] 回调是返回此用户参数
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
 EXPORT_DLL int Kvdb_GetKeyAbsolutely(const char *p_key, int n_key,
@@ -249,7 +261,10 @@ EXPORT_DLL int Kvdb_GetKeyAbsolutely(const char *p_key, int n_key,
                                      void *p_usr_arg);
 /************************************************************************
 *Description : 通过键值获取数据
-*Parameters  :
+*Parameters  : p_key[IN] 获取参数名称
+*              n_key[IN] 获取参数名称长度
+*              p_value[IN] 获取参数到的参数存入此buffer
+*              n_value[IN] 参数存入此buffer长度
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
 EXPORT_DLL int Kvdb_GetKeyToBuffer(const char *p_key, int n_key,
@@ -257,7 +272,9 @@ EXPORT_DLL int Kvdb_GetKeyToBuffer(const char *p_key, int n_key,
 
 /************************************************************************
 *Description : 通过键值获取数据
-*Parameters  :
+*Parameters  : p_key[IN] 获取参数名称
+*              n_key[IN] 获取参数名称长度
+*              p_string[IN] 获取参数到的参数存入此std:string*
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
 #ifdef __cplusplus
@@ -266,7 +283,10 @@ EXPORT_DLL int Kvdb_GetKeyToString(const char *p_key, int n_key, void *p_string)
 
 /************************************************************************
 *Description : 通过键值获取数据
-*Parameters  :
+*Parameters  : p_key[IN] 获取参数名称
+*              n_key[IN] 获取参数名称长度
+*              p_value[IN] 获取参数到的参数存入此buffer
+*              n_value[IN] 参数存入此buffer长度
 *Return      : >0 成功(获取数据长度); KVDB_RET_FAILURE 失败
 ************************************************************************/
 EXPORT_DLL int Kvdb_GetKeyAbsolutelyToBuffer(const char *p_key, int n_key,

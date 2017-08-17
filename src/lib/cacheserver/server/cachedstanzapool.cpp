@@ -1,6 +1,8 @@
 #include "cacheserver/server/cachedstanzapool.h"
 #include "vzlogging/logging/vzloggingcpp.h"
 
+#include <string.h>
+
 namespace cached {
 
 CachedStanzaPool *CachedStanzaPool::pool_instance_ = NULL;
@@ -27,7 +29,7 @@ CachedStanza::Ptr CachedStanzaPool::TakeStanza(std::size_t mini_size) {
   //  LOG(INFO) << "stanzas_.size() == 0, Create cached stanza";
   /*return CachedStanza::Ptr(new CachedStanza());*/
   //}
-  LOG(WARNING) << "The stanza size reach limit "
+  LOG(L_WARNING) << "The stanza size reach limit "
                << MAX_CACHED_STANZA_SIZE
                << "\t" << stanzas_.size();
   return CachedStanza::Ptr();
@@ -35,16 +37,16 @@ CachedStanza::Ptr CachedStanzaPool::TakeStanza(std::size_t mini_size) {
 
 void CachedStanzaPool::RecyleStanza(CachedStanza *stanza) {
   vzbase::CritScope stanza_mutex(&pool_mutex_);
-  LOG(INFO) << "Recyle Stanza " << stanza->size();
+  LOG(L_INFO) << "Recyle Stanza " << stanza->size();
   stanza->ResetDefualtState();
   InsertStanza(stanza);
 }
 
 void CachedStanzaPool::SetDefaultCachedSize(std::size_t mini_size,
     std::size_t stanza_size) {
-  LOG(INFO) << "Set default cached size = " << stanza_size;
+  LOG(L_INFO) << "Set default cached size = " << stanza_size;
   for(std::size_t i = 0; i < stanza_size; i++) {
-    LOG(INFO) << "Create cached stanza";
+    LOG(L_INFO) << "Create cached stanza";
     stanzas_.push_back(new CachedStanza());
   }
 }
@@ -62,15 +64,15 @@ CachedStanza::Ptr CachedStanzaPool::TaskPerfectStanza(std::size_t mini_size) {
     if((*iter)->Capacity() >= mini_size) {
       perfect_stanza.reset(*iter, &CachedStanzaPool::RecyleBuffer);
       stanzas_.erase(iter);
-      LOG(INFO) << "Take stanza by mini size = " << mini_size
+      LOG(L_INFO) << "Take stanza by mini size = " << mini_size
                 << "\t" << stanzas_.size();
       return perfect_stanza;
     }
   }
-  LOG(INFO) << "Task stanza by back size = " << stanzas_.size();
+  LOG(L_INFO) << "Task stanza by back size = " << stanzas_.size();
   perfect_stanza.reset(stanzas_.front(), &CachedStanzaPool::RecyleBuffer);
   stanzas_.pop_front();
-  LOG(INFO) << "Task stanza by back size = " << stanzas_.size()
+  LOG(L_INFO) << "Task stanza by back size = " << stanzas_.size()
     << " perfect_stanza use count " << perfect_stanza.use_count();
   return perfect_stanza;
 }
@@ -95,12 +97,12 @@ uint32 CachedStanza::stanza_count = 0;
 CachedStanza::CachedStanza()
   : is_saved_(false) {
   stanza_count++;
-  LOG(WARNING) << "Create stanza " << stanza_count;
+  LOG(L_WARNING) << "Create stanza " << stanza_count;
 }
 
 CachedStanza::~CachedStanza() {
   stanza_count--;
-  LOG(WARNING) << "Delete Cache Stanza " << stanza_count;
+  LOG(L_WARNING) << "Delete Cache Stanza " << stanza_count;
 }
 
 bool CachedStanza::IsSaved() {

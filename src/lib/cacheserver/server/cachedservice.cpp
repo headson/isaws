@@ -99,12 +99,13 @@ void CachedService::CheckFileLimit() {
     file_size = statbuf.st_size;
   }
 #endif
-  LOG(INFO) << "The file info "
+  LOG(L_INFO) << "The file info "
             << stanza.max_size << "\t"
             << file_size << "\t"
             << stanza.path;
   if (stanza.max_size < file_size) {
-    std::remove(stanza.path.c_str());
+    //std::remove(stanza.path.c_str());
+    remove(stanza.path.c_str());
   }
 }
 
@@ -119,7 +120,7 @@ bool CachedService::InitFileLimitCheck() {
   // Open this file
   FILE * fp = fopen(FILE_LIMIT_CONFIG, "rb");
   if (fp == NULL) {
-    LOG(ERROR) << "Failure to open " << FILE_LIMIT_CONFIG;
+    LOG(L_ERROR) << "Failure to open " << FILE_LIMIT_CONFIG;
     return false;
   }
 
@@ -137,7 +138,7 @@ bool CachedService::InitFileLimitCheck() {
     }
     // Check the file data is empty
     if (data.empty()) {
-      LOG(ERROR) << "The file is empty " << FILE_LIMIT_CONFIG;
+      LOG(L_ERROR) << "The file is empty " << FILE_LIMIT_CONFIG;
       break;
     }
 
@@ -145,7 +146,7 @@ bool CachedService::InitFileLimitCheck() {
     Json::Reader reader;
     Json::Value  value;
     if (!reader.parse(data, value)) {
-      LOG(ERROR) << "Parse the file data error "
+      LOG(L_ERROR) << "Parse the file data error "
                  << reader.getFormattedErrorMessages();
       break;
     }
@@ -154,13 +155,13 @@ bool CachedService::InitFileLimitCheck() {
     for (std::size_t i = 0; i < limit_checks.size(); i++) {
       if (limit_checks[i][JSON_FLC_PATH].isNull()
           || limit_checks[i][JSON_FLC_MAX_SIZE].isNull()) {
-        LOG(ERROR) << "Failure Item";
+        LOG(L_ERROR) << "Failure Item";
         continue;
       }
       FlcStanza stanza;
       stanza.max_size   = limit_checks[i][JSON_FLC_MAX_SIZE].asUInt();
       stanza.path       = limit_checks[i][JSON_FLC_PATH].asString();
-      LOG(INFO) << stanza.max_size << "\t" << stanza.path;
+      LOG(L_INFO) << stanza.max_size << "\t" << stanza.path;
       flc_stanzas_.push_back(stanza);
     }
 
@@ -175,7 +176,7 @@ bool CachedService::InitFileLimitCheck() {
 }
 
 bool CachedService::AddFile(CachedStanza::Ptr stanza, bool is_cached) {
-  LOG(INFO) << "Cached file = " << stanza->path()
+  LOG(L_INFO) << "Cached file = " << stanza->path()
             <<" is cached "<< is_cached
             <<" stanza use count "<<stanza.use_count();
   ReplaceCachedFile(stanza);
@@ -183,7 +184,7 @@ bool CachedService::AddFile(CachedStanza::Ptr stanza, bool is_cached) {
   RemoveOutOfDataStanza();
   if(cached_stanzas_.size() > MAX_CACHED_STANZA_SIZE) {
     stanza->SaveConfimation();
-    LOG(WARNING) << "cached_stanzas size big than 64 " << cached_stanzas_.size();
+    LOG(L_WARNING) << "cached_stanzas size big than 64 " << cached_stanzas_.size();
     return true;
   }
   if(is_cached) {
@@ -207,7 +208,7 @@ void CachedService::ReplaceCachedFile(CachedStanza::Ptr stanza) {
 }
 
 bool CachedService::RemoveFile(const std::string path) {
-  LOG(INFO) << "Remove file " << path;
+  LOG(L_INFO) << "Remove file " << path;
   BOOST_ASSERT(cachedstanza_pool_ != NULL);
   for(std::deque<CachedStanza::Ptr>::iterator iter = cached_stanzas_.begin();
       iter != cached_stanzas_.end(); ++iter) {
@@ -227,16 +228,16 @@ void CachedService::OnAsyncRemoveFile(std::string path) {
 }
 
 CachedStanza::Ptr CachedService::GetFile(const char *path) {
-  LOG(INFO) << "Get File " << path;
+  LOG(L_INFO) << "Get File " << path;
   for(std::deque<CachedStanza::Ptr>::iterator iter = cached_stanzas_.begin();
       iter != cached_stanzas_.end(); ++iter) {
     if((*iter)->path() == path) {
-      LOG(INFO) << "Find stanza";
+      LOG(L_INFO) << "Find stanza";
       return (*iter);
     }
   }
   BOOST_ASSERT(cachedstanza_pool_ != NULL);
-  LOG(INFO) << "Can't to find the file " << path;
+  LOG(L_INFO) << "Can't to find the file " << path;
   CachedStanza::Ptr stanza = cachedstanza_pool_->TakeStanza(READ_MAX_BUFFER);
   if(!stanza) {
     return CachedStanza::Ptr();
@@ -245,11 +246,11 @@ CachedStanza::Ptr CachedService::GetFile(const char *path) {
   if(ReadFile(stanza->path(), stanza->data())) {
     // AddFile(stanza, false);
     // stanza->SaveConfimation();
-    LOG(INFO) << "Read Stanza";
+    LOG(L_INFO) << "Read Stanza";
     return stanza;
   } else {
   }
-  LOG(INFO) << "Not find";
+  LOG(L_INFO) << "Not find";
   return CachedStanza::Ptr();
 }
 
@@ -315,7 +316,7 @@ void CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
 #endif
   FILE *fp = fopen(stanza->path().c_str(), "wb");
   if(fp == NULL) {
-    LOG(ERROR) << "Failure to open file " << stanza->path();
+    LOG(L_ERROR) << "Failure to open file " << stanza->path();
     stanza->SaveConfimation();
     return;
   }
@@ -338,10 +339,10 @@ void CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
     //          << write_size
     //          << "\t" << stanza->size();
     if (ferror(fp) && try_write_times) {
-      LOG(ERROR) << "Write file error: size != stanza->data.size() "
+      LOG(L_ERROR) << "Write file error: size != stanza->data.size() "
                  << ferror(fp);
       perror("Failure to write file");
-      LOG(ERROR) << "Try times " << MAX_TRY_TIMES - try_write_times;
+      LOG(L_ERROR) << "Try times " << MAX_TRY_TIMES - try_write_times;
       clearerr(fp);
       break;
     }
@@ -360,11 +361,11 @@ void CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
     }
   }
   if(write_size != stanza->size()) {
-    LOG(ERROR) << "Write file error: size != stanza->data.size() "
+    LOG(L_ERROR) << "Write file error: size != stanza->data.size() "
                << ferror(fp);
     perror("Failure to write file");
   } else {
-    LOG(INFO) << "save cached file " << stanza->path()
+    LOG(L_INFO) << "save cached file " << stanza->path()
               << " stanze use count " << stanza.use_count();
   }
   stanza->SaveConfimation();
@@ -376,7 +377,7 @@ bool CachedService::ReadFile(const std::string path,
   static char read_buffer[READ_FILE_BUFFER_SIZE];
   FILE *fp = fopen(path.c_str(), "rb");
   if(fp == NULL) {
-    LOG(ERROR) << "Failure to open the file " << path;
+    LOG(L_ERROR) << "Failure to open the file " << path;
     return false;
   }
   data_buffer.resize(0);
@@ -396,7 +397,7 @@ bool CachedService::ReadFile(const std::string path,
 
 void CachedService::RemoveOutOfDataStanza() {
   BOOST_ASSERT(cachedstanza_pool_ != NULL);
-  LOG(INFO) << "cached stanza = " << cached_stanzas_.size()
+  LOG(L_INFO) << "cached stanza = " << cached_stanzas_.size()
             << " cache_size_ " << cache_size_;
   /*##rjx## 如果缓存队首数据未被存储，但队列中数据存在已经存储的则不能及时回收*/
   while(cached_stanzas_.size() > cache_size_) {

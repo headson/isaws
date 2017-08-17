@@ -104,7 +104,7 @@ class CVzLoggingFile {
   virtual int Open(const char*  s_path,
                    const char*  s_filename,
                    unsigned int n_limit_size);
-  int StartRecord(const char* s_usr_cmd);
+  int WriteSome(const char* s_usr_cmd);
 
   void Sync();
 

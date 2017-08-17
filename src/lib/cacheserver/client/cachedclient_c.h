@@ -26,7 +26,9 @@ typedef void(*Cached_GetFileCallback)(const char *s_path,
 #define CACHED_RET_SUCCEED 0
 #define CACHED_RET_FAILURE 1
 
+// Return CACHED_RET_SUCCEED, CACHED_RET_FAILURE
 EXPORT_DLL int Cached_Start(const char *s_srv_ip, unsigned short n_srv_port);
+// Return CACHED_RET_SUCCEED, CACHED_RET_FAILURE
 EXPORT_DLL int Cached_Stop();
 
 // SetKey, if the path not exist, then create the path

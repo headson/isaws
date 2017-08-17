@@ -23,11 +23,15 @@ static bool                       k_en_watchdog = true;   // 看门狗使能
 
 /***进程心跳信息*********************************************************/
 typedef struct _TAG_WATCHDOG {
-  unsigned int  n_mark;
-  char          s_app_name[DEF_PROCESS_NAME_MAX];     // 进程名
-  char          s_descrebe[DEF_USER_DESCREBE_MAX+4];  // 用户描述
-  unsigned int  n_timeout;                            // 超时
-  time_t        last_heartbeat;                       // 最好一次心跳时间
+  unsigned int  mark;
+  
+  char          app_name[DEF_PROCESS_NAME_MAX];     // 进程名
+  char          descrebe[DEF_USER_DESCREBE_MAX];    // 用户描述
+
+  unsigned int  status;
+
+  unsigned int  timeout;                            // 超时
+  time_t        last_hb_time;                       // 最好一次心跳时间
 } TAG_HEARTBEAT;
 static TAG_HEARTBEAT k_pro_heart[DEF_PER_DEV_PROCESS_MAX];  // 进程心跳信息
 
@@ -78,7 +82,7 @@ static void PrintUsage() {
   printf(
     "      -p  <trans port> Defualt value is 5760\n");
   printf(
-    "      -s  <IP:PORT> remote server address\n");
+    "      -s  <PATH> change log save path\n");
   printf(
     "      -d  print all log in console\n");
   printf(
@@ -172,6 +176,7 @@ int main(int argc, char* argv[]) {
     VZ_ERROR("close watchdog.\n");
   }
 
+#ifndef _WIN32
   int i = 0;
   if (b_wait_20s == 1) {
     VZ_ERROR("wait some time.\n");
@@ -180,6 +185,7 @@ int main(int argc, char* argv[]) {
       usleep(5*1000);
     }
   }
+#endif
   VZ_ERROR("monitor all modules.\n");
 
   // 共享参数
@@ -260,7 +266,7 @@ int InitLogRecord(const char* path,
     VZ_ERROR("log record open failed.%d.\n", ret);
     return ret;
   }
-  k_log_file.StartRecord("program log");
+  k_log_file.WriteSome("program log");
 
   // 看门狗日志
   ret = k_wdg_file.Open(path, wdg_fname, DEF_WDG_FILE_SIZE);
@@ -268,7 +274,7 @@ int InitLogRecord(const char* path,
     VZ_ERROR("wdg record open failed.%d.\n", ret);
     return ret;
   }
-  k_wdg_file.StartRecord("watchdog");
+  k_wdg_file.WriteSome("watchdog start");
 
   return 0;
 }
@@ -290,8 +296,8 @@ int InitMonitorModule(const char* s_path) {
       }
 
       for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
-        if (k_pro_heart[i].n_mark == 0
-            && k_pro_heart[i].s_app_name[0] == '\0') {
+        if (k_pro_heart[i].mark == 0
+            && k_pro_heart[i].app_name[0] == '\0') {
           char s_app_name[32+1] = {0};
           char s_descrebe[8+1]  = {0};
           int  n_timeout        = 0;
@@ -321,9 +327,9 @@ int InitMonitorModule(const char* s_path) {
           // 去重复
           bool b_find = false;
           for (int j = 0; j < DEF_PER_DEV_PROCESS_MAX; j++) {
-            if (k_pro_heart[j].n_mark == DEF_TAG_MARK &&
-                !strncmp(k_pro_heart[j].s_descrebe, s_descrebe, DEF_USER_DESCREBE_MAX)       // 描述符
-                && !strncmp(k_pro_heart[j].s_app_name, s_app_name, DEF_PROCESS_NAME_MAX)) {  // 进程名
+            if (k_pro_heart[j].mark == DEF_TAG_MARK &&
+                !strncmp(k_pro_heart[j].descrebe, s_descrebe, DEF_USER_DESCREBE_MAX)       // 描述符
+                && !strncmp(k_pro_heart[j].app_name, s_app_name, DEF_PROCESS_NAME_MAX)) {  // 进程名
               b_find = true;
               break;
             }
@@ -331,15 +337,15 @@ int InitMonitorModule(const char* s_path) {
 
           // 加入新模块
           if (b_find == false) {
-            k_pro_heart[i].n_mark = DEF_TAG_MARK;
-            k_pro_heart[i].n_timeout = n_timeout;
-            k_pro_heart[i].last_heartbeat = get_sys_sec();
-            strncpy(k_pro_heart[i].s_app_name, s_app_name, DEF_PROCESS_NAME_MAX);
-            strncpy(k_pro_heart[i].s_descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
+            k_pro_heart[i].mark = DEF_TAG_MARK;
+            k_pro_heart[i].timeout = n_timeout;
+            k_pro_heart[i].last_hb_time = get_sys_sec();
+            strncpy(k_pro_heart[i].app_name, s_app_name, DEF_PROCESS_NAME_MAX);
+            strncpy(k_pro_heart[i].descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
             VZ_ERROR("add module %s-%s-%d.\n",
-                     k_pro_heart[i].s_app_name,
-                     k_pro_heart[i].s_descrebe,
-                     k_pro_heart[i].n_timeout);
+                     k_pro_heart[i].app_name,
+                     k_pro_heart[i].descrebe,
+                     k_pro_heart[i].timeout);
           }
           break;
         }
@@ -411,11 +417,11 @@ int callback_timeout() {
   if ((n_now - n_last) > 1) {  // 1S检查一次
     // 进程超时检查
     for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
-      if (k_pro_heart[i].n_mark == DEF_TAG_MARK
-          && k_pro_heart[i].s_app_name[0] != '\0') {
+      if (k_pro_heart[i].mark == DEF_TAG_MARK
+          && k_pro_heart[i].app_name[0] != '\0') {
         unsigned long long n_diff_time =
-          abs(n_now - k_pro_heart[i].last_heartbeat);
-        if (n_diff_time > k_pro_heart[i].n_timeout) {
+          abs(n_now - k_pro_heart[i].last_hb_time);
+        if (n_diff_time > k_pro_heart[i].timeout) {
           //if (k_en_watchdog) {
           OnModuleLostHeartbeat(n_now);
           //}
@@ -445,7 +451,7 @@ int callback_timeout() {
 static int wdt_fd = 0;
 static int feed_times = 0;
 int callback_feeddog() {
-#if 0
+#ifndef _WIN32
   if (wdt_fd <= 0) {
     wdt_fd = open("/dev/watchdog", O_WRONLY);
     if (wdt_fd < 0) {
@@ -462,36 +468,6 @@ int callback_feeddog() {
     if (feed_times >= 1000) {   // 1S
       feed_times = 0;
       ioctl(wdt_fd, WDIOC_KEEPALIVE, 1);
-    }
-  }
-#endif
-
-#ifdef IMX6Q
-  if (0 == wdt_fd) {
-    wdt_fd = open("/dev/ihs_gpio", O_RDWR);
-    if (wdt_fd < 0) {
-      perror("open");
-      return -1;
-    }
-  }
-
-  if (wdt_fd > 0) {
-    feed_times += 5;  // 5ms
-    if (feed_times >= 1000) {   // 1S
-      feed_times = 0;
-
-      static int nWatchdog = 0;
-      nWatchdog = ((nWatchdog>0) ? 0 : 1);
-
-      struct {
-        int eType;     // 类型
-        int nState;    // 状态
-        int nParam;    // 占空比
-      } cExt;
-      cExt.eType = 106;
-      cExt.nState = nWatchdog;
-
-      write(wdt_fd, &cExt, sizeof(cExt));
     }
   }
 #endif
@@ -517,20 +493,20 @@ int WatchdogProcess(const char* s_msg, unsigned int n_msg) {
 
   // 更新进程心跳时间
   for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
-    if (k_pro_heart[i].n_mark == DEF_TAG_MARK &&
-        !strncmp(k_pro_heart[i].s_descrebe,
+    if (k_pro_heart[i].mark == DEF_TAG_MARK &&
+        !strncmp(k_pro_heart[i].descrebe,
                  s_descrebe, DEF_USER_DESCREBE_MAX)       // 描述符
-        && !strncmp(k_pro_heart[i].s_app_name,
+        && !strncmp(k_pro_heart[i].app_name,
                     s_app_name, DEF_PROCESS_NAME_MAX)) {  // 进程名
       if (5 <= n_timeout && n_timeout <= 80) {
-        k_pro_heart[i].n_timeout = n_timeout;
+        k_pro_heart[i].timeout = n_timeout;
       }
-      k_pro_heart[i].last_heartbeat = get_sys_sec();
+      k_pro_heart[i].last_hb_time = get_sys_sec();
       return 0;
     }
 
     if (n_empty == -1 &&
-        k_pro_heart[i].n_mark == 0) {
+        k_pro_heart[i].mark == 0) {
       n_empty = i;
     }
   }
@@ -542,11 +518,11 @@ int WatchdogProcess(const char* s_msg, unsigned int n_msg) {
   }
 
   // 新进程
-  k_pro_heart[n_empty].n_mark         = DEF_TAG_MARK;
-  strncpy(k_pro_heart[n_empty].s_app_name, s_app_name, DEF_PROCESS_NAME_MAX);
-  strncpy(k_pro_heart[n_empty].s_descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
-  k_pro_heart[n_empty].n_timeout      = n_timeout;
-  k_pro_heart[n_empty].last_heartbeat = get_sys_sec();
+  k_pro_heart[n_empty].mark         = DEF_TAG_MARK;
+  strncpy(k_pro_heart[n_empty].app_name, s_app_name, DEF_PROCESS_NAME_MAX);
+  strncpy(k_pro_heart[n_empty].descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
+  k_pro_heart[n_empty].timeout      = n_timeout;
+  k_pro_heart[n_empty].last_hb_time = get_sys_sec();
   VZ_PRINT("%s %s register.\n", s_app_name, s_descrebe);
   return 0;
 }
@@ -556,13 +532,13 @@ int OnModuleLostHeartbeat(time_t n_now) {
   TAG_HEARTBEAT c_heart;
   for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
     for (int j = i + 1; j < DEF_PER_DEV_PROCESS_MAX - 1; j++) {
-      if (strncmp(k_pro_heart[i].s_app_name,
-                  k_pro_heart[j].s_app_name, DEF_PROCESS_NAME_MAX) < 0) {
+      if (strncmp(k_pro_heart[i].app_name,
+                  k_pro_heart[j].app_name, DEF_PROCESS_NAME_MAX) < 0) {
         memcpy(&c_heart, &k_pro_heart[i], sizeof(TAG_HEARTBEAT));
-        if (k_pro_heart[i].n_mark == DEF_TAG_MARK) {
+        if (k_pro_heart[i].mark == DEF_TAG_MARK) {
           memcpy(&k_pro_heart[i], &k_pro_heart[j], sizeof(TAG_HEARTBEAT));
         }
-        if (c_heart.n_mark == DEF_TAG_MARK) {
+        if (c_heart.mark == DEF_TAG_MARK) {
           memcpy(&k_pro_heart[j], &c_heart, sizeof(TAG_HEARTBEAT));
         }
       }
@@ -576,17 +552,17 @@ int OnModuleLostHeartbeat(time_t n_now) {
                              DEF_LOG_MAX_SIZE,
                              "watchdog danager ");
   for (int j = 0; j < DEF_PER_DEV_PROCESS_MAX; j++) {
-    if (k_pro_heart[j].n_mark == DEF_TAG_MARK
-        && k_pro_heart[j].s_app_name[0] != '\0') {
+    if (k_pro_heart[j].mark == DEF_TAG_MARK
+        && k_pro_heart[j].app_name[0] != '\0') {
       char *p_fmt = (char*)"--%s-%s[%d]";
       if (n_1_log == n_log) {  // 只有开始数据,第一包不包含"--"
         p_fmt = (char*)"%s-%s[%d]";
       }
       n_log += snprintf(s_log + n_log, DEF_LOG_MAX_SIZE - n_log,
                         p_fmt,
-                        k_pro_heart[j].s_app_name,
-                        k_pro_heart[j].s_descrebe,
-                        (n_now - k_pro_heart[j].last_heartbeat));
+                        k_pro_heart[j].app_name,
+                        k_pro_heart[j].descrebe,
+                        (n_now - k_pro_heart[j].last_hb_time));
     }
   }
   if (n_log < DEF_LOG_MAX_SIZE) {
@@ -594,7 +570,7 @@ int OnModuleLostHeartbeat(time_t n_now) {
   }
   VZ_ERROR("%s", s_log);
   k_wdg_file.Write(s_log, n_log);
-  k_wdg_file.StartRecord("watchdog");
+  k_wdg_file.WriteSome("watchdog stop");
 
   // 使能看门狗
   if (k_en_watchdog) {

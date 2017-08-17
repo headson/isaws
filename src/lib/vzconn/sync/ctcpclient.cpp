@@ -126,7 +126,8 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
   if (0 == ret) {
     return Open(s, b_block);
   } else {
-    if (error_no() == XEINPROGRESS) {
+    if (XEAGAIN == error_no() ||
+        XEINPROGRESS == error_no()) {
 #if 1
       fd_set fdw, fdr, efds;
       FD_ZERO(&fdw);
@@ -457,7 +458,7 @@ int32 CTcpClient::EvtConnect(SOCKET       fd,
   if (p_usr_arg) {
     n_ret = ((CTcpClient*)p_usr_arg)->OnConnect(fd);
     if (n_ret < 0) {
-      delete ((CTcpClient*)p_usr_arg);
+      ((CTcpClient*)p_usr_arg)->StopEvent();
     }
   }
   return n_ret;

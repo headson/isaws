@@ -265,7 +265,7 @@ void CVzLoggingFile::Sync() {
   }
 }
 
-int CVzLoggingFile::StartRecord(const char* s_usr_cmd) {
+int CVzLoggingFile::WriteSome(const char* s_usr_cmd) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   time_t tt = tv.tv_sec;
@@ -276,7 +276,7 @@ int CVzLoggingFile::StartRecord(const char* s_usr_cmd) {
 
   char s_log[64] = { 0 };
   int n_log = snprintf(s_log, 63,
-                       "%s start at [%02d/%02d/%04d %02d:%02d:%02d %04d]\n",
+                       "%s at [%02d/%02d/%04d %02d:%02d:%02d %04d]\n",
                        s_usr_cmd,
                        wtm->tm_mday, wtm->tm_mon+1, wtm->tm_year + 1900,
                        wtm->tm_hour, wtm->tm_min, wtm->tm_sec,
@@ -299,7 +299,7 @@ int CVzLoggingFile::Write(const char* msg, unsigned int size) {
     do {
       pos += fwrite(msg + pos, 1, size - pos, p_file_);
     } while (pos > 0 && pos < size && p_file_ != NULL);
-
+    // VZ_ERROR("write file pos %d, %p.\n", pos, p_file_);
     n_file_size_ += size;
     return size;
   }
@@ -320,6 +320,8 @@ int CVzLoggingFile::OpenFileFirst() {
   n_filename_idx_ = 0;
   p_file_ = fopen(s_filename_[n_filename_idx_], "at+");
   if (p_file_) {
+    VZ_ERROR("open file %s success.\n", s_filename_[n_filename_idx_]);
+
     fseek(p_file_, 0, SEEK_END);
     n_file_size_ = ftell(p_file_);
 
@@ -361,12 +363,15 @@ int CVzLoggingFile::OpenFileFirst() {
         VZ_PRINT("use %s.\n", s_filename_[n_filename_idx_]);
         return 0;
       } else {
+        VZ_ERROR("open file %s failed.\n", s_filename_[n_filename_idx_]);
         return -1;
       }
     }
     VZ_PRINT("use %s.\n", s_filename_[n_filename_idx_]);
     return 0;
   }
+
+  VZ_ERROR("open file %s failed.\n", s_filename_[n_filename_idx_]);
   return -1;
 }
 
