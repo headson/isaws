@@ -44,14 +44,6 @@ class CEncUserData {
 
   CShareBuffer      shm_dbg_img_;
   unsigned int      w_sec_, w_usec_;
-
-  VB_BLK            VbBlk;
-  HI_U32            u32PhyAddr;
-  HI_U8             *pVirAddr;
-  HI_U32            u32Stride;
-  HI_U32            u32Width;
-  HI_U32            u32Height;
-  VIDEO_FRAME_INFO_S vdo_frm_info_;
 };
 
 #endif  // LIBPLATFORM_CENCUSERDATA_H

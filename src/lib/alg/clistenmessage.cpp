@@ -48,7 +48,7 @@ bool CListenMessage::Start() {
   bool bret = false;
 
   /*内存共享*/
-  bret = share_image_.Open(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
+  bret = shm_alg_image_.Open(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
   if (false == bret) {
     LOG(L_ERROR) << "open share failed.";
     return false;
@@ -59,6 +59,14 @@ bool CListenMessage::Start() {
     LOG(L_ERROR) << "new image buffer failed.";
     return false;
   }
+
+  bret = shm_dbg_image_.Create(SHM_IMAGE_1, SHM_IMAGE_1_SIZE);
+  if (false == bret) {
+    LOG(L_ERROR) << "open share failed.";
+    return false;
+  }
+  shm_dbg_image_.SetWidth(SHM_IMAGE_1_W);
+  shm_dbg_image_.SetHeight(SHM_IMAGE_1_H);
 
   /*算法创建*/
   sdk_iva_create_param param;
@@ -201,18 +209,32 @@ static unsigned char chn_cmd_byte(int ch) {
   return cmd;
 }
 
-static int chn_value(int fd, int nreg) {
+static int chn_value(int fd, unsigned char nreg) {
+#if 0
   if (write(fd, &nreg, 1) != 1) {
-    // LOG_ERROR("write i2c reg %d failed.\n", nreg);
+    LOG_ERROR("write i2c reg %d failed.\n", nreg);
     return -1;
   }
 
   unsigned char aval[2] = { 0 };
   if (read(fd, aval, 2) != 2) {
-    // LOG_ERROR("read i2c reg %d failed.\n", nreg);
+    LOG_ERROR("read i2c reg %d failed.\n", nreg);
     return -1;
   }
+#else
+#ifndef _WIN32
+  ioctl(fd, 0x709, 0);
+  ioctl(fd, 0x70A, 1);
+#endif // !_WIN32
 
+  unsigned char aval[2] = { 0xff,0xff };
+
+  aval[0] = nreg & 0xff;
+  if (read(fd, aval, 2) != 2) {
+    LOG_ERROR("read i2c reg %d failed.\n", nreg);
+    return -1;
+  }
+#endif
   int nval = (aval[0] << 8) + aval[1];
   return nval;
 }
@@ -221,7 +243,7 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
   if (p_msg->message_id == CATCH_IMAGE) {
     main_thread_->PostDelayed(POLL_TIMEOUT, this, CATCH_IMAGE);
 
-    int nlen = share_image_.Read(image_buffer_, SHM_IMAGE_0_SIZE,
+    int nlen = shm_alg_image_.Read(image_buffer_, SHM_IMAGE_0_SIZE,
                                  &last_read_sec_, &last_read_usec_);
     if (nlen <= 0) {
       return;
@@ -240,21 +262,27 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
 #else
     static int fd = 0;
     if (fd == 0) {
-      fd = open("/dev/i2c-0", O_RDWR);
-      if (fd > 0) {
-        if (ioctl(fd, I2C_SLAVE_FORCE, 0x48) < 0) {
-          LOG(L_ERROR) << "i2c ioctl failed.";
-          close(fd);
-          fd = 0;
-        }
+      fd = open("/dev/i2c-2", O_RDWR);
+      if(fd < 0) {
+        printf("Open /dev/i2c-2 error!\n");
+        return;
+      }
+
+      int ret = ioctl(fd, I2C_SLAVE_FORCE, 0x90);
+      if (ret < 0) {
+        printf("CMD_SET_DEV error!\n");
+        return;
       }
     }
 
     if (fd > 0) {
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < 5; i++) {
         frame.param[i] = chn_value(fd, chn_cmd_byte(i));
       }
     }
+    LOG_WARNING("ir value: %d %d %d %d %d.",
+                frame.param[0], frame.param[1], frame.param[2],
+                frame.param[3], frame.param[4]);
 #endif
     frame.data_size_in_bytes = nlen;
     frame.data = (unsigned char*)image_buffer_;

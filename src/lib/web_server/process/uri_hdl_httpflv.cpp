@@ -52,6 +52,8 @@ void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *p) {
   char chn[128] = {0};
   mg_get_http_var(&hm->query_string, "chn", chn, 123);
 
+  LOG(L_INFO) << "preview channel " << chn;
+
   bool bres = false;
   if (0 == strncmp(chn, "video0", 7)) {
     bres = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_0, SHM_VIDEO_0_SIZE);

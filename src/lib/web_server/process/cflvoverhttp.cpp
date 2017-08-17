@@ -116,7 +116,7 @@ int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead) {
   }
 
   int nret = evt_timer_.Start(5, 5);   //
-  if (nret != RET_SUCCESS) {
+  if (nret != 0) {
     LOG(L_ERROR) << "evt timer open failed.";
     return -1;
   }
@@ -195,7 +195,7 @@ int32 CFlvOverHttp::OnTimer() {
                               &w_sec_, &w_usec_);
     if (ndata > 0) {
       uint32 pts = vzbase::CurrentSystemTicket() - pts_;
-      LOG(L_INFO) << "pts "<< pts;
+      // LOG(L_INFO) << "pts "<< pts;
 
       int   nal_bng = 0, frm_type = 0;
       char *p_nal = nal_parse(flv_data_+flv_shm_.VdoHeadSize(), ndata, &frm_type, &nal_bng);

@@ -28,6 +28,8 @@ extern "C"
 #include "systemv/shm/vzshm_c.h"
 #include "systemv/flvmux/cflvmux.h"
 
+#include "cencuserdata.h"
+
 class CVideoCatch {
  public:
   CVideoCatch();
@@ -44,7 +46,8 @@ class CVideoCatch {
   pthread_t     osd_pid_;
   pthread_t     yuv_pid_;
 
-  RGN_HANDLE    rgn_hdl_;  
+  RGN_HANDLE    rgn_hdl_;
+  CEncUserData  enc_user_data_;
 
   CShareBuffer  shm_video_[3];
   CShareBuffer  shm_image_;

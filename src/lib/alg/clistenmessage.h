@@ -64,7 +64,8 @@ class CListenMessage : public vzbase::noncopyable,
   iva_count_handle  alg_handle_;      // À„∑®HANDLE
 
  protected:
-  CShareBuffer      share_image_;
+  CShareBuffer      shm_alg_image_;
+  CShareBuffer      shm_dbg_image_;
 
   char             *image_buffer_;
   unsigned int      last_read_sec_;
