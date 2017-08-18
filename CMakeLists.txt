@@ -3,7 +3,7 @@
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3516 -DCMAKE_BUILD_TYPE=Release
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=IMX6Q -DCMAKE_BUILD_TYPE=Release
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3518 -DCMAKE_BUILD_TYPE=Release
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 2.8)
 project(isaw_project)
 INCLUDE(cmake/global_environment_settings.cmake)
 

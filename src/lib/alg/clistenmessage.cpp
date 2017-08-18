@@ -235,7 +235,7 @@ static int chn_value(int fd, unsigned char nreg) {
     return -1;
   }
 #endif
-  int nval = (aval[0] << 8) + aval[1];
+  int nval = (aval[1] << 8) + aval[0];
   return nval;
 }
 
