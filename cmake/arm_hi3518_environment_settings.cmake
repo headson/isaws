@@ -61,6 +61,8 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
 		vzlogging
 		libevent_core.so
 		libevent_pthreads.so
+		-lm
+		-ldl
         -Wl,-rpath=.
 		pthread
 		rt

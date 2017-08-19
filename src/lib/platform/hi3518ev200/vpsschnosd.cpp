@@ -4,6 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "cvideocatch.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -290,18 +292,31 @@ int Get_Sys_DayTime(char *pTime) {
 }
 
 // 调用并进行刷新时间
-void *API_OSD_DisplayProcess(void * arg) {
-  char timebuf[32];
-  Get_Sys_DayTime(timebuf);
+void *osd_display(void *arg) {
+  CVideoCatch::TAG_OSD *posd = (CVideoCatch::TAG_OSD*)arg;
 
-  Hi_LiteOs_OSD_Start(1, 0, 10, 10, timebuf);
-  Hi_LiteOs_OSD_Start(1, 1, 10, 100, timebuf);
+  Get_Sys_DayTime(posd->ch1);
+  snprintf(posd->ch2, 31, "POSI:123456789 NEGA:123456789");
+
+  // video0
+  Hi_LiteOs_OSD_Start(0, 0, 10, 10, posd->ch1);
+  Hi_LiteOs_OSD_Start(0, 1, 10, SHM_VIDEO_0_H - 18, posd->ch2);
+
+  // video1
+  Hi_LiteOs_OSD_Start(1, 2, 10, 10, posd->ch1);
+  Hi_LiteOs_OSD_Start(1, 3, 10, SHM_VIDEO_1_H - 18, posd->ch2);
 
   while(1) {
-    Get_Sys_DayTime(timebuf);
-    Hi_LiteOs_OSD_Update(0, timebuf);
+    Get_Sys_DayTime(posd->ch1);
+    Hi_LiteOs_OSD_Update(0, posd->ch1);
+    if (posd->ch2[0] != '\0') {
+      Hi_LiteOs_OSD_Update(1, posd->ch2);
+    }
 
-    Hi_LiteOs_OSD_Update(1, timebuf);
+    Hi_LiteOs_OSD_Update(2, posd->ch1);
+    if (posd->ch2[0] != '\0') {
+      Hi_LiteOs_OSD_Update(3, posd->ch2);
+    }
 
     usleep(500 * 1000);
   }

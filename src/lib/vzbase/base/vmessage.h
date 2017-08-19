@@ -92,6 +92,9 @@ typedef enum _MSG_RET {
 #define MSG_GET_ENC_CFG       "get_enc_cfg"       // 获取编码配置
 #define MSG_SET_ENC_CFG       "set_enc_cfg"       // 设置编码配置
 
+#define MSG_IRCUT_CTRLS       "ircut_ctrls"       // IRCUT控制
+#define MSG_IRLED_CTRLS       "irled_ctrls"       // 红外LED控制
+
 //////////////////////////////////////////////////////////////////////////
 #define MSG_GET_IVAINFO       "get_ivainfo"       // 获取算法信息
 #define MSG_SET_IVAINFO       "set_ivainfo"       // 设置算法信息

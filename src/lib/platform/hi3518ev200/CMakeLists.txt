@@ -12,7 +12,7 @@ INCLUDE_DIRECTORIES(
 )
 
 LINK_DIRECTORIES(
-	${CMAKE_CURRENT_SOURCE_DIR}/mpp/lib
+	${CMAKE_CURRENT_SOURCE_DIR}/mpp/lib 
 )
 
 #########################################################################
@@ -75,14 +75,17 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vo.c
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vpss.c
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/rgn_cover.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/cencuserdata.h
-	${CMAKE_CURRENT_SOURCE_DIR}/cencuserdata.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/sendframe.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vpsschnosd.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vpsschndump.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
 
 SOURCE_GROUP(mpp_include FILES
@@ -130,14 +133,19 @@ SOURCE_GROUP(common FILES
 )
 
 SOURCE_GROUP(audio_video FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/rgn_cover.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/cencuserdata.h
-	${CMAKE_CURRENT_SOURCE_DIR}/cencuserdata.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/sendframe.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vpsschnosd.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vpsschndump.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/caudiocatch.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocatch.cpp
+)
+
+SOURCE_GROUP(listen FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")

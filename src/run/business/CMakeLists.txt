@@ -13,7 +13,6 @@ foreach(inc_dir ${inc_dirs})
 endforeach()
 
 #########################################################################
-LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/lib/platform/imx6q/sdk/lib/)
 MESSAGE(STATUS "Print the link directores")
 get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
 	PROPERTY LINK_DIRECTORIES)

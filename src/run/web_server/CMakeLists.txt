@@ -54,7 +54,7 @@ if(WIN32)
 		libdpclient
 		libvzbase
 		libvzconn
-		libjsoncpp.lib
+		libjsoncpp
 		${VZPROJECT_LINK_LIB} 
 	)
 else()

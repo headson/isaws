@@ -1,11 +1,11 @@
 #include "cvideocatch.h"
 
 #include "systemv/shm/vzshm_c.h"
-#include "systemv/flvmux/cflvmux.h"
-
 #include "vzbase/helper/stdafx.h"
 
-extern void *API_OSD_DisplayProcess(void * arg);
+extern void *osd_display(void *arg);
+extern void *vpss_chn_dump(void* arg);
+extern void *send_usr_frame(void *arg);
 
 HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_usr_arg) {
   if (p_usr_arg) {
@@ -14,8 +14,7 @@ HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_us
   return 0;
 }
 
-CVideoCatch::CVideoCatch() 
- : enc_user_data_(2) {
+CVideoCatch::CVideoCatch() {
 }
 
 CVideoCatch::~CVideoCatch() {
@@ -56,7 +55,7 @@ HI_VOID SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
     s32Ret = HI_MPI_VENC_GetChnAttr(VencChn, &stVencChnAttr);
     if(s32Ret != HI_SUCCESS) {
       printf("HI_MPI_VENC_GetChnAttr chn[%d] failed with %#x!\n", \
-                 VencChn, s32Ret);
+             VencChn, s32Ret);
       return;
     }
     enPayLoadType[i] = stVencChnAttr.stVeAttr.enType;
@@ -65,7 +64,7 @@ HI_VOID SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
     VencFd[i] = HI_MPI_VENC_GetFd(i);
     if (VencFd[i] < 0) {
       printf("HI_MPI_VENC_GetFd failed with %#x!\n",
-                 VencFd[i]);
+             VencFd[i]);
       return;
     }
     if (maxfd <= VencFd[i]) {
@@ -288,7 +287,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     stVpssChnMode.enCompressMode = COMPRESS_MODE_SEG;
     memset(&stVpssChnAttr, 0, sizeof(stVpssChnAttr));
     stVpssChnAttr.s32SrcFrameRate = 30;
-    stVpssChnAttr.s32DstFrameRate = 15;
+    stVpssChnAttr.s32DstFrameRate = 30;
     s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr,&stVpssChnMode, HI_NULL);
     if (HI_SUCCESS != s32Ret) {
       printf("Enable vpss chn failed!\n");
@@ -310,7 +309,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     stVpssChnMode.u32Height       = stSize.u32Height;
     stVpssChnMode.enCompressMode  = COMPRESS_MODE_SEG;
     stVpssChnAttr.s32SrcFrameRate = 30;
-    stVpssChnAttr.s32DstFrameRate = 15;
+    stVpssChnAttr.s32DstFrameRate = 30;
     s32Ret = SAMPLE_COMM_VPSS_EnableChn(VpssGrp, VpssChn, &stVpssChnAttr, &stVpssChnMode, HI_NULL);
     if (HI_SUCCESS != s32Ret) {
       printf("Enable vpss chn failed!\n");
@@ -355,8 +354,8 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     VpssGrp = 0;
     VpssChn = 0;
     VencChn = 0;
-    s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[0],\
-                                    VIDEO_ENCODING_MODE_PAL, PIC_D1, enRcMode,u32Profile);
+    s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[0], \
+                                    VIDEO_ENCODING_MODE_PAL, enSize[0], enRcMode, u32Profile);
     if (HI_SUCCESS != s32Ret) {
       printf("Start Venc failed!\n");
       goto END_VENC_1080P_CLASSIC_5;
@@ -374,7 +373,7 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     VpssChn = 1;
     VencChn = 1;
     s32Ret = SAMPLE_COMM_VENC_Start(VencChn, enPayLoad[1], \
-                                    VIDEO_ENCODING_MODE_PAL, enSize[1], enRcMode,u32Profile);
+                                    VIDEO_ENCODING_MODE_PAL, enSize[1], enRcMode, u32Profile);
     if (HI_SUCCESS != s32Ret) {
       printf("Start Venc failed!\n");
       goto END_VENC_1080P_CLASSIC_5;
@@ -472,57 +471,66 @@ END_VENC_1080P_CLASSIC_0:     // system exit
   return NULL;
 }
 
-int32 CVideoCatch::Start() {
+bool CVideoCatch::Start() {
   bool bres = false;
 
   // video_0
-  bres = shm_video_[0].Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+  bres = sys_enc.shm[0].Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
   if (bres == false) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
   }
-  shm_video_[0].SetWidth(SHM_VIDEO_0_W);
-  shm_video_[0].SetHeight(SHM_VIDEO_0_H);
+  sys_enc.shm[0].SetWidth(SHM_VIDEO_0_W);
+  sys_enc.shm[0].SetHeight(SHM_VIDEO_0_H);
 
   // video_1
-  bres = shm_video_[1].Create(SHM_VIDEO_1, SHM_VIDEO_1_SIZE);
+  bres = sys_enc.shm[1].Create(SHM_VIDEO_1, SHM_VIDEO_1_SIZE);
   if (bres == false) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
   }
-  shm_video_[1].SetWidth(SHM_VIDEO_1_W);
-  shm_video_[1].SetHeight(SHM_VIDEO_1_H);
+  sys_enc.shm[1].SetWidth(SHM_VIDEO_1_W);
+  sys_enc.shm[1].SetHeight(SHM_VIDEO_1_H);
 
   // video_2
-  bres = shm_video_[2].Create(SHM_VIDEO_2, SHM_VIDEO_2_SIZE);
+  bres = sys_enc.shm[2].Create(SHM_VIDEO_2, SHM_VIDEO_2_SIZE);
   if (bres == false) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
   }
-  shm_video_[2].SetWidth(SHM_VIDEO_2_W);
-  shm_video_[2].SetHeight(SHM_VIDEO_2_H);
+  sys_enc.shm[2].SetWidth(SHM_VIDEO_2_W);
+  sys_enc.shm[2].SetHeight(SHM_VIDEO_2_H);
 
   // image 0 to alg
-  bres = shm_image_.Create(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
+  bres = chn1_yuv.shm.Create(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
   if (bres == false) {
     LOG(L_ERROR) << "can't open share memory.";
     return -1;
   }
-  shm_image_.SetWidth(SHM_IMAGE_0_W);
-  shm_image_.SetHeight(SHM_IMAGE_0_H);
+  chn1_yuv.shm.SetWidth(SHM_IMAGE_0_W);
+  chn1_yuv.shm.SetHeight(SHM_IMAGE_0_H);
 
   //
-  pthread_create(&enc_pid_, NULL, VideoVencClassic, this);
+  pthread_create(&sys_enc.pid, NULL, VideoVencClassic, this);
 
   usleep(2*1000*1000);
-  pthread_create(&osd_pid_, NULL, API_OSD_DisplayProcess, this);
+  pthread_create(&osd_.pid, NULL, osd_display, &osd_);
 
   usleep(2*1000*1000);
-  pthread_create(&yuv_pid_, NULL, GetYUVThread, this);
+  pthread_create(&chn1_yuv.pid, NULL, vpss_chn_dump, &chn1_yuv);
 
-  enc_user_data_.Start(SHM_IMAGE_1, SHM_IMAGE_1_SIZE,
-                       SHM_IMAGE_1_W, SHM_IMAGE_1_H, SHM_IMAGE_1_W);
-  return 0;
+  pthread_create(&usr_enc.pid, NULL, send_usr_frame, &usr_enc);
+  return true;
+}
+
+void CVideoCatch::Stop() {
+
+}
+
+void CVideoCatch::SetOsdChn2(const char *osd) {
+  memset(osd_.ch2, 0, MAX_OSD_SIZE);
+  strncpy(osd_.ch2, osd, MAX_OSD_SIZE);
+  LOG(L_INFO) << "osd ch2: " << osd_.ch2;
 }
 
 HI_S32 CVideoCatch::GetOneFrame(HI_S32 chn, VENC_STREAM_S *pStream) {
@@ -530,6 +538,7 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 chn, VENC_STREAM_S *pStream) {
     return 0;
   }
 
+  // LOG(L_INFO) << "channel "<<chn;
   for (uint32 i = 0; i < pStream->u32PackCount; i++) {
     int n_frm_type = 0;
     char *p_nal = (char*)pStream->pstPack[i].pu8Addr + pStream->pstPack[i].u32Offset;
@@ -538,116 +547,21 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 chn, VENC_STREAM_S *pStream) {
     } else if (p_nal[0] == 0x00 && p_nal[1] == 0x00 &&
                p_nal[2] == 0x00 && p_nal[3] == 0x01) {
       n_frm_type = p_nal[4] & 0x1f;
-    }    
+    }
 
     if (n_frm_type == 7) {
-      shm_video_[chn].WriteSps((char*)pStream->pstPack[i].pu8Addr + pStream->pstPack[i].u32Offset,
-                                 pStream->pstPack[i].u32Len - pStream->pstPack[i].u32Offset);
+      sys_enc.shm[chn].WriteSps((char*)pStream->pstPack[i].pu8Addr + pStream->pstPack[i].u32Offset,
+                                pStream->pstPack[i].u32Len - pStream->pstPack[i].u32Offset);
     } else if (n_frm_type == 8) {
-      shm_video_[chn].WritePps((char*)pStream->pstPack[i].pu8Addr + pStream->pstPack[i].u32Offset,
-                                 pStream->pstPack[i].u32Len - pStream->pstPack[i].u32Offset);
+      sys_enc.shm[chn].WritePps((char*)pStream->pstPack[i].pu8Addr + pStream->pstPack[i].u32Offset,
+                                pStream->pstPack[i].u32Len - pStream->pstPack[i].u32Offset);
     } else if (n_frm_type == 5 || n_frm_type == 1) {
       struct timeval tv;
       gettimeofday(&tv, NULL);
-      shm_video_[chn].Write((char*)pStream->pstPack[i].pu8Addr + pStream->pstPack[i].u32Offset,
-                              pStream->pstPack[i].u32Len - pStream->pstPack[i].u32Offset,
-                              tv.tv_sec, tv.tv_usec);
+      sys_enc.shm[chn].Write((char*)pStream->pstPack[i].pu8Addr + pStream->pstPack[i].u32Offset,
+                             pStream->pstPack[i].u32Len - pStream->pstPack[i].u32Offset,
+                             tv.tv_sec, tv.tv_usec);
     }
   }
   return 0;
 }
-
-#if 1
-static HI_S32 s_s32MemDev = -1;
-
-#define MEM_DEV_OPEN()                                            \
-  do {                                                            \
-    if (s_s32MemDev <= 0)                                         \
-    {                                                             \
-      s_s32MemDev = open("/dev/mem", O_CREAT | O_RDWR | O_SYNC);  \
-      if (s_s32MemDev < 0)                                        \
-      {                                                           \
-        perror("Open dev/mem error");                             \
-        return NULL;                                              \
-      }                                                           \
-    }                                                             \
-  } while (0)
-
-#define MEM_DEV_CLOSE()                                           \
-  do {                                                            \
-    HI_S32 s32Ret;                                                \
-    if (s_s32MemDev > 0)                                          \
-    {                                                             \
-      s32Ret = close(s_s32MemDev);                                \
-      if (HI_SUCCESS != s32Ret)                                   \
-      {                                                           \
-        perror("Close mem/dev Fail");                             \
-        return NULL;                                              \
-      }                                                           \
-      s_s32MemDev = -1;                                           \
-    }                                                             \
-  } while (0)
-
-
-void* CVideoCatch::GetYUVThread(void* pArg) {
-  VPSS_GRP vGrp = 0;
-  VPSS_CHN vChn = 1;
-  VIDEO_FRAME_INFO_S stFrame;
-  HI_S32 s32MilliSec = 2000;
-
-  MEM_DEV_OPEN();
-
-  if (HI_MPI_VPSS_SetDepth(vGrp, vChn, 2) != HI_SUCCESS) {
-    printf("set depth error!!!\n");
-    return NULL;
-  }
-  //usleep(100000);
-
-  HI_S32 nSeq = 0;
-  HI_S32 nSize = 0;
-  HI_CHAR *pUserPageAddr[2];
-
-  while (true) {
-    memset(&stFrame, 0, sizeof(stFrame));
-    if (HI_MPI_VPSS_GetChnFrame(vGrp, vChn, &stFrame, s32MilliSec) != HI_SUCCESS) {
-      printf("get frame error!!!\n");
-      //usleep(40000);
-      continue;
-    }
-    nSize = (stFrame.stVFrame.u32Stride[0])*(stFrame.stVFrame.u32Height) * 3 / 2;
-    pUserPageAddr[0] = (HI_CHAR *)HI_MPI_SYS_Mmap(stFrame.stVFrame.u32PhyAddr[0], nSize);
-    if (NULL == pUserPageAddr[0]) {
-      HI_MPI_VPSS_ReleaseChnFrame(vGrp, vChn, &stFrame);
-
-      continue;
-    }
-//#ifdef IVA
-//    Update(pUserPageAddr[0], 720 * 576 * 3 / 2);
-//#endif
-    //printf("Get frame\t%d\t%d\t%d\t0x%x\t0x%x\n",
-    //       nSeq++, stFrame.stVFrame.u32Width, stFrame.stVFrame.u32Height,
-    //       stFrame.stVFrame.u32PhyAddr[0], stFrame.stVFrame.pVirAddr[0]);
-
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    ((CVideoCatch*)pArg)->shm_image_.Write((const char*)pUserPageAddr[0],
-                                           stFrame.stVFrame.u32Width * stFrame.stVFrame.u32Height * 3 / 2,
-                                           tv.tv_sec, tv.tv_usec);
-
-    //printf("%d %d, %d. %d %d, %d %d %d\n", 
-    //       stFrame.u32PoolId,
-    //       stFrame.stVFrame.enPixelFormat, stFrame.stVFrame.u32Field, 
-    //       stFrame.stVFrame.u32Width, stFrame.stVFrame.u32Height,
-    //       stFrame.stVFrame.u32Stride[1],
-    //       stFrame.stVFrame.u32Stride[2],
-    //       stFrame.stVFrame.u32Stride[3]);
-
-    HI_MPI_SYS_Munmap(pUserPageAddr[0], nSize);
-    HI_MPI_VPSS_ReleaseChnFrame(vGrp, vChn, &stFrame);
-  }
-
-  MEM_DEV_CLOSE();
-  return NULL;
-}
-
-#endif
