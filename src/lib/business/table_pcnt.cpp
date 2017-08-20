@@ -34,7 +34,7 @@ static const char CLEAR_STMT_SQL[] = "DELETE FROM pcount";
 static const char DELETE_STMT_SQL[] = "DELETE FROM pcount WHERE ident_timet < %d";
 
 static const char SELECT_STMT_SQL_ALL_LAST_ONE[] = "SELECT insert_time, "
-    " positive_number, positive_add_num, negative_number, negative_add_num "
+    " positive_number, negative_number "
     " FROM pcount ORDER BY ident_timet DESC LIMIT 0, 1";
 
 #define  SELECT_STMT_SQL_NOT_SEND "SELECT ident_timet, positive_number, negative_number " \
@@ -131,29 +131,29 @@ bool CDataBase::ReplacePCount(const Json::Value &jreq) {
     return false;
   }
 
-  res = sqlite3_bind_int(pcount_.replace_stmt_, 2,
-                         jreq[MSG_BODY][ALG_POSITIVE_NUMBER].asInt());
+  int posi_num = jreq[MSG_BODY][ALG_POSITIVE_NUMBER].asInt();
+  res = sqlite3_bind_int(pcount_.replace_stmt_, 2, posi_num);
   if (res != SQLITE_OK) {
     LOG(L_ERROR) << "Failure to call sqlite3_bind_*";
     return false;
   }
 
   res = sqlite3_bind_int(pcount_.replace_stmt_, 3,
-                         jreq[MSG_BODY][ALG_POSITIVE_ADD_NUM].asInt());
+                         posi_num - pcount_.last_positive_number);
   if (res != SQLITE_OK) {
     LOG(L_ERROR) << "Failure to call sqlite3_bind_*";
     return false;
   }
 
-  res = sqlite3_bind_int(pcount_.replace_stmt_, 4,
-                         jreq[MSG_BODY][ALG_NEGATIVE_NUMBER].asInt());
+  int nega_num = jreq[MSG_BODY][ALG_NEGATIVE_NUMBER].asInt();
+  res = sqlite3_bind_int(pcount_.replace_stmt_, 4, nega_num);
   if (res != SQLITE_OK) {
     LOG(L_ERROR) << "Failure to call sqlite3_bind_*";
     return false;
   }
 
   res = sqlite3_bind_int(pcount_.replace_stmt_, 5,
-                         jreq[MSG_BODY][ALG_NEGATIVE_ADD_NUM].asInt());
+                         nega_num - pcount_.last_negative_number);
   if (res != SQLITE_OK) {
     LOG(L_ERROR) << "Failure to call sqlite3_bind_*";
     return false;
@@ -194,7 +194,7 @@ bool CDataBase::ClearPCount(const Json::Value &jreq) {
   return true;
 }
 
-bool CDataBase::SelectLastPCount(Json::Value &jresp) {
+bool CDataBase::SelectLastPCount(std::string *stm, int *posi_num, int *nega_num) {
   int res;
   sqlite3_stmt *stmt;
   char sql[1024] = {0};
@@ -211,11 +211,9 @@ bool CDataBase::SelectLastPCount(Json::Value &jresp) {
 
   res = sqlite3_step(stmt);
   if (res == SQLITE_ROW) {
-    jresp[MSG_BODY]["insert_time"]      = sqlite3_column_text(stmt, 0);
-    jresp[MSG_BODY]["positive_number"]  = sqlite3_column_int(stmt, 1);
-    jresp[MSG_BODY]["positive_add_num"] = sqlite3_column_int(stmt, 2);
-    jresp[MSG_BODY]["negative_number"]  = sqlite3_column_int(stmt, 3);
-    jresp[MSG_BODY]["negative_add_num"] = sqlite3_column_int(stmt, 3);
+    *stm      = (char*)sqlite3_column_text(stmt, 0);
+    *posi_num = sqlite3_column_int(stmt, 1);
+    *nega_num = sqlite3_column_int(stmt, 2);
   }
   sqlite3_finalize(stmt);
   return res == SQLITE_ROW;

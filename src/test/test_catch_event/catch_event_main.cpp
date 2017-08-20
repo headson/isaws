@@ -30,11 +30,11 @@ int main(int argc, char* argv[]) {
 
     positive_number += (rand() % 3);
     jroot[MSG_BODY][ALG_POSITIVE_NUMBER] = positive_number;
-    jroot[MSG_BODY][ALG_POSITIVE_ADD_NUM] = positive_number - last_positive_number;
+    // jroot[MSG_BODY][ALG_POSITIVE_ADD_NUM] = positive_number - last_positive_number;
 
     negative_number += (rand() % 3);
     jroot[MSG_BODY][ALG_NEGATIVE_NUMBER] = negative_number;
-    jroot[MSG_BODY][ALG_NEGATIVE_ADD_NUM] = negative_number - last_negative_number;
+    // jroot[MSG_BODY][ALG_NEGATIVE_ADD_NUM] = negative_number - last_negative_number;
 
     last_positive_number = positive_number;
     last_negative_number = negative_number;

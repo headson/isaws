@@ -7,17 +7,17 @@ extern void *osd_display(void *arg);
 extern void *vpss_chn_dump(void* arg);
 extern void *send_usr_frame(void *arg);
 
+CVideoCatch::CVideoCatch() {
+}
+
+CVideoCatch::~CVideoCatch() {
+}
+
 HI_S32 HisiPutH264DataToBuffer(HI_S32 n_chn, VENC_STREAM_S *p_stream, void* p_usr_arg) {
   if (p_usr_arg) {
     return ((CVideoCatch*)p_usr_arg)->GetOneFrame(n_chn, p_stream);
   }
   return 0;
-}
-
-CVideoCatch::CVideoCatch() {
-}
-
-CVideoCatch::~CVideoCatch() {
 }
 
 /******************************************************************************
@@ -402,6 +402,10 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     //  printf("Start Venc failed!\n");
     //  goto END_VENC_1080P_CLASSIC_5;
     //}
+
+    VENC_COLOR2GREY_S vcs;
+    vcs.bColor2Grey = HI_TRUE;
+    HI_MPI_VENC_SetColor2Grey(VencChn, &vcs);
   }
 
   /******************************************

@@ -50,7 +50,7 @@ TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		libvzconn
 		libvzbase
 		libjsoncpp
-		libsqlite3.lib
+		libsqlite3
 		${VZPROJECT_LINK_LIB}
 	)
 else()

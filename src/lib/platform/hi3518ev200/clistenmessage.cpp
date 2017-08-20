@@ -17,7 +17,6 @@ static const char  *METHOD_SET[] = {
   MSG_CATCH_EVENT,
   MSG_GET_I_FRAME,
   MSG_IRCUT_CTRLS,
-  MSG_IRLED_CTRLS,
   MSG_GET_ENC_CFG,
   MSG_SET_ENC_CFG
 };
@@ -33,7 +32,7 @@ CListenMessage::CListenMessage()
   HI_MPI_SYS_GetReg(0x201C0400, &nval);
   nval |= 0x1;
   HI_MPI_SYS_SetReg(0x201C0400, nval);
-  HI_MPI_SYS_SetReg(0x201c0004, 0);   // default value
+  HI_MPI_SYS_SetReg(0x201c0004, 0x0);   // default value
   
   // GPIO0_3 output
   HI_MPI_SYS_SetReg(0x200F0030, 0x0);
@@ -42,7 +41,7 @@ CListenMessage::CListenMessage()
   HI_MPI_SYS_GetReg(0x20140400, &nval);
   nval |= 0x8;
   HI_MPI_SYS_SetReg(0x20140400, nval);
-  HI_MPI_SYS_SetReg(0x20140020, 0);   // default value
+  HI_MPI_SYS_SetReg(0x20140020, 0x0);   // default value
 }
 
 CListenMessage::~CListenMessage() {
@@ -148,20 +147,20 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     // GPIO8_0
     if (jreq[MSG_BODY]["switch"].asInt() > 0) {
       HI_MPI_SYS_SetReg(0x201c0004, 1);
-      HI_MPI_SYS_SetReg(0x20140020, 1);
+      HI_MPI_SYS_SetReg(0x20140020, 0x8);
+
+      VENC_COLOR2GREY_S vcs;
+      vcs.bColor2Grey = HI_TRUE;
+      HI_MPI_VENC_SetColor2Grey(0, &vcs);
+      HI_MPI_VENC_SetColor2Grey(1, &vcs);
     } else {
       HI_MPI_SYS_SetReg(0x201c0004, 0);
       HI_MPI_SYS_SetReg(0x20140020, 0);
-    }
-    jresp[MSG_STATE] = RET_SUCCESS;
-  } else if (0 == strncmp(dmp->method, MSG_IRLED_CTRLS, MAX_METHOD_SIZE)) {
-    reply = true;
 
-    // GPIO0_3
-    if (jreq[MSG_BODY]["switch"].asInt() > 0) {
-      HI_MPI_SYS_SetReg(0x20140020, 1);
-    } else {
-      HI_MPI_SYS_SetReg(0x20140020, 0);
+      VENC_COLOR2GREY_S vcs;
+      vcs.bColor2Grey = HI_FALSE;
+      HI_MPI_VENC_SetColor2Grey(0, &vcs);
+      HI_MPI_VENC_SetColor2Grey(1, &vcs);
     }
     jresp[MSG_STATE] = RET_SUCCESS;
   } else if (0 == strncmp(dmp->method, MSG_GET_I_FRAME, MAX_METHOD_SIZE)) {

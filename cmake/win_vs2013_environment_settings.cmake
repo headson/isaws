@@ -28,7 +28,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	)
 	SET(VZPROJECT_LINK_LIB
 		libevent_core.lib
-		libvzlogging.lib
+		libvzlogging
 		Iphlpapi.lib
 		ws2_32.lib
 		winmm.lib
@@ -44,7 +44,7 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
 	)
 	SET(VZPROJECT_LINK_LIB
 		libevent_core.lib
-		libvzlogging.lib
+		libvzlogging
 		Iphlpapi.lib
 		ws2_32.lib
 		winmm.lib

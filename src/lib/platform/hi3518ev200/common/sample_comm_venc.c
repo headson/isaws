@@ -681,9 +681,9 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_CHN VencChn, PAYLOAD_TYPE_E enType, VIDEO_NOR
 
     if(SAMPLE_RC_CBR == enRcMode) {
       stVencChnAttr.stRcAttr.enRcMode = VENC_RC_MODE_H264CBR;
-      stH264Cbr.u32Gop            = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
-      stH264Cbr.u32StatTime       = 1; /* stream rate statics time(s) */
-      stH264Cbr.u32SrcFrmRate      = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* input (vi) frame rate */
+      stH264Cbr.u32Gop         = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+      stH264Cbr.u32StatTime    = 1; /* stream rate statics time(s) */
+      stH264Cbr.u32SrcFrmRate  = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* input (vi) frame rate */
       stH264Cbr.fr32DstFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* target frame rate */
 
       switch (enSize) {
