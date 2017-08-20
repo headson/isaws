@@ -11,8 +11,6 @@
 
 void alg::CListenMessage::AlgActionCallback(sdk_iva_output_info *paction) {
   Json::Value jroot;
-  jroot[MSG_CMD] = MSG_CATCH_EVENT;
-
   if (paction->event_type == IVA_EVENT_COUTING) {
     static int last_positive_number = 0;
     static int last_negative_number = 0;
@@ -22,6 +20,7 @@ void alg::CListenMessage::AlgActionCallback(sdk_iva_output_info *paction) {
       return;
     }
 
+    jroot[MSG_CMD] = MSG_CATCH_EVENT;
     jroot[MSG_BODY][ALG_EVT_OUT_TIMET] = vzbase::CurrentTimet();
     jroot[MSG_BODY][ALG_POSITIVE_NUMBER] = paction->positive_number;
     jroot[MSG_BODY][ALG_POSITIVE_ADD_NUM] = paction->positive_number - last_positive_number;
@@ -44,7 +43,7 @@ void alg::CListenMessage::AlgActionCallback(sdk_iva_output_info *paction) {
                 << " positive_number " << last_positive_number
                 << " negative_number " << last_negative_number;
   } else if (paction->event_type == IVA_EVENT_SET_DAY_MODE
-             || paction->event_type == IVA_EVENT_SET_DAY_MODE) {
+             || paction->event_type == IVA_EVENT_SET_NIGHT_MODE) {
     Json::Value jreq;
     jreq[MSG_CMD] = MSG_IRCUT_CTRLS;
     jreq[MSG_ID]  = 1;

@@ -517,8 +517,10 @@ bool CVideoCatch::Start() {
   pthread_create(&osd_.pid, NULL, osd_display, &osd_);
 
   usleep(2*1000*1000);
+  chn1_yuv.chn = 1;
   pthread_create(&chn1_yuv.pid, NULL, vpss_chn_dump, &chn1_yuv);
 
+  usr_enc.chn = 2;
   pthread_create(&usr_enc.pid, NULL, send_usr_frame, &usr_enc);
   return true;
 }

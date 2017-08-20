@@ -33,6 +33,10 @@ static const char CLEAR_STMT_SQL[] = "DELETE FROM pcount";
 
 static const char DELETE_STMT_SQL[] = "DELETE FROM pcount WHERE ident_timet < %d";
 
+static const char SELECT_STMT_SQL_ALL_LAST_ONE[] = "SELECT insert_time, "
+    " positive_number, positive_add_num, negative_number, negative_add_num "
+    " FROM pcount ORDER BY ident_timet DESC LIMIT 0, 1";
+
 #define  SELECT_STMT_SQL_NOT_SEND "SELECT ident_timet, positive_number, negative_number " \
   " main_srv_send_flag, minor_srv_send_flag "                   \
   " FROM pcount WHERE main_srv_send_flag == 0 OR minor_srv_send_flag == 0"  \
@@ -190,6 +194,33 @@ bool CDataBase::ClearPCount(const Json::Value &jreq) {
   return true;
 }
 
+bool CDataBase::SelectLastPCount(Json::Value &jresp) {
+  int res;
+  sqlite3_stmt *stmt;
+  char sql[1024] = {0};
+
+  res = sqlite3_prepare_v2(db_instance_,
+                           SELECT_STMT_SQL_ALL_LAST_ONE,
+                           strlen(SELECT_STMT_SQL_ALL_LAST_ONE),
+                           &stmt, 0);
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "failed sqlite3_prepare_v2 " << sql;
+    sqlite3_exec(db_instance_, "COMMIT", 0, 0, NULL);
+    return false;
+  }
+
+  res = sqlite3_step(stmt);
+  if (res == SQLITE_ROW) {
+    jresp[MSG_BODY]["insert_time"]      = sqlite3_column_text(stmt, 0);
+    jresp[MSG_BODY]["positive_number"]  = sqlite3_column_int(stmt, 1);
+    jresp[MSG_BODY]["positive_add_num"] = sqlite3_column_int(stmt, 2);
+    jresp[MSG_BODY]["negative_number"]  = sqlite3_column_int(stmt, 3);
+    jresp[MSG_BODY]["negative_add_num"] = sqlite3_column_int(stmt, 3);
+  }
+  sqlite3_finalize(stmt);
+  return res == SQLITE_ROW;
+}
+
 static bool GetNum(sqlite3 *db, const char *fmt,
                    unsigned int nbng, unsigned int nend,
                    int *positive_number, int *positive_add_num,
@@ -242,8 +273,10 @@ static void CreateNumber(Json::Value &jret, sqlite3 *db,
                &negative_number_last, &negative_add_num_last);
   if (positive_number_first == positive_number_last &&
       negative_number_first == negative_number_last) {
-    positive_number_last = 0; positive_add_num_last = positive_add_num_first;
-    negative_number_last = 0; negative_add_num_last = negative_add_num_first;
+    positive_number_last = 0;
+    positive_add_num_last = positive_add_num_first;
+    negative_number_last = 0;
+    negative_add_num_last = negative_add_num_first;
   }
   LOG(L_INFO) <<" number " << nnum
               << " \npositive_number_last " << positive_number_last
@@ -320,7 +353,6 @@ static bool SelectPCountOfYear(Json::Value &jresp, sqlite3 *db,
   jresp[MSG_BODY]["pcount"] = jret;
   return true;
 }
-
 
 bool CDataBase::SelectPCount(Json::Value &jresp, const Json::Value &jreq) {
   if (!jreq.isMember(MSG_BODY) ||

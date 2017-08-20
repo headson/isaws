@@ -29,6 +29,7 @@ class CDataBase : public vzbase::noncopyable {
   bool ReplacePCount(const Json::Value &jreq);
   bool ClearPCount(const Json::Value &jreq);
   bool RemovePCount(unsigned int some_days_ago);
+  bool SelectLastPCount(Json::Value &jresp);
   bool SelectPCount(Json::Value &jresp, const Json::Value &jreq);
 
  protected:

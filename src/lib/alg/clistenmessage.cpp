@@ -15,10 +15,6 @@
 #endif
 
 namespace alg {
-
-#define IVA_CFG_FILE    "./config/cfg_file_iva.xml"
-#define IVA_AUX_FILE    "./config/cfg_file_aux.xml"
-
 static const char  *METHOD_SET[] = {
   MSG_GET_IVAINFO,
   MSG_SET_IVAINFO,
@@ -70,13 +66,15 @@ bool CListenMessage::Start() {
 
   /*À„∑®¥¥Ω®*/
   sdk_iva_create_param param;
+  memset(&param, 0, sizeof(param));
   param.debug_callback_fun  = AlgDebugCallback;
   param.output_callback_fun = AlgActionCallback;
   param.image_width         = SHM_IMAGE_0_W;
   param.image_height        = SHM_IMAGE_0_H;
+  snprintf(param.config_filename, 127, "/mnt/etc/iva.json");
 
-  LOG_INFO("iva set image size %d, %d.",
-           param.image_width, param.image_height);
+  LOG_INFO("iva set image size %d, %d, %s.",
+           param.image_width, param.image_height, param.config_filename);
 
   int nret = sdk_iva_create(&alg_handle_, &param);
   if (nret != IVA_ERROR_NO_ERROR) {

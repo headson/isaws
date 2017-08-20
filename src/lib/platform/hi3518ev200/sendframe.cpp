@@ -21,7 +21,7 @@ void *send_usr_frame(void *parg) {
   unsigned int w_sec = 0, w_usec = 0;
   const HI_U32 IMAGE_WIDTH = SHM_IMAGE_1_W;
   const HI_U32 IMAGE_HEIGHT = SHM_IMAGE_1_H;
-  
+
   HI_U32 phyYaddr;
   HI_U8 *pVirYaddr;
   VIDEO_FRAME_INFO_S vdo_frm_info_;
@@ -65,21 +65,22 @@ void *send_usr_frame(void *parg) {
     if (pVirYaddr != NULL) {
       nres = penc->shm.Read((char*)pVirYaddr, IMAGE_WIDTH * IMAGE_HEIGHT * 3 / 2, &w_sec, &w_usec);
       if (nres > 0) {
-        vdo_frm_info_.stVFrame.u64pts     = (HI_U64)w_sec << 32 | w_usec;
-        vdo_frm_info_.stVFrame.u32TimeRef = frame++ * 2;
-        // memset(pVirYaddr + IMAGE_WIDTH * IMAGE_HEIGHT, 128, IMAGE_WIDTH * IMAGE_HEIGHT/2);
+        frame++;
+        vdo_frm_info_.stVFrame.u64pts     = frame * 40; // (HI_U64)w_sec << 32 | w_usec;
+        vdo_frm_info_.stVFrame.u32TimeRef = frame * 2;
+        memset(pVirYaddr + IMAGE_WIDTH * IMAGE_HEIGHT, 128, IMAGE_WIDTH * IMAGE_HEIGHT/2);
 
         nres = HI_MPI_VENC_SendFrame(penc->chn, &vdo_frm_info_, 400);
         //LOG_INFO("%d read some buffer form alg 0x%x.",
-        //         venc_chn_, res);
+        //         penc->chn, nres);
       }
     }
-
-    usleep(10 * 1000);
     /* 释放掉获取的vb物理地址和虚拟地址 */
     HI_MPI_SYS_Munmap(pVirYaddr, IMAGE_WIDTH * IMAGE_HEIGHT * 3 / 2);
     HI_MPI_VB_ReleaseBlock(handleY);
     handleY = VB_INVALID_HANDLE;
+
+    usleep(5 * 1000);
   }
   return NULL;
 }
