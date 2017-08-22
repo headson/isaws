@@ -138,7 +138,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
       n2 = jreq[MSG_BODY][ALG_NEGATIVE_NUMBER].asInt();
     }
     char osd[32] = {0};
-    snprintf(osd, 31, "POSI:%d NEGA:%d", n1, n2);
+    snprintf(osd, 31, "IN:%d OUT:%d", n1, n2);
 
     video_catch_.SetOsdChn2(osd);
   } else if (0 == strncmp(dmp->method, MSG_IRCUT_CTRLS, MAX_METHOD_SIZE)) {
@@ -149,18 +149,18 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
       HI_MPI_SYS_SetReg(0x201c0004, 1);
       HI_MPI_SYS_SetReg(0x20140020, 0x8);
 
-      VENC_COLOR2GREY_S vcs;
+      /*VENC_COLOR2GREY_S vcs;
       vcs.bColor2Grey = HI_TRUE;
       HI_MPI_VENC_SetColor2Grey(0, &vcs);
-      HI_MPI_VENC_SetColor2Grey(1, &vcs);
+      HI_MPI_VENC_SetColor2Grey(1, &vcs);*/
     } else {
       HI_MPI_SYS_SetReg(0x201c0004, 0);
       HI_MPI_SYS_SetReg(0x20140020, 0);
 
-      VENC_COLOR2GREY_S vcs;
+      /*VENC_COLOR2GREY_S vcs;
       vcs.bColor2Grey = HI_FALSE;
       HI_MPI_VENC_SetColor2Grey(0, &vcs);
-      HI_MPI_VENC_SetColor2Grey(1, &vcs);
+      HI_MPI_VENC_SetColor2Grey(1, &vcs);*/
     }
     jresp[MSG_STATE] = RET_SUCCESS;
   } else if (0 == strncmp(dmp->method, MSG_GET_I_FRAME, MAX_METHOD_SIZE)) {
