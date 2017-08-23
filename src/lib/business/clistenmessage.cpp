@@ -60,6 +60,10 @@ bool CListenMessage::Start(const char *db_path) {
     DpClient_HdlAddListenMessage(dp_cli_, METHOD_SET, METHOD_SET_SIZE);
   }
 
+  std::string last_time = "";
+  database_.SelectLastPCount(&last_time);
+  if (last_time.size() > 0) {
+  }
   vzbase::Thread::Current()->PostDelayed(2*1000, this, MSG_HDL_CHECK_DATABASE);
   return true;
 }
@@ -78,7 +82,9 @@ void CListenMessage::Stop() {
 }
 
 void CListenMessage::RunLoop() {
-  main_thread_->Run();
+  while (true) {
+    main_thread_->ProcessMessages(5*1000);
+  }
 }
 
 vzbase::Thread *CListenMessage::MainThread() {

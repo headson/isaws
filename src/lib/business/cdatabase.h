@@ -26,10 +26,10 @@ class CDataBase : public vzbase::noncopyable {
   bool CreatePCount();
   bool InitPCountStmt();
   void UninitPCountStmt();
-  bool ReplacePCount(const Json::Value &jreq);
+  bool SelectLastPCount(std::string *tm);
   bool ClearPCount(const Json::Value &jreq);
+  bool ReplacePCount(const Json::Value &jreq);
   bool RemovePCount(unsigned int some_days_ago);
-  bool SelectLastPCount(std::string *stm, int *posi_num, int *nega_num);
   bool SelectPCount(Json::Value &jresp, const Json::Value &jreq);
 
  protected:
@@ -37,6 +37,7 @@ class CDataBase : public vzbase::noncopyable {
 
  private:
   sqlite3      *db_instance_;
+
   struct {
     sqlite3_stmt *replace_stmt_;
     sqlite3_stmt *delete_stmt_;

@@ -191,7 +191,9 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   HI_S32 s32Ret = HI_SUCCESS;
   HI_U32 u32BlkSize;
   SIZE_S stSize;
-  char c;
+
+  ISP_DEV IspDev = 0;
+  ISP_EXPOSURE_ATTR_S ex_attr;
 
   /******************************************
    step  1: init sys variable
@@ -407,6 +409,11 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     vcs.bColor2Grey = HI_TRUE;
     HI_MPI_VENC_SetColor2Grey(VencChn, &vcs);
   }
+
+  HI_MPI_ISP_GetExposureAttr(IspDev, &ex_attr);
+  ex_attr.bByPass = HI_FALSE;
+  ex_attr.stAuto.enAEMode = AE_MODE_FIX_FRAME_RATE;
+  HI_MPI_ISP_SetExposureAttr(IspDev, &ex_attr);
 
   /******************************************
    step 6: stream venc process -- get stream, then save it to file.
