@@ -19,20 +19,8 @@
 #include "getopt.h"
 #endif
 
-#ifdef HISI_R
-#include "vzlogging/dog/vzhardwaredog.h"
-#include "vzlogging/rtc/vz_r_rtc.h"
-#define MAX_HISIR_FEED_DOG_TIME 2500     // HISI R相机默认硬件喂狗时间为2.5s
-static int hisir_feed_dog_times = 0;
-#endif
-
 /*喂狗回调*/
 int sys_feeddog();
-
-#ifdef HISI_R
-/*持续15s时间喂狗 阻塞WATCHDOG 启动时间...*/
-void FeedHardwareDog();
-#endif  // HISI_R
 
 static void PrintUsage() {
   printf("\n");
@@ -142,20 +130,6 @@ int main(int argc, char* argv[]) {
 
   if (1 == k_en_watchdog) {
 #ifndef _WIN32
-#ifdef HISI_R
-    //15s只喂硬件狗
-    FeedHardwareDog();
-#else
-    VZ_ERROR("callback_feeddod.\n");
-    int i = 0;
-    if (k_en_20s_wait == 1) {
-      VZ_ERROR("wait some time.\n");
-      for (i = 0; i < 18 * 1000; i += 5) { // 18s
-        sys_feeddog();
-        sleep(1);
-      }
-    }
-#endif  // HISI_R
 #endif  // WIN32
   } else {
     VZ_ERROR("close watchdog.\n");
@@ -204,53 +178,10 @@ int main(int argc, char* argv[]) {
 #include <sys/ioctl.h>
 #include <linux/watchdog.h>
 #endif
-static int wdt_fd = 0;
-static int feed_times = 0;
 int sys_feeddog() {
 #ifndef _WIN32
-#ifdef HISI_R
-  /* 检测是否进行硬件喂狗 */
-  hisir_feed_dog_times += 5;
-  if (hisir_feed_dog_times >= MAX_HISIR_FEED_DOG_TIME) {
-    hisir_feed_dog_times = 0;
-    vzlog::PWMWatchDog::FeedPwmWatchDog();
-  }
-#else
-  if (wdt_fd <= 0) {
-    wdt_fd = open("/dev/watchdog", O_WRONLY);
-    if (wdt_fd < 0) {
-      perror("open device /dev/watchdog");
-      exit(1);
-    }
 
-    ioctl(wdt_fd, WDIOC_SETOPTIONS, WDIOS_ENABLECARD);
-    ioctl(wdt_fd, WDIOC_SETTIMEOUT, 6);
-  }
-
-  if (wdt_fd > 0) {
-    feed_times += 5;  // 5ms
-    if (feed_times >= 1000) {   // 1S
-      feed_times = 0;
-      ioctl(wdt_fd, WDIOC_KEEPALIVE, 1);
-    }
-  }
-#endif  // HISI_R
 #endif
   return 0;
 }
-
-#ifdef HISI_R
-void FeedHardwareDog() {
-  // start hisi_r hardware watch dog
-  if (!vzlog::PWMWatchDog::StartPwmWatchDog()) {
-    VZ_ERROR("start hardware watch dog failed.");
-    return;
-  }
-
-  for (int i = 0; i < 15; i++) {
-    vzlog::PWMWatchDog::FeedPwmWatchDog();
-    sleep(1);
-  }
-}
-#endif  // HISI_R
 

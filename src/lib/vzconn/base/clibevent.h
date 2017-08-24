@@ -5,6 +5,8 @@
 #ifndef LIBVZCONN_CLIBEVENT_H_
 #define LIBVZCONN_CLIBEVENT_H_
 
+#include "vzbase/base/basictypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
