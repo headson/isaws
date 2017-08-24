@@ -32,14 +32,15 @@ typedef int             SOCKET;
 namespace vzlogging {
 
 /* 接收回调 */
-typedef int (*RECV_CALLBACK)(SOCKET             sock,
-                             const sockaddr_in* addr,
+typedef int (*CALLBACK_RECEIVE)(SOCKET             sock,
+                             const sockaddr_in *addr,
                              const char*        msg,
-                             unsigned int       size);
+                             unsigned int       size, 
+                             void              *usr_arg);
 /* 超时回调 */
-typedef int(*TIMEOUT_CALLBACK)();
+typedef int(*CALLBACK_TIMEOUT)(void *usr_arg);
 
-typedef int(*FEEDOG_CALLBACK)();
+typedef int(*CALLBACK_FEEDOG)(void *usr_arg);
 
 class CVzSockDgram {
  public:
@@ -47,9 +48,10 @@ class CVzSockDgram {
   virtual ~CVzSockDgram();
 
   // 设置回调函数
-  void SetCallback(RECV_CALLBACK recv_cb,
-                   TIMEOUT_CALLBACK timeout_cb,
-                   FEEDOG_CALLBACK feeddog_cb);
+  void SetCallback(CALLBACK_RECEIVE receive_cb,
+                   void *recv_usr_arg,
+                   CALLBACK_TIMEOUT timeout_cb,
+                   void *timeout_usr_arg);
 
   // 打开透传地址
   int  OpenTransAddr(const char* s_srv_addr);
@@ -59,33 +61,24 @@ class CVzSockDgram {
   int  OpenListenAddr(const char* ip, unsigned short port);
   void Close();
 
-  // 循环等待数据或超时
-  void Loop();
+  // 循环等待数据或超时(毫秒)
+  void Loop(int ms = 5*1000);
 
  private:
-  RECV_CALLBACK    recv_cb_;                // 接收回调
-  TIMEOUT_CALLBACK timeout_cb_;             // 超时回调
-  FEEDOG_CALLBACK  feeddog_cb_;             // 喂狗回调
+  CALLBACK_RECEIVE cb_receive_;       // 接收回调
+  void            *receive_usr_arg_;
+
+  CALLBACK_TIMEOUT cb_timeout_;       // 超时回调
+  void            *timeout_usr_arg_;
 
  private:  // 需要初始化
-  fd_set           rfds_;
-  SOCKET           sock_recv_;              // 接收SOCKET
-  SOCKET           sock_send_;              // 转发SOCKET
-
-  // 运行时初始化;不在循环中创建,减少可能的内存碎片
- private:
-  struct timeval   tv_;                           // select超时参数
+  fd_set  rfds_;
+  SOCKET  sock_recv_;   // 接收SOCKET
+  SOCKET  sock_send_;   // 转发SOCKET
 
  private:  // 接收数据
-  sockaddr_in      recv_addr_;                    // 接收远端地址
-#ifdef WIN32
-  int              recv_addr_len_;                //
-#else
-  socklen_t        recv_addr_len_;                //
-#endif
-
-  int              recv_size_;                    //
-  char             recv_data_[DEF_LOG_MAX_SIZE+1];  // 接收远端数据,MAX 1024
+  int     recv_size_;                       //
+  char    recv_data_[DEF_LOG_MAX_SIZE+1];   // 接收远端数据,MAX 1024
 };
 
 //////////////////////////////////////////////////////////////////////////

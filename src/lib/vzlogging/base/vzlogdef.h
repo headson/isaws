@@ -1,12 +1,12 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #ifndef LIBVZLOGGING_VZLOGDEF_H_
 #define LIBVZLOGGING_VZLOGDEF_H_
 
 #include <stdio.h>
-#define DEF_TAG_MARK             0x55AAEEFF
+#define DEF_TAG_MARK              0x55AAEEFF
 
 #define DEF_PER_PRO_THREAD_MAX    16    // 单进程中最多线程数
 #define DEF_PER_PRO_WATCHDOG_MAX  4     // 单进程中最多看门狗数
@@ -19,13 +19,13 @@
 #define DEF_ERR_FILE_COUNT        2     // 记录错误文件个数+1;
 // 文件大小为一半默认日志最大存储空间
 
-#define DEF_SERVER_HOST          "127.0.0.1"     // 默认服务器地址
-#define DEF_SERVER_PORT          5760            // 默认服务器端口
+#define DEF_SERVER_HOST           "127.0.0.1"     // 默认服务器地址
+#define DEF_SERVER_PORT           5760            // 默认服务器端口
 
-#define DEF_LOG_MAX_SIZE         1024            // 单条日志字符最大尺寸
+#define DEF_LOG_MAX_SIZE          1024            // 单条日志字符最大尺寸
 
-#define DEF_LOG_FILE_SIZE        2 * 1024 * 1024  // 默认日志文件最大存储空间
-#define DEF_WDG_FILE_SIZE        64 * 1024        // 默认看门狗文件最大存储空间
+#define DEF_LOG_FILE_SIZE         2 * 1024 * 1024  // 默认日志文件最大存储空间
+#define DEF_WDG_FILE_SIZE         64 * 1024        // 默认看门狗文件最大存储空间
 
 #ifdef WIN32
 #ifndef snprintf
@@ -43,11 +43,11 @@
 #else
 typedef int         SOCKET;
 
-#define DEF_RECORD_PATH     "/mnt/web/log/"
+#define DEF_RECORD_PATH     "/mnt/log/system_server_files/"
 #define DEF_LOG_REC_FILE    "logfile"
 #define DEF_WDG_REC_FILE    "watchdog"
 
-#define DEF_WDG_MODULE_FILE "/mnt/etc/module.cfg"
+#define DEF_WDG_MODULE_FILE "/mnt/usr/module.cfg"
 #endif
 
 #ifdef __cplusplus
@@ -58,10 +58,11 @@ void gettimeofday(struct timeval *tp, struct timezone *tz);
 #endif
 
 namespace vzlogging {
+unsigned int get_sys_sec();
 
 unsigned int GetPid();
 unsigned int GetPpid();
-const   char *GetFileName(const char *filepath);
+const char *GetFileName(const char *filepath);
 
 /*组包头*/
 int          VzLogPackHead(unsigned int level,

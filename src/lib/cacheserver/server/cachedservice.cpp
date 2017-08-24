@@ -104,8 +104,8 @@ void CachedService::CheckFileLimit() {
             << file_size << "\t"
             << stanza.path;
   if (stanza.max_size < file_size) {
-    //std::remove(stanza.path.c_str());
-    remove(stanza.path.c_str());
+    // std::remove(stanza.path.c_str());
+	::remove(stanza.path.c_str());
   }
 }
 

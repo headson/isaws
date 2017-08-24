@@ -1,7 +1,8 @@
 #include "dispatcher/dpserver/dpserver.h"
 #include "vzlogging/logging/vzloggingcpp.h"
 
-#include "vzconn/base/byteorder.h"
+#include "vzconn/base/basedefines.h"
+#include "vzconn/buffer/byteorder.h"
 #include "vzconn/async/cevttcpclient.h"
 
 namespace dp {

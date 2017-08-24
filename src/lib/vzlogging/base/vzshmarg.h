@@ -56,11 +56,25 @@ class VShm {
 };
 
 /**共享内存-参数*********************************************************/
-typedef struct {
-  unsigned int        snd_level;      // 日志打印级别
-  struct sockaddr_in  sock_addr;      //
+typedef struct _TAG_WATCHDOG {
+  unsigned int  mark;
 
-  unsigned int        checksum;       // 校验;校验共享内存为被串改
+  char          app_name[DEF_PROCESS_NAME_MAX];     // 进程名
+  char          descrebe[DEF_USER_DESCREBE_MAX];    // 用户描述
+
+  unsigned int  status;                             // 
+
+  unsigned int  timeout;                            // 超时
+  unsigned int  last_heartbeat;                     // 最好一次心跳时间
+} TAG_MODULE_STATE;
+
+typedef struct {
+  unsigned int        snd_level;    // 日志打印级别
+  struct sockaddr_in  sock_addr;    //
+
+  unsigned int        checksum;     // 校验;校验共享内存为被串改
+
+  TAG_MODULE_STATE    mod_state[DEF_PER_DEV_PROCESS_MAX];
 } TAG_SHM_ARG;
 
 class CVzShmArg {
@@ -78,6 +92,8 @@ class CVzShmArg {
   // 获取参数
   unsigned int        GetSendLevel() const;
   struct sockaddr_in* GetSockAddr() const;
+
+  int GetShmArg(TAG_SHM_ARG *arg);
 
  private:
   VShm        vshm_;

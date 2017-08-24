@@ -15,8 +15,10 @@
 namespace vzlogging {
 
 CVzSockDgram::CVzSockDgram()
-  : recv_cb_(NULL)
-  , timeout_cb_(NULL) {
+  : cb_receive_(NULL)
+  , receive_usr_arg_(NULL)
+  , cb_timeout_(NULL) 
+  , timeout_usr_arg_(NULL) {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 
   FD_ZERO(&rfds_);
@@ -26,16 +28,18 @@ CVzSockDgram::CVzSockDgram()
 
 CVzSockDgram::~CVzSockDgram() {
   Close();
-
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-void CVzSockDgram::SetCallback(RECV_CALLBACK    recv_cb,
-                               TIMEOUT_CALLBACK timeout_cb,
-                               FEEDOG_CALLBACK  feeddog_cb) {
-  recv_cb_    = recv_cb;
-  timeout_cb_ = timeout_cb;
-  feeddog_cb_ = feeddog_cb;
+void CVzSockDgram::SetCallback(CALLBACK_RECEIVE receive_cb,
+                               void *recv_usr_arg,
+                               CALLBACK_TIMEOUT timeout_cb,
+                               void *timeout_usr_arg) {
+  cb_receive_ = receive_cb;
+  receive_usr_arg_ = recv_usr_arg;
+
+  cb_timeout_ = timeout_cb;
+  timeout_usr_arg_ = timeout_usr_arg;
 }
 
 //
@@ -146,28 +150,36 @@ void CVzSockDgram::Close() {
   }
 }
 
-void CVzSockDgram::Loop() {
+void CVzSockDgram::Loop(int ms) {
   FD_ZERO(&rfds_);
   FD_SET(sock_recv_, &rfds_);
 
   // 读数据
-  tv_.tv_sec  = 0;
-  tv_.tv_usec = 5*1000;
-  if (select(sock_recv_+1, &rfds_, NULL, NULL, &tv_) > 0) {
+  struct timeval tv;
+  tv.tv_sec = ms / 1000;
+  tv.tv_usec = (ms % 1000) * 1000;
+  if (select(sock_recv_+1, &rfds_, NULL, NULL, &tv) > 0) {
     if (INVALID_SOCKET != sock_recv_) {
       if (FD_ISSET(sock_recv_, &rfds_)) {
         do {
-          recv_addr_len_ = sizeof(sockaddr);
+          sockaddr_in      raddr;                    // 接收远端地址
+#ifdef WIN32
+          int raddr_len = 0;
+#else
+          socklen_t raddr_len = 0;
+#endif
+
+          raddr_len = sizeof(sockaddr);
           recv_size_ = recvfrom(sock_recv_, recv_data_, DEF_LOG_MAX_SIZE,
                                 0,
-                                (sockaddr*)&recv_addr_,
-                                &recv_addr_len_);
+                                (sockaddr*)&raddr,
+                                &raddr_len);
           if (recv_size_ > 0) {
-            if (recv_cb_) {
+            if (cb_receive_) {
               if (recv_size_ < DEF_LOG_MAX_SIZE) {
                 recv_data_[recv_size_] = '\0';  // 防止溢出
               }
-              recv_cb_(sock_recv_, &recv_addr_, recv_data_, recv_size_);
+              cb_receive_(sock_recv_, &raddr, recv_data_, recv_size_, receive_usr_arg_);
             }
           } else {
             break;
@@ -176,14 +188,9 @@ void CVzSockDgram::Loop() {
       }
     }
   } else {  // 超时\错误
-    if (timeout_cb_) {
-      timeout_cb_();
+    if (cb_timeout_) {
+      cb_timeout_(timeout_usr_arg_);
     }
-  }
-
-  // 喂狗回调
-  if (feeddog_cb_) {
-    feeddog_cb_();
   }
 }
 

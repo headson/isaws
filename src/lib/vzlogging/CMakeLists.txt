@@ -46,9 +46,8 @@ SET(SRC_LIST_LOGGING
 )
 
 SET(SRC_LIST_LOGSERVER
-	${CMAKE_CURRENT_SOURCE_DIR}/server/vzflags.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.c
-	${CMAKE_CURRENT_SOURCE_DIR}/server/vzflags.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.h
@@ -70,9 +69,8 @@ SOURCE_GROUP(logging FILES
 	)
 
 SOURCE_GROUP(server FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/server/vzflags.h
+	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.c
-	${CMAKE_CURRENT_SOURCE_DIR}/server/vzflags.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.h
@@ -106,8 +104,8 @@ else()
 	set_property(TARGET ${BUILD_PROJECT_NAME_LOGGING} 
 		PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME_LOGGING} 
-		libevent_core.so
-		libevent_pthreads.so
+		#libevent_core.so
+		#libevent_pthreads.so
 	)
 endif()
 

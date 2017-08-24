@@ -3,9 +3,9 @@
 *Description :
 ************************************************************************/
 #include "ctcpclient.h"
+#include "vzconn/base/basedefines.h"
 
 #include "vzbase/helper/stdafx.h"
-#include "vzconn/base/connhead.h"
 
 namespace vzconn {
 
@@ -128,7 +128,7 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
   } else {
     if (XEAGAIN == error_no() ||
         XEINPROGRESS == error_no()) {
-#if 1
+#if 0
       fd_set fdw, fdr, efds;
       FD_ZERO(&fdw);
       FD_SET(s, &fdw);
@@ -177,7 +177,7 @@ int32 CTcpClient::AsyncWrite(const void  *p_data,
     return -1;
   }
 
-  uint32 n_head = cli_hdl_ptr_->NetHeadSize();
+  uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
   if (c_send_data_.FreeSize() < (n_data+n_head)) {
     c_send_data_.Recycle();
     if (c_send_data_.FreeSize() < (n_data+n_head)) {
@@ -195,7 +195,7 @@ int32 CTcpClient::AsyncWrite(const void  *p_data,
                         n_data,
                         e_flag);
   c_send_data_.MoveWritePtr(n_head_size);
-  c_send_data_.WriteBytes((uint8*)p_data, n_data);
+  c_send_data_.WriteBytes((uint8_t*)p_data, n_data);
 
   // 打开事件
   if (c_send_data_.UsedSize() > 0) {
@@ -219,7 +219,7 @@ int32 CTcpClient::AsyncWrite(struct iovec iov[],
   for (uint32 i = 0; i < n_iov; i++) {
     n_data += iov[i].iov_len;
   }
-  uint32 n_head = cli_hdl_ptr_->NetHeadSize();
+  uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
   if (c_send_data_.FreeSize() < (n_data + n_head)) {
     c_send_data_.Recycle();
     if (c_send_data_.FreeSize() < (n_data + n_head)) {
@@ -255,7 +255,7 @@ int32 CTcpClient::SyncWrite(const void *p_data, uint32 n_data, uint16 e_flag) {
     return -1;
   }
 
-  uint32 n_head = cli_hdl_ptr_->NetHeadSize();
+  uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
   if (c_send_data_.FreeSize() < (n_data + n_head)) {
     c_send_data_.Recycle();
     if (c_send_data_.FreeSize() < (n_data + n_head)) {
@@ -275,7 +275,7 @@ int32 CTcpClient::SyncWrite(const void *p_data, uint32 n_data, uint16 e_flag) {
                         n_data,
                         e_flag);
   c_send_data_.MoveWritePtr(n_head_size);
-  c_send_data_.WriteBytes((uint8*)p_data, n_data);
+  c_send_data_.WriteBytes((uint8_t*)p_data, n_data);
 
   n_data = SendN(c_send_data_.GetReadPtr(),
                  c_send_data_.UsedSize());
@@ -300,7 +300,7 @@ int32 CTcpClient::SyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
   for (uint32 i = 0; i < n_iov; i++) {
     n_data += iov[i].iov_len;
   }
-  uint32 n_head = cli_hdl_ptr_->NetHeadSize();
+  uint32_t n_head = cli_hdl_ptr_->NetHeadSize();
   if (c_send_data_.FreeSize() < (n_data + n_head)) {
     c_send_data_.Recycle();
     if (c_send_data_.FreeSize() < (n_data + n_head)) {
@@ -364,14 +364,14 @@ int32 CTcpClient::EvtRecv(SOCKET      fd,
 }
 
 int32 CTcpClient::OnRecv() {
-  int32 n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
+  int32_t n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
                                  c_recv_data_.FreeSize());
   if (n_recv > 0) {
     c_recv_data_.MoveWritePtr(n_recv);
     //LOG(L_ERROR) << "recv length "<<n_recv;
 
     uint16 n_flag = 0;
-    uint32 n_pkg_size = 0;
+    uint32_t n_pkg_size = 0;
     do {
       n_pkg_size = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),
                                               c_recv_data_.UsedSize(),
@@ -475,6 +475,7 @@ int32 CTcpClient::OnConnect(SOCKET fd) {
     LOG(L_ERROR) << "connect return ev_write, check ok";
   } else {
     n_ret = -1;
+    perror("getsockopt error.\n");
     LOG(L_ERROR) << "connect return ev_write, but check failed";
   }
 

@@ -3,9 +3,9 @@
 *Description :
 ************************************************************************/
 #include "cevttcpclient.h"
+#include "vzconn/base/basedefines.h"
 
 #include "vzbase/helper/stdafx.h"
-#include "vzconn/base/connhead.h"
 
 namespace vzconn {
 
@@ -104,7 +104,7 @@ bool CEvtTcpClient::Connect(const CInetAddr *p_remote_addr,
     LOG(L_ERROR) << "param is error.";
     return false;
   }
-
+  SetRemoteAddr(*p_remote_addr);
   SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (INVALID_SOCKET == s) {
     LOG(L_ERROR) << "socket open failed.";

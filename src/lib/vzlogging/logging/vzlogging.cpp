@@ -216,15 +216,10 @@ typedef struct {
 
 /**static value**********************************************************/
 static char           k_app_name[DEF_PROCESS_NAME_MAX] = { 0 };  // 进程名
-
-static CVzShmArg      k_shm_arg;                      // 共享内存
-
+static CVzShmArg      k_shm_arg;  // 共享内存
 static VTls           k_tls_log;                      // 日志线程私有数据
-
 static TAG_WATCHDOG   k_watchdog[DEF_PER_PRO_WATCHDOG_MAX];  // 看门狗结构
-
 static bool           k_en_stdout = false;            // 输出使能
-//static unsigned int   k_snd_level = L_ERROR;          // 发送等级
 
 /**静态函数**************************************************************/
 #ifdef __cplusplus
@@ -827,6 +822,51 @@ void *RegisterWatchDogKey(const char   *s_descrebe,
 }
 
 /************************************************************************
+*Description : 判断是否所有的模块都正常运行
+*Parameters  :
+*Return      : 1=所有模块运行正常,<0有1个或几个模块运行失败
+************************************************************************/
+int IsAllModuleRuning() {
+  vzlogging::TAG_SHM_ARG shm_arg;
+  int res = vzlogging::k_shm_arg.GetShmArg(&shm_arg);
+
+  int no_run_mod = 0;
+  unsigned int nsec = vzlogging::get_sys_sec();
+  for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
+    if (shm_arg.mod_state[i].mark == DEF_TAG_MARK 
+        && shm_arg.mod_state[i].app_name[0] != '\0') {
+      if ((nsec - shm_arg.mod_state[i].last_heartbeat) >= DEF_WATCHDOG_TIMEOUT) {
+        no_run_mod++;
+      }
+    }
+  }
+  if (0 == no_run_mod) {
+    return 1;
+  }
+  return -no_run_mod;
+}
+
+int IsModuleRuning(const char *name, const char *desc) {
+  vzlogging::TAG_SHM_ARG shm_arg;
+  int res = vzlogging::k_shm_arg.GetShmArg(&shm_arg);
+
+  int no_run_mod = 0;
+  unsigned int nsec = vzlogging::get_sys_sec();
+  for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
+    if (shm_arg.mod_state[i].mark == DEF_TAG_MARK
+        && strcmp(shm_arg.mod_state[i].app_name, name) == 0
+        && strcmp(shm_arg.mod_state[i].descrebe, desc) == 0) {
+      if ((nsec - shm_arg.mod_state[i].last_heartbeat) >= DEF_WATCHDOG_TIMEOUT) {
+        return 0;
+      } else {
+        return 1;
+      }
+    }
+  }
+  return -1;
+}
+
+/************************************************************************
 *Description : 喂狗接口, 定时调用, 否则看门狗服务判断此key相关线程挂掉
 *Parameters  : key[IN] 注册看门狗时使用传入的key值
 *Return      : true 喂狗成功, false 喂狗失败
@@ -845,3 +885,4 @@ int FeedDog(const void *p_arg) {
   }
   return -1;
 }
+

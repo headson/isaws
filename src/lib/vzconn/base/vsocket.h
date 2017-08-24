@@ -11,7 +11,7 @@
 #include <io.h>
 
 struct iovec {
-  void  *iov_base;    /* Starting address */
+  const void  *iov_base;    /* Starting address */
   size_t iov_len;     /* Number of bytes to transfer */
 };
 #else  // _LINUX
@@ -29,6 +29,7 @@ struct iovec {
 #include <string>
 
 #include "vzbase/base/basictypes.h"
+#include "vzbase/base/boost_settings.hpp"
 
 namespace vzconn {
 
@@ -72,57 +73,16 @@ class CInetAddr {
   struct sockaddr_in         c_sock_addr_;
 };
 
-class VSocket;
 /* TCP服务网络事件接口 */
-class CTcpServerInterface {
+class CClientInterface;
+class CTcpServerInterface;
+
+class VSocket : public vzbase::noncopyable,
+  public boost::enable_shared_from_this<VSocket> {
+
  public:
-  virtual bool HandleNewConnection(VSocket *p_srv, VSocket *new_sock) = 0;
-  virtual void HandleServerClose(VSocket *p_srv) = 0;
-};
+   boost::shared_ptr<VSocket> Ptr;
 
-/* 客户端网络事件接口 */
-class CClientInterface {
- public:
-  /***********************************************************************
-  *Description : 网络头部长度
-  *Parameters  :
-  *Return      :
-  ***********************************************************************/
-  virtual uint32 NetHeadSize();
-
-  /***********************************************************************
-  *Description : 回调解析网络头部
-  *Parameters  : p_data[IN] 数据解析地址;[此处内存4字节对齐]
-  *              n_data[IN] 数据长度
-  *              n_flag[OUT] 头部FLAG
-  *Return      : 0=未找到包头,>0一整包长度(head+body),<0(脏数据)未找到包头
-  ***********************************************************************/
-  virtual int32 NetHeadParse(const uint8 *p_data,
-                             uint32       n_data,
-                             uint16      *n_flag);
-
-  /***********************************************************************
-  *Description : 回调网络头部打包
-  *Parameters  : p_data[OUT] 数据存储地址;[此处可能内存不对齐,请使用memcpy设置网络头]
-  *              n_data[IN]  可使用数据长度
-  *              n_body[IN]  数据区大小
-  *              n_flag[IN]  VZ包头的flag
-  *Return      : >0包头占用数据长度
-  ***********************************************************************/
-  virtual int32 NetHeadPacket(uint8  *p_data,
-                              uint32  n_data,
-                              uint32  n_body,
-                              uint16  n_flag);
- public:
-  virtual int32 HandleRecvPacket(VSocket       *p_cli,
-                                 const uint8   *p_data,
-                                 uint32         n_data,
-                                 uint16         n_flag) = 0;
-  virtual int32 HandleSendPacket(VSocket *p_cli) = 0;
-  virtual void  HandleClose(VSocket *p_cli) = 0;
-};
-
-class VSocket {
  public:
   VSocket(CClientInterface *cli_hdl);
   virtual ~VSocket();
@@ -135,6 +95,10 @@ class VSocket {
   virtual void    SetSocket(SOCKET handle);
 
   virtual void    Close();
+
+  const std::string ip_addr();
+  const CInetAddr &remote_addr();
+  void            SetRemoteAddr(const CInetAddr &addr);
 
   bool            isOpen() const;
   bool            isClose();
@@ -194,7 +158,60 @@ class VSocket {
 
  protected:
   CClientInterface    *cli_hdl_ptr_;  // 客户端事件处理
+  CInetAddr           remote_addr_;
+  std::string         remote_ip_addr_;
 };
+
+/* TCP服务网络事件接口 */
+class CTcpServerInterface {
+ public:
+  virtual bool HandleNewConnection(VSocket *srv, VSocket *new_cli) = 0;
+  virtual void HandleServerClose(VSocket *srv) = 0;
+};
+
+/* 客户端网络事件接口 */
+class CClientInterface {
+ public:
+  /***********************************************************************
+  *Description : 网络头部长度
+  *Parameters  :
+  *Return      :
+  ***********************************************************************/
+  virtual uint32 NetHeadSize();
+
+  /***********************************************************************
+  *Description : 回调解析网络头部
+  *Parameters  : p_data[IN] 数据解析地址;[此处内存4字节对齐]
+  *              n_data[IN] 数据长度
+  *              n_flag[OUT] 头部FLAG
+  *Return      : 0=未找到包头,>0一整包长度(head+body),<0(脏数据)未找到包头
+  ***********************************************************************/
+  virtual int32 NetHeadParse(const uint8 *p_data,
+                             uint32       n_data,
+                             uint16      *n_flag);
+
+  /***********************************************************************
+  *Description : 回调网络头部打包
+  *Parameters  : p_data[OUT] 数据存储地址;[此处可能内存不对齐,请使用memcpy设置网络头]
+  *              n_data[IN]  可使用数据长度
+  *              n_body[IN]  数据区大小
+  *              n_flag[IN]  VZ包头的flag
+  *Return      : >0包头占用数据长度
+  ***********************************************************************/
+  virtual int32 NetHeadPacket(uint8  *p_data,
+                              uint32  n_data,
+                              uint32  n_body,
+                              uint16  n_flag);
+ public:
+  virtual int32 HandleRecvPacket(VSocket       *p_cli,
+                                 const uint8   *p_data,
+                                 uint32         n_data,
+                                 uint16         n_flag) = 0;
+  virtual int32 HandleSendPacket(VSocket *p_cli) = 0;
+  virtual void  HandleClose(VSocket *p_cli) = 0;
+};
+
+typedef VSocket VzConnect;
 
 }  // namespace vzconn
 #endif  // LIBVZCONN_VSOCKET_H_

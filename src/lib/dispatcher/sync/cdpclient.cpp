@@ -3,7 +3,7 @@
 *Description :
 ************************************************************************/
 #include "cdpclient.h"
-#include "vzconn/base/byteorder.h"
+#include "vzconn/buffer/byteorder.h"
 
 #include "vzbase/helper/stdafx.h"
 #include "dispatcher/base/pkghead.h"

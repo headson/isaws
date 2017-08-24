@@ -226,4 +226,13 @@ struct sockaddr_in* CVzShmArg::GetSockAddr() const {
   return NULL;
 }
 
+int CVzShmArg::GetShmArg(TAG_SHM_ARG *arg) {
+  TAG_SHM_ARG* pArg = (TAG_SHM_ARG*)vshm_.GetData();
+  if (pArg) {
+    memcpy(arg, pArg, sizeof(TAG_SHM_ARG));
+    return 0;
+  }
+  return -1;
+}
+
 }  // namespace vzlogging

@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #include "vzlogging/base/vzlogdef.h"
 
@@ -38,6 +38,17 @@ void gettimeofday(struct timeval *tp, struct timezone *tz) {
 #endif
 
 namespace vzlogging {
+
+unsigned int get_sys_sec() {
+#ifdef WIN32
+  return (unsigned int)(GetTickCount() / 1000);
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (unsigned int)ts.tv_sec;
+#endif
+  return 0;
+}
 
 // 获取进程ID
 unsigned int GetPid() {
@@ -157,7 +168,7 @@ void VzDumpLogging(const char* s_msg, int n_msg) {
     fd_out = stderr;
     SetConsoleColor(FOREGROUND_INTENSITY | FOREGROUND_RED);
   }
-    break;
+  break;
   default:
     break;
   }
@@ -182,7 +193,7 @@ void VzDumpLogging(const char* s_msg, int n_msg) {
     fd_out = stderr;
     color = VZ_RED;
   }
-    break;
+  break;
   default:
     break;
   }
