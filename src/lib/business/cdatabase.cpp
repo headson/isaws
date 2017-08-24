@@ -42,7 +42,7 @@ bool CDataBase::InitDB(const char *db_path) {
     LOG(L_ERROR) << "init pcount stmt failed.";
     return false;
   }
-
+  
   return true;
 }
 

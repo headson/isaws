@@ -95,6 +95,8 @@ bool CDataBase::InitPCountStmt() {
   //  return false;
   //}
 
+  pcount_.last_positive_number = 0;
+  pcount_.last_negative_number = 0;
   return true;
 }
 
@@ -144,6 +146,7 @@ bool CDataBase::ReplacePCount(const Json::Value &jreq) {
     LOG(L_ERROR) << "Failure to call sqlite3_bind_*";
     return false;
   }
+  pcount_.last_positive_number = posi_num;
 
   int nega_num = jreq[MSG_BODY][ALG_NEGATIVE_NUMBER].asInt();
   res = sqlite3_bind_int(pcount_.replace_stmt_, 4, nega_num);
@@ -158,6 +161,7 @@ bool CDataBase::ReplacePCount(const Json::Value &jreq) {
     LOG(L_ERROR) << "Failure to call sqlite3_bind_*";
     return false;
   }
+  pcount_.last_negative_number = nega_num;
 #endif
 
   res = sqlite3_step(pcount_.replace_stmt_);
@@ -194,7 +198,7 @@ bool CDataBase::ClearPCount(const Json::Value &jreq) {
   return true;
 }
 
-bool CDataBase::SelectLastPCount(std::string *stm, int *posi_num, int *nega_num) {
+bool CDataBase::SelectLastPCount(std::string *tm) {
   int res;
   sqlite3_stmt *stmt;
   char sql[1024] = {0};
@@ -211,9 +215,9 @@ bool CDataBase::SelectLastPCount(std::string *stm, int *posi_num, int *nega_num)
 
   res = sqlite3_step(stmt);
   if (res == SQLITE_ROW) {
-    *stm      = (char*)sqlite3_column_text(stmt, 0);
-    *posi_num = sqlite3_column_int(stmt, 1);
-    *nega_num = sqlite3_column_int(stmt, 2);
+    *tm       = (char*)sqlite3_column_text(stmt, 0);
+    pcount_.last_positive_number = sqlite3_column_int(stmt, 1);
+    pcount_.last_negative_number = sqlite3_column_int(stmt, 2);
   }
   sqlite3_finalize(stmt);
   return res == SQLITE_ROW;
