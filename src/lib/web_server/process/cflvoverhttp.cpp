@@ -17,7 +17,8 @@
 #include "web_server/clistenmessage.h"
 
 CFlvOverHttp::CFlvOverHttp()
-  : exit_flag_(0)
+  : thiz_ptr_(this)
+  , exit_flag_(0)
   , evt_loop_(NULL)
   , sock_(NULL)
   , evt_send_()
@@ -52,9 +53,8 @@ bool CFlvOverHttp::Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop,
   set_socket_nonblocking(sock);
 
   evt_loop_ = evt_loop;
-
-  evt_send_.Init(evt_loop_, EvtSend, this);
-  evt_timer_.Init(evt_loop_, EvtTimer, this);
+  evt_send_.Init(evt_loop_, EvtSend, &thiz_ptr_);
+  evt_timer_.Init(evt_loop_, EvtTimer, &thiz_ptr_);
 
   bool ret = shm_vdo_.Open(shm_key, shm_size);
   if (false == ret) {
@@ -137,12 +137,17 @@ int CFlvOverHttp::AsyncWrite(const void *p_data, unsigned int n_data) {
   return n_data;
 }
 
-int CFlvOverHttp::EvtSend(SOCKET fd, short events, const void *p_usr_arg) {
-  int n_ret = -1;
-  if (p_usr_arg) {
-    n_ret = ((CFlvOverHttp*)p_usr_arg)->OnSend();
+int CFlvOverHttp::EvtSend(SOCKET fd, short events, const void *usr_arg) {
+  int res = -1;
+  if (usr_arg) {
+    CFlvOverHttp::Ptr ptr =
+      *((CFlvOverHttp::Ptr*)usr_arg);
+    res = ptr->OnSend();
+    if (res < 0) {
+      ((CFlvOverHttp::Ptr*)usr_arg)->reset();
+    }
   }
-  return n_ret;
+  return res;
 }
 
 int CFlvOverHttp::OnSend() {
@@ -168,20 +173,18 @@ int CFlvOverHttp::OnSend() {
   return nsend;
 }
 
-int CFlvOverHttp::EvtTimer(SOCKET fd, short events, const void *p_usr_arg) {
-  int32 nret = -1;
-  if (p_usr_arg) {
-    nret = ((CFlvOverHttp*)p_usr_arg)->OnTimer();
-    if (nret >= 0) {
-      return 0;
+int CFlvOverHttp::EvtTimer(SOCKET fd, short events, const void *usr_arg) {
+  int32 res = -1;
+  if (usr_arg) {
+    CFlvOverHttp::Ptr ptr =
+      *((CFlvOverHttp::Ptr*)usr_arg);
+    res = ptr->OnTimer();
+    if (res < 0) {
+      ((CFlvOverHttp::Ptr*)usr_arg)->reset();
     }
-
-    delete ((CFlvOverHttp*)p_usr_arg);
-    p_usr_arg = NULL;
-    return -1;
   }
   LOG(L_ERROR) << "param is null.";
-  return nret;
+  return res;
 }
 
 int32 CFlvOverHttp::OnTimer() {
@@ -193,32 +196,36 @@ int32 CFlvOverHttp::OnTimer() {
     int ndata = shm_vdo_.Read(flv_data_+flv_shm_.VdoHeadSize(),
                               flv_data_size_,
                               &w_sec_, &w_usec_);
-    if (ndata > 0) {
-      uint32 pts = vzbase::CurrentSystemTicket() - pts_;
-      // LOG(L_INFO) << "pts "<< pts;
-
-      int   nal_bng = 0, frm_type = 0;
-      char *p_nal = nal_parse(flv_data_+flv_shm_.VdoHeadSize(), ndata, &frm_type, &nal_bng);
-
-      int n_flv = 0;
-      if (frm_type == 5) {
-        AsyncWrite(avcc_data_, avcc_data_size_);
-        char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
-                                           p_nal + nal_bng, ndata - nal_bng,
-                                           true, pts);
-        n_flv = p_dst - (flv_data_ + nal_bng);
-      } else if (frm_type == 1) {
-        char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
-                                           p_nal + nal_bng, ndata - nal_bng,
-                                           false, pts);
-        n_flv = p_dst - (flv_data_ + nal_bng);
+    if (ndata <= 0) {
+      if (vzconn::VSocket::IsSocketClosed(sock_)) {
+        return -1;
       }
-      AsyncWrite(flv_data_+nal_bng, n_flv);
-      if (file) {
-        fwrite(flv_data_+nal_bng, 1, n_flv, file);
-      }
-      // printf("----------------- flv %d %d.\n", frm_type, n_flv);
     }
+
+    uint32 pts = vzbase::CurrentSystemTicket() - pts_;
+    // LOG(L_INFO) << "pts "<< pts;
+
+    int   nal_bng = 0, frm_type = 0;
+    char *p_nal = nal_parse(flv_data_+flv_shm_.VdoHeadSize(), ndata, &frm_type, &nal_bng);
+
+    int n_flv = 0;
+    if (frm_type == 5) {
+      AsyncWrite(avcc_data_, avcc_data_size_);
+      char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
+                                         p_nal + nal_bng, ndata - nal_bng,
+                                         true, pts);
+      n_flv = p_dst - (flv_data_ + nal_bng);
+    } else if (frm_type == 1) {
+      char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
+                                         p_nal + nal_bng, ndata - nal_bng,
+                                         false, pts);
+      n_flv = p_dst - (flv_data_ + nal_bng);
+    }
+    AsyncWrite(flv_data_+nal_bng, n_flv);
+    if (file) {
+      fwrite(flv_data_+nal_bng, 1, n_flv, file);
+    }
+    // printf("----------------- flv %d %d.\n", frm_type, n_flv);
   }
   return 0;
 }

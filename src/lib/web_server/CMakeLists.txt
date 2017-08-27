@@ -28,8 +28,8 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 	
-    ${CMAKE_CURRENT_SOURCE_DIR}/base/mongoose.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/mongoose.c
+    #${CMAKE_CURRENT_SOURCE_DIR}/base/mongoose.h
+	#${CMAKE_CURRENT_SOURCE_DIR}/base/mongoose.c
 	#${CMAKE_CURRENT_SOURCE_DIR}/base/v7.h
 	#${CMAKE_CURRENT_SOURCE_DIR}/base/v7.c
 	

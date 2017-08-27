@@ -124,6 +124,9 @@ class CClientInterface {
 
 class VSocket {
  public:
+  static bool VSocket::IsSocketClosed(SOCKET s);
+
+ public:
   VSocket(CClientInterface *cli_hdl);
   virtual ~VSocket();
 

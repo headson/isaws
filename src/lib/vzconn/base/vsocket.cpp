@@ -242,7 +242,7 @@ bool VSocket::isOpen() const {
 }
 
 #ifdef _WIN32
-static bool IsSocketClosed(SOCKET s) {
+bool VSocket::IsSocketClosed(SOCKET s) {
   bool ret = false;
   if (s == INVALID_SOCKET) {
     return true;
@@ -262,7 +262,7 @@ static bool IsSocketClosed(SOCKET s) {
 #else
 #include <errno.h>
 
-static bool IsSocketClosed(SOCKET s) {
+bool VSocket::IsSocketClosed(SOCKET s) {
   if (s == INVALID_SOCKET) {
     return true;
   }

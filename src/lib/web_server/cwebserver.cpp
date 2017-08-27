@@ -96,13 +96,13 @@ void CWebServer::web_ev_handler(struct mg_connection *nc, int ev, void *ev_data)
     mg_serve_http(nc, (struct http_message*)ev_data, s_web_def_opts_);
     break;
 
-  case MG_EV_CLOSE:
+  /*case MG_EV_CLOSE:
     if (nc->user_data) {
       url_hdl_httpflv_release(nc);
       nc->user_data = NULL;
     }
     break;
-  }
+  }*/
 }
 
 } //  namespace web

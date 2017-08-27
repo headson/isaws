@@ -11,7 +11,7 @@
 
 #include "json/json.h"
 
-#include "web_server/base/mongoose.h"
+#include "mongoose/mongoose.h"
 #include "dispatcher/sync/dpclient_c.h"
 
 #ifdef __cplusplus

@@ -7,8 +7,8 @@
 
 #include "vzbase/base/basictypes.h"
 
+#include "mongoose/mongoose.h"
 #include "vzbase/thread/thread.h"
-#include "web_server/base/mongoose.h"
 
 namespace web { 
 
