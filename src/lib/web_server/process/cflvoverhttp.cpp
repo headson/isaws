@@ -183,7 +183,6 @@ int CFlvOverHttp::EvtTimer(SOCKET fd, short events, const void *usr_arg) {
       ((CFlvOverHttp::Ptr*)usr_arg)->reset();
     }
   }
-  LOG(L_ERROR) << "param is null.";
   return res;
 }
 

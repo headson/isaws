@@ -130,7 +130,17 @@ void CListenMessage::Stop() {
 }
 
 void CListenMessage::RunLoop() {
-  thread_fast_->Run();
+  while (true) {
+    thread_fast_->ProcessMessages(4 * 1000);
+
+    static void *watchdog = NULL;
+    if (watchdog == NULL) {
+      watchdog = RegisterWatchDogKey("MAIN", 4, 21);
+    }
+    if (watchdog) {
+      FeedDog(watchdog);
+    }
+  }
 }
 
 void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl,

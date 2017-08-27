@@ -128,7 +128,7 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
   } else {
     if (XEAGAIN == error_no() ||
         XEINPROGRESS == error_no()) {
-#if 0
+#if 1
       fd_set fdw, fdr, efds;
       FD_ZERO(&fdw);
       FD_SET(s, &fdw);

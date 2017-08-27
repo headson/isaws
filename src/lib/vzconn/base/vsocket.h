@@ -84,7 +84,7 @@ class VSocket : public vzbase::noncopyable,
    boost::shared_ptr<VSocket> Ptr;
 
  public:
-  static bool VSocket::IsSocketClosed(SOCKET s);
+  static bool IsSocketClosed(SOCKET s);
 
  public:
   VSocket(CClientInterface *cli_hdl);

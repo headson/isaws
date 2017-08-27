@@ -26,8 +26,8 @@
 #define DEF_SOFTWARE_FILE     "c:\\tools\\software.json"
 #define DB_PCOUNT_FILEPATH    "c:\\tools\\pcount.db"
 #else
-#define DEF_WEB_SRV_PATH      "/mnt/web/html"
-#define DEF_SYS_LOG_PATH      "/mnt/web/html/log"
+#define DEF_WEB_SRV_PATH      "/mnt/web/"
+#define DEF_SYS_LOG_PATH      "/mnt/web/log"
 #define DEF_UPLOAD_FILENAME   "/tmp/upload.tar"
 #define DEF_HARDWARE_FILE     "/mnt/etc/hardware.json"
 #define DEF_SOFTWARE_FILE     "/mnt/etc/software.json"

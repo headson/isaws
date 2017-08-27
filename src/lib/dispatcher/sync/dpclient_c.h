@@ -31,12 +31,6 @@ typedef void(*DpClient_MessageCallback)(
 typedef void(*DpClient_PollStateCallback)(
   DPPollHandle p_hdl, uint32 n_state, void* p_usr_arg);
 
-
-typedef void* EventSignal;   // 信号量
-// libevent监听signal事件
-typedef int (*Event_SignalCallback)(int         n_signal,
-                                    short       events,
-                                    const void *p_usr_arg);
 #endif
 /************************************************************************
 *Description : 初始化Dispatcher的服务器[地址:端口]
@@ -186,28 +180,6 @@ EXPORT_DLL int DpClient_PollDpMessage(
 ************************************************************************/
 EXPORT_DLL DpEvtService DpClient_GetEvtLoopFromPoll(
   const DPPollHandle p_poll_handle);
-
-///SIGNAL/////////////////////////////////////////////////////////////////
-/************************************************************************
-*Description : 创建信号监听
-*Parameters  : p_evt_service[IN] 事件分发器指针
-*              n_signal_no[IN] 信号 SIGINT\SIGTERM\SIGKILL
-*              p_callback[IN] 信号触发时回调函数
-*              p_user_arg[IN] 信号触发函数回调传出用户指针
-*Return      : !=NULL 成功, ==NULL失败
-************************************************************************/
-EXPORT_DLL EventSignal Event_CreateSignalHandle(
-  const DpEvtService   p_evt_service,
-  int                  n_signal_no,
-  Event_SignalCallback p_callback,
-  void                *p_user_arg);
-
-/************************************************************************
-*Description : 释放信号监听
-*Parameters  : p_evt_sig[IN] 信号监听句柄
-*Return      :
-************************************************************************/
-EXPORT_DLL void Event_ReleaseSignalHandle(EventSignal p_evt_sig);
 
 //////////////////////////////////////////////////////////////////////////
 // GetKey callback function

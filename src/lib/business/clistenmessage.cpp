@@ -83,7 +83,15 @@ void CListenMessage::Stop() {
 
 void CListenMessage::RunLoop() {
   while (true) {
-    main_thread_->ProcessMessages(5*1000);
+    main_thread_->ProcessMessages(4*1000);
+
+    static void *watchdog = NULL;
+    if (watchdog == NULL) {
+      watchdog = RegisterWatchDogKey("MAIN", 4, 21);
+    }
+    if (watchdog) {
+      FeedDog(watchdog);
+    }
   }
 }
 

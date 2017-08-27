@@ -130,7 +130,17 @@ void CListenMessage::Stop() {
 }
 
 void CListenMessage::RunLoop() {
-  main_thread_->Run();
+  while (true) {
+    main_thread_->ProcessMessages(4 * 1000);
+
+    static void *watchdog = NULL;
+    if (watchdog == NULL) {
+      watchdog = RegisterWatchDogKey("MAIN", 4, 21);
+    }
+    if (watchdog) {
+      FeedDog(watchdog);
+    }
+  }
 }
 
 vzbase::Thread *CListenMessage::MainThread() {
@@ -242,7 +252,7 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
     main_thread_->PostDelayed(POLL_TIMEOUT, this, CATCH_IMAGE);
 
     int nlen = shm_alg_image_.Read(image_buffer_, SHM_IMAGE_0_SIZE,
-                                 &last_read_sec_, &last_read_usec_);
+                                   &last_read_sec_, &last_read_usec_);
     if (nlen <= 0) {
       return;
     }

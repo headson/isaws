@@ -365,43 +365,6 @@ EXPORT_DLL DpEvtService DpClient_GetEvtLoopFromPoll(
   return p_tcp->GetEvtLoop();
 }
 
-///SIGNAL/////////////////////////////////////////////////////////////////
-EXPORT_DLL EventSignal Event_CreateSignalHandle(
-  const DpEvtService   p_evt_service,
-  int                  n_signal_no,
-  Event_SignalCallback p_callback,
-  void                *p_user_arg) {
-  vzconn::EVT_IO *p_evt_io = new vzconn::EVT_IO();
-  if (NULL == p_evt_io) {
-    LOG(L_ERROR) << "new evt_io failed.";
-    return NULL;
-  }
-
-  p_evt_io->Init((vzconn::EVT_LOOP*)p_evt_service,
-                 (vzconn::EVT_FUNC)p_callback, p_user_arg);
-  int32 n_ret = p_evt_io->Start(n_signal_no, EV_SIGNAL | EVT_PERSIST);
-  if (n_ret != 0) {
-    LOG(L_ERROR) << "listening signal failed.";
-
-    delete p_evt_io;
-    p_evt_io = NULL;
-  }
-  return p_evt_io;
-}
-
-EXPORT_DLL void Event_ReleaseSignalHandle(EventSignal p_evt_handle) {
-  vzconn::EVT_IO *p_evt_io = (vzconn::EVT_IO*)p_evt_handle;
-  if (p_evt_io == NULL) {
-    LOG(L_ERROR) << "param is null.";
-    return;
-  }
-
-  p_evt_io->Stop();
-
-  delete p_evt_io;
-  p_evt_io = NULL;
-}
-
 //////////////////////////////////////////////////////////////////////////
 static CKvdbClient         *g_kvdb_client   = NULL;
 

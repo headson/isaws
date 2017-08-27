@@ -16,8 +16,8 @@ static const char  *METHOD_SET[] = {
 static int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
 
 CListenMessage::CListenMessage()
-  : p_dp_cli_(NULL)
-  , c_web_srv_() {
+  : dp_cli_(NULL)
+  , web_server_() {
 }
 
 CListenMessage::~CListenMessage() {
@@ -33,52 +33,62 @@ bool CListenMessage::Start(unsigned short n_web_port, const char *s_web_path) {
   bool b_ret = false;
   char s_port[9] = {0};
   snprintf(s_port, 8, "%d", n_web_port);
-  b_ret = c_web_srv_.Start(s_web_path, s_port);
+  b_ret = web_server_.Start(s_web_path, s_port);
   if (b_ret == false) {
     LOG(L_ERROR) << "start web server failed.";
     exit(EXIT_FAILURE);
   }
-  p_main_thread_ = vzbase::Thread::Current();
-  if (p_dp_cli_ == NULL) {
+  main_thread_ = vzbase::Thread::Current();
+  if (dp_cli_ == NULL) {
     vzconn::EventService *p_evt_srv =
-      p_main_thread_->socketserver()->GetEvtService();
+      main_thread_->socketserver()->GetEvtService();
 
-    p_dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
+    dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
                                           dpcli_poll_state_cb, this,
                                           p_evt_srv);
-    if (p_dp_cli_ == NULL) {
+    if (dp_cli_ == NULL) {
       LOG(L_ERROR) << "dp client create poll handle failed.";
 
-      DpClient_ReleasePollHandle(p_dp_cli_);
-      p_dp_cli_ = NULL;
+      DpClient_ReleasePollHandle(dp_cli_);
+      dp_cli_ = NULL;
       return false;
     }
 
-    DpClient_HdlAddListenMessage(p_dp_cli_, METHOD_SET, METHOD_SET_SIZE);
+    DpClient_HdlAddListenMessage(dp_cli_, METHOD_SET, METHOD_SET_SIZE);
   }
   return true;
 }
 
 void CListenMessage::Stop() {
-  c_web_srv_.Stop();
+  web_server_.Stop();
 
-  if (p_main_thread_) {
-    p_main_thread_->Release();
-    p_main_thread_ = NULL;
+  if (main_thread_) {
+    main_thread_->Release();
+    main_thread_ = NULL;
   }
-  if (p_dp_cli_) {
-    DpClient_ReleasePollHandle(p_dp_cli_);
-    p_dp_cli_ = NULL;
+  if (dp_cli_) {
+    DpClient_ReleasePollHandle(dp_cli_);
+    dp_cli_ = NULL;
   }
   DpClient_Stop();
 }
 
 void CListenMessage::RunLoop() {
-  p_main_thread_->Run();
+  while (true) {
+    main_thread_->ProcessMessages(4 * 1000);
+
+    static void *watchdog = NULL;
+    if (watchdog == NULL) {
+      watchdog = RegisterWatchDogKey("MAIN", 4, 21);
+    }
+    if (watchdog) {
+      FeedDog(watchdog);
+    }
+  }
 }
 
 vzbase::Thread *CListenMessage::MainThread() {
-  return p_main_thread_;
+  return main_thread_;
 }
 void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
   if (p_usr_arg) {
@@ -102,7 +112,7 @@ void CListenMessage::OnDpState(DPPollHandle p_hdl, unsigned int n_state) {
   if (n_state == DP_CLIENT_DISCONNECT) {
     int32 n_ret = DpClient_HdlReConnect(p_hdl);
     if (n_ret == VZNETDP_SUCCEED) {
-      DpClient_HdlAddListenMessage(p_dp_cli_, METHOD_SET, METHOD_SET_SIZE);
+      DpClient_HdlAddListenMessage(dp_cli_, METHOD_SET, METHOD_SET_SIZE);
     }
   }
 }

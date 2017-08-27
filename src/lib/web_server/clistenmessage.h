@@ -22,7 +22,7 @@ class CListenMessage : public vzbase::noncopyable,
   CListenMessage();
   virtual ~CListenMessage();
 
-public:
+ public:
   static CListenMessage *Instance();
 
   bool  Start(unsigned short n_web_port, const char *s_web_path);
@@ -44,11 +44,11 @@ public:
   void OnMessage(vzbase::Message* msg);
 
  private:
-  DPPollHandle               p_dp_cli_;
-  vzbase::Thread            *p_main_thread_;
+  vzbase::Thread            *main_thread_;
 
-  CWebServer                 c_web_srv_;
+  DPPollHandle               dp_cli_;
+  CWebServer                 web_server_;
 };
 
-}  // namespace web 
+}  // namespace web
 #endif  // _CLISTENMESSAGE_H

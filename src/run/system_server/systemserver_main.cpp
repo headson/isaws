@@ -38,15 +38,15 @@ int main(int argc, char *argv[]) {
   ShowVzLoggingAlways();
 #endif
 
-  DpEvtService p_evt_service =
+  DpEvtService evt_service =
     (DpEvtService)vzbase::Thread::Current()->socketserver()->GetEvtService();
 
-  Event_CreateSignalHandle(p_evt_service, SIGINT, SignalHandle, NULL);
-  Event_CreateSignalHandle(p_evt_service, SIGTERM, SignalHandle, NULL);
-  Event_CreateSignalHandle(p_evt_service, SIGSEGV, SignalHandle, NULL);
-  Event_CreateSignalHandle(p_evt_service, SIGABRT, SignalHandle, NULL);
+  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGINT, SignalHandle, NULL);
+  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGTERM, SignalHandle, NULL);
+  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGSEGV, SignalHandle, NULL);
+  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGABRT, SignalHandle, NULL);
 #ifdef POSIX
-  Event_CreateSignalHandle(p_evt_service, SIGPIPE, SignalHandle, NULL);
+  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGPIPE, SignalHandle, NULL);
 #endif
 
   DpClient_Init(DEF_DP_SRV_IP, DEF_DP_SRV_PORT);

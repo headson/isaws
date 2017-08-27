@@ -33,7 +33,7 @@ CListenMessage::CListenMessage()
   nval |= 0x1;
   HI_MPI_SYS_SetReg(0x201C0400, nval);
   HI_MPI_SYS_SetReg(0x201c0004, 0x0);   // default value
-  
+
   // GPIO0_3 output
   HI_MPI_SYS_SetReg(0x200F0030, 0x0);
 
@@ -98,7 +98,17 @@ void CListenMessage::Stop() {
 }
 
 void CListenMessage::RunLoop() {
-  main_thread_->Run();
+  while (true) {
+    main_thread_->ProcessMessages(4 * 1000);
+
+    static void *watchdog = NULL;
+    if (watchdog == NULL) {
+      watchdog = RegisterWatchDogKey("MAIN", 4, 21);
+    }
+    if (watchdog) {
+      FeedDog(watchdog);
+    }
+  }
 }
 
 vzbase::Thread *CListenMessage::MainThread() {
@@ -129,7 +139,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
 
   bool reply = false;
   if (0 == strncmp(dmp->method, MSG_CATCH_EVENT, MAX_METHOD_SIZE)) {
-    
+
     int n1=0, n2=0;
     if (jreq[MSG_BODY][ALG_POSITIVE_NUMBER].isInt()) {
       n1 = jreq[MSG_BODY][ALG_POSITIVE_NUMBER].asInt();
