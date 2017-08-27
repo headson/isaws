@@ -3,6 +3,7 @@
 *Description :
 ************************************************************************/
 #include "cmcastsocket.h"
+#include "vzconn/base/basedefines.h"
 
 #ifndef WIN32
 #include <sys/types.h>
@@ -17,7 +18,7 @@
 #endif
 
 #include "vzbase/helper/stdafx.h"
-#include "vzconn/base/connhead.h"
+
 namespace vzconn {
 
 // SOCKET CMCastSocket::send_socket_ = INVALID_SOCKET;

@@ -4,14 +4,15 @@
 /*                 主要针对TCP定义的收发缓冲区,缓冲区最大128K             */
 /************************************************************************/
 #include "cblockbuffer.h"
+#include "vzconn/base/basedefines.h"
 
 #include <stdio.h>
 
 #include "vzconn/base/vsocket.h"
-#include "vzconn/base/connhead.h"
-#include "vzconn/base/byteorder.h"
+#include "vzconn/buffer/byteorder.h"
 
 namespace vzconn {
+
 CBlockBuffer::CBlockBuffer() {
   read_pos_ = 0;
   write_pos_ = 0;

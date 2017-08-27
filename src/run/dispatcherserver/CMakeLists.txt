@@ -50,6 +50,7 @@ MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libdispatch
+		libdpclient
 		libvzconn
 		libvzlogging
 		libsqlite3

@@ -18,14 +18,16 @@
 int main() {
   system("killall watchdog");
 
+#if 0
   int fd;
 
-#if 0
+#if 1
   sleep(1);
 
   fd = open("/dev/watchdog", O_WRONLY);
   if (fd < 0) {
     printf("open error!!\n");
+    return -1;
   }
   ioctl(fd, WDIOC_SETOPTIONS, WDIOS_ENABLECARD);
   ioctl(fd, WDIOC_SETTIMEOUT, 6);
@@ -35,9 +37,7 @@ int main() {
     sleep(1);
   }
   close(fd);
-#endif
-
-#ifdef IMX6Q
+#else
   sleep(1);
 
   typedef struct {
@@ -65,6 +65,7 @@ int main() {
   }
 
   close(fd);
+#endif
 #endif
 
   return 0;

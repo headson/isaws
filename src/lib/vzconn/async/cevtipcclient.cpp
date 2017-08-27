@@ -5,7 +5,7 @@
 #include "cevtipcclient.h"
 
 #include "vzbase/helper/stdafx.h"
-#include "vzconn/base/connhead.h"
+#include "vzconn/base/basedefines.h"
 
 namespace vzconn {
 CEvtIpcClient::CEvtIpcClient(const EVT_LOOP *p_loop,

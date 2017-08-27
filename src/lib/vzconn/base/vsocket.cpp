@@ -6,9 +6,10 @@
 
 #include <string.h>
 
+#include "vzconn/base/basedefines.h"
+#include "vzconn/buffer/byteorder.h"
+
 #include "vzbase/helper/stdafx.h"
-#include "vzconn/base/connhead.h"
-#include "vzconn/base/byteorder.h"
 
 namespace vzconn {
 
@@ -237,7 +238,22 @@ void VSocket::Close() {
   }
 }
 
+const std::string VSocket::ip_addr() {
+  return remote_ip_addr_;
+}
+
+
+const CInetAddr &VSocket::remote_addr() {
+  return remote_addr_;
+}
+
+void VSocket::SetRemoteAddr(const CInetAddr &addr) {
+  remote_addr_ = addr;
+  remote_ip_addr_ = addr.IP2String();
+}
+
 bool VSocket::isOpen() const {
+  // LOG(L_INFO) << "handler_ " << (int)handler_;
   return (handler_ != INVALID_SOCKET);
 }
 

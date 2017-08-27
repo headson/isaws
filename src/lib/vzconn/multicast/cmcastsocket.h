@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-07-10
-*Description : 
+*Description :
 ************************************************************************/
 #ifndef LIBVZCONN_CMCASTSOCKET_H_
 #define LIBVZCONN_CMCASTSOCKET_H_

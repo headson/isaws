@@ -17,7 +17,7 @@ EVT_LOOP::~EVT_LOOP() {
   Stop();
 }
 
-int32 EVT_LOOP::Start() {
+int EVT_LOOP::Start() {
 #ifdef WIN32
   evthread_use_windows_threads();
 #else
@@ -44,8 +44,8 @@ void EVT_LOOP::Stop() {
   }
 }
 
-int32 EVT_LOOP::RunLoop(uint32 ms_timeout) {
-  int32 n_ret = -1;
+int EVT_LOOP::RunLoop(unsigned int ms_timeout) {
+  int n_ret = -1;
   if (base_event_) {
     evt_exit_timer_.Stop();
 
@@ -68,7 +68,7 @@ int32 EVT_LOOP::RunLoop(uint32 ms_timeout) {
 
 void EVT_LOOP::LoopExit(unsigned int ms_timeout) {
   if (base_event_) {
-    int32 n_ret = 0;
+    int n_ret = 0;
     if (ms_timeout > 0) {
       struct timeval tv;
       tv.tv_sec = ms_timeout / 1000;
@@ -87,7 +87,7 @@ bool EVT_LOOP::isRuning() {
   return ((running_==1) ? true : false);
 }
 
-int32 EVT_LOOP::exit_callback(SOCKET fd, short events, const void *p_usr_arg) {
+int EVT_LOOP::exit_callback(SOCKET fd, short events, const void *p_usr_arg) {
   EVT_LOOP *p_loop = (EVT_LOOP*)p_usr_arg;
   if (p_loop && p_loop->base_event_) {
     event_base_loopbreak(p_loop->base_event_);
@@ -112,8 +112,8 @@ void EVT_TIMER::Init(const EVT_LOOP* loop, EVT_FUNC fn_cb, void* p_arg) {
   usr_args_ = p_arg;
 }
 
-int32 EVT_TIMER::Start(uint32 after_ms, uint32 repeat_ms) {
-  int32 n_ret = -1;
+int EVT_TIMER::Start(unsigned int after_ms, unsigned int repeat_ms) {
+  int n_ret = -1;
   if (!base_event_ || !base_event_->get_event()) {
     LOG(L_ERROR)<<"param error.";
     return n_ret;
@@ -181,8 +181,8 @@ void EVT_IO::Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg) {
   usr_args_ = pArg;
 }
 
-int32 EVT_IO::Start(SOCKET vHdl, int32 nEvt, uint32 ms_timeout) {
-  int32 n_ret = -1;
+int EVT_IO::Start(SOCKET vHdl, int nEvt, unsigned int ms_timeout) {
+  int n_ret = -1;
   if (!base_event_ || !base_event_->get_event()) {
     LOG(L_ERROR)<<"param error.";
     return n_ret;

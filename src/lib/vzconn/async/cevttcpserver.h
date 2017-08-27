@@ -53,5 +53,7 @@ class CEvtTcpServer : public VSocket {
   CTcpServerInterface   *srv_handle_ptr_;
 };
 
+typedef CEvtTcpServer VzTcpServer;
+
 }  // namespace vzconn
 #endif  // LIBVZCONN_CEVTTCPSERVER_H_

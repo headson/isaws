@@ -29,18 +29,22 @@ endforeach()
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST 	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/connhead.h  
+	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.h  
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/byteorder.h
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/clibevent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/clibevent.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.h
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/byteorder.h
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/bytebuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/bytebuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/perfectbufferpool.h
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/perfectbufferpool.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevttcpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cevttcpclient.cpp
@@ -60,10 +64,10 @@ SET(SRC_LIST
 )
 
 SOURCE_GROUP(base FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/base/connhead.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/byteorder.h
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/clibevent.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/clibevent.cpp
@@ -71,9 +75,13 @@ SOURCE_GROUP(base FILES
 
 SOURCE_GROUP(buffer FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.h
-	${CMAKE_CURRENT_SOURCE_DIR}/buffer/csocketbuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/cblockbuffer.cpp 
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/byteorder.h
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/bytebuffer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/bytebuffer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/perfectbufferpool.h
+	${CMAKE_CURRENT_SOURCE_DIR}/buffer/perfectbufferpool.cpp
 )
 
 SOURCE_GROUP(async FILES
@@ -105,24 +113,30 @@ MESSAGE(STATUS "Step 4 : Add code source")
 #########################################################################
 #Step 5 : Add executable or library target
 MESSAGE(STATUS "Step 5 : Add executable or library target")
+#ADD_executable(${BUILD_PROJECT_NAME} ${SRC_LIST})
 
-IF(WIN32)
+#########################################################################
+#Step 6 : link with other library
+MESSAGE(STATUS "Step 6 : link with other library")
+
+if(WIN32)
 	ADD_LIBRARY(${BUILD_PROJECT_NAME} STATIC ${SRC_LIST})
-ELSE()
+	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+	)
+else()
 	ADD_LIBRARY(${BUILD_PROJECT_NAME} SHARED ${SRC_LIST})
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
+		vzbase
 		vzlogging
 		libevent_core.so
 		libevent_pthreads.so
 	)
-	IF(UNIX)
-		add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
-			COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzconn.so
-			COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzconn.so ${FTP_DIR}/libvzconn.so
+endif()
+set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
+
+IF(UNIX)
+    add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
+        COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzconn.so
+        COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzconn.so ${FTP_DIR}/libvzconn.so
 		)
-	ENDIF()
 ENDIF()
-SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
-#########################################################################
-#Step 6 : link with other library
-MESSAGE(STATUS "Step 6 : link with other library")

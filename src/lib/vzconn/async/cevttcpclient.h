@@ -9,17 +9,24 @@
 
 #include "vzconn/base/vsocket.h"
 #include "vzconn/base/clibevent.h"
-#include "vzconn/buffer/csocketbuffer.h"
+#include "vzconn/buffer/cblockbuffer.h"
+#include "vzbase/base/boost_settings.hpp"
 
 namespace vzconn {
 
-class CEvtTcpClient : public VSocket {
+class CEvtTcpClient : public VSocket,
+  public vzbase::noncopyable,
+  public boost::enable_shared_from_this<CEvtTcpClient> {
+
+ public:
+  typedef boost::shared_ptr<CEvtTcpClient> Ptr;
+
  protected:
-  CEvtTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl);
+  CEvtTcpClient(const EVT_LOOP *evt_loop, CClientInterface *cli_hdl);
   virtual ~CEvtTcpClient();
 
  public:
-  static CEvtTcpClient* Create(const EVT_LOOP   *p_loop,
+  static CEvtTcpClient* Create(const EVT_LOOP *evt_loop,
                                CClientInterface *cli_hdl);
 
   // 主动断开链接
@@ -27,37 +34,37 @@ class CEvtTcpClient : public VSocket {
 
  public:
   // 设置已打开的SCOKET
-  virtual bool  Open(SOCKET s, bool b_block=false);
+  virtual bool  Open(SOCKET s, bool is_block=false);
 
  public:
   // 链接到服务端;无需调用Open
-  virtual bool  Connect(const CInetAddr *p_remote_addr,
-                        bool             b_block,
-                        bool             b_reuse,
-                        uint32           n_timeout=5000);
+  virtual bool  Connect(const CInetAddr *remote_addr,
+                        bool             is_block,
+                        bool             is_reuse,
+                        uint32           ms_timeout=5000);
 
  public:
   /***********************************************************************
   *Description : 发送一包数据;缓存到发送cache中
-  *Parameters  : p_data[IN] 数据(body区)
-  *              n_data[IN] 数据长度
-  *              e_flag[IN] VZ为包头的flag[uint16]
+  *Parameters  : pdata[IN] 数据(body区)
+  *              ndata[IN] 数据长度
+  *              eflag[IN] VZ为包头的flag[uint16]
   *Return      : >0 缓存数据长度,<=0 发送失败
   ***********************************************************************/
-  virtual int32 AsyncWrite(const void  *p_data,
-                           uint32       n_data,
-                           uint16       e_flag);
+  virtual int32 AsyncWrite(const void *pdata,
+                           uint32      ndata,
+                           uint16      eflag);
 
   /***********************************************************************
   *Description : 发送一包数据;缓存到发送cache中
-  *Parameters  : iov[IN]    数据(body区)
-  *              n_iov[IN]  iov个数
-  *              e_flag[IN] VZ为包头的flag[uint16]
+  *Parameters  : aiov[IN]  数据(body区)
+  *              niov[IN]  iov个数
+  *              eflag[IN] VZ为包头的flag[uint16]
   *Return      : >0 缓存数据长度,<=0 发送失败
   ***********************************************************************/
-  virtual int32 AsyncWrite(struct iovec iov[],
-                           uint32       n_iov,
-                           uint16       e_flag);
+  virtual int32 AsyncWrite(struct iovec aiov[],
+                           uint32       niov,
+                           uint16       eflag);
 
  protected:
   friend class CEvtTcpServer;
@@ -66,19 +73,19 @@ class CEvtTcpClient : public VSocket {
   // 接收事件
   static int32  EvtRecv(SOCKET        fd,
                         short         events,
-                        const void   *p_usr_arg);
+                        const void   *usr_arg);
   virtual int32 OnRecv();
 
   // 发送事件
   static int32  EvtSend(SOCKET        fd,
                         short         events,
-                        const void   *p_usr_arg);
+                        const void   *usr_arg);
   virtual int32 OnSend();
 
   // 异步链接服务器,暂时不成功,待研究
   static int32  EvtConnect(SOCKET      fd,
                            short       events,
-                           const void *p_usr_arg);
+                           const void *usr_arg);
   virtual int32 OnConnect(SOCKET fd);
 
  public:
@@ -105,6 +112,8 @@ class CEvtTcpClient : public VSocket {
   EVT_IO            c_evt_send_;    // 发送事件
   CBlockBuffer      c_send_data_;   // 发送buffer
 };
+
+typedef CEvtTcpClient TcpConnect;
 
 }  // namespace vzconn
 #endif  // LIBVZCONN_CEVTTCPCLIENT_H_

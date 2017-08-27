@@ -5,6 +5,8 @@
 #ifndef LIBVZCONN_CLIBEVENT_H_
 #define LIBVZCONN_CLIBEVENT_H_
 
+#include "vzbase/base/basictypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,11 +28,9 @@ extern "C" {
 
 #include <string>
 
-#include "vzbase/base/basictypes.h"
-
 namespace vzconn {
 
-typedef int32 (*EVT_FUNC)(SOCKET fd, short events, const void *p_usr_arg);
+typedef int (*EVT_FUNC)(SOCKET fd, short events, const void *usr_arg);
 
 #define EVT_READ          EV_READ     // 读事件
 #define EVT_WRITE         EV_WRITE    // 写事件
@@ -42,13 +42,13 @@ class EVT_LOOP;
 ///TIMER///////////////////////////////////////////////////////////////////////
 class EVT_TIMER {
  private:
-  struct event    event_;       //
+  struct event    event_;           //
   EVT_LOOP*       base_event_;      //
 
-  EVT_FUNC        callback_;  // 消息回调
-  void*           usr_args_;  // 回调参数
+  EVT_FUNC        callback_;        // 消息回调
+  void*           usr_args_;        // 回调参数
 
-  uint32          init_, start_;
+  unsigned int    init_, start_;
 
  public:
   EVT_TIMER();
@@ -66,7 +66,7 @@ class EVT_TIMER {
   *              repeat_ms[IN] 此不为0,注册为永久超时事件,延迟repeat_ms执行一次
   *Return      : 0 成功
   ************************************************************************/
-  int32           Start(uint32 after_ms, uint32 repeat_ms);
+  int             Start(unsigned int after_ms, unsigned int repeat_ms);
   void            Stop();
 
   static void     evt_callback(evutil_socket_t fd, short event, void *ctx);
@@ -75,12 +75,12 @@ class EVT_TIMER {
 ///IO//////////////////////////////////////////////////////////////////////////
 class EVT_IO {
  private:
-  struct event    event_;       //
+  struct event    event_;           //
   EVT_LOOP*       base_event_;      //
 
-  EVT_FUNC        callback_;  // 消息回调
-  void*           usr_args_;  // 回调参数
-  uint32          init_, start_;
+  EVT_FUNC        callback_;        // 消息回调
+  void*           usr_args_;        // 回调参数
+  unsigned int          init_, start_;
 
  public:
   EVT_IO();
@@ -94,7 +94,7 @@ class EVT_IO {
   *              ms_timeout[IN] 超时时间
   *Return      : 0 成功
   ************************************************************************/
-  int32           Start(SOCKET hdl, int32 evt, uint32 ms_timeout=0);
+  int           Start(SOCKET hdl, int evt, unsigned int ms_timeout=0);
   void            Stop();
 
   // 用户主动唤醒事件,调用事件回调时使用
@@ -106,25 +106,25 @@ class EVT_IO {
 
 ///LOOP////////////////////////////////////////////////////////////////////////
 class EVT_LOOP {
-private:
+ private:
   struct event_base* base_event_;     // 只能在第一位
 
-  uint32             running_;        // 运行状态
+  unsigned int             running_;        // 运行状态
   EVT_TIMER          evt_exit_timer_; // 退出定时器
 
-public:
+ public:
   EVT_LOOP();
   virtual ~EVT_LOOP();
 
-  int32   Start();
+  int   Start();
   void    Stop();
 
   // ms_timeout > 0,超时退出
   // ms_timeout = 0,运行一次;
-  int32   RunLoop(uint32 ms_timeout = 0);
+  int   RunLoop(unsigned int ms_timeout = 0);
 
   // 定时退出,0=立刻退出
-  void    LoopExit(uint32 ms_timeout);
+  void    LoopExit(unsigned int ms_timeout);
 
   bool    isRuning();
 
@@ -132,10 +132,10 @@ public:
     return base_event_;
   }
 
-private:
-  static int32 exit_callback(SOCKET      fd,
-                             short       events,
-                             const void *p_usr_arg);
+ private:
+  static int exit_callback(SOCKET      fd,
+                           short       events,
+                           const void *usr_arg);
 };
 typedef EVT_LOOP EventService;
 
