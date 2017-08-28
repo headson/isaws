@@ -26,16 +26,14 @@ class CFlvOverHttp : public vzbase::noncopyable {
             const char* shm_key, unsigned int shm_size);
   void Close();
 
-  int AsyncHeader(const void *p_resp, unsigned int n_resp);
-  int AsyncWrite(const void *p_data, unsigned int n_data);
+  int AsyncHeader(const void *presp, unsigned int nresp);
+  int AsyncWrite(const void *pdata, unsigned int ndata);
 
  protected:
-  static int EvtSend(SOCKET fd,
-                     short events,
-                     const void *p_usr_arg);
+  static int EvtSend(SOCKET fd, short events, const void *usr_arg);
   int OnSend();
 
-  static int EvtTimer(SOCKET fd, short events, const void *p_usr_arg);
+  static int EvtTimer(SOCKET fd, short events, const void *usr_arg);
   int32 OnTimer();
 
   char *nal_parse(const char *ph264, int nh264, int *frm_type, int *nal_bng);

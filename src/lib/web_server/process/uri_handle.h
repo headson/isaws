@@ -77,7 +77,6 @@ extern void uri_hdl_upload(struct mg_connection *nc, int ev, void *ev_data);
 
 ///HTTP_FLV///////////////////////////////////////////////////////////////////
 extern void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *ev_data);
-extern void url_hdl_httpflv_release(struct mg_connection *nc);
 
 #ifdef __cplusplus
 }

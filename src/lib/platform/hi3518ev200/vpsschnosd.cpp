@@ -161,40 +161,6 @@ static int OSD_Draw_BitMap_ASC16(int len, const char *pdata, unsigned char *pbit
   return 0;
 }
 
-static int OSD_Draw_BitMap_RECT(int nw, int nh, unsigned char *pbitmap, int ncolor) {
-  if (!pbitmap) {
-    printf("[%s, %d] error, NULL pointer transfered.\n", __FUNCTION__, __LINE__);
-    return -1;
-  }
-  int i, w, h, flag, offset;
-  unsigned char ch;
-  char *code;
-  unsigned short *pDst;
-
-  //printf("[%s %d]: len = %d, data = %s\n", __func__, __LINE__, len, pdata);
-  int xx = 0;
-  char *asc16 = s_pFontSetASC16;
-  /***move 1 Byte to can set color***/
-  pbitmap = pbitmap + 1;
-
-  /* get the first row, then next*/
-  for (h = 0; h < nh; h++) { // height ;
-    for (i = 0; i < nw; i++) {
-      for (w = 0; w < 8; w++) {
-        pDst = (unsigned short *)(pbitmap + xx);
-        if (1) {
-          // *pDst = (0x00<< 10) | (0x00<< 5) | (0x80);//display font
-          *pDst = ncolor; // (0xFF<< 10) | (0xFF<< 5) | (0xFF);//display font
-        } else {
-          *pDst = (0x88 << 10) | (0x88 << 5) | (0x77);//(0xff<< 10) | (0x00<< 5) | (0x00);//background
-        }
-        xx += 2;
-      }
-    }
-  }
-  return 0;
-}
-
 int OSD_Overlay_RGN_Handle_Init(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, int w, int h, int bgalpha=10) {
   HI_S32 s32Ret = HI_FAILURE;
   RGN_ATTR_S stRgnAttr;
@@ -286,39 +252,6 @@ int OSD_Overlay_RGN_Display_English(RGN_HANDLE Handle, const char *pRgnContent, 
   return 0;
 }
 
-int OSD_Overlay_RGN_Display_CoverRect(RGN_HANDLE Handle, int ncolor, int w, int h) {
-  HI_S32 s32Ret = HI_FAILURE;
-  BITMAP_S stBitmap;
-  int ContentLen = 0;
-
-  /* HI_MPI_RGN_SetBitMap */
-  unsigned char *BitMap = (unsigned char *)malloc(w * h * 16); //RGB1555: 2 bytes(R:5 G:5 B:5).
-  if (NULL == BitMap) {
-    printf("malloc error with\n");
-    return HI_FAILURE;
-  }
-  memset(BitMap, '\0', w * h * 2);
-
-  OSD_Draw_BitMap_RECT(w, h, BitMap, ncolor);
-
-  stBitmap.enPixelFormat = PIXEL_FORMAT_RGB_1555;
-  stBitmap.u32Width = w;
-  stBitmap.u32Height = h;
-  stBitmap.pData = BitMap;
-
-  s32Ret = HI_MPI_RGN_SetBitMap(Handle, &stBitmap);
-  if (s32Ret != HI_SUCCESS) {
-    printf("HI_MPI_RGN_SetBitMap failed with %x!\n", s32Ret);
-    if (BitMap)
-      free(BitMap);
-    return HI_FAILURE;
-  }
-
-  if (BitMap)
-    free(BitMap);
-  return 0;
-}
-
 HI_S32 Hi_LiteOs_OSD_Text_Start(int chn_id, RGN_HANDLE Handle, int x, int y, const char *text) {
   static int firstflag = 1;
 
@@ -327,25 +260,19 @@ HI_S32 Hi_LiteOs_OSD_Text_Start(int chn_id, RGN_HANDLE Handle, int x, int y, con
     init_font_libs();
   }
 
-  OSD_Overlay_RGN_Handle_Init(chn_id, Handle, x, y, FONT_WIDTH*strlen(text), FONT_HEIGHT);
+  OSD_Overlay_RGN_Handle_Init(chn_id, Handle, x, y, FONT_WIDTH*strlen(text), FONT_HEIGHT, 0);
 
   OSD_Overlay_RGN_Display_English(Handle, text, 0xFFFF);
 }
 
 HI_S32 Hi_LiteOs_OSD_Cover_Start(int chn_id, RGN_HANDLE Handle, int x, int y, int w, int h) {
-  OSD_Overlay_RGN_Handle_Init(chn_id, Handle, x, y, w, h, 128);
-
-  // OSD_Overlay_RGN_Display_CoverRect(Handle, w, h, 0x8000);
+  OSD_Overlay_RGN_Handle_Init(chn_id, Handle, x, y, w, h, 96);
 }
 
 
 // 时间显示成功;
 HI_S32  Hi_LiteOs_OSD_Update(int channel, const char *text, int ncolor) {
   OSD_Overlay_RGN_Display_English(channel, text, ncolor);
-}
-
-HI_S32  Hi_LiteOs_COVER_Update(int channel, int w, int h, int ncolor) {
-  OSD_Overlay_RGN_Display_CoverRect(channel, w, h, 0x8000);
 }
 
 int Get_Sys_DayTime(char *pTime) {
@@ -369,6 +296,31 @@ int Get_Sys_DayTime(char *pTime) {
   return 0;
 }
 
+/*
+[
+{
+"handle": 0,
+"enable": 1,
+"x": 10,
+"y": 10,
+"size": 16
+},
+{
+"handle": 1,
+"enable": 1,
+"x": 10,
+"y": 10,
+"size": 16
+},
+{
+"handle": 2,
+"enable": 1,
+"x": 0,
+"y": 10,
+"size": 40
+}
+]
+*/
 // 调用并进行刷新时间
 void *osd_display(void *arg) {
   CVideoCatch::TAG_OSD *posd = (CVideoCatch::TAG_OSD*)arg;
@@ -377,6 +329,8 @@ void *osd_display(void *arg) {
   snprintf(posd->ch2, 31, "IN:0000000000 OUT:0000000000");
 
   RGN_HANDLE hdl = 0;
+
+
 
   // video0
   hdl = 0;
@@ -390,22 +344,29 @@ void *osd_display(void *arg) {
   Hi_LiteOs_OSD_Text_Start(1, hdl+1, 10, SHM_VIDEO_1_H - 18, posd->ch2);
   Hi_LiteOs_OSD_Cover_Start(1, hdl+2, 0, SHM_VIDEO_1_H/2+28, SHM_VIDEO_1_W, 16);
 
+  int ncolor = 0xFFFF;
   while(1) {
+    if (ncolor == 0xFFFF) {
+      ncolor = 0x8000;
+    } else {
+      ncolor = 0xFFFF;
+    }
+
     Get_Sys_DayTime(posd->ch1);
 
     hdl = 0;
-    Hi_LiteOs_OSD_Update(hdl+0, posd->ch1, 0xFFFF);
+    Hi_LiteOs_OSD_Update(hdl+0, posd->ch1, ncolor);
     if (posd->ch2[0] != '\0') {
-      Hi_LiteOs_OSD_Update(hdl+1, posd->ch2, 0xEC00);
+      Hi_LiteOs_OSD_Update(hdl+1, posd->ch2, ncolor);
     }
 
     hdl = 3;
-    Hi_LiteOs_OSD_Update(hdl+0, posd->ch1, 0xFFFF);
+    Hi_LiteOs_OSD_Update(hdl+0, posd->ch1, ncolor);
     if (posd->ch2[0] != '\0') {
-      Hi_LiteOs_OSD_Update(hdl+1, posd->ch2, 0xEC00);
+      Hi_LiteOs_OSD_Update(hdl+1, posd->ch2, ncolor);
     }
 
-    usleep(500 * 1000);
+    usleep(800 * 1000);
   }
 }
 
