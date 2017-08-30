@@ -17,6 +17,7 @@ static const char  *METHOD_SET[] = {
   MSG_CATCH_EVENT,
   MSG_GET_I_FRAME,
   MSG_IRCUT_CTRLS,
+  MSG_GET_VDO_URL,  
   MSG_GET_ENC_CFG,
   MSG_SET_ENC_CFG
 };
@@ -139,7 +140,6 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
 
   bool reply = false;
   if (0 == strncmp(dmp->method, MSG_CATCH_EVENT, MAX_METHOD_SIZE)) {
-
     int n1=0, n2=0;
     if (jreq[MSG_BODY][ALG_POSITIVE_NUMBER].isInt()) {
       n1 = jreq[MSG_BODY][ALG_POSITIVE_NUMBER].asInt();
@@ -173,6 +173,8 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
       HI_MPI_VENC_SetColor2Grey(1, &vcs);*/
     }
     jresp[MSG_STATE] = RET_SUCCESS;
+  } else if (0 == strncmp(dmp->method, MSG_GET_VDO_URL, MAX_METHOD_SIZE)) {
+    Kvdb_GetKey();
   } else if (0 == strncmp(dmp->method, MSG_GET_I_FRAME, MAX_METHOD_SIZE)) {
     HI_MPI_VENC_RequestIDR(jreq[MSG_BODY]["venc_chn"].asInt(), HI_TRUE);
   } else if (0 == strncmp(dmp->method, MSG_GET_ENC_CFG, MAX_METHOD_SIZE)) {

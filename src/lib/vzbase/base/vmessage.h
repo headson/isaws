@@ -89,10 +89,13 @@ typedef enum _MSG_RET {
 #define MSG_SET_TIMEINFO      "set_timeinfo"      // 设置时间信息
 
 #define MSG_GET_I_FRAME       "get_i_frame"       // 请求I帧
+#define MSG_GET_VDO_URL       "get_vdo_url"       // 获取视频URL
 #define MSG_GET_ENC_CFG       "get_enc_cfg"       // 获取编码配置
 #define MSG_SET_ENC_CFG       "set_enc_cfg"       // 设置编码配置
 
 #define MSG_IRCUT_CTRLS       "ircut_ctrls"       // IRCUT控制
+
+#define MSG_REMOTE_5_IR       "remote_5_ir"       // 远端5组IR
 
 //////////////////////////////////////////////////////////////////////////
 #define MSG_GET_IVAINFO       "get_ivainfo"       // 获取算法信息
@@ -110,6 +113,7 @@ typedef enum _MSG_RET {
 #define MSG_REBOOT_DEVICE     "reboot_device"     // 重启设备
 
 //////////////////////////////////////////////////////////////////////////
-#define KVDB_USER_LIST        "user_list"        // 登录用户;username\password
-#define KVDB_TIME_INFO        "time_info"        // 设备时间;timezone ntp[enable\server]
+#define KVDB_HW_INFO          "hw_info"           // 硬件信息
+#define KVDB_NETWORK          "network"           // 网络参数
+#define KVDB_USER_LIST        "user_list"         // 登录用户;username\password
 #endif  // VMESSAGE_H

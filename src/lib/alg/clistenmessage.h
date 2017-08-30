@@ -10,13 +10,14 @@
 
 #include "vzbase/thread/thread.h"
 
+#include "dispatcher/sync/cdpclient.h"
 #include "dispatcher/sync/dpclient_c.h"
-
 
 #include "systemv/shm/vzshm_c.h"
 #include "alg/include/sdk_iva_interface.h"
 
 namespace alg {
+#define MAX_IR_NUM  5
 
 class CListenMessage : public vzbase::noncopyable,
   public vzbase::MessageHandler {
@@ -70,6 +71,16 @@ class CListenMessage : public vzbase::noncopyable,
   char             *image_buffer_;
   unsigned int      last_read_sec_;
   unsigned int      last_read_usec_;
+
+ protected:
+  CDpClient        *remote_dp_client_;
+  struct TAG_IRS {
+    unsigned int   is_new;
+    struct timeval tv;
+    unsigned int   ir[MAX_IR_NUM];
+  };
+  TAG_IRS           ir_local_;
+  TAG_IRS           ir_remote_;
 };
 
 }  // namespace alg

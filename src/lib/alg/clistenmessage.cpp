@@ -13,9 +13,17 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #endif
+#include <fstream>
 
 namespace alg {
+#ifdef _WIN32
+#define RDP_ADDR_CONFIG  "./remote_address.json"
+#else  // _LINUX
+#define RDP_ADDR_CONFIG  "/mnt/etc/remote_address.json"
+#endif
+
 static const char  *METHOD_SET[] = {
+  MSG_REMOTE_5_IR,
   MSG_GET_IVAINFO,
   MSG_SET_IVAINFO,
   MSG_RESET_PCNUM
@@ -28,7 +36,10 @@ CListenMessage::CListenMessage()
   , alg_handle_(NULL)
   , image_buffer_(NULL)
   , last_read_sec_(0)
-  , last_read_usec_(0) {
+  , last_read_usec_(0)
+  , remote_dp_client_(NULL) {
+  memset(&ir_local_, 0, sizeof(ir_local_));
+  memset(&ir_remote_, 0, sizeof(ir_remote_));
 }
 
 CListenMessage::~CListenMessage() {
@@ -85,12 +96,12 @@ bool CListenMessage::Start() {
   /* 消息poll */
   main_thread_ = vzbase::Thread::Current();
   if (dp_cli_ == NULL) {
-    vzconn::EventService *p_evt_srv =
+    vzconn::EventService *evt_srv =
       main_thread_->socketserver()->GetEvtService();
 
     dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
                                         dpcli_poll_state_cb, this,
-                                        p_evt_srv);
+                                        evt_srv);
     if (dp_cli_ == NULL) {
       LOG(L_ERROR) << "dp client create poll handle failed.";
 
@@ -100,6 +111,22 @@ bool CListenMessage::Start() {
     }
 
     DpClient_HdlAddListenMessage(dp_cli_, METHOD_SET, METHOD_SET_SIZE);
+
+    // 连接远端星型机构
+    Json::Reader jread;
+    Json::Value  jinfo;
+    std::ifstream ifs;
+    ifs.open(RDP_ADDR_CONFIG);
+    if (ifs.is_open() &&
+        jread.parse(ifs, jinfo)) {
+      if (!jinfo["ip"].isNull()
+          && !jinfo["port"].isNull()) {
+        remote_dp_client_ = CDpClient::Create(
+                              jinfo["ip"].asString().c_str(),
+                              jinfo["port"].asInt(), evt_srv);
+      }
+
+    }
   }
 
   main_thread_->PostDelayed(POLL_TIMEOUT, this, CATCH_IMAGE);
@@ -160,8 +187,16 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
   Json::Value jresp;
   jresp[MSG_CMD]  = dmp->method;
   //jresp[MSG_BODY] = "";
-
-  if (strncmp(dmp->method, MSG_GET_IVAINFO, MAX_METHOD_SIZE) == 0) {
+  if (strncmp(dmp->method, MSG_REMOTE_5_IR, MAX_METHOD_SIZE) == 0) {
+    if (sizeof(ir_remote_) == dmp->data_size) {
+      ir_remote_.is_new = 1;
+      memcpy(&ir_remote_, dmp->data, dmp->data_size);
+      LOG_WARNING("remote ir %d %d \nvalue: %d %d %d %d %d.",
+                  ir_remote_.tv.tv_sec, ir_remote_.tv.tv_usec,
+                  ir_remote_.ir[0], ir_remote_.ir[1], ir_remote_.ir[2],
+                  ir_remote_.ir[3], ir_remote_.ir[4]);
+    }
+  } else if (strncmp(dmp->method, MSG_GET_IVAINFO, MAX_METHOD_SIZE) == 0) {
     // 获取算法参数
     char sver[64] = {0};
     if (IVA_ERROR_NO_ERROR == sdk_iva_get_version(sver)) {
@@ -264,7 +299,7 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
 
     // 读红外测距
 #ifdef _WIN32
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < MAX_IR_NUM; i++) {
       frame.param[i] = rand() % 100;
     }
 #else
@@ -284,13 +319,25 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
     }
 
     if (fd > 0) {
-      for (int i = 0; i < 5; i++) {
-        frame.param[i] = chn_value(fd, chn_cmd_byte(i));
+      for (int i = 0; i < MAX_IR_NUM; i++) {
+        ir_local_.ir[i] = frame.param[i] = chn_value(fd, chn_cmd_byte(i));
+
+        if (1 == ir_remote_.is_new) {
+          frame.param[MAX_IR_NUM + i] = ir_remote_.ir[i];
+        }
       }
     }
     LOG_WARNING("ir value: %d %d %d %d %d.",
                 frame.param[0], frame.param[1], frame.param[2],
                 frame.param[3], frame.param[4]);
+
+    ir_local_.tv.tv_sec = last_read_sec_;
+    ir_local_.tv.tv_usec = last_read_usec_;
+    if (remote_dp_client_) {
+      remote_dp_client_->SendDpMessage(MSG_REMOTE_5_IR, 0,
+                                       &ir_local_, sizeof(ir_local_));
+    }
+    memset(&ir_remote_, 0, sizeof(ir_remote_));
 #endif
     frame.data_size_in_bytes = nlen;
     frame.data = (unsigned char*)image_buffer_;

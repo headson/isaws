@@ -330,8 +330,6 @@ void *osd_display(void *arg) {
 
   RGN_HANDLE hdl = 0;
 
-
-
   // video0
   hdl = 0;
   Hi_LiteOs_OSD_Text_Start(0, hdl+0, 10, 10, posd->ch1);
