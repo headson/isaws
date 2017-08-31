@@ -103,15 +103,11 @@ inline void get_hardware(std::string &hw, std::string &uuid) {
 inline void get_software(std::string &sw) {
   static std::string tsw = "";
 
-  if (sw.empty()) {
-    Json::Reader jr;
-    Json::Value  jv;
+  if (tsw.empty()) {
     std::ifstream ifs;
     ifs.open(DEF_SOFTWARE_FILE);
-    if (ifs.is_open() && jr.parse(ifs, jv)) {
-      tsw = jv["software"].asString();
-    } else {
-      tsw = "1.0.0.1001707310";
+    if (ifs.is_open()) {
+      ifs >> tsw;
     }
   }
   sw = tsw;

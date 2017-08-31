@@ -8,14 +8,11 @@
 int SignalHandle(int n_signal, short events, const void *p_usr_arg) {
   if (n_signal == SIGINT) {
     LOG(L_WARNING) << "revive SIGINT,End of the platform app";
-  }
-  else if (n_signal == SIGTERM) {
+  } else if (n_signal == SIGTERM) {
     LOG(L_WARNING) << "revive SIGTERM,End of the platform app";
-  }
-  else if (n_signal == SIGSEGV) {
+  } else if (n_signal == SIGSEGV) {
     LOG(L_ERROR) << "revive SIGSEGV,End of the platform app";
-  }
-  else if (n_signal == SIGABRT) {
+  } else if (n_signal == SIGABRT) {
     LOG(L_ERROR) << "revive SIGSEGV,End of the platform app";
   }
 #ifdef POSIX
@@ -27,7 +24,6 @@ int SignalHandle(int n_signal, short events, const void *p_usr_arg) {
       n_signal == SIGTERM ||
       n_signal == SIGSEGV ||
       n_signal == SIGABRT) {
-
     hi3518e::CListenMessage::Instance()->Stop();
     LOG(L_WARNING) << "End of the platform app";
     exit(EXIT_SUCCESS);

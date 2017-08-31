@@ -17,7 +17,7 @@
 
 namespace alg {
 #ifdef _WIN32
-#define RDP_ADDR_CONFIG  "./remote_address.json"
+#define RDP_ADDR_CONFIG  "c:/tools/remote_address.json"
 #else  // _LINUX
 #define RDP_ADDR_CONFIG  "/mnt/etc/remote_address.json"
 #endif
@@ -121,11 +121,16 @@ bool CListenMessage::Start() {
         jread.parse(ifs, jinfo)) {
       if (!jinfo["ip"].isNull()
           && !jinfo["port"].isNull()) {
-        remote_dp_client_ = CDpClient::Create(
-                              jinfo["ip"].asString().c_str(),
-                              jinfo["port"].asInt(), evt_srv);
+        int nport = jinfo["port"].asInt();
+        std::string sip = jinfo["ip"].asString();
+        if (nport > 1024 &&
+            vzconn::CInetAddr::IsIPV4(sip.c_str())) {
+          remote_dp_client_ = CDpClient::Create(
+                                sip.c_str(), nport, evt_srv);
+        }
+        LOG(L_INFO) << "remote address "<<sip
+                    << " port "<<nport;
       }
-
     }
   }
 
@@ -291,16 +296,16 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
     if (nlen <= 0) {
       return;
     }
-    //LOG_INFO("get one frame image. length %d, %u %u.",
-    //         nlen,
-    //         last_read_sec_, last_read_usec_);
 
     iva_frame_t frame;
-
     // ¶ÁºìÍâ²â¾à
 #ifdef _WIN32
     for (int i = 0; i < MAX_IR_NUM; i++) {
       frame.param[i] = rand() % 100;
+    }
+    if (remote_dp_client_) {
+      remote_dp_client_->SendDpMessage(MSG_REMOTE_5_IR, 0,
+                                       (char*)&ir_local_, sizeof(ir_local_));
     }
 #else
     static int fd = 0;
@@ -335,7 +340,7 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
     ir_local_.tv.tv_usec = last_read_usec_;
     if (remote_dp_client_) {
       remote_dp_client_->SendDpMessage(MSG_REMOTE_5_IR, 0,
-                                       &ir_local_, sizeof(ir_local_));
+                                       (char*)&ir_local_, sizeof(ir_local_));
     }
     memset(&ir_remote_, 0, sizeof(ir_remote_));
 #endif

@@ -23,14 +23,14 @@
 #define DEF_SYS_LOG_PATH      "c:\\tools\\web\html\\log"
 #define DEF_UPLOAD_FILENAME   "c:\\tools\\upload.tar"
 #define DEF_HARDWARE_FILE     "c:\\tools\\hardware.json"
-#define DEF_SOFTWARE_FILE     "c:\\tools\\software.json"
+#define DEF_SOFTWARE_FILE     "c:\\tools\\software.ver"
 #define DB_PCOUNT_FILEPATH    "c:\\tools\\pcount.db"
 #else
-#define DEF_WEB_SRV_PATH      "/mnt/web/"
-#define DEF_SYS_LOG_PATH      "/mnt/web/log"
+#define DEF_WEB_SRV_PATH      "/tmp/web/"
+#define DEF_SYS_LOG_PATH      "/tmp/web/log"
 #define DEF_UPLOAD_FILENAME   "/tmp/upload.tar"
-#define DEF_HARDWARE_FILE     "/mnt/etc/hardware.json"
-#define DEF_SOFTWARE_FILE     "/mnt/etc/software.json"
+#define DEF_HARDWARE_FILE     "/etc/hardware.json"
+#define DEF_SOFTWARE_FILE     "/mnt/usr/software.ver"
 #define DB_PCOUNT_FILEPATH    "/mnt/usr/pcount.db"
 #endif
 
@@ -115,5 +115,6 @@ typedef enum _MSG_RET {
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_HW_INFO          "hw_info"           // 硬件信息
 #define KVDB_NETWORK          "network"           // 网络参数
+#define KVDB_TIME_INFO        "time_info"         // 时间信息
 #define KVDB_USER_LIST        "user_list"         // 登录用户;username\password
 #endif  // VMESSAGE_H
