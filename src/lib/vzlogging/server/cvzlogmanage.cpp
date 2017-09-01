@@ -148,9 +148,9 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
           n_timeout = atoi(p_desc + 1);
           if (s_app_name[0] == '\0' ||
               s_descrebe[0] == '\0' ||
-              n_timeout < 5 || n_timeout > 80) {
+              n_timeout < 5 || n_timeout > 180) {
             VZ_ERROR("get a error config %s.\n", s_line);
-            break;
+            continue;
           }
 
           // 去重复
@@ -286,7 +286,7 @@ int CVzLogManage::WatchdogProcess(const char* smsg, unsigned int nmsg) {
     if (k_shm_mod.mod_state[i].mark == DEF_TAG_MARK &&
         !strncmp(k_shm_mod.mod_state[i].descrebe, s_descrebe, DEF_USER_DESCREBE_MAX)       // 描述符
         && !strncmp(k_shm_mod.mod_state[i].app_name, s_app_name, DEF_PROCESS_NAME_MAX)) {  // 进程名
-      if (5 <= n_timeout && n_timeout <= 80) {
+      if (5 <= n_timeout && n_timeout < 180) {
         k_shm_mod.mod_state[i].timeout = n_timeout;
       }
       unsigned int nlast = k_shm_mod.mod_state[i].last_heartbeat;

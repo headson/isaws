@@ -12,8 +12,10 @@ class KvdbSqlite : public vzbase::noncopyable {
  public:
   KvdbSqlite();
   virtual ~KvdbSqlite();
+
   bool InitKvdb(const char *kvdb_path, const char *backup_path);
   void UinitKvdb();
+
   void RemoveDatabase(const char *kvdb_path);
   bool ReplaceKeyValue(const char *key, int key_size,
                        const char *value, int value_size);
@@ -23,9 +25,21 @@ class KvdbSqlite : public vzbase::noncopyable {
   // Copy the current database to backup database
   bool BackupDatabase();
   // If the restore database is null, then delete all of the current data
-  bool RestoreDatabase();
+  bool RestoreDatabase(std::string backup_path);
+
+  inline std::string GetKvdbPath() {
+    return kvdb_path_;
+  }
+
+  inline std::string GetBackupPath() {
+    return backup_path_;
+  }
+
+  bool CheckDBBackup();
+  bool CheckDBRecover();
 
   void ForceTransaction();
+
  public:
   /*
   @function: config sqlite soft max memory use and set sqlite
@@ -38,24 +52,35 @@ class KvdbSqlite : public vzbase::noncopyable {
   */
   static void ConfigGlobalKVDB(int soft_limit_heap_size = 64,
                                int malloc_heap_size = 64);
+
  private:
   void CheckTransaction();
+
   bool InitStmt();
+
   bool CheckFileExsits(const char *kvdb_path);
   bool CopyDatabase(sqlite3 *from, sqlite3* to);
   bool InitBackupDatabase(const char *backup_path);
+
  private:
   static const unsigned int MAX_TRANSACTION_SIZE = 64;
   static const unsigned int SIZE_OF_HEADER       = 5;
-  static bool is_init_memory_use_;
-  sqlite3 *db_instance_;
+  static bool   is_init_memory_use_;
+
+  sqlite3      *db_instance_;
   sqlite3_stmt *replace_stmt_;
   sqlite3_stmt *delete_stmt_;
   sqlite3_stmt *select_stmt_;
-  std::string backup_path_;
+  
+  std::string   kvdb_path_;
+  std::string   kvdb_bak_path_;
+  std::string   backup_path_;
+
+  unsigned int  is_db_update_;
   // unsigned int is_transaction_;
 };
 
 }
 
 #endif //  VZCONN_SERVER_KVDB_SQLITE_H_
+

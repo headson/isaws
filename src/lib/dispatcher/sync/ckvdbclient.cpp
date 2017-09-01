@@ -247,6 +247,7 @@ int32 CKvdbClient::GetKey(const char  *p_key,
     }
     p_value->append(p_cur_msg_->value,
                     n_val_len);
+    LOG(L_INFO) << p_value->c_str();
     return n_val_len;
   }
   return 0;

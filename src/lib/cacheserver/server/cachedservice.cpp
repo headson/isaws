@@ -242,6 +242,7 @@ CachedStanza::Ptr CachedService::GetFile(const char *path) {
   if(!stanza) {
     return CachedStanza::Ptr();
   }
+  stanza->SetPath(path);
 
   if(ReadFile(stanza->path(), stanza->data())) {
     // AddFile(stanza, false);

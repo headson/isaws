@@ -3,9 +3,8 @@
 
 namespace kvdb {
 
-
-KvdbServer::KvdbServer(vzconn::EventService &event_service)
-  : event_service_(event_service),
+KvdbServer::KvdbServer(vzbase::Thread *main_thread)
+  : main_thread_(main_thread),
     tcp_server_(NULL),
     kvdb_sqlite_(NULL) {
 }
@@ -13,25 +12,28 @@ KvdbServer::KvdbServer(vzconn::EventService &event_service)
 KvdbServer::~KvdbServer() {
 }
 
-
-bool KvdbServer::StartKvdbServer(
-  const char *listen_addr,
-  unsigned short listen_port,
-  const char *kvdb_path,
-  const char *backup_path) {
+bool KvdbServer::StartKvdbServer(const char *listen_addr,
+                                 unsigned short listen_port,
+                                 const char *kvdb_path,
+                                 const char *backup_path) {
   if (tcp_server_ != NULL || kvdb_sqlite_ != NULL) {
     LOG(L_ERROR) << "Failure to restart kvdb server";
     return false;
   }
-  vzconn::CEvtTcpServer *tcp_server_ = vzconn::CEvtTcpServer::Create(&event_service_,
-                                       this,
-                                       this);
+  vzconn::CEvtTcpServer *tcp_server_ =
+    vzconn::CEvtTcpServer::Create(main_thread_->socketserver()->GetEvtService(),
+                                  this,
+                                  this);
 
   int32 n_ret = 0;
   vzconn::CInetAddr c_addr(listen_addr, listen_port);
   n_ret = tcp_server_->Open(&c_addr, false, true);
 
   kvdb_sqlite_ = new KvdbSqlite();
+  if (NULL == kvdb_sqlite_) {
+    return false;
+  }
+
   if(!kvdb_sqlite_->InitKvdb(kvdb_path, backup_path)) {
     LOG(L_ERROR) << "open kvdb error";
     kvdb_sqlite_->RemoveDatabase(kvdb_path);
@@ -40,6 +42,8 @@ bool KvdbServer::StartKvdbServer(
       return false;
     }
   }
+
+  main_thread_->PostDelayed(1 * 1000, this);
   return true;
 }
 
@@ -100,7 +104,7 @@ bool KvdbServer::ProcessKvdbService(const KvdbMessage *kvdb_msg,
     return kvdb_sqlite_->DeleteKeyValue(kvdb_msg->key,
                                         kvdb_msg->key_size);
   } else if (kvdb_msg->type == KVDB_RESTORE) {
-    return kvdb_sqlite_->RestoreDatabase();
+    return kvdb_sqlite_->RestoreDatabase(kvdb_sqlite_->GetBackupPath());
   } else if (kvdb_msg->type == KVDB_BACKUP) {
     return kvdb_sqlite_->BackupDatabase();
   }
@@ -148,4 +152,15 @@ int32 KvdbServer::HandleSendPacket(vzconn::VSocket *p_cli) {
 void  KvdbServer::HandleClose(vzconn::VSocket *p_cli) {
 }
 
+void KvdbServer::OnMessage(vzbase::Message* msg) {
+  if (kvdb_sqlite_ != NULL) {
+    // if kvdb and secret_kvdb state all istrue;
+    kvdb_sqlite_->CheckDBBackup();
+  }
+
+  // timer
+  vzbase::Thread::Current()->PostDelayed(10 * 60 * 1000, this);
 }
+
+}
+

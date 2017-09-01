@@ -56,10 +56,10 @@ typedef struct _TagDpMsg {
 enum {
   KVDB_INVALID = -1,            // 非法KVDB
   KVDB_REPLACE = 0,
-  KVDB_DELETE = 1,
-  KVDB_SELECT = 2,
+  KVDB_DELETE  = 1,
+  KVDB_SELECT  = 2,
 
-  KVDB_BACKUP = 3,
+  KVDB_BACKUP  = 3,
   KVDB_RESTORE = 4,
 
   KVDB_SUCCEED = 5,
@@ -70,7 +70,7 @@ enum {
 
 typedef struct _KvdbMsg {
   unsigned int type;            // 请求类型;回执错误代码
-  unsigned int id;              // 
+  unsigned int id;              //
   unsigned int key_size;        // key 长度
   char key[MAX_KVDB_KEY_SIZE];
   char value[0];

@@ -1,8 +1,14 @@
 #include "dispatcher/kvdbserver/kvdbsqlite.h"
 #include "vzlogging/logging/vzloggingcpp.h"
+#include "dispatcher/base/pkghead.h"
 #include <string.h>
 #include <stdio.h>
-
+#include<stdlib.h>
+#ifdef WIN32
+#include <io.h>
+#else
+#include <unistd.h>
+#endif // WIN32
 namespace kvdb {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -15,6 +21,7 @@ const char KVDB_SQL[] = "CREATE TABLE [kvdb] ("
 const char REPLACE_STMT_SQL[] = "REPLACE INTO kvdb(key, value) VALUES (?, ?);";
 const char DELETE_STMT_SQL[] = "DELETE FROM kvdb where kvdb.key = ?;";
 const char SELECT_STMT_SQL[] = "SELECT kvdb.value from kvdb where kvdb.key = ?";
+const char KVDB_SUFFIX[] = "_back";
 
 bool KvdbSqlite::is_init_memory_use_ = false;
 
@@ -22,7 +29,11 @@ KvdbSqlite::KvdbSqlite()
   : db_instance_(NULL),
     replace_stmt_(NULL),
     delete_stmt_(NULL),
-    select_stmt_(NULL) {
+    select_stmt_(NULL),
+    kvdb_path_(""),
+    kvdb_bak_path_(""),
+    backup_path_(""),
+    is_db_update_(1) {
 }
 
 KvdbSqlite::~KvdbSqlite() {
@@ -36,10 +47,15 @@ void KvdbSqlite::RemoveDatabase(const char *kvdb_path) {
 
 bool KvdbSqlite::InitKvdb(const char *kvdb_path, const char *backup_path) {
   //
+  kvdb_path_ = kvdb_path;
+  kvdb_bak_path_ = kvdb_path_;
+  kvdb_bak_path_.append(KVDB_SUFFIX);
   if(backup_path) {
     backup_path_ = backup_path;
     InitBackupDatabase(backup_path);
   }
+  CheckDBRecover();
+
   //
   bool file_exsits = CheckFileExsits(kvdb_path);
   //
@@ -58,17 +74,45 @@ bool KvdbSqlite::InitKvdb(const char *kvdb_path, const char *backup_path) {
       return false;
     }
   }
-  res = sqlite3_exec(db_instance_, "PRAGMA journal_mode = MEMORY;", 0,0,0);
-  if(res != SQLITE_OK) {
+
+  // add by pyh 2017-08-31 数据库损坏
+  res = sqlite3_exec(db_instance_, "PRAGMA synchronous = FULL;", 0, 0, 0);
+  if (res != SQLITE_OK) {
     LOG(L_ERROR) << "PRAGMA journal_mode = MEMORY;";
     return false;
   }
+
+  //res = sqlite3_exec(db_instance_, "PRAGMA journal_mode = MEMORY;", 0, 0, 0);
+  //if (res != SQLITE_OK) {
+  //  LOG(L_ERROR) << "PRAGMA journal_mode = MEMORY;";
+  //  return false;
+  //}
+
   //res = sqlite3_exec(db_instance_, "BEGIN TRANSACTION;", 0,0,0);
   //if(res != SQLITE_OK) {
   //  LOG(L_ERROR) << "Process transaction begin;";
   //  return false;
   //}
+
   return InitStmt();
+}
+
+void KvdbSqlite::UinitKvdb() {
+  int res = 0;
+  res = sqlite3_finalize(replace_stmt_);
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "Failure to finalize replace_stmt_";
+  }
+  res = sqlite3_finalize(delete_stmt_);
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "Failure to finalize delete_stmt_";
+  }
+  res = sqlite3_finalize(select_stmt_);
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "Failure to finalize remove_stmt_";
+  }
+  sqlite3_close(db_instance_);
+  db_instance_ = NULL;
 }
 
 bool KvdbSqlite::InitBackupDatabase(const char *backup_path) {
@@ -158,24 +202,6 @@ bool KvdbSqlite::InitStmt() {
   return true;
 }
 
-void KvdbSqlite::UinitKvdb() {
-  int res = 0;
-  res = sqlite3_finalize(replace_stmt_);
-  if(res != SQLITE_OK) {
-    LOG(L_ERROR) << "Failure to finalize replace_stmt_";
-  }
-  res = sqlite3_finalize(delete_stmt_);
-  if(res != SQLITE_OK) {
-    LOG(L_ERROR) << "Failure to finalize delete_stmt_";
-  }
-  res = sqlite3_finalize(select_stmt_);
-  if(res != SQLITE_OK) {
-    LOG(L_ERROR) << "Failure to finalize remove_stmt_";
-  }
-  sqlite3_close(db_instance_);
-  db_instance_ = NULL;
-}
-
 bool KvdbSqlite::CheckFileExsits(const char *kvdb_path) {
   FILE *fp = fopen(kvdb_path, "rb");
   if(fp == NULL) {
@@ -216,8 +242,10 @@ bool KvdbSqlite::ReplaceKeyValue(const char *key, int key_size,
     return false;
   }
   LOG(L_INFO) << "Replace Key " << res;
-  LOG(L_INFO).write(key, key_size);
+  LOG(L_ERROR).write(key, key_size);
   LOGB_INFO(key, key_size);
+
+  is_db_update_++;
   return true;
 }
 
@@ -244,6 +272,9 @@ bool KvdbSqlite::DeleteKeyValue(const char *key, int key_size) {
     LOG(L_ERROR) << "Failure to call sqlite3_step";
     return false;
   }
+  LOG(L_ERROR).write(key, key_size);
+
+  is_db_update_++;
   return true;
 }
 
@@ -272,6 +303,8 @@ bool KvdbSqlite::SelectKeyValue(const char *key, int key_size,
     //memcpy(&buffer[SIZE_OF_HEADER], data, data_size);
     buffer.resize(data_size);
     memcpy(&buffer[0], data, data_size);
+    //LOG(L_INFO) << "key "<<key;
+    //LOGB_INFO((char*)data, data_size);
     return true;
   }
   LOGB_INFO(key, key_size);
@@ -279,7 +312,6 @@ bool KvdbSqlite::SelectKeyValue(const char *key, int key_size,
   LOG(L_INFO) << "Failure find this key " << res;
   return false;
 }
-
 
 bool KvdbSqlite::BackupDatabase() {
   if(backup_path_.empty()) {
@@ -296,24 +328,144 @@ bool KvdbSqlite::BackupDatabase() {
   /* Close the database connection opened on database file zFilename
   ** and return the result of this function. */
   sqlite3_close(db_backup);
+  LOG(L_ERROR)<<"backup database.";
   return copy_res;
 }
 
-bool KvdbSqlite::RestoreDatabase() {
-  if(backup_path_.empty()) {
+// check database is damage callback
+int Sqlite3CheckKVDBCallBack(void *user_data, int a, char** b, char** c) {
+  if (NULL == user_data) {
+    LOG(L_ERROR) << "param is failed.";
+    return 0;
+  }
+
+  if (strncmp(*b, "ok", 2) == 0) {
+    *((unsigned int*)user_data) = 0;
+  } else {
+    *((unsigned int*)user_data) = 1;
+  }
+  return 0;
+}
+
+bool KvdbSqlite::CheckDBBackup() {
+  LOG(L_WARNING) << "to check kvdb and backup ...";
+  if (NULL == db_instance_) {
+    LOG(L_ERROR) << "have not open database ...";
+    return false;
+  }
+
+  //sqlite3 *db = NULL;
+  //int res = sqlite3_open(kvdb_path_.c_str(), &db);
+  //if (res) {
+  //  LOG(L_ERROR) << "Failure to open the database";
+  //  sqlite3_close(db);
+  //  return false;
+  //}
+
+  char *error_msg = NULL;
+  unsigned int is_error = 0;
+  int res = sqlite3_exec(db_instance_,
+                         "PRAGMA integrity_check;",
+                         Sqlite3CheckKVDBCallBack,
+                         &is_error,
+                         &error_msg);
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "PRAGMA integrity_check;";
+    sqlite3_free(error_msg);
+    is_error = 1;
+  }
+
+  if (1 == is_error) {
+    UinitKvdb();
+    LOG(L_ERROR) << "recover from backup database."<<is_error;
+    // TODO 从备份中恢复数据库
+    char scmd[1024] = { 0 };
+    sprintf(scmd, "cp %s %s;sync",
+            kvdb_bak_path_.c_str(),
+            kvdb_path_.c_str());
+    LOG(L_ERROR) << "cmd "<<scmd;
+    system(scmd);
+
+    return InitKvdb(kvdb_path_.c_str(), backup_path_.c_str());
+  } else {
+    if (is_db_update_ > 0) {
+      UinitKvdb();
+      LOG(L_ERROR) << "backup database."<<is_error;
+      // TODO 备份数据库
+      char scmd[1024] = { 0 };
+      sprintf(scmd, "cp %s %s;sync",
+              kvdb_path_.c_str(),
+              kvdb_bak_path_.c_str());
+      LOG(L_ERROR) << "cmd "<<scmd;
+      system(scmd);
+
+      is_db_update_ = 0;
+      return InitKvdb(kvdb_path_.c_str(), backup_path_.c_str());
+    }
+  }
+  return true;
+}
+
+bool KvdbSqlite::CheckDBRecover() {
+  LOG(L_WARNING) << "to check kvdb and recover ...";
+
+  if (CheckFileExsits(kvdb_path_.c_str()) == false) {
+    return false;
+  }
+
+  sqlite3 *db = NULL;
+  int res = sqlite3_open(kvdb_path_.c_str(), &db);
+  if (res) {
+    LOG(L_ERROR) << "Failure to open the database";
+    sqlite3_close(db);
+    return false;
+  }
+
+  char *error_msg = NULL;
+  unsigned int is_error = 0;
+  res = sqlite3_exec(db,
+                     "PRAGMA integrity_check;",
+                     Sqlite3CheckKVDBCallBack,
+                     &is_error,
+                     &error_msg);
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "PRAGMA integrity_check;";
+    sqlite3_free(error_msg);
+    is_error = 1;
+  }
+  sqlite3_close(db);
+
+  LOG(L_ERROR) << "check database."<<is_error;
+  if (1 == is_error) {
+    LOG(L_ERROR) << "recover from backup database."<<is_error;
+    // TODO 从备份中恢复数据库
+    char scmd[1024] = { 0 };
+    sprintf(scmd, "cp %s %s;sync",
+            kvdb_bak_path_.c_str(),
+            kvdb_path_.c_str());
+    LOG(L_ERROR) << "cmd "<<scmd;
+    system(scmd);
+  }
+  return true;
+}
+
+bool KvdbSqlite::RestoreDatabase(std::string backup_path) {
+  if (backup_path.empty()) {
     return true;
   }
+  LOG(L_WARNING) << "backup database to local ....";
   CheckTransaction();
   sqlite3 *db_backup = NULL;
-  int res = sqlite3_open(backup_path_.c_str(), &db_backup);
+  int res = sqlite3_open(backup_path.c_str(), &db_backup);
   if(res != SQLITE_OK) {
-    LOG(L_ERROR) << "Failure to open the database " << backup_path_;
+    LOG(L_ERROR) << "Failure to open the database " << backup_path;
     return false;
   }
   bool copy_res = CopyDatabase(db_backup, db_instance_);
   /* Close the database connection opened on database file zFilename
   ** and return the result of this function. */
   sqlite3_close(db_backup);
+  LOG(L_ERROR)<<"restore database.";
   return copy_res;
 }
 
@@ -386,3 +538,4 @@ void KvdbSqlite::ConfigGlobalKVDB(int soft_limit_heap_size,
 }
 
 }
+

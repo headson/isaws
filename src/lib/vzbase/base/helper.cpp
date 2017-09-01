@@ -282,13 +282,9 @@ int Gb2312ToUtf8(const char *src,
   }
   return 0;
 }
-
 #endif
 
-
-const std::string CalculationsFileMd5(
-  const std::string &file_name) {
-
+const std::string CalculationsFileMd5(const std::string &file_name) {
   FILE * fp = fopen(file_name.c_str(), "rb");
   if (fp == NULL) {
     return "";
