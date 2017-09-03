@@ -27,6 +27,7 @@ inline int my_system(const char * cmd) {
     printf("my_system cmd is NULL!\n");
     return -1;
   }
+  LOG(L_ERROR) << cmd;
   return system(cmd);
 
 #ifdef _LIMUX

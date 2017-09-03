@@ -55,6 +55,9 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/base/stringhelper.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/stringhelper.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h
@@ -110,6 +113,9 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/base/stringhelper.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/stringhelper.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp

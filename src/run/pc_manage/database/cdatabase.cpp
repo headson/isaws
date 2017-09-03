@@ -280,7 +280,7 @@ int32_t CDataBase::DeleteTableDevice(QString& sUuid) {
 }
 
 int32_t CDataBase::InsertTableDevice(const CDevInfo& cDev) {
-  if (cDev.id_.isEmpty()) {
+  /*if (cDev.id_.isEmpty()) {
     return -1;
   }
 
@@ -306,7 +306,7 @@ int32_t CDataBase::InsertTableDevice(const CDevInfo& cDev) {
   if (bRet == false) {
     qDebug() << "InsertTableDevice failed " << query.lastError() << endl;
     return -1;
-  }
+  }*/
   return 0;
 }
 
@@ -324,14 +324,14 @@ int32_t CDataBase::UpdateTableDeviceOffline() {
 }
 
 int32_t CDataBase::UpdateTableDevice(const CDevInfo& cDev) {
-  if (cDev.id_.isEmpty()) {
+  /*if (cDev.id_.isEmpty()) {
     return -1;
-  }
+  }*/
 
   QSqlQuery query;
   bool bRet = false;
 
-  QString sSql = "UPDATE device SET IS_ONLINE=" + QString::number(cDev.is_online_) + "";
+  /*QString sSql = "UPDATE device SET IS_ONLINE=" + QString::number(cDev.is_online_) + "";
   if (cDev.check_code_ != "NULL") {
     sSql += ", CHECK_CODE='" + cDev.check_code_ + "'";
   }
@@ -380,7 +380,7 @@ int32_t CDataBase::UpdateTableDevice(const CDevInfo& cDev) {
   if (!bRet) {
     qDebug() << "UpdateTableDevice failed " << query.lastError() << endl;
     return -1;
-  }
+  }*/
   //qDebug("%s.\n", sSql.toStdString().c_str());
   return 0;
 }
@@ -398,7 +398,7 @@ int32_t CDataBase::SelectTableDevice(CDevInfo& cDev, const QString& sUuid) {
   if (bRet) {
     if (query.next()) {
       int32_t nIndex = 0;
-      cDev.id_ = query.value(nIndex++).toString();
+      /*cDev.id_ = query.value(nIndex++).toString();
       cDev.check_code_ = query.value(nIndex++).toString();
       cDev.device_type_id_ = query.value(nIndex++).toInt();
       cDev.name_ = query.value(nIndex++).toString();
@@ -422,7 +422,7 @@ int32_t CDataBase::SelectTableDevice(CDevInfo& cDev, const QString& sUuid) {
       cDev.heart_cycle_ = query.value(nIndex++).toInt();
       cDev.install_addr_ = query.value(nIndex++).toString();
       cDev.note_ = query.value(nIndex++).toString();
-      cDev.photo_ = query.value(nIndex++).toString();
+      cDev.photo_ = query.value(nIndex++).toString();*/
     }
   }
   if (!bRet) {
@@ -464,7 +464,7 @@ int32_t CDataBase::SelectTableDevice(QVector<CDevInfo>* aDev, const QString& sFi
       CDevInfo cDev;
       int32_t nIndex = 0;
 
-      cDev.id_ = query.value(nIndex++).toString();
+      /*cDev.id_ = query.value(nIndex++).toString();
       cDev.check_code_ = query.value(nIndex++).toString();
       cDev.device_type_id_ = query.value(nIndex++).toInt();
       cDev.name_ = query.value(nIndex++).toString();
@@ -488,7 +488,7 @@ int32_t CDataBase::SelectTableDevice(QVector<CDevInfo>* aDev, const QString& sFi
       cDev.heart_cycle_ = query.value(nIndex++).toInt();
       cDev.install_addr_ = query.value(nIndex++).toString();
       cDev.note_ = query.value(nIndex++).toString();
-      cDev.photo_= query.value(nIndex++).toString();
+      cDev.photo_= query.value(nIndex++).toString();*/
       aDev->push_back(cDev);
     }
   }

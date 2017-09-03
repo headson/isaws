@@ -42,14 +42,15 @@ void CListenMessage::GetHwInfo() {
     jinfo["sw_version"] = "1.0.0.1001707310";
     jinfo["hw_version"] = "1.0.0.1001707310";
     jinfo["alg_version"] = "1.0.0.1001707310";
+
     jinfo["net"]["wifi_en"] = 0;
     jinfo["net"]["dhcp_en"] = 0;
-    jinfo["net"]["ip_addr"] = "192.168.1.100";
+    jinfo["net"]["ip_addr"] = "127.0.0.1";
     jinfo["net"]["netmask"] = "255.255.255.0";
     jinfo["net"]["gateway"] = "192.168.1.1";
     jinfo["net"]["phy_mac"] = "01:12:23:34:45:67";
     jinfo["net"]["dns_addr"] = "192.168.1.1";
-    jinfo["net"]["http_port"] = 80;
+    jinfo["net"]["http_port"] = 8000;
     jinfo["net"]["rtsp_port"] = 554;
   }
 
@@ -88,11 +89,13 @@ void CListenMessage::GetHwInfo() {
   // hardware/uuid
   vzbase::get_hardware(sys_info_.hw_version, sys_info_.dev_uuid);
 
-  // save size
-  
+  // save to kvdb
+  std::string sjson = jinfo["net"].toStyledString();
+  Kvdb_SetKey(KVDB_NETWORK, strlen(KVDB_NETWORK), sjson.c_str(), sjson.size());
 }
 
 bool CListenMessage::GetDevInfo(Json::Value &jbody) {
+  jbody["dev_uuid"] = sys_info_.dev_uuid;
   jbody["dev_name"] = sys_info_.dev_name;
   jbody["dev_type"] = sys_info_.dev_type;
 
@@ -108,7 +111,7 @@ bool CListenMessage::GetDevInfo(Json::Value &jbody) {
   jbody["net"]["ip_addr"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::ip_addr_));
   jbody["net"]["netmask"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::netmask_));
   jbody["net"]["gateway"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::gateway_));
-  jbody["net"]["phy_mac"]  = CNetCtrl::phy_mac_;
+  jbody["net"]["phy_mac"] = CNetCtrl::phy_mac_;
 
   jbody["net"]["dns_addr"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::dns_addr_));
 

@@ -43,6 +43,7 @@ class CVideoCatch {
   void Stop();
 
   void SetOsdChn2(const char *osd);
+  int  OSDAdjust(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, int bgalpha = 10);
 
  public:
   HI_S32 GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream);

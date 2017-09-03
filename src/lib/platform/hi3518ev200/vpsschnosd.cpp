@@ -213,6 +213,44 @@ int OSD_Overlay_RGN_Handle_Init(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, 
   return HI_SUCCESS;
 }
 
+int CVideoCatch::OSDAdjust(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, int bgalpha) {
+  HI_S32 s32Ret = HI_FAILURE;
+  MPP_CHN_S stChn;
+  VENC_GRP VencGrp;
+  RGN_CHN_ATTR_S stChnAttr;
+
+  memset(&stChnAttr, 0, sizeof(stChnAttr));
+  stChn.enModId = HI_ID_VENC;
+  stChn.s32DevId = 0;
+  stChn.s32ChnId = chn_id;
+
+  stChnAttr.bShow = HI_TRUE;
+  stChnAttr.enType = OVERLAY_RGN;
+  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32X = x;
+  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y = y;
+  stChnAttr.unChnAttr.stOverlayChn.u32BgAlpha = bgalpha;
+  stChnAttr.unChnAttr.stOverlayChn.u32FgAlpha = 128;
+  stChnAttr.unChnAttr.stOverlayChn.u32Layer = Handle;
+
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.bAbsQp = HI_FALSE;
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.s32Qp = 0;
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.s32Qp = 0;
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.bQpDisable = HI_FALSE;
+
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Height = 16 * (Handle % 2 + 1);
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Width = 16 * (Handle % 2 + 1);
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.u32LumThresh = 128;
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.enChgMod = LESSTHAN_LUM_THRESH;
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.bInvColEn = HI_FALSE;
+  s32Ret = HI_MPI_RGN_SetDisplayAttr(Handle, &stChn, &stChnAttr);
+  if (HI_SUCCESS != s32Ret) {
+    printf("HI_MPI_RGN_AttachToChn (%d to %d) failed with %#x!\n", Handle, VencGrp, s32Ret);
+    return HI_FAILURE;
+  }
+
+  return HI_SUCCESS;
+}
+
 int OSD_Overlay_RGN_Display_English(RGN_HANDLE Handle, const char *pRgnContent, int ncolor) {
   HI_S32 s32Ret = HI_FAILURE;
   BITMAP_S stBitmap;
@@ -266,7 +304,7 @@ HI_S32 Hi_LiteOs_OSD_Text_Start(int chn_id, RGN_HANDLE Handle, int x, int y, con
 }
 
 HI_S32 Hi_LiteOs_OSD_Cover_Start(int chn_id, RGN_HANDLE Handle, int x, int y, int w, int h) {
-  OSD_Overlay_RGN_Handle_Init(chn_id, Handle, x, y, w, h, 96);
+  OSD_Overlay_RGN_Handle_Init(chn_id, Handle, x, y, w, h, 128);
 }
 
 
@@ -334,13 +372,13 @@ void *osd_display(void *arg) {
   hdl = 0;
   Hi_LiteOs_OSD_Text_Start(0, hdl+0, 10, 10, posd->ch1);
   Hi_LiteOs_OSD_Text_Start(0, hdl+1, 10, SHM_VIDEO_0_H - 18, posd->ch2);
-  Hi_LiteOs_OSD_Cover_Start(0, hdl+2, 0, SHM_VIDEO_0_H/2+64, SHM_VIDEO_0_W, 40);
+  Hi_LiteOs_OSD_Cover_Start(0, hdl+2, 0, SHM_VIDEO_0_H/2+64, SHM_VIDEO_0_W, 80);
 
   // video1
   hdl = 3;
   Hi_LiteOs_OSD_Text_Start(1, hdl+0, 10, 10, posd->ch1);
   Hi_LiteOs_OSD_Text_Start(1, hdl+1, 10, SHM_VIDEO_1_H - 18, posd->ch2);
-  Hi_LiteOs_OSD_Cover_Start(1, hdl+2, 0, SHM_VIDEO_1_H/2+28, SHM_VIDEO_1_W, 16);
+  Hi_LiteOs_OSD_Cover_Start(1, hdl+2, 0, SHM_VIDEO_1_H/2+28, SHM_VIDEO_1_W, 32);
 
   int ncolor = 0xFFFF;
   while(1) {

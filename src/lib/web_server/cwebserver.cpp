@@ -53,7 +53,7 @@ bool CWebServer::Start(const char *s_web_path, const char *s_http_port) {
   
   s_web_def_opts_.document_root = (char*)s_web_path;
   s_web_def_opts_.enable_directory_listing = "yes";
-  s_web_def_opts_.index_files = "login.html";
+  s_web_def_opts_.index_files = "Login.html";
 
   // mg_set_timer(p_web_conn_, mg_time() + SESSION_CHECK_INTERVAL);
 

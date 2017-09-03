@@ -79,8 +79,9 @@ class CListenMessage : public vzbase::noncopyable,
     struct timeval tv;
     unsigned int   ir[MAX_IR_NUM];
   };
-  TAG_IRS           ir_local_;
-  TAG_IRS           ir_remote_;
+  TAG_IRS                 ir_local_;
+  vzbase::CriticalSection ir_mutex_;
+  TAG_IRS                 ir_remote_;
 };
 
 }  // namespace alg

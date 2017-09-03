@@ -24,6 +24,7 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/global_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/win_vs2010_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/win_vs2013_environment_settings.cmake
+	${CMAKE_CURRENT_SOURCE_DIR}/linux_u1004_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/arm_imx6q_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/arm_hi3516_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/arm_hi3518_environment_settings.cmake
@@ -34,6 +35,7 @@ SOURCE_GROUP(cmake FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/global_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/win_vs2010_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/win_vs2013_environment_settings.cmake
+	${CMAKE_CURRENT_SOURCE_DIR}/linux_u1004_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/arm_imx6q_environment_settings.cmake
 	${CMAKE_CURRENT_SOURCE_DIR}/arm_hi3516_environment_settings.cmake 
 	${CMAKE_CURRENT_SOURCE_DIR}/arm_hi3518_environment_settings.cmake

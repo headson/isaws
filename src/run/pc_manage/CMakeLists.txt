@@ -12,7 +12,7 @@ SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 #########################################################################
-#INCLUDE_DIRECTORIES(${LIBVZNET_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/sdk/ffmpeg/inc)
 MESSAGE(STATUS "Print the include directores")
 get_property(inc_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
 foreach(inc_dir ${inc_dirs})
@@ -22,7 +22,7 @@ endforeach()
 #########################################################################
 #Step 2 : Add library directories
 MESSAGE(STATUS "Step 2 : Add library directories")
-#LINK_DIRECTORIES(${LIBVZNET_LIBRARY_DIR})
+LINK_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/sdk/ffmpeg/lib)
 MESSAGE(STATUS "Print the link directores")
 get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY LINK_DIRECTORIES)
 foreach(link_dir ${link_dirs})
@@ -49,8 +49,16 @@ qt5_add_resources(QRC_FILES
 )
 
 qt5_wrap_ui(UI_FILES 
-	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.ui
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.ui
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideoplayer.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/clivewidget.ui
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdevcfgwidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/civacfgwidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdbgvdowidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cuplinkwidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cvdocfgwidget.ui
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.ui
 	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/cmaindialog.ui
@@ -68,12 +76,30 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.h
 	${CMAKE_CURRENT_SOURCE_DIR}/common/cmytitlebar.cpp
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.h
-	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevicedetect.h
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevicedetect.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.h
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideoplayer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideoplayer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/chttpflvclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/chttpflvclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideowidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideowidget.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/clivewidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/clivewidget.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdevcfgwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdevcfgwidget.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/config/civacfgwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/civacfgwidget.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdbgvdowidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdbgvdowidget.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cuplinkwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cuplinkwidget.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cvdocfgwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cvdocfgwidget.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.h
 	${CMAKE_CURRENT_SOURCE_DIR}/maindialog/clogindialog.cpp
@@ -100,16 +126,48 @@ SOURCE_GROUP(common FILES
 )
 
 SOURCE_GROUP(devtree FILES 
-	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.ui
-	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.h
-	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistitem.cpp
-	
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevicedetect.h
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevicedetect.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.ui
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.h
 	${CMAKE_CURRENT_SOURCE_DIR}/devtree/cdevlistwidget.cpp
+)
+
+SOURCE_GROUP(preview FILES 
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideoplayer.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideoplayer.h
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideoplayer.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/chttpflvclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/chttpflvclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideowidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/cvideowidget.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/clivewidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/clivewidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/preview/clivewidget.cpp
+)
+
+SOURCE_GROUP(config FILES 
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdevcfgwidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdevcfgwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdevcfgwidget.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cuplinkwidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cuplinkwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cuplinkwidget.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cvdocfgwidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cvdocfgwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cvdocfgwidget.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/config/civacfgwidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/civacfgwidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/civacfgwidget.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdbgvdowidget.ui
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdbgvdowidget.h
+	${CMAKE_CURRENT_SOURCE_DIR}/config/cdbgvdowidget.cpp
 )
 
 SOURCE_GROUP(maindialog FILES 

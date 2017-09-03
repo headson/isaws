@@ -78,7 +78,7 @@ bool CNetCtrl::Start() {
     return false;
   }
 
-  int ret = mcast_sock_->Open((unsigned char*)DEF_MCAST_IP,
+  int ret = mcast_sock_->Open(DEF_MCAST_IP,
                               DEF_MCAST_DEV_PORT);
   if (ret != false) {
     LOG(L_ERROR) << "multi socket open failed.";
@@ -161,14 +161,14 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
     j_resp[MSG_BODY] = j_body;
 
     sjson = j_resp.toStyledString();
-    mcast_sock_->SendUdpData((uint8*)DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                             (uint8*)sjson.c_str(), sjson.size());
+    mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
+                             sjson.c_str(), sjson.size());
   } else if (0 == strncmp(s_type.c_str(), MSG_SET_DEVINFO, MSG_CMD_SIZE)) {
     // 设置设备信息
     Json::Value j_resp;
     j_resp[MSG_CMD]  = s_type;
 
-    bool b_ret = CListenMessage::Instance()->SetDevInfo(j_resp[MSG_BODY]);
+    bool b_ret = CListenMessage::Instance()->SetDevInfo(jreq[MSG_BODY]);
     if (b_ret) {
       j_resp[MSG_STATE] = 0;
     } else {
@@ -176,8 +176,8 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
     }
 
     sjson = j_resp.toStyledString();
-    mcast_sock_->SendUdpData((uint8*)DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                             (uint8*)sjson.c_str(), sjson.size());
+    mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
+                             sjson.c_str(), sjson.size());
   } else {
     LOG(L_ERROR) << "this message type is no function to process." << s_type;
   }

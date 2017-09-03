@@ -21,8 +21,8 @@ class CClientProcess : public CClientInterface {
   }
 };
 
-static const uint8  DEF_CERTER_IP[] = "234.2.2.2";
-static const uint16 DEF_CENTER_PORT = 12345;
+static const char DEF_CERTER_IP[] = "234.2.2.2";
+static const int  DEF_CENTER_PORT = 12345;
 
 int32 timer_cb(SOCKET          fd,
                short           events,

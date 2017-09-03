@@ -10,6 +10,7 @@
 #include <QDateTime>
 
 #include <QPixmap>
+#include <QTreeWidgetItem>
 
 #include <QtWidgets/QDialog>
 #include <QtWidgets/QWidget>

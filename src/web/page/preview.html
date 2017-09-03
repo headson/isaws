@@ -1,27 +1,20 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-    </style>
+  <title>Test page for WebCall ActiveX</title>
+  <script>
+    function play_hd() {
+      VideoX.SetUrl("http://127.0.0.1:8000/httpflv?chn=video0");
+    }
+  </script>
+
 </head>
 <body>
-    <object type='application/x-vlc-plugin' id='vlc' events='True' 
-            classid='clsid:9BE31822-FDAD-461B-AD51-BE1D1C159921' 
-            codebase="http://downloads.videolan.org/pub/videolan/vlc/latest/win32/axvlc.cab" 
-            width="720" height="576">
-      <param name='mrl' value='/httpflv?chn=video1' />
-      <param name='volume' value='50' />
-      <param name='autoplay' value='true' />
-      <param name='loop' value='false' />
-      <param name='fullscreen' value='false' />
-      <param name="controls" value="false">
-    </object>
+  <object id="VideoX"
+          classid="CLSID:6251159e-a5c6-49fb-aca6-205ffad9df99"
+          width="100%"
+          height="100%"
+          codebase="VideoX.dll"></object>
 
-    <script language="JavaScript">
-    </script>
+  <input type="button" value="play HD" onclick="play_hd()" />
 </body>
 </html>

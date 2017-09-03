@@ -240,3 +240,47 @@ void EVT_IO::evt_callback(evutil_socket_t fd, short events, void *ctx) {
 }
 
 }  // namespace vzconn
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+EventSignal Event_CreateSignalHandle(const vzconn::EventService* evt_service,
+                                     int signal_no,
+                                     Event_SignalCallback callback,
+                                     void *user_arg) {
+  vzconn::EVT_IO *p_evt_io = new vzconn::EVT_IO();
+  if (NULL == p_evt_io) {
+    LOG(L_ERROR) << "new evt_io failed.";
+    return NULL;
+  }
+
+  p_evt_io->Init((vzconn::EVT_LOOP*)evt_service,
+                 (vzconn::EVT_FUNC)callback, user_arg);
+  int32 n_ret = p_evt_io->Start(signal_no, EV_SIGNAL | EVT_PERSIST);
+  if (n_ret != 0) {
+    LOG(L_ERROR) << "listening signal failed.";
+
+    delete p_evt_io;
+    p_evt_io = NULL;
+  }
+  return p_evt_io;
+}
+
+
+void Event_ReleaseSignalHandle(EventSignal p_evt_handle) {
+  vzconn::EVT_IO *p_evt_io = (vzconn::EVT_IO*)p_evt_handle;
+  if (p_evt_io == NULL) {
+    LOG(L_ERROR) << "param is null.";
+    return;
+  }
+
+  p_evt_io->Stop();
+
+  delete p_evt_io;
+  p_evt_io = NULL;
+}
+#ifdef __cplusplus
+};
+#endif
+

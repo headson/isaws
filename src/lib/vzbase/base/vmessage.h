@@ -19,8 +19,8 @@
 // WEB Server 监听端口和网页存储路径
 #define DEF_WEB_SRV_PORT      8000
 #ifdef WIN32
-#define DEF_WEB_SRV_PATH      "c:\\tools\\web\\html"
-#define DEF_SYS_LOG_PATH      "c:\\tools\\web\html\\log"
+#define DEF_WEB_SRV_PATH      "c:\\tools\\html\\htmldata"
+#define DEF_SYS_LOG_PATH      "c:\\tools\\html\\htmldata\\log"
 #define DEF_UPLOAD_FILENAME   "c:\\tools\\upload.tar"
 #define DEF_HARDWARE_FILE     "c:\\tools\\hardware.json"
 #define DEF_SOFTWARE_FILE     "c:\\tools\\software.ver"
@@ -107,8 +107,6 @@ typedef enum _MSG_RET {
 
 #define MSG_GET_PCOUNTS       "get_pcounts"       // 获取客流量
 #define MSG_CLEAR_PCOUNT      "clear_pcount"      // 清空pcount数据库
-
-#define MSG_SYSTEM_UPDATE     "system_update"     // 系统升级
 
 #define MSG_REBOOT_DEVICE     "reboot_device"     // 重启设备
 

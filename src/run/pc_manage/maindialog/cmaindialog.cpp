@@ -35,6 +35,10 @@ bool CMainDialog::InitWindow() {
     ui.dev_list_grp_->setLayout(layout_);
     ui.dev_list_grp_->setMaximumWidth(196);
   }
+
+  live_widget_ = new CLiveWidget();
+  ui.center_widget_->addWidget(live_widget_);
+  ui.center_widget_->setCurrentWidget(live_widget_);
   return true;
 }
 

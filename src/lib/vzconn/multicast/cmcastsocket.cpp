@@ -113,7 +113,6 @@ int UpdateNetworkInterface(
   // char temp_ip[128];
 
   do {
-
     pAddresses = (IP_ADAPTER_ADDRESSES *)MALLOC(outBufLen);
     if (pAddresses == NULL) {
       printf
@@ -228,10 +227,9 @@ int ChangeMulticastMembership(
 }
 
 #endif // def WIN32
-int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
-
-  const char *multicast_addr = (const char *)s_center_ip;
-  uint16      multicast_port = n_center_port;
+int32 CMCastSocket::Open(const char* center_ip, int center_port) {
+  const char *multicast_addr = (const char *)center_ip;
+  uint16      multicast_port = center_port;
 
   LOG(L_WARNING) << multicast_addr << " : " << multicast_port;
   sockaddr_in         peeraddr;
@@ -273,20 +271,6 @@ int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
     LOG(L_ERROR) << "SO_REUSEADDR error";
     return 1;
   }
-  LOG(L_INFO) << "------------START FOUND DEVICES---------------";
-#ifdef WIN32
-  ChangeMulticastMembership(send_socket_, multicast_addr);
-#else
-  struct ip_mreq      mreq;
-  bzero(&mreq, sizeof(struct ip_mreq));
-  mreq.imr_interface.s_addr = INADDR_ANY;
-  mreq.imr_multiaddr.s_addr = inet_addr(multicast_addr);
-  if (setsockopt(send_socket_, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-                 (const char *)&mreq, sizeof(struct ip_mreq)) == -1) {
-    printf("Add membership error\n");
-    //LOG(L_ERROR) << "IP_ADD_MEMBERSHIP " << inet_ntoa(net_inter[i].ip_addr);
-  }
-#endif
 
   // Init the multicast address
   socklen = sizeof(struct sockaddr_in);
@@ -297,19 +281,28 @@ int32 CMCastSocket::Open(const uint8* s_center_ip, uint16 n_center_port) {
   // peeraddr.sin_addr.s_addr = inet_addr("0.0.0.0");
   /* 绑定自己的端口和IP信息到socket上 */
   if (bind(send_socket_, (struct sockaddr *) &peeraddr,
-           sizeof(struct sockaddr_in)) == -1) {
+    sizeof(struct sockaddr_in)) == -1) {
     LOG(L_ERROR) << "Bind error\n";
     return 1;
   }
 
-  //int len = 0;
-  //len = sizeof(struct sockaddr_in);
-  //bool is_add = false;
-  //time(&start_time);
+  LOG(L_INFO) << "------------START FOUND DEVICES---------------";
+#ifdef WIN32
+  ChangeMulticastMembership(send_socket_, multicast_addr);
+#else
+  struct ip_mreq      mreq;
+  bzero(&mreq, sizeof(struct ip_mreq));
+  mreq.imr_interface.s_addr = INADDR_ANY;
+  mreq.imr_multiaddr.s_addr = inet_addr(multicast_addr);
+  if (setsockopt(send_socket_, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+                 (const char *)&mreq, sizeof(struct ip_mreq)) == -1) {
+    perror("Add membership error\n");
+    // LOG(L_ERROR) << "IP_ADD_MEMBERSHIP " << inet_ntoa(net_inter[i].ip_addr);
+  }
+#endif
+
   /* 循环接收网络上来的组播消息 */
-
   SetSocket(send_socket_);
-
   c_evt_recv_.Init(p_evt_loop_, EvtRecv, this);
   if (c_evt_recv_.Start(GetSocket(), EVT_READ | EVT_PERSIST) != 0) {
     return -1;
@@ -332,8 +325,9 @@ int32 CMCastSocket::EvtRecv(SOCKET      fd,
 
 int32 CMCastSocket::OnRecv() {
   vzconn::CInetAddr c_remote_addr;
-  uint8 s_data[2048] = {0};
-  int32 n_data = vzconn::VSocket::Recv(s_data, 2047, c_remote_addr);
+  uint8 s_data[2048+1] = {0};
+  int32 n_data = vzconn::VSocket::Recv(s_data, 2048, c_remote_addr);
+  LOG(L_INFO) << "recv frame "<<n_data;
   if (cli_hdl_ptr_) {
     cli_hdl_ptr_->HandleRecvPacket(this, s_data, n_data, 0);
   }
@@ -346,16 +340,16 @@ int32 CMCastSocket::OnRecv() {
   return n_data;
 }
 
-int CMCastSocket::SendUdpData(const uint8* s_center_ip, uint16 n_center_port,
-                              const uint8* p_data, uint32 n_data) {
-  LOG(L_INFO) << (const char *)s_center_ip << "\t" << n_center_port;
+int CMCastSocket::SendUdpData(const char* center_ip, int center_port,
+                              const char* pdata, unsigned int ndata) {
+  LOG(L_INFO) << (const char *)center_ip << "\t" << center_port;
   struct sockaddr_in s_center;
   s_center.sin_family = AF_INET;
-  s_center.sin_port = htons(n_center_port);
-  s_center.sin_addr.s_addr = inet_addr((char*)s_center_ip);
+  s_center.sin_port = htons(center_port);
+  s_center.sin_addr.s_addr = inet_addr((char*)center_ip);
   int ret = sendto(send_socket_,
-                   (const char*)p_data,
-                   n_data,
+                   (const char*)pdata,
+                   ndata,
                    0,
                    (struct sockaddr*)&s_center,
                    sizeof(struct sockaddr));

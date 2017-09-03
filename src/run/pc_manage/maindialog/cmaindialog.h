@@ -4,6 +4,7 @@
 #include "appinc.h"
 
 #include "ui_cmaindialog.h"
+#include "preview/clivewidget.h"
 #include "devtree/cdevlistwidget.h"
 
 class CMainDialog : public CMyDialog {
@@ -22,7 +23,7 @@ class CMainDialog : public CMyDialog {
 
  private:
    CDevListWidget *dev_list_;
-
+   CLiveWidget    *live_widget_;
 };
 
 #endif // CMAINDIALOG_H

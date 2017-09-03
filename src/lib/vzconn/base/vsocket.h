@@ -81,7 +81,10 @@ class VSocket : public vzbase::noncopyable,
   public boost::enable_shared_from_this<VSocket> {
 
  public:
-   boost::shared_ptr<VSocket> Ptr;
+  boost::shared_ptr<VSocket> Ptr;
+
+ public:
+  static bool IsSocketClosed(SOCKET s);
 
  public:
   VSocket(CClientInterface *cli_hdl);

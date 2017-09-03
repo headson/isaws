@@ -1,22 +1,38 @@
 ﻿#include "cdevlistwidget.h"
 #include "ui_cdevlistwidget.h"
 
+#include <QDrag>
+#include <QMenu>
+#include <QMimeData>
+#include <QMouseEvent>
+
+#include "config/cdevcfgwidget.h"
+#include "config/cdbgvdowidget.h"
+
 CDevListWidget::CDevListWidget(QWidget *parent)
   : QWidget(parent)
   , ui(new Ui::CDevListWidget) {
+  item_menu_ = NULL;
   ui->setupUi(this);
-  ui->dev_list_->setContentsMargins(0, 0, 0, 0);
+  // ui->dev_list_->setContentsMargins(0, 0, 0, 0);
 
   // style sheet
-  QFile file(":/resource/devlistwidget.css");
-  if (file.open(QFile::ReadOnly)) {
-    this->setStyleSheet(QLatin1String(file.readAll()));
-    file.close();
-  }
+  //QFile file(":/resource/devlistwidget.css");
+  //if (file.open(QFile::ReadOnly)) {
+  //  this->setStyleSheet(QLatin1String(file.readAll()));
+  //  file.close();
+  //}
+
+  ui->pDevTreeWidget->setDragEnabled(true);
+  ui->pDevTreeWidget->setDropIndicatorShown(true);
+  ui->pDevTreeWidget->viewport()->installEventFilter(this);
+  ui->pDevTreeWidget->setSelectionMode(QAbstractItemView::SingleSelection);
+  ui->pDevTreeWidget->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
+  //ui->pDevTreeWidget->header()->setResizeMode(QHeaderView::ResizeToContents);
 
   // 监听
-  connect(ui->find_button_, SIGNAL(clicked()), SLOT(OnDevListSlot()));
   connect(CDeviceDetect::Instance(), SIGNAL(UpdateDevice()), SLOT(OnDevListSlot()));
+  connect(ui->pDevTreeWidget, SIGNAL(itemPressed(QTreeWidgetItem*, int)), SLOT(OnItemClickSlot(QTreeWidgetItem*, int)));
 }
 
 CDevListWidget::~CDevListWidget() {
@@ -28,57 +44,108 @@ int CDevListWidget::Initinal() {
   return 0;
 }
 
+bool CDevListWidget::eventFilter(QObject *pObj, QEvent *pEvt) {
+  if ((pObj == ui->pDevTreeWidget->viewport()) &&
+      (pEvt->type() == QEvent::MouseButtonPress)) {
+    if (((QMouseEvent*)pEvt)->button() == Qt::RightButton) {
+    }
+    else if (dev_info_ != "") {
+      QDrag* pDrag = new QDrag(this);
+      QMimeData* pMimeData = new QMimeData();
+      if ((NULL != pDrag) && (NULL != pMimeData)) {
+        pMimeData->setData("data1", dev_info_.toLocal8Bit());
+
+        pDrag->setMimeData(pMimeData);
+        pDrag->exec(Qt::CopyAction | Qt::MoveAction);
+      }
+    }
+  }
+
+  return QWidget::eventFilter(pObj, pEvt);
+}
+
+void CDevListWidget::OnItemClickSlot(QTreeWidgetItem *item, int index) {
+  dev_info_ = item->text(0);        // name
+  dev_info_ += ":";
+  dev_info_ += item->toolTip(0);    // id
+  dev_info_ += ":";
+  dev_info_ += item->text(1);       // ip
+  dev_info_ += ":";
+  dev_info_ += item->toolTip(1);    // port
+}
+
+void CDevListWidget::contextMenuEvent(QContextMenuEvent *pEvt) {
+  if (dev_info_.isEmpty())
+    return;
+
+  if (!item_menu_) {
+    item_menu_ = new QMenu(ui->pDevTreeWidget);
+
+    QAction* pAct = NULL;
+
+    pAct = new QAction(tr("配置参数"), item_menu_);
+    if (pAct) {
+      item_menu_->addAction(pAct);
+      connect(pAct, SIGNAL(triggered()), this, SLOT(OnDevCfgSlot()));
+    }
+
+    pAct = new QAction(tr("清空计数"), item_menu_);
+    if (pAct) {
+      item_menu_->addAction(pAct);
+      connect(pAct, SIGNAL(triggered()), this, SLOT(OnClrPcntSlot()));
+    }
+
+    pAct = new QAction(tr("调试图像"), item_menu_);
+    if (pAct) {
+      item_menu_->addAction(pAct);
+      connect(pAct, SIGNAL(triggered()), this, SLOT(OnDbgVdoSlot()));
+    }
+  }
+
+  item_menu_->exec(QCursor::pos());
+}
+
 void CDevListWidget::OnDetectSlot() {
   CDeviceDetect::Instance()->Detect();
 }
 
 void CDevListWidget::OnDevListSlot() {
-  QString sFilter = "";
-#if 0
-  // 计算显示量
-  ui->pDevListWidget->clear();
-  m_nPageSize      = ui->pDevListWidget->height() / DEV_ITEM_H;               // 设备ITEM数
-  uint32_t DITEM_H = (ui->pDevListWidget->height()-m_nPageSize) / m_nPageSize;// 设备ITEM高
+  ui->pDevTreeWidget->clear();
 
-  // 分页
-  int32_t nDevCnt = DATABASE()->SelectTableDeviceCount(sFilter);
-  if (nDevCnt <= 0) {
+  QVector<CDevInfo> devs;
+  CDeviceDetect::Instance()->GetDevs(devs);
+
+  int dev_size = devs.size();
+  for (int i = 0; i < dev_size; i++) {
+    QTreeWidgetItem *items = new QTreeWidgetItem(ui->pDevTreeWidget);
+    items->setText(0, devs[i].name_.c_str());
+    items->setText(1, devs[i].ip_.c_str());
+    items->setToolTip(0, devs[i].id_.c_str());
+    items->setToolTip(1, QString::number(devs[i].port_));
+    ui->pDevTreeWidget->insertTopLevelItem(0, items);
+  }
+}
+
+void CDevListWidget::OnDevCfgSlot() {
+  if (dev_info_.isEmpty()) {
     return;
   }
-  m_nPageCount = nDevCnt / m_nPageSize + (((nDevCnt % m_nPageSize) > 0) ? 1 : 0);
+  QStringList sl = dev_info_.split(":");
 
-  // 初始化页CBox
-  ui->pCurPageCBox->clear();
-  for (int32_t i = 0; i < m_nPageCount; i++) {
-    ui->pCurPageCBox->addItem(QString::number(i + 1));
-  }
-  ui->pCurPageCBox->setCurrentIndex(m_nPageIndex);
-  sFilter += " ORDER BY DEVICE_TYPE_ID ASC LIMIT "
-             + QString::number(m_nPageIndex*m_nPageSize) + ", " + QString::number(m_nPageSize) + "";
-
-  // 初始化设备Tree
-  QVector<CDevInfo> aDev;
-  int32_t nRet = DATABASE()->SelectTableDevice(&aDev, sFilter);
-  if (nRet == 0) {
-    CDevListItem* pDev = NULL;
-    QListWidgetItem* pItem = NULL;
-    foreach(CDevInfo cDev, aDev) {
-      pItem = new QListWidgetItem(ui->pDevListWidget);
-      if (pItem) {
-        ui->pDevListWidget->addItem(pItem);
-        pDev = new CDevListItem(cDev, this);
-        if (pDev) {
-          pItem->setSizeHint(QSize(DEV_ITEM_W, DITEM_H));
-          ui->pDevListWidget->setItemWidget(pItem, pDev);
-        }
-      }
-    }
-  }
-#endif
+  CDevCfgWidget dev_cfg;
+  dev_cfg.Initinal(sl.at(1));
 }
 
-void CDevListWidget::resizeEvent(QResizeEvent* pEvt) {
-  OnDevListSlot();
-  QWidget::resizeEvent(pEvt);
+void CDevListWidget::OnDbgVdoSlot() {
+  if (dev_info_.isEmpty()) {
+    return;
+  }
+  QStringList sl = dev_info_.split(":");
+
+  CDbgVdoWidget dbg_vdo;
+  dbg_vdo.Initinal(sl.at(1));
 }
 
+void CDevListWidget::OnClrPcntSlot() {
+
+}

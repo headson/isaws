@@ -5,6 +5,8 @@
 #ifndef LIBVZCONN_CLIBEVENT_H_
 #define LIBVZCONN_CLIBEVENT_H_
 
+#include "vzbase/base/basictypes.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,7 +28,6 @@ extern "C" {
 
 #include <string>
 
-#include "vzbase/base/basictypes.h"
 namespace vzconn {
 
 typedef int (*EVT_FUNC)(SOCKET fd, short events, const void *usr_arg);
@@ -139,4 +140,38 @@ class EVT_LOOP {
 typedef EVT_LOOP EventService;
 
 }  // namespace vzconn
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+///SIGNAL/////////////////////////////////////////////////////////////////
+/************************************************************************
+*Description : 创建信号监听
+*Parameters  : p_evt_service[IN] 事件分发器指针
+*              n_signal_no[IN] 信号 SIGINT\SIGTERM\SIGKILL
+*              p_callback[IN] 信号触发时回调函数
+*              p_user_arg[IN] 信号触发函数回调传出用户指针
+*Return      : !=NULL 成功, ==NULL失败
+************************************************************************/
+typedef void* EventSignal;   // 信号量
+// libevent监听signal事件
+typedef int(*Event_SignalCallback)(int         n_signal,
+                                   short       events,
+                                   const void *p_usr_arg);
+
+EventSignal Event_CreateSignalHandle(const vzconn::EventService*  evt_service,
+                                     int                  signal_no,
+                                     Event_SignalCallback callback,
+                                     void                *user_arg);
+
+/************************************************************************
+*Description : 释放信号监听
+*Parameters  : p_evt_sig[IN] 信号监听句柄
+*Return      :
+************************************************************************/
+void Event_ReleaseSignalHandle(EventSignal p_evt_sig);
+#ifdef __cplusplus
+};
+#endif
 #endif  // LIBVZCONN_CLIBEVENT_H_

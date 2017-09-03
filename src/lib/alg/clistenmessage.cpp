@@ -194,6 +194,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
   //jresp[MSG_BODY] = "";
   if (strncmp(dmp->method, MSG_REMOTE_5_IR, MAX_METHOD_SIZE) == 0) {
     if (sizeof(ir_remote_) == dmp->data_size) {
+      vzbase::CritScope cs(&ir_mutex_);
       ir_remote_.is_new = 1;
       memcpy(&ir_remote_, dmp->data, dmp->data_size);
       LOG_WARNING("remote ir %d %d \nvalue: %d %d %d %d %d.",
@@ -322,27 +323,30 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
         return;
       }
     }
+    {
+      vzbase::CritScope cs(&ir_mutex_);
+      if (fd > 0) {
+        for (int i = 0; i < MAX_IR_NUM; i++) {
+          ir_local_.ir[i] = frame.param[i] = chn_value(fd, chn_cmd_byte(i));
 
-    if (fd > 0) {
-      for (int i = 0; i < MAX_IR_NUM; i++) {
-        ir_local_.ir[i] = frame.param[i] = chn_value(fd, chn_cmd_byte(i));
-
-        if (1 == ir_remote_.is_new) {
           frame.param[MAX_IR_NUM + i] = ir_remote_.ir[i];
         }
       }
-    }
-    LOG_WARNING("ir value: %d %d %d %d %d.",
-                frame.param[0], frame.param[1], frame.param[2],
-                frame.param[3], frame.param[4]);
+      LOG_WARNING("ir value: %d %d %d %d %d, remote ir value: %d %d %d %d %d",
+                  frame.param[0], frame.param[1], frame.param[2],
+                  frame.param[3], frame.param[4],
+                  frame.param[MAX_IR_NUM+0], frame.param[MAX_IR_NUM+1], frame.param[MAX_IR_NUM+2],
+                  frame.param[MAX_IR_NUM+3], frame.param[MAX_IR_NUM+4]);
 
-    ir_local_.tv.tv_sec = last_read_sec_;
-    ir_local_.tv.tv_usec = last_read_usec_;
-    if (remote_dp_client_) {
-      remote_dp_client_->SendDpMessage(MSG_REMOTE_5_IR, 0,
-                                       (char*)&ir_local_, sizeof(ir_local_));
+      ir_local_.tv.tv_sec = last_read_sec_;
+      ir_local_.tv.tv_usec = last_read_usec_;
+      if (remote_dp_client_) {
+        remote_dp_client_->SendDpMessage(MSG_REMOTE_5_IR, 0,
+                                         (char*)&ir_local_, sizeof(ir_local_));
+        memset(&ir_remote_, 0, sizeof(ir_remote_));
+      }
     }
-    memset(&ir_remote_, 0, sizeof(ir_remote_));
+
 #endif
     frame.data_size_in_bytes = nlen;
     frame.data = (unsigned char*)image_buffer_;
@@ -353,3 +357,4 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
 }
 
 }  // namespace alg
+

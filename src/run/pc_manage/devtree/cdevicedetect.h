@@ -29,6 +29,10 @@ class CDeviceDetect : public QThread,
   bool Start();
   bool Detect();
 
+  int  GetDevs(QVector<CDevInfo> &devs);
+  bool GetDev(CDevInfo &dev, QString id);
+  bool SetDev(Json::Value &jreq);
+
  signals:
   void UpdateDevice();
 
@@ -36,26 +40,25 @@ class CDeviceDetect : public QThread,
   void run();
 
  protected:
-  virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,
-                                 const uint8      *p_data,
-                                 uint32            n_data,
-                                 uint16            n_flag);
+  virtual int32 HandleRecvPacket(vzconn::VSocket *p_cli,
+                                 const uint8     *p_data,
+                                 uint32           n_data,
+                                 uint16           n_flag);
   virtual int32 HandleSendPacket(vzconn::VSocket *p_cli) {
     return 0;
   }
-
   virtual void  HandleClose(vzconn::VSocket *p_cli) {
   }
 
  protected:
-  void OnGetDevInfo(Json::Value &jroot);
+  void OnGetDevInfo(const Json::Value &jroot);
 
  protected:
-  bool                   running_;
+  bool                          running_;
 
  protected:
   QMutex                        mutex_;
-  QMap<std::string, CDevInfo*>  devs_info_; // dev_id dev_info
+  QMap<std::string, CDevInfo>   devs_info_; // dev_id dev_info
 
  protected:
   vzconn::CMCastSocket         *mcast_sock_;
