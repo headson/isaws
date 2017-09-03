@@ -17,7 +17,7 @@
 #define DEF_KVDB_SRV_PORT     5299
 
 // WEB Server 监听端口和网页存储路径
-#define DEF_WEB_SRV_PORT      8000
+#define DEF_WEB_SRV_PORT      80
 #ifdef WIN32
 #define DEF_WEB_SRV_PATH      "c:\\tools\\html\\htmldata"
 #define DEF_SYS_LOG_PATH      "c:\\tools\\html\\htmldata\\log"
@@ -34,7 +34,7 @@
 #define DB_PCOUNT_FILEPATH    "/mnt/usr/pcount.db"
 #endif
 
-#define DEF_MCAST_IP          "228.5.6.2"
+#define DEF_MCAST_IP          "224.5.6.2"
 #define DEF_MCAST_DEV_PORT    20003     // 设备监听端口,修改IP地址
 #define DEF_MCAST_CLI_PORT    20004     // 客户端监听端口,获取设备信息
 

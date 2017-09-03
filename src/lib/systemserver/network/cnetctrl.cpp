@@ -14,9 +14,7 @@
 
 namespace sys {
 
-#define GET_IP_TIMEOUT  200       // 200ms
-
-#define DEF_GET_PHY_ADDR 0x123456
+#define GET_IP_TIMEOUT  1000       // 1S
 
 in_addr_t    CNetCtrl::ip_addr_   = 0;
 in_addr_t    CNetCtrl::netmask_   = 0;
@@ -84,7 +82,7 @@ bool CNetCtrl::Start() {
     LOG(L_ERROR) << "multi socket open failed.";
   }
 
-  thread_fast_->PostDelayed(GET_IP_TIMEOUT, this, DEF_GET_PHY_ADDR);
+  thread_fast_->PostDelayed(GET_IP_TIMEOUT, this);
   return (ret == 0);
 }
 
@@ -96,40 +94,40 @@ void CNetCtrl::Stop() {
 }
 
 void CNetCtrl::OnMessage(vzbase::Message* msg) {
-  if (msg->message_id == DEF_GET_PHY_ADDR) {
 #ifdef _WIN32
-    // LOG(L_WARNING) << "get phy addr.";
+  // LOG(L_WARNING) << "get phy addr.";
 #else
-    in_addr_t ip = net_get_ifaddr(PHY_ETH_NAME);
-    if (0 == ip) {
-      if (GetTickCount() > 30*1000)  {  // 30S
-        LOG(L_INFO) << "set default address.";
-        net_set_ifaddr(PHY_ETH_NAME, inet_addr("192.168.254.254"));
-        net_set_netmask(PHY_ETH_NAME, inet_addr("255.255.0.0"));
-        net_set_gateway(inet_addr("192.168.254.1"));
-      }
-    } else {
-      if (ip_addr_ != ip) {
-        netmask_  = net_get_netmask(PHY_ETH_NAME);
-        gateway_  = net_get_gateway();
-        dns_addr_ = net_get_dns();
-      }
-      ip_addr_ = ip;
-
-      static unsigned int i = 0;
-      if (inet_addr("192.168.254.254") != ip_addr_) {
-        // 闪灯频率 200ms
-
-      } else {
-        // 闪灯频率 1000ms
-        if ((++i % 5) == 0) {
-
-        }
-      }
+  in_addr_t ip = net_get_ifaddr(PHY_ETH_NAME);
+  if (0 == ip) {
+    if (GetTickCount() > 30*1000)  {  // 30S
+      LOG(L_INFO) << "set default address.";
+      net_set_ifaddr(PHY_ETH_NAME, inet_addr("192.168.254.254"));
+      net_set_netmask(PHY_ETH_NAME, inet_addr("255.255.0.0"));
+      net_set_gateway(inet_addr("192.168.254.1"));
     }
-#endif
-    thread_fast_->PostDelayed(GET_IP_TIMEOUT, this, DEF_GET_PHY_ADDR);
+  } else {
+    if (ip_addr_ != ip) {
+      netmask_  = net_get_netmask(PHY_ETH_NAME);
+      gateway_  = net_get_gateway();
+      dns_addr_ = net_get_dns();
+    }
+    ip_addr_ = ip;
+
+    if (inet_addr("192.168.254.254") != ip_addr_) {
+      // 闪灯频率 200ms
+    } else {
+      // 闪灯频率 1000ms
+    }
   }
+#endif
+
+  static int bcast_dev_info = 5;  // 5S
+  if ((bcast_dev_info--) <= 0) {
+    bcast_dev_info = 5;
+    BcastDevInfo();
+  }
+
+  thread_fast_->PostDelayed(GET_IP_TIMEOUT, this);
 }
 
 int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
@@ -148,21 +146,7 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
   std::string s_type = jreq[MSG_CMD].asString();
   if (0 == strncmp(s_type.c_str(), MSG_GET_DEVINFO, MSG_CMD_SIZE)) {
     // 获取设备信息
-    Json::Value j_resp;
-    j_resp[MSG_CMD] = s_type;
-
-    Json::Value j_body;
-    bool b_ret = CListenMessage::Instance()->GetDevInfo(j_body);
-    if (b_ret) {
-      j_resp[MSG_STATE] = 0;
-    } else {
-      j_resp[MSG_STATE] = 6;
-    }
-    j_resp[MSG_BODY] = j_body;
-
-    sjson = j_resp.toStyledString();
-    mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                             sjson.c_str(), sjson.size());
+    BcastDevInfo();
   } else if (0 == strncmp(s_type.c_str(), MSG_SET_DEVINFO, MSG_CMD_SIZE)) {
     // 设置设备信息
     Json::Value j_resp;
@@ -247,6 +231,24 @@ bool CNetCtrl::ModityNetwork(const TAG_SYS_INFO &sys_info) {
     DpClient_SendDpMessage(MSG_ADDR_CHANGE, 0, NULL, 0);
   }
   return addr_modify;
+}
+
+void CNetCtrl::BcastDevInfo() {
+  Json::Value j_resp;
+  j_resp[MSG_CMD] = MSG_GET_DEVINFO;
+
+  Json::Value j_body;
+  bool b_ret = CListenMessage::Instance()->GetDevInfo(j_body);
+  if (b_ret) {
+    j_resp[MSG_STATE] = 0;
+  } else {
+    j_resp[MSG_STATE] = 6;
+  }
+  j_resp[MSG_BODY] = j_body;
+
+  std::string sjson = j_resp.toStyledString();
+  mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
+                           sjson.c_str(), sjson.size());
 }
 
 }  // namespace sys

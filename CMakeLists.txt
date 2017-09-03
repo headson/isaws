@@ -14,7 +14,8 @@ IF(WIN32)
         INCLUDE(cmake/win_vs2010_environment_settings.cmake)
     ENDIF()
 ELSEIF(UNIX)
-	IF(CMAKE_BUILD_PLATFORM MATCHES LINUX)
+    ADD_DEFINITIONS(-fpermissive)
+    IF(CMAKE_BUILD_PLATFORM MATCHES LINUX)
         INCLUDE(cmake/linux_u1004_environment_settings.cmake)
     ELSEIF(CMAKE_BUILD_PLATFORM MATCHES IMX6Q)
         INCLUDE(cmake/arm_imx6q_environment_settings.cmake)
@@ -49,7 +50,6 @@ ADD_SUBDIRECTORY(src/lib/platform/hi3518ev200)
 #ADD_SUBDIRECTORY(src/lib/platform/imx6q)
 ADD_SUBDIRECTORY(src/lib/alg)
 ADD_SUBDIRECTORY(src/lib/business)
-ADD_SUBDIRECTORY(src/lib/curlclient)
 #ADD_SUBDIRECTORY(src/lib/web_for_dp)
 
 ## add run
@@ -68,7 +68,8 @@ ADD_SUBDIRECTORY(src/run/fix_sqlite)
 #ADD_SUBDIRECTORY(src/run/web_for_dp)
 
 IF(WIN32)
-#ADD_SUBDIRECTORY(src/lib/avplayer)
+ADD_SUBDIRECTORY(src/lib/curlclient)
+
 ADD_SUBDIRECTORY(src/run/icamera)
 ADD_SUBDIRECTORY(src/run/pc_manage)
 

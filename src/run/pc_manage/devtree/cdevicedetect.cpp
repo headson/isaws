@@ -87,8 +87,7 @@ void CDeviceDetect::run() {
 
   while (running_) {
     evt_loop.RunLoop(5 * 1000);
-
-    Detect();
+    // Detect();
   }
 
   evt_loop.Stop();

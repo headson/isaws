@@ -47,6 +47,7 @@ class CNetCtrl : public vzbase::MessageHandler,
 
  public:
   static bool ModityNetwork(const TAG_SYS_INFO &sys_info);
+  void BcastDevInfo();
 
  private:
   vzconn::CMCastSocket *mcast_sock_;

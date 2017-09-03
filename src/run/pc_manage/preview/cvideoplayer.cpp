@@ -74,7 +74,7 @@ void CVideoPlayer::dropEvent(QDropEvent *evt) {
   dev_info_ = evt->mimeData()->data("data1");
   LOG(L_INFO) << dev_info_.toLocal8Bit().data();
   
-  sharp_index_ = 0;
+  sharp_index_ = 1;
   OnSharpButtonSlot();
 }
 

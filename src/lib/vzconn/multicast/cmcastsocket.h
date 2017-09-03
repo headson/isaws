@@ -32,8 +32,8 @@ class CMCastSocket : public vzconn::VSocket {
   virtual int32 OnRecv();
 
  private:
-  vzconn::EVT_LOOP*     p_evt_loop_;
-  vzconn::EVT_IO        c_evt_recv_;
+  vzconn::EVT_LOOP*     evt_loop_;
+  vzconn::EVT_IO        evt_recv_;
 
   SOCKET                send_socket_;
 };

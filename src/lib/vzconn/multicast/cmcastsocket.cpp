@@ -26,8 +26,8 @@ namespace vzconn {
 CMCastSocket::CMCastSocket(vzconn::EVT_LOOP* p_loop,
                            vzconn::CClientInterface *cli_hdl)
   : vzconn::VSocket(cli_hdl)
-  , p_evt_loop_(p_loop)
-  , c_evt_recv_() {
+  , evt_loop_(p_loop)
+  , evt_recv_() {
 }
 
 CMCastSocket * CMCastSocket::Create(vzconn::EVT_LOOP* p_loop,
@@ -46,7 +46,7 @@ CMCastSocket * CMCastSocket::Create(vzconn::EVT_LOOP* p_loop,
 }
 
 CMCastSocket::~CMCastSocket() {
-  c_evt_recv_.Stop();
+  evt_recv_.Stop();
 
   Close();
 }
@@ -83,9 +83,7 @@ struct NetworkInterfaceState {
 
 std::vector<NetworkInterfaceState> network_interfaces_;
 
-int UpdateNetworkInterface(
-  std::vector<NetworkInterfaceState>& net_inter) {
-#ifdef WIN32
+int UpdateNetworkInterface(std::vector<NetworkInterfaceState>& net_inter) {
   /* Declare and initialize variables */
   DWORD dwSize = 0;
   DWORD dwRetVal = 0;
@@ -180,15 +178,10 @@ int UpdateNetworkInterface(
   if (pAddresses) {
     FREE(pAddresses);
   }
-
-#else
-  return 0;
-#endif
   return 0;
 }
 
-int ChangeMulticastMembership(
-  int sockfd, const char* multicast_addr) {
+int ChangeMulticastMembership(int sockfd, const char* multicast_addr) {
   struct ip_mreq      mreq;
   bzero(&mreq, sizeof(struct ip_mreq));
   std::vector<NetworkInterfaceState> net_inter;
@@ -217,6 +210,10 @@ int ChangeMulticastMembership(
         LOG(L_INFO) << "IP_ADD_MEMBERSHIP " << inet_ntoa(net_inter[i].ip_addr);
         net_inter[i].state = INTERFACE_STATE_ADD;
       }
+
+      unsigned char loop = 0;
+      setsockopt(sockfd, IPPROTO_IP, IP_MULTICAST_LOOP,
+                 (const char*)&loop, sizeof(loop));
     }
     if (net_inter[i].state != INTERFACE_STATE_NONE) {
       continue;
@@ -227,6 +224,8 @@ int ChangeMulticastMembership(
 }
 
 #endif // def WIN32
+
+
 int32 CMCastSocket::Open(const char* center_ip, int center_port) {
   const char *multicast_addr = (const char *)center_ip;
   uint16      multicast_port = center_port;
@@ -238,26 +237,11 @@ int32 CMCastSocket::Open(const char* center_ip, int center_port) {
 #else
   size_t              socklen;
 #endif
-  //unsigned int        n;
-  //fd_set              read_fds;
-  //timeval             timeout;
-  //time_t              start_time, end_time;
-
   // Init send sock
   sockaddr_in  send_addr;
-  //int send_sockfd = -1;
-
   send_addr.sin_family = AF_INET;
   send_addr.sin_port = htons(multicast_port);
   send_addr.sin_addr.s_addr = inet_addr(multicast_addr);
-  //send_sockfd = socket(AF_INET, SOCK_DGRAM, 0);
-  //if (send_sockfd < 0){
-  //  LOG(L_ERROR) << "Init Send Socket fd failure";
-  //  return 1;
-  //}
-  //if (!InitSendMulticastFd(&send_sockfd)){
-  //  return 1;
-  //}
 
   // Create Udp socket that used to recv data
   send_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
@@ -281,7 +265,7 @@ int32 CMCastSocket::Open(const char* center_ip, int center_port) {
   // peeraddr.sin_addr.s_addr = inet_addr("0.0.0.0");
   /* 绑定自己的端口和IP信息到socket上 */
   if (bind(send_socket_, (struct sockaddr *) &peeraddr,
-    sizeof(struct sockaddr_in)) == -1) {
+           sizeof(struct sockaddr_in)) == -1) {
     LOG(L_ERROR) << "Bind error\n";
     return 1;
   }
@@ -299,12 +283,16 @@ int32 CMCastSocket::Open(const char* center_ip, int center_port) {
     perror("Add membership error\n");
     // LOG(L_ERROR) << "IP_ADD_MEMBERSHIP " << inet_ntoa(net_inter[i].ip_addr);
   }
+
+  unsigned char loop = 0;
+  setsockopt(send_socket_, IPPROTO_IP, IP_MULTICAST_LOOP,
+             (const char*)&loop, sizeof(loop));
 #endif
 
   /* 循环接收网络上来的组播消息 */
   SetSocket(send_socket_);
-  c_evt_recv_.Init(p_evt_loop_, EvtRecv, this);
-  if (c_evt_recv_.Start(GetSocket(), EVT_READ | EVT_PERSIST) != 0) {
+  evt_recv_.Init(evt_loop_, EvtRecv, this);
+  if (evt_recv_.Start(GetSocket(), EVT_READ | EVT_PERSIST) != 0) {
     return -1;
   }
   return 0;
@@ -343,15 +331,15 @@ int32 CMCastSocket::OnRecv() {
 int CMCastSocket::SendUdpData(const char* center_ip, int center_port,
                               const char* pdata, unsigned int ndata) {
   LOG(L_INFO) << (const char *)center_ip << "\t" << center_port;
-  struct sockaddr_in s_center;
-  s_center.sin_family = AF_INET;
-  s_center.sin_port = htons(center_port);
-  s_center.sin_addr.s_addr = inet_addr((char*)center_ip);
+  struct sockaddr_in scenter;
+  scenter.sin_family = AF_INET;
+  scenter.sin_port = htons(center_port);
+  scenter.sin_addr.s_addr = inet_addr((char*)center_ip);
   int ret = sendto(send_socket_,
                    (const char*)pdata,
                    ndata,
                    0,
-                   (struct sockaddr*)&s_center,
+                   (struct sockaddr*)&scenter,
                    sizeof(struct sockaddr));
   return ret;
 }

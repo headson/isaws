@@ -22,6 +22,7 @@ CDevListWidget::CDevListWidget(QWidget *parent)
   //  this->setStyleSheet(QLatin1String(file.readAll()));
   //  file.close();
   //}
+  ui->detect_button_->setVisible(false);
 
   ui->pDevTreeWidget->setDragEnabled(true);
   ui->pDevTreeWidget->setDropIndicatorShown(true);

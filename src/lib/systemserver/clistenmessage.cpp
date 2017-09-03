@@ -70,13 +70,14 @@ bool CListenMessage::Start() {
     LOG(L_ERROR) << "create net ctrl failed.";
     return false;
   }
+  net_ctrl_->ModityNetwork(sys_info_);
+
   b_ret = net_ctrl_->Start();
   if (b_ret == false) {
     LOG(L_ERROR) << "net ctrl start failed.";
     return false;
   }
-  net_ctrl_->ModityNetwork(sys_info_);
-
+  
   // hw clock
   hw_clock_ = CHwclock::Create(thread_slow_);
   if (NULL == hw_clock_) {

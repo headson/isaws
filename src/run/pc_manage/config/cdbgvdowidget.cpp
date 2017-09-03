@@ -43,8 +43,8 @@ void CDbgVdoWidget::Initinal(QString id) {
   surl += ":";
   surl += QString::number(dev.port_);
   surl += "/httpflv?chn=video";
-  //surl += QString::number(2);
-  surl += QString::number(0);
+  surl += QString::number(2);
+  //surl += QString::number(0);
   if (vdo_play_) {
     vdo_play_->PlayUrl(surl);
   }

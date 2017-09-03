@@ -31,9 +31,14 @@ CPlayWidget::~CPlayWidget() {
 void CPlayWidget::PlayOneFrame(const char *yuv, int width, int height) {
   //函数功能读取一张yuv图像数据进行显示,每单击一次，就显示一张图片
 
-  if (m_nVideoW == 0 || m_nVideoH == 0) {
+  if (m_nVideoW != width ||
+      m_nVideoH != height) {
     m_nVideoW = width;
     m_nVideoH = height;
+    if (m_pBufYuv420p) {
+      delete[] m_pBufYuv420p;
+      m_pBufYuv420p = NULL;
+    }
   }
 
   //申请内存存一帧yuv图像数据,其大小为分辨率的1.5倍
@@ -43,7 +48,7 @@ void CPlayWidget::PlayOneFrame(const char *yuv, int width, int height) {
     qDebug("CPlayWidget::PlayOneFrame new data memory. Len=%d width=%d height=%d\n",
            nLen, m_nVideoW, m_nVideoW);
   }
-  
+
   //将一帧yuv图像读到内存中
   memcpy(m_pBufYuv420p, yuv, nLen);
 
