@@ -1,6 +1,9 @@
 #include "dispatcher/kvdbserver/kvdbsqlite.h"
 #include "vzlogging/logging/vzloggingcpp.h"
 #include "dispatcher/base/pkghead.h"
+
+#include "vzbase/base/timeutils.h"
+
 #include <string.h>
 #include <stdio.h>
 #include<stdlib.h>
@@ -333,18 +336,46 @@ bool KvdbSqlite::BackupDatabase() {
 }
 
 // check database is damage callback
-int Sqlite3CheckKVDBCallBack(void *user_data, int a, char** b, char** c) {
+static int Sqlite3CheckKVDBCallBack(void *user_data, int a, char** b, char** c) {
   if (NULL == user_data) {
     LOG(L_ERROR) << "param is failed.";
     return 0;
   }
 
+  LOG(L_ERROR) << *b;
   if (strncmp(*b, "ok", 2) == 0) {
     *((unsigned int*)user_data) = 0;
   } else {
     *((unsigned int*)user_data) = 1;
   }
   return 0;
+}
+
+// true = error, false = no error
+static bool Sqlite3CheckError(std::string &db_path) {
+  sqlite3 *db = NULL;
+  int res = sqlite3_open(db_path.c_str(), &db);
+  if (res) {
+    LOG(L_ERROR) << "Failure to open the database";
+    sqlite3_close(db);
+    return true;
+  }
+
+  char *error_msg = NULL;
+  unsigned int is_error = 0;
+  res = sqlite3_exec(db,
+                     "PRAGMA integrity_check;",
+                     Sqlite3CheckKVDBCallBack,
+                     &is_error,
+                     &error_msg);
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "PRAGMA integrity_check;";
+    sqlite3_free(error_msg);
+    is_error = 1;
+  }
+  sqlite3_close(db);
+
+  return ((is_error == 1) ? true : false);
 }
 
 bool KvdbSqlite::CheckDBBackup() {
@@ -361,7 +392,6 @@ bool KvdbSqlite::CheckDBBackup() {
   //  sqlite3_close(db);
   //  return false;
   //}
-
   char *error_msg = NULL;
   unsigned int is_error = 0;
   int res = sqlite3_exec(db_instance_,
@@ -380,9 +410,14 @@ bool KvdbSqlite::CheckDBBackup() {
     LOG(L_ERROR) << "recover from backup database."<<is_error;
     // TODO 从备份中恢复数据库
     char scmd[1024] = { 0 };
+#ifdef _WIN32
+    sprintf(scmd, "copy /Y %s %s",
+#else
     sprintf(scmd, "cp %s %s;sync",
+#endif
             kvdb_bak_path_.c_str(),
             kvdb_path_.c_str());
+
     LOG(L_ERROR) << "cmd "<<scmd;
     system(scmd);
 
@@ -393,9 +428,14 @@ bool KvdbSqlite::CheckDBBackup() {
       LOG(L_ERROR) << "backup database."<<is_error;
       // TODO 备份数据库
       char scmd[1024] = { 0 };
+#ifdef _WIN32
+      sprintf(scmd, "copy /Y %s %s",
+#else
       sprintf(scmd, "cp %s %s;sync",
+#endif
               kvdb_path_.c_str(),
               kvdb_bak_path_.c_str());
+
       LOG(L_ERROR) << "cmd "<<scmd;
       system(scmd);
 
@@ -413,38 +453,42 @@ bool KvdbSqlite::CheckDBRecover() {
     return false;
   }
 
-  sqlite3 *db = NULL;
-  int res = sqlite3_open(kvdb_path_.c_str(), &db);
-  if (res) {
-    LOG(L_ERROR) << "Failure to open the database";
-    sqlite3_close(db);
-    return false;
-  }
+  bool kvdb_error = Sqlite3CheckError(kvdb_path_);
 
-  char *error_msg = NULL;
-  unsigned int is_error = 0;
-  res = sqlite3_exec(db,
-                     "PRAGMA integrity_check;",
-                     Sqlite3CheckKVDBCallBack,
-                     &is_error,
-                     &error_msg);
-  if (res != SQLITE_OK) {
-    LOG(L_ERROR) << "PRAGMA integrity_check;";
-    sqlite3_free(error_msg);
-    is_error = 1;
-  }
-  sqlite3_close(db);
-
-  LOG(L_ERROR) << "check database."<<is_error;
-  if (1 == is_error) {
-    LOG(L_ERROR) << "recover from backup database."<<is_error;
-    // TODO 从备份中恢复数据库
+  LOG(L_ERROR) << "check database have error." << kvdb_error;
+  if (kvdb_error) {
     char scmd[1024] = { 0 };
-    sprintf(scmd, "cp %s %s;sync",
-            kvdb_bak_path_.c_str(),
-            kvdb_path_.c_str());
-    LOG(L_ERROR) << "cmd "<<scmd;
-    system(scmd);
+    if (CheckFileExsits(kvdb_bak_path_.c_str()) == false) {
+      LOG_ERROR("there is no %s, then remove the error %s.",
+                kvdb_bak_path_.c_str(),
+                kvdb_path_.c_str());
+      remove(kvdb_path_.c_str());
+      return false;
+    }
+
+    bool kvdb_back_error = Sqlite3CheckError(kvdb_bak_path_);
+    if (kvdb_back_error == false) {
+      // TODO 从备份中恢复数据库
+      memset(scmd, 0, 1024);
+      LOG(L_ERROR) << "recover from backup database.";
+#ifdef _WIN32
+      sprintf(scmd, "copy /Y %s %s",
+#else
+      sprintf(scmd, "cp %s %s;sync",
+#endif
+              kvdb_bak_path_.c_str(),
+              kvdb_path_.c_str());
+
+      LOG(L_ERROR) << "cmd " << scmd;
+      system(scmd);
+    } else {
+      // TODO 备份数据库也有问题,删除两个数据库
+      LOG_ERROR("%s is error database, then remove all db file.",
+                kvdb_bak_path_.c_str());
+      remove(kvdb_path_.c_str());
+      remove(kvdb_bak_path_.c_str());
+      return false;
+    }
   }
   return true;
 }

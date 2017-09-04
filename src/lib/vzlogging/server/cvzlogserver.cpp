@@ -17,7 +17,7 @@ namespace vzlogging {
 CVzSockDgram::CVzSockDgram()
   : cb_receive_(NULL)
   , receive_usr_arg_(NULL)
-  , cb_timeout_(NULL) 
+  , cb_timeout_(NULL)
   , timeout_usr_arg_(NULL) {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 
@@ -187,10 +187,10 @@ void CVzSockDgram::Loop(int ms) {
         } while (true);
       }
     }
-  } else {  // ³¬Ê±\´íÎó
-    if (cb_timeout_) {
-      cb_timeout_(timeout_usr_arg_);
-    }
+  }
+
+  if (cb_timeout_) {
+    cb_timeout_(timeout_usr_arg_);
   }
 }
 

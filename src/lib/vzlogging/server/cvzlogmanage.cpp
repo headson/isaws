@@ -244,13 +244,11 @@ int CVzLogManage::OnTimeout() {
     for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
       if (k_shm_mod.mod_state[i].mark == DEF_TAG_MARK
           && k_shm_mod.mod_state[i].app_name[0] != '\0') {
+
         unsigned long n_diff_time =
           n_now - k_shm_mod.mod_state[i].last_heartbeat;
         if (n_diff_time > k_shm_mod.mod_state[i].timeout) {
-          //if (k_en_watchdog) {
           OnModuleLostHeartbeat(n_now);
-          //}
-
           memset(&k_shm_mod.mod_state[i], 0, sizeof(k_shm_mod.mod_state[i]));
           break;
         }
@@ -370,9 +368,8 @@ int CVzLogManage::OnModuleLostHeartbeat(time_t n_now) {
     k_log_file.OnModuleLostHeartbeat(slog, nlog);
     // ÷ÿ∆Ù…Ë±∏
     system("reboot");
+    exit(127);
   }
   return 0;
 }
-
-
 }  // namespace vzlogging
