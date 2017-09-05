@@ -4,7 +4,7 @@
 #include "vzconn/multicast/cmcastsocket.h"
 using namespace vzconn;
 
-#if 0
+#if 1
 
 class CClientProcess : public CClientInterface {
  public:
@@ -23,8 +23,8 @@ class CClientProcess : public CClientInterface {
   }
 };
 
-static const char DEF_CERTER_IP[] = "224.5.6.2";
-static const int  DEF_CENTER_PORT = 20004;
+static const char DEF_CERTER_IP[] = "224.5.6.122";
+static const int  DEF_CENTER_PORT = 28888;
 
 int32 timer_cb(SOCKET          fd,
                short           events,

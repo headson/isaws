@@ -20,9 +20,7 @@
 #include "vzbase/helper/stdafx.h"
 
 namespace vzconn {
-
-// SOCKET CMCastSocket::send_socket_ = INVALID_SOCKET;
-
+  
 CMCastSocket::CMCastSocket(vzconn::EVT_LOOP* p_loop,
                            vzconn::CClientInterface *cli_hdl)
   : vzconn::VSocket(cli_hdl)
@@ -225,7 +223,6 @@ int ChangeMulticastMembership(int sockfd, const char* multicast_addr) {
 
 #endif // def WIN32
 
-
 int32 CMCastSocket::Open(const char* center_ip, int center_port) {
   const char *multicast_addr = (const char *)center_ip;
   uint16      multicast_port = center_port;
@@ -244,13 +241,13 @@ int32 CMCastSocket::Open(const char* center_ip, int center_port) {
   send_addr.sin_addr.s_addr = inet_addr(multicast_addr);
 
   // Create Udp socket that used to recv data
-  send_socket_ = socket(AF_INET, SOCK_DGRAM, 0);
-  if (send_socket_ < 0) {
+  SOCKET s = socket(AF_INET, SOCK_DGRAM, 0);
+  if (s < 0) {
     LOG(L_ERROR) << "socket creating err in udptalk";
     return 1;
   }
   int enable = 1;
-  if (setsockopt(send_socket_, SOL_SOCKET, SO_REUSEADDR,
+  if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR,
                  (const char*)&enable, sizeof(int)) < 0) {
     LOG(L_ERROR) << "SO_REUSEADDR error";
     return 1;
@@ -264,33 +261,33 @@ int32 CMCastSocket::Open(const char* center_ip, int center_port) {
   peeraddr.sin_addr.s_addr = INADDR_ANY;
   // peeraddr.sin_addr.s_addr = inet_addr("0.0.0.0");
   /* 绑定自己的端口和IP信息到socket上 */
-  if (bind(send_socket_, (struct sockaddr *) &peeraddr,
+  if (bind(s, (struct sockaddr *) &peeraddr,
            sizeof(struct sockaddr_in)) == -1) {
     LOG(L_ERROR) << "Bind error\n";
     return 1;
   }
 
   LOG(L_INFO) << "------------START FOUND DEVICES---------------";
-#ifdef WIN32
-  ChangeMulticastMembership(send_socket_, multicast_addr);
+#if 0
+  ChangeMulticastMembership(s, multicast_addr);
 #else
   struct ip_mreq      mreq;
   bzero(&mreq, sizeof(struct ip_mreq));
   mreq.imr_interface.s_addr = INADDR_ANY;
   mreq.imr_multiaddr.s_addr = inet_addr(multicast_addr);
-  if (setsockopt(send_socket_, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+  if (setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,
                  (const char *)&mreq, sizeof(struct ip_mreq)) == -1) {
     perror("Add membership error\n");
     // LOG(L_ERROR) << "IP_ADD_MEMBERSHIP " << inet_ntoa(net_inter[i].ip_addr);
   }
 
   unsigned char loop = 0;
-  setsockopt(send_socket_, IPPROTO_IP, IP_MULTICAST_LOOP,
+  setsockopt(s, IPPROTO_IP, IP_MULTICAST_LOOP,
              (const char*)&loop, sizeof(loop));
 #endif
 
   /* 循环接收网络上来的组播消息 */
-  SetSocket(send_socket_);
+  SetSocket(s);
   evt_recv_.Init(evt_loop_, EvtRecv, this);
   if (evt_recv_.Start(GetSocket(), EVT_READ | EVT_PERSIST) != 0) {
     return -1;
@@ -335,7 +332,7 @@ int CMCastSocket::SendUdpData(const char* center_ip, int center_port,
   scenter.sin_family = AF_INET;
   scenter.sin_port = htons(center_port);
   scenter.sin_addr.s_addr = inet_addr((char*)center_ip);
-  int ret = sendto(send_socket_,
+  int ret = sendto(GetSocket(),
                    (const char*)pdata,
                    ndata,
                    0,
@@ -343,5 +340,4 @@ int CMCastSocket::SendUdpData(const char* center_ip, int center_port,
                    sizeof(struct sockaddr));
   return ret;
 }
-
 }  // namespace vzconn

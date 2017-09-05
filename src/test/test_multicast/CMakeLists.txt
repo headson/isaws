@@ -52,6 +52,7 @@ if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libvzconn
 		libvzbase
+		IPHLPAPI.lib
 		${VZPROJECT_LINK_LIB}
 	)
 else()
