@@ -57,8 +57,8 @@ int main(int argc, char *argv[]) {
 
   kvdb::KvdbServer kvdb_server(main_thread);
 #ifdef WIN32
-  kvdb_server.StartKvdbServer("0.0.0.0", 5299, "./kvdb.db",
-                              "./kvdb_backup.db");
+  kvdb_server.StartKvdbServer("0.0.0.0", 5299, "c:\\tools\\kvdb.db",
+                              "c:\\tools\\kvdb_backup.db");
 #else
   kvdb_server.StartKvdbServer("0.0.0.0", 5299, "/mnt/usr/kvdb.db",
                               "/mnt/usr/kvdb_backup.db");
@@ -67,8 +67,8 @@ int main(int argc, char *argv[]) {
   kvdb::KvdbServer skvdb_server(main_thread);
 #ifdef WIN32
   skvdb_server.StartKvdbServer("0.0.0.0", 5499,
-                               "./secret_kvdb.db",
-                               "./secret_kvdb_backup.db");
+                               "c:\\tools\\secret_kvdb.db",
+                               "c:\\tools\\secret_kvdb_backup.db");
 #else
   skvdb_server.StartKvdbServer("0.0.0.0", 5499,
                                "/mnt/usr/secret_kvdb.db",

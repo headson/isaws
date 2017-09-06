@@ -107,6 +107,12 @@ bool KvdbServer::ProcessKvdbService(const KvdbMessage *kvdb_msg,
     return kvdb_sqlite_->RestoreDatabase(kvdb_sqlite_->GetBackupPath());
   } else if (kvdb_msg->type == KVDB_BACKUP) {
     return kvdb_sqlite_->BackupDatabase();
+  } else if (kvdb_msg->type == KVDB_TRANS_BEGIN) {
+    return kvdb_sqlite_->TransBegin();
+  } else if (kvdb_msg->type == KVDB_TRANS_COMMIT) {
+    return kvdb_sqlite_->TransCommit();
+  } else if (kvdb_msg->type == KVDB_TRANS_ROOLBACK) {
+    return kvdb_sqlite_->TransRollback();
   }
   return false;
 }

@@ -276,6 +276,10 @@ EXPORT_DLL int Kvdb_BackupDatabase();
 // Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int Kvdb_RestoreDatabase();
 
+// database use transaction
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
+EXPORT_DLL int Kvdb_Transaction(int e_trans);
+
 //////////////////////////////////////////////////////////////////////////
 // Default kvdb server:port is 127.0.0.1:5299
 EXPORT_DLL int SKvdb_Start(const char *server, unsigned short port);

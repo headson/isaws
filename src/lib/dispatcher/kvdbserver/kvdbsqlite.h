@@ -22,6 +22,11 @@ class KvdbSqlite : public vzbase::noncopyable {
   bool DeleteKeyValue(const char *key, int key_size);
   bool SelectKeyValue(const char *key, int key_size,
                       std::vector<char> &buffer);
+
+  bool TransBegin();
+  bool TransCommit();
+  bool TransRollback();
+
   // Copy the current database to backup database
   bool BackupDatabase();
   // If the restore database is null, then delete all of the current data

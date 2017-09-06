@@ -316,6 +316,40 @@ bool KvdbSqlite::SelectKeyValue(const char *key, int key_size,
   return false;
 }
 
+bool KvdbSqlite::TransBegin() {
+  int res = sqlite3_exec(db_instance_, "begin;", 0,0,0);
+  LOG(L_WARNING) << "TransBegin " << res;
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "trans begin;";
+    return false;
+  }
+  return true;
+}
+
+bool KvdbSqlite::TransCommit() {
+  int res = sqlite3_exec(db_instance_, "commit;", 0,0,0);
+  LOG(L_WARNING) << "TransCommit " << res;
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "trans commit;";
+    return false;
+  }
+  return true;
+}
+
+bool KvdbSqlite::TransRollback() {
+  char *error_msg = NULL;
+  int res = sqlite3_exec(db_instance_,
+                         "rollback transaction",
+                         0, 0, &error_msg);
+  LOG(L_WARNING) << "TransRollback " << res;
+  if (res != SQLITE_OK) {
+    LOG(L_ERROR) << "PRAGMA integrity_check;";
+    sqlite3_free(error_msg);
+    return false;
+  }
+  return true;
+}
+
 bool KvdbSqlite::BackupDatabase() {
   if(backup_path_.empty()) {
     return true;

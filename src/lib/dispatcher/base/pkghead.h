@@ -37,7 +37,7 @@ enum {
 };
 
 #define MAX_CLIS_PER_PROC  6              // 一个进程最多链接数
-#define DEF_TIMEOUT_MSEC   1000           // 默认超时 1S
+#define DEF_TIMEOUT_MSEC   3000           // 默认超时 1S
 
 typedef struct _TagDpMsg {
   unsigned char type;                     // 消息类型[8bits]
@@ -64,9 +64,13 @@ enum {
 
   KVDB_SUCCEED = 5,
   KVDB_FAILURE = 6,
+
+  KVDB_TRANS_BEGIN    = 7,
+  KVDB_TRANS_COMMIT   = 8,
+  KVDB_TRANS_ROOLBACK = 9,
 };
 
-#define MAX_KVDB_KEY_SIZE 32
+#define MAX_KVDB_KEY_SIZE 64
 
 typedef struct _KvdbMsg {
   unsigned int type;            // 请求类型;回执错误代码

@@ -52,7 +52,9 @@ class KvdbServer : public vzbase::noncopyable,
   void OnMessage(vzbase::Message* msg);
 
  private:
-  vzbase::Thread        *main_thread_;  vzconn::CEvtTcpServer *tcp_server_;
+  vzbase::Thread        *main_thread_;
+  vzconn::CEvtTcpServer *tcp_server_;
+
   KvdbSqlite            *kvdb_sqlite_;
   KvdbMessage            kvdb_message_;
 };

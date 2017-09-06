@@ -86,12 +86,14 @@ bool CKvdbClient::SetKey(const char *p_key,
   iov[1].iov_base = (void*)p_value;
   iov[1].iov_len  = (size_t)n_value;
 
+  LOG(L_INFO) << "begin.";
   n_ret_type_ = (uint32)KVDB_INVALID;
   n_ret = SyncWrite(iov, 2, 0);
   if (n_ret < 0) {
     LOG(L_ERROR) << "async write failed "<<p_key;
     return false;
   }
+  LOG(L_INFO) << "end.";
   n_ret = RunLoop(DEF_TIMEOUT_MSEC);
   if (n_ret == 0) {
     LOG(L_ERROR) << "set key time out";
@@ -247,7 +249,6 @@ int32 CKvdbClient::GetKey(const char  *p_key,
     }
     p_value->append(p_cur_msg_->value,
                     n_val_len);
-    LOG(L_INFO) << p_value->c_str();
     return n_val_len;
   }
   return 0;
@@ -359,11 +360,49 @@ bool CKvdbClient::RestoreDatabase() {
   return (n_ret_type_ == KVDB_SUCCEED);
 }
 
+bool CKvdbClient::Transaction(int e_trans) {
+  if (CheckAndConnected() == false) {
+    return false;
+  }
+
+  if (e_trans != KVDB_TRANS_BEGIN &&
+      e_trans != KVDB_TRANS_COMMIT &&
+      e_trans != KVDB_TRANS_ROOLBACK) {
+    LOG(L_ERROR) << "param is error. " << e_trans;
+    return false;
+  }
+
+  int32 n_ret = 0;
+  KvdbMessage c_head;
+  n_ret = EncKvdbMsg(&c_head,
+                     e_trans,
+                     "fk", 2,
+                     0);
+  if (n_ret <= 0) {
+    LOG(L_ERROR) << "param is error.";
+    return false;
+  }
+
+  n_ret_type_ = (uint32)KVDB_INVALID;
+  n_ret = SyncWrite(&c_head, sizeof(c_head), 0);
+  if (n_ret < 0) {
+    LOG(L_ERROR) << "async write failed ";
+    return false;
+  }
+
+  n_ret = RunLoop(DEF_TIMEOUT_MSEC);
+  if (n_ret == 0) {
+    LOG(L_ERROR) << "restore time out";
+    return false;
+  }
+  return (n_ret_type_ == KVDB_SUCCEED);
+}
+
 int32 CKvdbClient::HandleRecvPacket(vzconn::VSocket *p_cli,
                                     const uint8     *p_data,
                                     uint32           n_data,
                                     uint16           n_flag) {
-  //LOG(L_WARNING) << "recv packet length " << n_data;
+  LOG(L_WARNING) << "recv packet length " << n_data;
   if (!p_cli || !p_data || n_data == 0) {
     return -1;
   }

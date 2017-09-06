@@ -32,7 +32,7 @@ class CKvdbClient : public vzconn::CTcpClient,
               const char *p_value,
               uint32      n_value);
 
-  bool SetKey(const std::string  s_key,
+  bool SetKey(const std::string s_key,
               const char *p_value,
               uint32      n_value);
 
@@ -90,6 +90,15 @@ class CKvdbClient : public vzconn::CTcpClient,
   bool Delete(const char *p_key, uint8 n_key);
   bool BackupDatabase();
   bool RestoreDatabase();
+
+  /************************************************************************
+  *Description : 开启\提交\回滚事务
+  *Parameters  : KVDB_TRANS_BEGIN
+                 KVDB_TRANS_COMMIT
+                 KVDB_TRANS_ROLLBACK
+  *Return      : true = 成功, false = 失败
+  ************************************************************************/
+  bool Transaction(int e_trans);
 
  protected:
   virtual int32 HandleRecvPacket(vzconn::VSocket  *p_cli,

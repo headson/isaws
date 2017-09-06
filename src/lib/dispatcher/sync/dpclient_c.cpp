@@ -506,6 +506,17 @@ EXPORT_DLL int Kvdb_RestoreDatabase() {
   return KVDB_RET_FAILURE;
 }
 
+EXPORT_DLL int Kvdb_Transaction(int e_trans) {
+  if (g_kvdb_client == NULL) {
+    return KVDB_RET_FAILURE;
+  }
+
+  if (g_kvdb_client->Transaction(e_trans)) {
+    return KVDB_RET_SUCCEED;
+  }
+  return KVDB_RET_FAILURE;
+}
+
 //////////////////////////////////////////////////////////////////////////
 static CKvdbClient         *g_skvdb_client = NULL;
 
