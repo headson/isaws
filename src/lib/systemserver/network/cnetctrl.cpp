@@ -152,16 +152,21 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
     Json::Value j_resp;
     j_resp[MSG_CMD]  = s_type;
 
-    bool b_ret = CListenMessage::Instance()->SetDevInfo(jreq[MSG_BODY]);
-    if (b_ret) {
-      j_resp[MSG_STATE] = 0;
-    } else {
-      j_resp[MSG_STATE] = 6;
-    }
+    std::string net_dev_uuid = jreq[MSG_BODY]["dev_uuid"].asString();
+    std::string dev_uuid = CListenMessage::Instance()->sys_info_.dev_uuid;
+    if (0 == dev_uuid.compare(net_dev_uuid)) {
+      bool b_ret = CListenMessage::Instance()->SetDevInfo(jreq[MSG_BODY]);
+      if (b_ret) {
+        j_resp[MSG_STATE] = 0;
+      }
+      else {
+        j_resp[MSG_STATE] = 6;
+      }
 
-    sjson = j_resp.toStyledString();
-    mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                             sjson.c_str(), sjson.size());
+      sjson = j_resp.toStyledString();
+      mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
+                               sjson.c_str(), sjson.size());
+    }
   } else {
     LOG(L_ERROR) << "this message type is no function to process." << s_type;
   }

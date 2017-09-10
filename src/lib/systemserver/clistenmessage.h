@@ -48,8 +48,7 @@ class CListenMessage : public vzbase::noncopyable {
   bool GetDevInfo(Json::Value &j_body);       // 获取设备信息
   bool SetDevInfo(const Json::Value &j_body); // 设置设备信息
 
- private:
-  // Json::Value     hw_json_;       // 硬件参数json
+ public:
   TAG_SYS_INFO    sys_info_;      // 硬件参数
 
  private:

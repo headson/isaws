@@ -52,6 +52,7 @@ if(WIN32)
 		libdispatch
 		libdpclient
 		libvzconn
+		libvzbase
 		libvzlogging
 		libsqlite3
 		${VZPROJECT_LINK_LIB}

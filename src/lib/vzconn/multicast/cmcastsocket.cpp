@@ -20,7 +20,7 @@
 #include "vzbase/helper/stdafx.h"
 
 namespace vzconn {
-  
+
 CMCastSocket::CMCastSocket(vzconn::EVT_LOOP* p_loop,
                            vzconn::CClientInterface *cli_hdl)
   : vzconn::VSocket(cli_hdl)
@@ -223,7 +223,7 @@ int ChangeMulticastMembership(int sockfd, const char* multicast_addr) {
 
 #endif // def WIN32
 
-int32 CMCastSocket::Open(const char* center_ip, int center_port) {
+int CMCastSocket::Open(const char* center_ip, int center_port) {
   const char *multicast_addr = (const char *)center_ip;
   uint16      multicast_port = center_port;
 
@@ -271,7 +271,6 @@ int32 CMCastSocket::Open(const char* center_ip, int center_port) {
 #if 0
   ChangeMulticastMembership(s, multicast_addr);
 #else
-  struct ip_mreq      mreq;
   bzero(&mreq, sizeof(struct ip_mreq));
   mreq.imr_interface.s_addr = INADDR_ANY;
   mreq.imr_multiaddr.s_addr = inet_addr(multicast_addr);
@@ -293,6 +292,15 @@ int32 CMCastSocket::Open(const char* center_ip, int center_port) {
     return -1;
   }
   return 0;
+}
+
+void CMCastSocket::Stop() {
+  if (setsockopt(GetSocket(), IPPROTO_IP, IP_DROP_MEMBERSHIP,
+                 (const char *)&mreq, sizeof(struct ip_mreq)) == -1) {
+    perror("Drop membership error\n");
+  }
+
+  Close();
 }
 
 int32 CMCastSocket::EvtRecv(SOCKET      fd,

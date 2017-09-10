@@ -25,13 +25,14 @@ endforeach()
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST 
-	#${CMAKE_CURRENT_SOURCE_DIR}/kvdb_client_main.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/shell.c
-	${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.c
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdb_client_main.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/shell.c
+	#${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.c
 	)
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/shell.c
-	${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.c
+	${CMAKE_CURRENT_SOURCE_DIR}/kvdb_client_main.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/shell.c
+	#${CMAKE_CURRENT_SOURCE_DIR}/sqlite3.c
 )
 #########################################################################
 #Step 4 : Add PROJECT define 
@@ -53,14 +54,14 @@ set_property(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_TES
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		#libdpclient
-		#libvzconn
-		#${VZPROJECT_LINK_LIB}
+		libdpclient
+		libvzconn
+		${VZPROJECT_LINK_LIB}
 	)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		#dpclient
-		#vzconn
-		#${VZPROJECT_LINK_LIB}
+		dpclient
+		vzconn
+		${VZPROJECT_LINK_LIB}
 	)
 endif()

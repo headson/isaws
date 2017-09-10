@@ -213,7 +213,7 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
   }
 
   if (net_ctrl_->ModityNetwork(sys_info_)) {
-    CModuleMonitor::ReStartModule();
+    // CModuleMonitor::ReStartModule();
   }
   return true;
 }

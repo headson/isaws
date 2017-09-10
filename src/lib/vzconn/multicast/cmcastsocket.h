@@ -19,7 +19,8 @@ class CMCastSocket : public vzconn::VSocket {
                               CClientInterface *cli_hdl);
   virtual ~CMCastSocket();
 
-  int32 Open(const char* center_ip, int center_port);
+  int Open(const char* center_ip, int center_port);
+  void Stop();
 
   int SendUdpData(const char* center_ip, int center_port,
                   const char* pdata, unsigned int ndata);
@@ -34,6 +35,8 @@ class CMCastSocket : public vzconn::VSocket {
  private:
   vzconn::EVT_LOOP*     evt_loop_;
   vzconn::EVT_IO        evt_recv_;
+
+  struct ip_mreq        mreq;
 };
 
 }  // namespace vzconn
