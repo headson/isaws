@@ -5,8 +5,8 @@
 #ifndef LIBVZLOGSERVER_CVZLOGMANAGE_H_
 #define LIBVZLOGSERVER_CVZLOGMANAGE_H_
 
-#include "vzlogging/base/vzlogdef.h"
-#include "vzlogging/base/vzshmarg.h"
+#include "vzlogging/base/vzbases.h"
+#include "vzlogging/base/vzcommon.h"
 #include "vzlogging/logging/vzlogging.h"
 #include "vzlogging/server/cvzlogserver.h"
 
@@ -47,7 +47,7 @@ class CVzLogManage {
 
   /*初始化网络服务*/
   int InitSrvSocket(const char* ip, unsigned short port,
-                    const char* s_snd_addr);
+                    const char* trans_addr);
 
   /*看门狗处理*/
   int WatchdogProcess(const char* smsg, unsigned int nmsg);
@@ -85,10 +85,10 @@ class CVzLogManage {
   unsigned int    k_en_watchdog;  // 使能看门狗
 
  private:
-  CVzShmArg       k_shm_arg;      // 共享参数
-  CVzSockDgram    k_srv_sock;     // 网络服务
-  CVzLoggingFile  k_log_file;     // 普通日志
-  CVzWatchdogFile k_wdg_file;     // 看门狗日志
+  CVzLogShm       k_shm_arg;      // 共享参数
+  CVzLogSrv       k_log_srv;      // 网络服务
+  CVzLogFile      k_log_file;     // 普通日志
+  CVzWdgFile      k_wdg_file;     // 看门狗日志
 };
 }  // namespace vzlogging
 #endif  // LIBVZLOGSERVER_CVZLOGMANAGE_H_

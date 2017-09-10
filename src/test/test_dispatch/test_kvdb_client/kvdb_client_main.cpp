@@ -32,41 +32,37 @@ int main(int argc, char* argv[]) {
 
   Kvdb_Transaction(KVDB_TRANS_BEGIN);
 
-  Kvdb_RestoreDatabase();
-
-  snprintf(s_key, 63, "key_work-%d", time(NULL));
-  n_key = strlen(s_key);
-
-  snprintf(s_value, 127, "key_work-%d", time(NULL));
-  n_value = strlen(s_value);
-  Kvdb_SetKey(s_key, n_key, s_value, n_value);
-
-  Kvdb_Transaction(KVDB_TRANS_COMMIT);
-
+  
   while(1) {
     snprintf(s_key, 63, "key_work-%d", time(NULL));
+    snprintf(s_key, 63, "key-%d", rand() % ((uint32)-1));
     n_key = strlen(s_key);
 
     snprintf(s_value, 127, "key_work-%d", time(NULL));
+    snprintf(s_value, 127, "value-%d", rand() % ((uint32)-1));
     n_value = strlen(s_value);
     Kvdb_SetKey(s_key, n_key, s_value, n_value);
 
     memset(s_value, 0, 128);
     Kvdb_GetKeyToBuffer(s_key, n_key, s_value, 127);
     printf("get %s \t %s.\n", s_key, s_value);
+    //memset(s_value, 0, 128);
+    //Kvdb_GetKeyToBuffer(s_key, n_key, s_value, 127);
+    //printf("get %s \t %s.\n", s_key, s_value);
 
     Kvdb_BackupDatabase();
+    //Kvdb_BackupDatabase();
 
     memset(s_value, 0, 128);
     Kvdb_GetKey(s_key, n_key, kvdb_GetKeyCallBack, NULL);
 
-    /*Kvdb_DeleteKey(s_key, n_key);
+    Kvdb_DeleteKey(s_key, n_key);
     memset(s_value, 0, 128);
     if (Kvdb_GetKeyToBuffer(s_key, n_key, s_value, 127) == KVDB_SUCCEED) {
-    printf("get %s \t %s.\n", s_key, s_value);
-    }*/
+      printf("get %s \t %s.\n", s_key, s_value);
+    }
 
-    //Kvdb_RestoreDatabase();
+    Kvdb_RestoreDatabase();
   }
 #endif
 
@@ -93,25 +89,68 @@ int main(int argc, char* argv[]) {
 
     //p_kvdb->BackupDatabase();
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     //memset(s_value, 0, 128);
     //p_kvdb->GetKey(s_key, n_key, kvdb_GetKeyCallBack, NULL);
+    //Kvdb_GetKey(s_key, n_key, kvdb_GetKeyCallBack, NULL);
 
     //std::string s_val;
     //p_kvdb->GetKey(s_key, n_key, &s_val);
     //printf("get %s \t %s.\n", s_key, s_val.c_str());
 
     //p_kvdb->Delete(s_key, n_key);
+    //Kvdb_DeleteKey(s_key, n_key);
     //memset(s_value, 0, 128);
     //if (p_kvdb->GetKey(s_key, n_key, s_value, 127) == KVDB_SUCCEED) {
+    //if (Kvdb_GetKeyToBuffer(s_key, n_key, s_value, 127) == KVDB_SUCCEED) {
     //  printf("get %s \t %s.\n", s_key, s_value);
     //}
     s_val = "asdasdasdasdasdasdasd";
     res = p_kvdb->SetKey(s_key, s_val.c_str(), s_val.size());
 
-    //p_kvdb->RestoreDatabase();
+    p_kvdb->RestoreDatabase();
 
     s_val = "asdasdasdasdasdasdasd";
     res = p_kvdb->SetKey(s_key, s_val.c_str(), s_val.size());
+    //Kvdb_RestoreDatabase();
+
+
+
   }
 
   getchar();

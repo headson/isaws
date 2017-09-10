@@ -10,11 +10,11 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-#include "vzlogging/base/vzlogdef.h"
+#include "vzlogging/base/vzbases.h"
 
 namespace vzlogging {
 
-CVzSockDgram::CVzSockDgram()
+CVzLogSrv::CVzLogSrv()
   : cb_receive_(NULL)
   , receive_usr_arg_(NULL)
   , cb_timeout_(NULL)
@@ -22,16 +22,16 @@ CVzSockDgram::CVzSockDgram()
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 
   FD_ZERO(&rfds_);
-  sock_recv_ = INVALID_SOCKET;
-  sock_send_ = INVALID_SOCKET;
+  rsock_ = INVALID_SOCKET;
+  ssock_ = INVALID_SOCKET;
 }
 
-CVzSockDgram::~CVzSockDgram() {
+CVzLogSrv::~CVzLogSrv() {
   Close();
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-void CVzSockDgram::SetCallback(CALLBACK_RECEIVE receive_cb,
+void CVzLogSrv::SetCallback(CALLBACK_RECEIVE receive_cb,
                                void *recv_usr_arg,
                                CALLBACK_TIMEOUT timeout_cb,
                                void *timeout_usr_arg) {
@@ -43,7 +43,7 @@ void CVzSockDgram::SetCallback(CALLBACK_RECEIVE receive_cb,
 }
 
 //
-int CVzSockDgram::OpenTransAddr(const char* s_srv_addr) {
+int CVzLogSrv::OpenTransAddr(const char* s_srv_addr) {
   char s_ip[20] = {0};
   unsigned int n_port = 0;
   char* token = strrchr((char*)s_srv_addr, ':');
@@ -53,16 +53,16 @@ int CVzSockDgram::OpenTransAddr(const char* s_srv_addr) {
   }
   if (strlen(s_ip) > 0 && n_port > 0) {
     // SOCKET只打开一次
-    if (sock_send_ == INVALID_SOCKET) {
-      sock_send_ = ::socket(AF_INET, SOCK_DGRAM, 0);
-      if (sock_send_ == INVALID_SOCKET) {
+    if (ssock_ == INVALID_SOCKET) {
+      ssock_ = ::socket(AF_INET, SOCK_DGRAM, 0);
+      if (ssock_ == INVALID_SOCKET) {
         VZ_ERROR("socket create failed.\n");
         return -1;
       }
 
       // REUSE address
       int val = 1;
-      setsockopt(sock_send_,
+      setsockopt(ssock_,
                  SOL_SOCKET,
                  SO_REUSEADDR,
                  (char*)&val,
@@ -76,31 +76,31 @@ int CVzSockDgram::OpenTransAddr(const char* s_srv_addr) {
     sa_snd_srv.sin_addr.s_addr  = inet_addr(s_ip);
 
     // 绑定发送地址,在发送时可不再指定
-    connect(sock_send_, (sockaddr*)&sa_snd_srv, sizeof(sa_snd_srv));
+    connect(ssock_, (sockaddr*)&sa_snd_srv, sizeof(sa_snd_srv));
     return 0;
   }
   return -1;
 }
 
-int CVzSockDgram::TransMsgToServer(const char* s_msg, unsigned int n_msg) {
-  if (sock_send_ == INVALID_SOCKET) {
+int CVzLogSrv::TransMsgToServer(const char* s_msg, unsigned int n_msg) {
+  if (ssock_ == INVALID_SOCKET) {
     return -1;
   }
-  return send(sock_send_, s_msg, n_msg, 0);
+  return send(ssock_, s_msg, n_msg, 0);
 }
 
-int CVzSockDgram::OpenListenAddr(const char* ip, unsigned short port) {
+int CVzLogSrv::OpenListenAddr(const char* ip, unsigned short port) {
   Close();
 
-  sock_recv_ = ::socket(AF_INET, SOCK_DGRAM, 0);
-  if (sock_recv_ == INVALID_SOCKET) {
+  rsock_ = ::socket(AF_INET, SOCK_DGRAM, 0);
+  if (rsock_ == INVALID_SOCKET) {
     VZ_ERROR("socket create failed.\n");
     return -1;
   }
 
   // REUSE address
   int val = 1;
-  setsockopt(sock_recv_, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(int));
+  setsockopt(rsock_, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(int));
 
   // bind local address
   struct sockaddr_in local_addr;
@@ -108,7 +108,7 @@ int CVzSockDgram::OpenListenAddr(const char* ip, unsigned short port) {
   local_addr.sin_port         = htons(port);
   local_addr.sin_addr.s_addr  = inet_addr(ip);
 
-  int ret = ::bind(sock_recv_,
+  int ret = ::bind(rsock_,
                    (struct sockaddr*)&local_addr, sizeof(struct sockaddr));
   if (ret < 0) {
     VZ_ERROR("socket bind address failed.\n");
@@ -119,7 +119,7 @@ int CVzSockDgram::OpenListenAddr(const char* ip, unsigned short port) {
 
   // 设置接收缓冲区
   int opt = 64 * 1024;
-  ret = setsockopt(sock_recv_, SOL_SOCKET, SO_RCVBUF, (char*)&opt, sizeof(int));
+  ret = setsockopt(rsock_, SOL_SOCKET, SO_RCVBUF, (char*)&opt, sizeof(int));
   if (ret < 0) {
     VZ_ERROR("setsockopt SO_RCVBUF failed.\n");
 
@@ -130,37 +130,37 @@ int CVzSockDgram::OpenListenAddr(const char* ip, unsigned short port) {
   // nonblock
 #ifdef WIN32
   int mode = 1;
-  ::ioctlsocket(sock_recv_, FIONBIO, (u_long FAR*)&mode);
+  ::ioctlsocket(rsock_, FIONBIO, (u_long FAR*)&mode);
 #else
-  int mode = fcntl(sock_recv_, F_GETFL, 0);
-  fcntl(sock_recv_, F_SETFL, mode | O_NONBLOCK);
+  int mode = fcntl(rsock_, F_GETFL, 0);
+  fcntl(rsock_, F_SETFL, mode | O_NONBLOCK);
 #endif
 
   return 0;
 }
 
-void CVzSockDgram::Close() {
-  if (INVALID_SOCKET != sock_recv_) {
+void CVzLogSrv::Close() {
+  if (INVALID_SOCKET != rsock_) {
 #ifdef WIN32
-    closesocket(sock_recv_);
+    closesocket(rsock_);
 #else
-    close(sock_recv_);
+    close(rsock_);
 #endif
-    sock_recv_ = INVALID_SOCKET;
+    rsock_ = INVALID_SOCKET;
   }
 }
 
-void CVzSockDgram::Loop(int ms) {
+void CVzLogSrv::Loop(int ms) {
   FD_ZERO(&rfds_);
-  FD_SET(sock_recv_, &rfds_);
+  FD_SET(rsock_, &rfds_);
 
   // 读数据
   struct timeval tv;
   tv.tv_sec = ms / 1000;
   tv.tv_usec = (ms % 1000) * 1000;
-  if (select(sock_recv_+1, &rfds_, NULL, NULL, &tv) > 0) {
-    if (INVALID_SOCKET != sock_recv_) {
-      if (FD_ISSET(sock_recv_, &rfds_)) {
+  if (select(rsock_+1, &rfds_, NULL, NULL, &tv) > 0) {
+    if (INVALID_SOCKET != rsock_) {
+      if (FD_ISSET(rsock_, &rfds_)) {
         do {
           sockaddr_in      raddr;                    // 接收远端地址
 #ifdef WIN32
@@ -170,17 +170,18 @@ void CVzSockDgram::Loop(int ms) {
 #endif
 
           raddr_len = sizeof(sockaddr);
-          recv_size_ = recvfrom(sock_recv_, recv_data_, DEF_LOG_MAX_SIZE,
+          nlog_ = recvfrom(rsock_, slog_, A_LOG_SIZE,
                                 0,
                                 (sockaddr*)&raddr,
                                 &raddr_len);
-          if (recv_size_ > 0) {
+          if (nlog_ > 0) {
             if (cb_receive_) {
-              if (recv_size_ < DEF_LOG_MAX_SIZE) {
-                recv_data_[recv_size_] = '\0';  // 防止溢出
+              if (nlog_ < A_LOG_SIZE) {
+                slog_[nlog_] = '\0';  // 防止溢出
               }
-              cb_receive_(sock_recv_, &raddr, recv_data_, recv_size_, receive_usr_arg_);
+              cb_receive_(rsock_, &raddr, slog_, nlog_, receive_usr_arg_);
             }
+            Tran
           } else {
             break;
           }
@@ -195,7 +196,7 @@ void CVzSockDgram::Loop(int ms) {
 }
 
 //////////////////////////////////////////////////////////////////////////
-CVzLoggingFile::CVzLoggingFile() {
+CVzLogFile::CVzLogFile() {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 
   n_file_limit_size_  = 1024*1024;  // 1MB
@@ -208,7 +209,7 @@ CVzLoggingFile::CVzLoggingFile() {
   n_file_size_        = 0;
 }
 
-CVzLoggingFile::~CVzLoggingFile() {
+CVzLogFile::~CVzLogFile() {
   if (p_file_) {
     fclose(p_file_);
     p_file_ = NULL;
@@ -216,34 +217,34 @@ CVzLoggingFile::~CVzLoggingFile() {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-int CVzLoggingFile::Open(const char*  s_path,
+int CVzLogFile::Open(const char*  s_path,
                          const char*  s_filename,
                          unsigned int n_limit_size) {
   // 组文件名
   for (int i = 0; i < 2; i++) {
-    memset(s_filename_[i], 0, DEF_LOG_FILE_NAME+1);
-    snprintf(s_filename_[i], DEF_LOG_FILE_NAME,
+    memset(s_filename_[i], 0, LEN_FILEPATH+1);
+    snprintf(s_filename_[i], LEN_FILEPATH,
              "%s%s_%d.log", s_path, s_filename, i+1);
   }
   // 错误文件名名称
-  memset(s_err_fname_, 0, DEF_LOG_FILE_NAME+1);
-  snprintf(s_err_fname_, DEF_LOG_FILE_NAME,
-           "%s%s_err_%d.log", s_path, s_filename, DEF_ERR_FILE_COUNT);
+  memset(s_err_fname_, 0, LEN_FILEPATH+1);
+  snprintf(s_err_fname_, LEN_FILEPATH,
+           "%s%s_err_%d.log", s_path, s_filename, MAX_FILE_CNT);
   // 此错误文件已存在,干掉之前的错误文件
 #ifdef WIN32
   if (_access(s_err_fname_, 0) == 0) {
 #else
   if (access(s_err_fname_, 0) == 0) {
 #endif
-    char s_temp_fname[DEF_LOG_FILE_NAME+1];
-    for (int i = 0; i < DEF_ERR_FILE_COUNT; i++) {
+    char s_temp_fname[LEN_FILEPATH+1];
+    for (int i = 0; i < MAX_FILE_CNT; i++) {
       // i文件
-      memset(s_temp_fname, 0, DEF_LOG_FILE_NAME + 1);
-      snprintf(s_temp_fname, DEF_LOG_FILE_NAME,
+      memset(s_temp_fname, 0, LEN_FILEPATH + 1);
+      snprintf(s_temp_fname, LEN_FILEPATH,
                "%s%s_err_%d.log", s_path, s_filename, i);
       // i+1文件
-      memset(s_err_fname_, 0, DEF_LOG_FILE_NAME + 1);
-      snprintf(s_err_fname_, DEF_LOG_FILE_NAME,
+      memset(s_err_fname_, 0, LEN_FILEPATH + 1);
+      snprintf(s_err_fname_, LEN_FILEPATH,
                "%s%s_err_%d.log", s_path, s_filename, i + 1);
       // 删除第一个文件,否则第二个不能rename成功
       if (i == 0 && (remove(s_temp_fname) == 0)) {
@@ -260,19 +261,19 @@ int CVzLoggingFile::Open(const char*  s_path,
   n_filename_idx_     = 0;                  // 从第一个文件写
   n_file_limit_size_  = n_limit_size / 2;   // 文件限制大小
   if (n_file_limit_size_ == 0) {
-    n_file_limit_size_ = DEF_LOG_FILE_SIZE / 2;
+    n_file_limit_size_ = MAX_LOG_FILE_SIZE / 2;
   }
 
   return CheckFileReopen(0);
 }
 
-void CVzLoggingFile::Sync() {
+void CVzLogFile::Sync() {
   if (p_file_) {
     fflush(p_file_);
   }
 }
 
-int CVzLoggingFile::WriteSome(const char* s_usr_cmd) {
+int CVzLogFile::WriteSome(const char* s_usr_cmd) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   time_t tt = tv.tv_sec;
@@ -291,9 +292,9 @@ int CVzLoggingFile::WriteSome(const char* s_usr_cmd) {
   return Write(s_log, n_log);
 }
 
-int CVzLoggingFile::Write(const char* msg, unsigned int size) {
+int CVzLogFile::Write(const char* msg, unsigned int size) {
   if (p_file_ == NULL ||
-      msg == NULL || size > DEF_LOG_MAX_SIZE) {
+      msg == NULL || size > A_LOG_SIZE) {
     return -1;
   }
 
@@ -313,7 +314,7 @@ int CVzLoggingFile::Write(const char* msg, unsigned int size) {
   return -2;
 }
 
-int CVzLoggingFile::CheckFileReopen(unsigned int size) {
+int CVzLogFile::CheckFileReopen(unsigned int size) {
   if (p_file_ != NULL) {  // 运行中打开,以wt+打开
     return OpenFileNext(size);
   } else {              // 第一次以at+打开
@@ -323,7 +324,7 @@ int CVzLoggingFile::CheckFileReopen(unsigned int size) {
 }
 
 // 第一次以at+打开
-int CVzLoggingFile::OpenFileFirst() {
+int CVzLogFile::OpenFileFirst() {
   n_filename_idx_ = 0;
   p_file_ = fopen(s_filename_[n_filename_idx_], "at+");
   if (p_file_) {
@@ -333,7 +334,7 @@ int CVzLoggingFile::OpenFileFirst() {
     n_file_size_ = ftell(p_file_);
 
     // 此文件已被写完,打开下一个文件
-    if ((n_file_size_ + 2 * DEF_LOG_MAX_SIZE) >= n_file_limit_size_) {
+    if ((n_file_size_ + 2 * A_LOG_SIZE) >= n_file_limit_size_) {
       time_t f1_wtime = 0, f2_wtime = 0;
 
       // 获取第一个文件时间
@@ -348,7 +349,7 @@ int CVzLoggingFile::OpenFileFirst() {
         n_file_size_ = ftell(p_file_);
 
         // 第二个文件也写满了,判断最后文件操作时间
-        if ((n_file_size_ + 2 * DEF_LOG_MAX_SIZE) >= n_file_limit_size_) {
+        if ((n_file_size_ + 2 * A_LOG_SIZE) >= n_file_limit_size_) {
           f2_wtime = GetFileMTime(p_file_);
 
           // 第一个文件最后修改时间大于第二个文件,关闭第二个文件,开第一个文件
@@ -383,7 +384,7 @@ int CVzLoggingFile::OpenFileFirst() {
 }
 
 // 运行中打开,以wt+打开
-int CVzLoggingFile::OpenFileNext(unsigned int size) {
+int CVzLogFile::OpenFileNext(unsigned int size) {
   // 关闭原文件
   if ((int)(n_file_size_ + size) >= n_file_limit_size_) {
     fclose(p_file_);
@@ -409,7 +410,7 @@ int CVzLoggingFile::OpenFileNext(unsigned int size) {
   return -1;
 }
 
-time_t CVzLoggingFile::GetFileMTime(FILE* file) {
+time_t CVzLogFile::GetFileMTime(FILE* file) {
   struct stat buf;
 #ifdef WIN32
   int fd = _fileno(file);
@@ -420,9 +421,9 @@ time_t CVzLoggingFile::GetFileMTime(FILE* file) {
   return buf.st_mtime;
 }
 
-int CVzLoggingFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
+int CVzLogFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
   int  n_log = 0;
-  char s_log[DEF_LOG_MAX_SIZE + 1] = {0};
+  char s_log[A_LOG_SIZE + 1] = {0};
   FILE* fd_err = fopen(s_err_fname_, "wt+");
   if (fd_err) {
     int n_other_filename_idx = n_filename_idx_ ? 0 : 1;
@@ -431,14 +432,14 @@ int CVzLoggingFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       fseek(file, n_file_size_, SEEK_SET);
 
       // 第一包
-      n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, file);
+      n_log = fread(s_log, 1, A_LOG_SIZE, file);
       char* p_log = strrchr(s_log, '\n');
-      if (n_log > 0 && strlen(p_log) < DEF_LOG_MAX_SIZE) {
+      if (n_log > 0 && strlen(p_log) < A_LOG_SIZE) {
         fwrite(p_log + 1, 1, strlen(p_log) - 1, fd_err);
       }
       do {
-        n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, file);
-        if (n_log > 0 && n_log < DEF_LOG_MAX_SIZE) {
+        n_log = fread(s_log, 1, A_LOG_SIZE, file);
+        if (n_log > 0 && n_log < A_LOG_SIZE) {
           fwrite(s_log, 1, n_log, fd_err);
         }
       } while (!feof(file) && n_log > 0);
@@ -453,8 +454,8 @@ int CVzLoggingFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       p_file_ = fopen(s_filename_[n_filename_idx_], "rt+");
       if (p_file_) {
         do {
-          n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
-          if (n_log > 0 && n_log < DEF_LOG_MAX_SIZE) {
+          n_log = fread(s_log, 1, A_LOG_SIZE, p_file_);
+          if (n_log > 0 && n_log < A_LOG_SIZE) {
             fwrite(s_log, 1, n_log, fd_err);
           }
         } while (!feof(p_file_) && n_log > 0);
@@ -472,22 +473,22 @@ int CVzLoggingFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
 }
 
 /*看门狗日志文件**********************************************************/
-CVzWatchdogFile::CVzWatchdogFile()
-  : CVzLoggingFile() {
+CVzWdgFile::CVzWdgFile()
+  : CVzLogFile() {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-CVzWatchdogFile::~CVzWatchdogFile() {
+CVzWdgFile::~CVzWdgFile() {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-int CVzWatchdogFile::Open(const char* s_path,
+int CVzWdgFile::Open(const char* s_path,
                           const char* s_filename,
                           unsigned int n_limit_size) {
   // 组文件名
-  snprintf(s_filename_[0], DEF_LOG_FILE_NAME,
+  snprintf(s_filename_[0], LEN_FILEPATH,
            "%s%s.log", s_path, s_filename);
-  snprintf(s_filename_[1], DEF_LOG_FILE_NAME,
+  snprintf(s_filename_[1], LEN_FILEPATH,
            "%s%s_temp.log", s_path, s_filename);
 
   n_filename_idx_ = 0;
@@ -496,7 +497,7 @@ int CVzWatchdogFile::Open(const char* s_path,
   return CheckFileReopen(0);
 }
 
-int CVzWatchdogFile::CheckFileReopen(unsigned int n_msg) {
+int CVzWdgFile::CheckFileReopen(unsigned int n_msg) {
   if (p_file_ == NULL) {  // 运行中打开,以wt+打开
     p_file_ = fopen(s_filename_[0], "at+");
     if (p_file_) {
@@ -512,17 +513,17 @@ int CVzWatchdogFile::CheckFileReopen(unsigned int n_msg) {
                 n_file_size_-n_less_size, SEEK_SET);  // 截取一半日志
 
           int  n_log = 0;
-          char s_log[DEF_LOG_MAX_SIZE+1] = {0};
+          char s_log[A_LOG_SIZE+1] = {0};
           // 第一包
-          n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
+          n_log = fread(s_log, 1, A_LOG_SIZE, p_file_);
           char* p_log = strrchr(s_log, '\n');
-          if (p_log && strlen(p_log) < DEF_LOG_MAX_SIZE) {
+          if (p_log && strlen(p_log) < A_LOG_SIZE) {
             fwrite(p_log + 1, 1, strlen(p_log) - 1, file_temp);
           }
 
           do {
-            n_log = fread(s_log, 1, DEF_LOG_MAX_SIZE, p_file_);
-            if (n_log > 0 && n_log < DEF_LOG_MAX_SIZE) {
+            n_log = fread(s_log, 1, A_LOG_SIZE, p_file_);
+            if (n_log > 0 && n_log < A_LOG_SIZE) {
               fwrite(s_log, 1, n_log, file_temp);
             }
           } while (!feof(p_file_) && n_log > 0);
