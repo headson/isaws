@@ -2,7 +2,7 @@
 *Author      : Sober.Peng 17-06-27
 *Description :
 ************************************************************************/
-#include "vzlogging/base/vzlogdef.h"
+#include "vzbases.h"
 
 #include <time.h>
 #include <string.h>
@@ -39,17 +39,6 @@ void gettimeofday(struct timeval *tp, struct timezone *tz) {
 
 namespace vzlogging {
 
-unsigned int get_sys_sec() {
-#ifdef WIN32
-  return (unsigned int)(GetTickCount() / 1000);
-#else
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (unsigned int)ts.tv_sec;
-#endif
-  return 0;
-}
-
 // 获取进程ID
 unsigned int GetPid() {
 #ifdef WIN32
@@ -68,8 +57,23 @@ unsigned int GetPpid() {
 #endif
 }
 
+unsigned int GetSysSec() {
+#ifdef WIN32
+  return (unsigned int)(GetTickCount() / 1000);
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (unsigned int)ts.tv_sec;
+#endif
+  return 0;
+}
+
 // 通过文件路径,获取文件名
 const char *GetFileName(const char *filepath) {
+  if (NULL == filepath) {
+    return "";
+  }
+
   int   n_file_name = strlen(filepath);
   const char *res_pos = filepath + n_file_name;
   for (int i = n_file_name; i > 0; i--) {
@@ -95,20 +99,20 @@ struct TAG_LOG_LEVEL {
   { L_ERROR,      L_C_ERROR },
   { L_HEARTBEAT,  L_C_HEARTBEAT },
 };
-int VzLogPackHead(unsigned int  level,
-                  const char    *file,
-                  int           line,
-                  char*         slog,
-                  int           nlog) {
+int VzLogHead(unsigned int  level,
+              const char *file, int line,
+              char *slog, int nlog) {
   if (level > (sizeof(k_log_level)/sizeof(struct TAG_LOG_LEVEL))) {
     return -1;
   }
 
   struct timeval tv;
   gettimeofday(&tv, NULL);
+
   time_t tt = tv.tv_sec;
   struct tm *wtm = localtime(&tt);
-  nlog = snprintf(slog, DEF_LOG_MAX_SIZE,
+
+  nlog = snprintf(slog, A_LOG_SIZE,
                   "%c %04d %04d %02d:%02d:%02d.%03d %s:%d] ",
                   k_log_level[level].option,
                   GetPid(), GetPpid(),
@@ -118,11 +122,11 @@ int VzLogPackHead(unsigned int  level,
   return nlog;
 }
 
-int VzLogPrintFailed(const char *file, int line, const char *fmt, ...) {
+int VzLogDebug(const char *file, int line, const char *fmt, ...) {
   int nlog = 0;
-  char slog[DEF_LOG_MAX_SIZE+2] = {0};
+  char slog[A_LOG_SIZE+2] = {0};
 
-  nlog = VzLogPackHead(L_DEBUG, file, line, slog, DEF_LOG_MAX_SIZE);
+  nlog = VzLogHead(L_DEBUG, file, line, slog, A_LOG_SIZE);
   if (nlog < 0) {
     return nlog;
   }
@@ -130,10 +134,10 @@ int VzLogPrintFailed(const char *file, int line, const char *fmt, ...) {
   // BODY
   va_list args;
   va_start(args, fmt);
-  nlog += vsnprintf(slog + nlog, DEF_LOG_MAX_SIZE - nlog, fmt, args);
+  nlog += vsnprintf(slog + nlog, A_LOG_SIZE - nlog, fmt, args);
   va_end(args);
 
-  if (nlog < DEF_LOG_MAX_SIZE) {
+  if (nlog < A_LOG_SIZE) {
     slog[nlog] = '\0';
   }
   printf(slog);
@@ -141,7 +145,7 @@ int VzLogPrintFailed(const char *file, int line, const char *fmt, ...) {
   return 0;
 }
 
-
+//////////////////////////////////////////////////////////////////////////
 #ifdef WIN32
 BOOL SetConsoleColor(WORD wAttributes) {
   HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -157,7 +161,7 @@ BOOL SetConsoleColor(WORD wAttributes) {
 #define VZ_YELLOW               "\e[1;33m"
 #endif
 
-void VzDumpLogging(const char* s_msg, int n_msg) {
+void VzLogPrint(const char* s_msg, int n_msg) {
   FILE* fd_out = stdout;
 #ifdef WIN32
   switch (s_msg[0]) {

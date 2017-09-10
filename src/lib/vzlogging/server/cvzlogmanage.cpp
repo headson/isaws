@@ -60,10 +60,11 @@ int CVzLogManage::Start(const char* log_path,
 }
 
 void CVzLogManage::RunLoop(int ms) {
-  k_srv_sock.Loop(ms);
+  k_log_srv.Loop(ms);
 }
 
-void CVzLogManage::SetLogAddrAndLevel(const char *lhost, unsigned short port, unsigned int level) {
+void CVzLogManage::SetLogAddrAndLevel(const char *lhost, unsigned short port, 
+                                      unsigned int level) {
   k_shm_mod.snd_level = level;
 
   k_shm_mod.sock_addr.sin_family = AF_INET;
@@ -84,14 +85,14 @@ void CVzLogManage::SetDisableWatchdog() {
 void CVzLogManage::ShareBuffer() {
   k_shm_arg.Share(&k_shm_mod, sizeof(k_shm_mod));
   k_shm_arg.Share(&k_shm_mod, sizeof(k_shm_mod));
-  k_shm_arg.Share(&k_shm_mod, sizeof(k_shm_mod));
 }
 
-int CVzLogManage::InitLogRecord(const char* path, const char* log_fname, const char* wdg_fname) {
+int CVzLogManage::InitLogRecord(const char* path, 
+                                const char* log_fname, const char* wdg_fname) {
   int ret = -1;
 
   // 普通日志
-  ret = k_log_file.Open(path, log_fname, DEF_LOG_FILE_SIZE);
+  ret = k_log_file.Open(path, log_fname, MAX_LOG_FILE_SIZE);
   if (ret < 0) {
     VZ_ERROR("log record open failed.%d.\n", ret);
     return ret;
@@ -99,7 +100,7 @@ int CVzLogManage::InitLogRecord(const char* path, const char* log_fname, const c
   k_log_file.WriteSome("program log");
 
   // 看门狗日志
-  ret = k_wdg_file.Open(path, wdg_fname, DEF_WDG_FILE_SIZE);
+  ret = k_wdg_file.Open(path, wdg_fname, MAX_WDG_FILE_SIZE);
   if (ret < 0) {
     VZ_ERROR("wdg record open failed.%d.\n", ret);
     return ret;
@@ -110,6 +111,8 @@ int CVzLogManage::InitLogRecord(const char* path, const char* log_fname, const c
 }
 
 int CVzLogManage::InitMonitorModule(const char* s_path) {
+  memset(k_shm_mod.mod_state, 0, sizeof(k_shm_mod.mod_state));
+
   FILE* file = fopen(s_path, "rt");
   if (file) {
     int  n_line = 0;
@@ -124,7 +127,7 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
         continue;
       }
 
-      for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
+      for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
         if (k_shm_mod.mod_state[i].mark == 0
             && k_shm_mod.mod_state[i].app_name[0] == '\0') {
           char s_app_name[32 + 1] = { 0 };
@@ -140,11 +143,11 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
             break;
           }
           strncpy(s_app_name, s_line,
-                  (((p_app - s_line) > DEF_PROCESS_NAME_MAX) ?
-                   DEF_PROCESS_NAME_MAX : (p_app - s_line)));
+                  (((p_app - s_line) > LEN_APP_NAME) ?
+                   LEN_APP_NAME : (p_app - s_line)));
           strncpy(s_descrebe, p_app + 1,
-                  (((p_desc - p_app - 1) > DEF_USER_DESCREBE_MAX) ?
-                   DEF_USER_DESCREBE_MAX : (p_desc - p_app - 1)));
+                  (((p_desc - p_app - 1) > LEN_DESCREBE) ?
+                   LEN_DESCREBE : (p_desc - p_app - 1)));
           n_timeout = atoi(p_desc + 1);
           if (s_app_name[0] == '\0' ||
               s_descrebe[0] == '\0' ||
@@ -155,10 +158,10 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
 
           // 去重复
           bool b_find = false;
-          for (int j = 0; j < DEF_PER_DEV_PROCESS_MAX; j++) {
+          for (int j = 0; j < MAX_WATCHDOG_A_DEVICE; j++) {
             if (k_shm_mod.mod_state[j].mark == DEF_TAG_MARK &&
-                !strncmp(k_shm_mod.mod_state[j].descrebe, s_descrebe, DEF_USER_DESCREBE_MAX)       // 描述符
-                && !strncmp(k_shm_mod.mod_state[j].app_name, s_app_name, DEF_PROCESS_NAME_MAX)) {  // 进程名
+                !strncmp(k_shm_mod.mod_state[j].descrebe, s_descrebe, LEN_DESCREBE)       // 描述符
+                && !strncmp(k_shm_mod.mod_state[j].app_name, s_app_name, LEN_APP_NAME)) {  // 进程名
               b_find = true;
               break;
             }
@@ -168,9 +171,9 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
           if (b_find == false) {
             k_shm_mod.mod_state[i].mark = DEF_TAG_MARK;
             k_shm_mod.mod_state[i].timeout = n_timeout;
-            k_shm_mod.mod_state[i].last_heartbeat = get_sys_sec();
-            strncpy(k_shm_mod.mod_state[i].app_name, s_app_name, DEF_PROCESS_NAME_MAX);
-            strncpy(k_shm_mod.mod_state[i].descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
+            k_shm_mod.mod_state[i].last_heartbeat = GetSysSec();
+            strncpy(k_shm_mod.mod_state[i].app_name, s_app_name, LEN_APP_NAME);
+            strncpy(k_shm_mod.mod_state[i].descrebe, s_descrebe, LEN_DESCREBE);
             VZ_ERROR("add module %s-%s-%d.\n",
                      k_shm_mod.mod_state[i].app_name,
                      k_shm_mod.mod_state[i].descrebe,
@@ -190,21 +193,21 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
 }
 
 int CVzLogManage::InitSrvSocket(const char *ip, unsigned short port,
-                                const char *s_snd_addr) {
-  k_srv_sock.SetCallback(callback_receive, this,
+                                const char *trans_addr) {
+  k_log_srv.SetCallback(callback_receive, this,
                          callback_timeout, this);
 
   int ret = -1;
   // 打开网络监听
-  ret = k_srv_sock.OpenListenAddr(ip, port);
+  ret = k_log_srv.OpenListenAddr(ip, port);
   if (ret < 0) {
     VZ_ERROR("open udp listen %d failed. %d.\n", port, ret);
     return ret;
   }
 
-  ret = k_srv_sock.OpenTransAddr(s_snd_addr);
+  ret = k_log_srv.OpenTransAddr(trans_addr);
   if (ret < 0) {
-    VZ_ERROR("open udp trans %s failed. %d.\n", s_snd_addr, ret);
+    VZ_ERROR("open udp trans %s failed. %d.\n", trans_addr, ret);
   }
   return 0;
 }
@@ -213,11 +216,7 @@ static int k_total_log = 0;
 int CVzLogManage::OnReceive(SOCKET sock, const sockaddr_in *raddr,
                             const char *smsg, unsigned int nmsg) {
   if (k_en_stdout) {
-    if (nmsg < DEF_LOG_MAX_SIZE) {
-      ((char*)smsg)[nmsg] = '\0';
-    }
-    // printf(s_msg);
-    vzlogging::VzDumpLogging(smsg, (int)nmsg);
+    vzlogging::VzLogPrint(smsg, (int)nmsg);
     fflush(stdout);
   }
 
@@ -230,18 +229,18 @@ int CVzLogManage::OnReceive(SOCKET sock, const sockaddr_in *raddr,
   }
 
   // 透传接收到的日志信息
-  k_srv_sock.TransMsgToServer(smsg, nmsg);
+  k_log_srv.TransMsgToServer(smsg, nmsg);
 
   k_total_log += nmsg;
   return nmsg;
 }
 
 int CVzLogManage::OnTimeout() {
-  unsigned int n_now = get_sys_sec();
+  unsigned int n_now = GetSysSec();
   static unsigned int n_last = n_now;
   if ((n_now - n_last) > 1) {  // 1S检查一次
     // 进程超时检查
-    for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
+    for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
       if (k_shm_mod.mod_state[i].mark == DEF_TAG_MARK
           && k_shm_mod.mod_state[i].app_name[0] != '\0') {
 
@@ -272,23 +271,23 @@ int CVzLogManage::WatchdogProcess(const char* smsg, unsigned int nmsg) {
 
   // 格式化获取字符串数据
   unsigned int n_timeout = 0;
-  char s_app_name[DEF_PROCESS_NAME_MAX] = { 0 };
-  char s_descrebe[DEF_USER_DESCREBE_MAX] = { 0 };
+  char s_app_name[LEN_APP_NAME] = { 0 };
+  char s_descrebe[LEN_DESCREBE] = { 0 };
   sscanf(p_usr_msg + 2, "%s %d %s",
          s_app_name, &n_timeout, s_descrebe);
 
   int n_empty = -1;  // 未使用进程信息空间
 
   // 更新进程心跳时间
-  for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
+  for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
     if (k_shm_mod.mod_state[i].mark == DEF_TAG_MARK &&
-        !strncmp(k_shm_mod.mod_state[i].descrebe, s_descrebe, DEF_USER_DESCREBE_MAX)       // 描述符
-        && !strncmp(k_shm_mod.mod_state[i].app_name, s_app_name, DEF_PROCESS_NAME_MAX)) {  // 进程名
+        !strncmp(k_shm_mod.mod_state[i].descrebe, s_descrebe, LEN_DESCREBE)       // 描述符
+        && !strncmp(k_shm_mod.mod_state[i].app_name, s_app_name, LEN_APP_NAME)) {  // 进程名
       if (5 <= n_timeout && n_timeout < 180) {
         k_shm_mod.mod_state[i].timeout = n_timeout;
       }
       unsigned int nlast = k_shm_mod.mod_state[i].last_heartbeat;
-      k_shm_mod.mod_state[i].last_heartbeat = get_sys_sec();
+      k_shm_mod.mod_state[i].last_heartbeat = GetSysSec();
 
       if (0 == nlast) {
         ShareBuffer();
@@ -310,10 +309,10 @@ int CVzLogManage::WatchdogProcess(const char* smsg, unsigned int nmsg) {
 
   // 新进程
   k_shm_mod.mod_state[n_empty].mark = DEF_TAG_MARK;
-  strncpy(k_shm_mod.mod_state[n_empty].app_name, s_app_name, DEF_PROCESS_NAME_MAX);
-  strncpy(k_shm_mod.mod_state[n_empty].descrebe, s_descrebe, DEF_USER_DESCREBE_MAX);
+  strncpy(k_shm_mod.mod_state[n_empty].app_name, s_app_name, LEN_APP_NAME);
+  strncpy(k_shm_mod.mod_state[n_empty].descrebe, s_descrebe, LEN_DESCREBE);
   k_shm_mod.mod_state[n_empty].timeout = n_timeout;
-  k_shm_mod.mod_state[n_empty].last_heartbeat = get_sys_sec();
+  k_shm_mod.mod_state[n_empty].last_heartbeat = GetSysSec();
   VZ_PRINT("%s %s register.\n", s_app_name, s_descrebe);
   ShareBuffer();
   return 0;
@@ -322,10 +321,10 @@ int CVzLogManage::WatchdogProcess(const char* smsg, unsigned int nmsg) {
 int CVzLogManage::OnModuleLostHeartbeat(time_t n_now) {
   // 排序
   vzlogging::TAG_MODULE_STATE cmodule;
-  for (int i = 0; i < DEF_PER_DEV_PROCESS_MAX; i++) {
-    for (int j = i + 1; j < DEF_PER_DEV_PROCESS_MAX - 1; j++) {
+  for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
+    for (int j = i + 1; j < MAX_WATCHDOG_A_DEVICE - 1; j++) {
       if (strncmp(k_shm_mod.mod_state[i].app_name,
-                  k_shm_mod.mod_state[j].app_name, DEF_PROCESS_NAME_MAX) < 0) {
+                  k_shm_mod.mod_state[j].app_name, LEN_APP_NAME) < 0) {
         memcpy(&cmodule, &k_shm_mod.mod_state[i], sizeof(cmodule));
         if (k_shm_mod.mod_state[i].mark == DEF_TAG_MARK) {
           memcpy(&k_shm_mod.mod_state[i], &k_shm_mod.mod_state[j], sizeof(cmodule));
@@ -339,23 +338,23 @@ int CVzLogManage::OnModuleLostHeartbeat(time_t n_now) {
 
   // 格式化输出
   int  nlog = 0, n1log = 0;
-  char slog[DEF_LOG_MAX_SIZE] = { 0 };
-  n1log = nlog = snprintf(slog, DEF_LOG_MAX_SIZE, "watchdog danager ");
-  for (int j = 0; j < DEF_PER_DEV_PROCESS_MAX; j++) {
+  char slog[A_LOG_SIZE] = { 0 };
+  n1log = nlog = snprintf(slog, A_LOG_SIZE, "watchdog danager ");
+  for (int j = 0; j < MAX_WATCHDOG_A_DEVICE; j++) {
     if (k_shm_mod.mod_state[j].mark == DEF_TAG_MARK
         && k_shm_mod.mod_state[j].app_name[0] != '\0') {
       char *p_fmt = (char*)"--%s-%s[%d]";
       if (n1log == nlog) {  // 只有开始数据,第一包不包含"--"
         p_fmt = (char*)"%s-%s[%d]";
       }
-      nlog += snprintf(slog + nlog, DEF_LOG_MAX_SIZE - nlog,
+      nlog += snprintf(slog + nlog, A_LOG_SIZE - nlog,
                        p_fmt,
                        k_shm_mod.mod_state[j].app_name,
                        k_shm_mod.mod_state[j].descrebe,
                        (n_now - k_shm_mod.mod_state[j].last_heartbeat));
     }
   }
-  if (nlog < DEF_LOG_MAX_SIZE) {
+  if (nlog < A_LOG_SIZE) {
     slog[nlog++] = '\n';
   }
   VZ_ERROR("%s", slog);

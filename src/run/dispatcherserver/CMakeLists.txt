@@ -52,6 +52,7 @@ if(WIN32)
 		libdispatch
 		libdpclient
 		libvzconn
+		libvzbase
 		libvzlogging
 		libsqlite3
 		${VZPROJECT_LINK_LIB}
@@ -60,6 +61,7 @@ else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		dispatch
 		vzconn
+		vzbase
 		sqlite3
 		${VZPROJECT_LINK_LIB}
 	)

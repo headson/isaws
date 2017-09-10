@@ -24,9 +24,8 @@ namespace vzlogging {
 
 class CVzLogStream {
  public:
-  CVzLogStream(int          n_level,
-               const char*  p_file,
-               int          n_line,
+  CVzLogStream(int n_level,
+               const char* p_file, int n_line,
                unsigned int b_local_print);
   virtual ~CVzLogStream();
 
@@ -52,6 +51,7 @@ class CVzLogStream {
   //CVzLogStream& operator<< (time_t tt);
 
   CVzLogStream& write(const char* s_msg, int n_msg);
+
  private:
   void*         p_tls_;
   unsigned int  n_level_;

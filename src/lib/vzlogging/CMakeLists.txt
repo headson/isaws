@@ -32,17 +32,21 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}../)
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST_BASE
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vzlogdef.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vzlogdef.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vzshmarg.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vzshmarg.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzbases.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzbases.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzcommon.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzcommon.cpp
 )
 
 SET(SRC_LIST_LOGGING
 	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.h
-	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzloggingcpp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzloggingcpp.h
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzloggingcpp.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzwatchdog.h
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzwatchdog.cpp
 )
 
 SET(SRC_LIST_LOGSERVER
@@ -55,18 +59,22 @@ SET(SRC_LIST_LOGSERVER
 )
 
 SOURCE_GROUP(base FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vzlogdef.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vzlogdef.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vzshmarg.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vzshmarg.cpp
-	)
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzbases.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzbases.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzcommon.h
+	${CMAKE_CURRENT_SOURCE_DIR}/base/vzcommon.cpp
+)
 
 SOURCE_GROUP(logging FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.h
-	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzloggingcpp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzlogging.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzloggingcpp.h
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzloggingcpp.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzwatchdog.h
-	)
+	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzwatchdog.cpp
+)
 
 SOURCE_GROUP(server FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.h
@@ -75,7 +83,7 @@ SOURCE_GROUP(server FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.cpp
-	)
+)
 ## build library vzlogging
 MESSAGE(STATUS "Build vzlogserver library")
 add_library(${BUILD_PROJECT_NAME_LOGSERVER} STATIC

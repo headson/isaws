@@ -27,7 +27,7 @@ typedef int             SOCKET;
 #define INVALID_SOCKET  -1
 #endif
 
-#include "vzlogging/base/vzlogdef.h"
+#include "vzlogging/base/vzbases.h"
 
 namespace vzlogging {
 
@@ -42,10 +42,10 @@ typedef int(*CALLBACK_TIMEOUT)(void *usr_arg);
 
 typedef int(*CALLBACK_FEEDOG)(void *usr_arg);
 
-class CVzSockDgram {
+class CVzLogSrv {
  public:
-  CVzSockDgram();
-  virtual ~CVzSockDgram();
+  CVzLogSrv();
+  virtual ~CVzLogSrv();
 
   // 设置回调函数
   void SetCallback(CALLBACK_RECEIVE receive_cb,
@@ -72,20 +72,20 @@ class CVzSockDgram {
   void            *timeout_usr_arg_;
 
  private:  // 需要初始化
-  fd_set  rfds_;
-  SOCKET  sock_recv_;   // 接收SOCKET
-  SOCKET  sock_send_;   // 转发SOCKET
+  fd_set           rfds_;
+  SOCKET           rsock_;   // 接收SOCKET
+  SOCKET           ssock_;   // 转发SOCKET
 
  private:  // 接收数据
-  int     recv_size_;                       //
-  char    recv_data_[DEF_LOG_MAX_SIZE+1];   // 接收远端数据,MAX 1024
+  int              nlog_;                 //
+  char             slog_[A_LOG_SIZE+4];   // 接收远端数据,MAX 1024
 };
 
 //////////////////////////////////////////////////////////////////////////
-class CVzLoggingFile {
+class CVzLogFile {
  public:
-  CVzLoggingFile();
-  virtual ~CVzLoggingFile();
+  CVzLogFile();
+  virtual ~CVzLogFile();
 
   /************************************************************************
   *Description : 打开日志文件
@@ -117,21 +117,21 @@ class CVzLoggingFile {
   time_t GetFileMTime(FILE* file);
 
  protected:
-  int     n_file_limit_size_;                   // 单个文件大小
-  char    s_err_fname_[DEF_LOG_FILE_NAME + 1];    // 错误文件名
-  char    s_filename_[2][DEF_LOG_FILE_NAME + 1];  // 文件名
-  int     n_filename_idx_;                      // 文件名索引
+  int     n_file_limit_size_;                // 单个文件大小
+  char    s_err_fname_[LEN_FILEPATH + 1];    // 错误文件名
+  char    s_filename_[2][LEN_FILEPATH + 1];  // 文件名
+  int     n_filename_idx_;                   // 文件名索引
 
  protected:
-  FILE*   p_file_;                              // 日志文件
-  int     n_file_size_;                         // 日志大小
+  FILE*   p_file_;                           // 日志文件
+  int     n_file_size_;                      // 日志大小
 };
 
 /* 只能使用第一个文件 */
-class CVzWatchdogFile : public CVzLoggingFile {
+class CVzWdgFile : public CVzLogFile {
  public:
-  CVzWatchdogFile();
-  virtual ~CVzWatchdogFile();
+  CVzWdgFile();
+  virtual ~CVzWdgFile();
 
   /************************************************************************
   *Description : 打开日志文件
