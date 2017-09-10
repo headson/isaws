@@ -168,6 +168,10 @@ void vzShmDt(void *p_ptr) {
   }
 }
 #else
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 typedef int       HANDLE;
 #define HDL_NULL  -1
 

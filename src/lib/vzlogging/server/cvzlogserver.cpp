@@ -181,7 +181,6 @@ void CVzLogSrv::Loop(int ms) {
               }
               cb_receive_(rsock_, &raddr, slog_, nlog_, receive_usr_arg_);
             }
-            Tran
           } else {
             break;
           }

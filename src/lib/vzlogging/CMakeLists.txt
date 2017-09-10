@@ -82,6 +82,8 @@ SOURCE_GROUP(server FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogmanage.cpp
+)
+	
 ## build library vzlogging
 MESSAGE(STATUS "Build vzlogserver library")
 add_library(${BUILD_PROJECT_NAME_LOGSERVER} STATIC

@@ -8,7 +8,7 @@
 #include <string.h>
 
 
-#include "vzlogging/base/vzlogdef.h"
+#include "vzlogging/base/vzbases.h"
 #include "vzlogging/server/cvzlogmanage.h"
 
 #ifdef _WIN32
