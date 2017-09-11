@@ -166,6 +166,7 @@ void KvdbServer::OnMessage(vzbase::Message* msg) {
 
   // timer
   vzbase::Thread::Current()->PostDelayed(10 * 60 * 1000, this);
+  // vzbase::Thread::Current()->PostDelayed(20 * 1000, this);
 }
 
 }

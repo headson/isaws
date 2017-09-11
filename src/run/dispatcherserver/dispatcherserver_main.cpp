@@ -3,6 +3,7 @@
 #include "vzlogging/logging/vzlogging.h"
 
 #include <signal.h>
+//#include <execinfo.h>
 #include "vzbase/helper/stdafx.h"
 #include "dispatcher/sync/dpclient_c.h"
 #include "vzbase/thread/thread.h"
@@ -32,8 +33,21 @@ int SignalHandle(int n_signal, short events, const void *p_usr_arg) {
   return 0;
 }
 
+//void dump(int signo) {
+//  char **strings = NULL;
+//  void *array[10] ={NULL};
+//  size_t size = backtrace(array, 10);
+//  strings = backtrace_symbols(array, size);
+//  printf("Obtained %zd stack frames.\n", size);
+//  for (size_t i = 0; i < size; i++) {
+//    printf("%s\n", strings[i]);
+//  }
+//  free(strings);
+//  exit(0);
+//}
 
 int main(int argc, char *argv[]) {
+  //signal(SIGSEGV, &dump);
 
   InitVzLogging(argc, argv);
 #ifdef WIN32
@@ -55,6 +69,7 @@ int main(int argc, char *argv[]) {
   dp::DpServer dpserver(*event_service);
   dpserver.StartDpServer("0.0.0.0", 5291);
 
+
   kvdb::KvdbServer kvdb_server(main_thread);
 #ifdef WIN32
   kvdb_server.StartKvdbServer("0.0.0.0", 5299, "c:\\tools\\kvdb.db",
@@ -74,6 +89,7 @@ int main(int argc, char *argv[]) {
                                "/mnt/usr/secret_kvdb.db",
                                "/mnt/usr/secret_kvdb_backup.db");
 #endif
+
   while (true) {
     main_thread->ProcessMessages(4 * 1000);
 

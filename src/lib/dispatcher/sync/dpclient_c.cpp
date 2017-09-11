@@ -658,3 +658,14 @@ EXPORT_DLL int SKvdb_RestoreDatabase() {
   }
   return KVDB_RET_FAILURE;
 }
+
+EXPORT_DLL int SKvdb_Transaction(int e_trans) {
+  if (g_skvdb_client == NULL) {
+    return KVDB_RET_FAILURE;
+  }
+
+  if (g_skvdb_client->Transaction(e_trans)) {
+    return KVDB_RET_SUCCEED;
+  }
+  return KVDB_RET_FAILURE;
+}

@@ -102,20 +102,35 @@ bool KvdbSqlite::InitKvdb(const char *kvdb_path, const char *backup_path) {
 
 void KvdbSqlite::UinitKvdb() {
   int res = 0;
-  res = sqlite3_finalize(replace_stmt_);
-  if (res != SQLITE_OK) {
-    LOG(L_ERROR) << "Failure to finalize replace_stmt_";
+  if (replace_stmt_) {
+    res = sqlite3_finalize(replace_stmt_);
+    if (res != SQLITE_OK) {
+      LOG(L_ERROR) << "Failure to finalize replace_stmt_";
+    }
+    replace_stmt_ = NULL;
   }
-  res = sqlite3_finalize(delete_stmt_);
-  if (res != SQLITE_OK) {
-    LOG(L_ERROR) << "Failure to finalize delete_stmt_";
+
+  if (delete_stmt_) {
+    res = sqlite3_finalize(delete_stmt_);
+    if (res != SQLITE_OK) {
+      LOG(L_ERROR) << "Failure to finalize delete_stmt_";
+    }
+    delete_stmt_ = NULL;
   }
-  res = sqlite3_finalize(select_stmt_);
-  if (res != SQLITE_OK) {
-    LOG(L_ERROR) << "Failure to finalize remove_stmt_";
+
+  if (select_stmt_) {
+    res = sqlite3_finalize(select_stmt_);
+    if (res != SQLITE_OK) {
+      LOG(L_ERROR) << "Failure to finalize remove_stmt_";
+    }
+    select_stmt_ = NULL;
   }
-  sqlite3_close(db_instance_);
-  db_instance_ = NULL;
+
+  if (db_instance_) {
+    //res = sqlite3_close(db_instance_);
+    res = sqlite3_close_v2(db_instance_);
+    db_instance_ = NULL;
+  }
 }
 
 bool KvdbSqlite::InitBackupDatabase(const char *backup_path) {
@@ -184,6 +199,8 @@ bool KvdbSqlite::InitStmt() {
     LOG(L_ERROR) << REPLACE_STMT_SQL;
     return false;
   }
+  LOG_WARNING("replace_stmt_ 0x%x.\n", replace_stmt_);
+
   res = sqlite3_prepare_v2(db_instance_,
                            DELETE_STMT_SQL,
                            strlen(DELETE_STMT_SQL),
@@ -193,6 +210,8 @@ bool KvdbSqlite::InitStmt() {
     LOG(L_ERROR) << DELETE_STMT_SQL;
     return false;
   }
+  LOG_WARNING("delete_stmt_ 0x%x.\n", delete_stmt_);
+
   res = sqlite3_prepare_v2(db_instance_,
                            SELECT_STMT_SQL,
                            strlen(SELECT_STMT_SQL),
@@ -202,6 +221,7 @@ bool KvdbSqlite::InitStmt() {
     LOG(L_ERROR) << SELECT_STMT_SQL;
     return false;
   }
+  LOG_WARNING("select_stmt_ 0x%x.\n", select_stmt_);
   return true;
 }
 
@@ -217,12 +237,22 @@ bool KvdbSqlite::CheckFileExsits(const char *kvdb_path) {
 bool KvdbSqlite::ReplaceKeyValue(const char *key, int key_size,
                                  const char *value, int value_size) {
   int res = 0;
+  if (NULL == replace_stmt_) {
+    LOG(L_ERROR) << "ReplaceKeyValue use NULL stmt";
+    return false;
+  }
+
   // CheckTransaction();
+  LOG(L_INFO) << "ReplaceKeyValue key " << key
+              << " key_size " << key_size
+              << " value_size " << value_size;
+
   res = sqlite3_reset(replace_stmt_);
   if(res != SQLITE_OK) {
     LOG(L_ERROR) << "Failure to reset replace_stmt_*";
     return false;
   }
+
   res = sqlite3_bind_text(replace_stmt_, 1,
                           key,
                           key_size,
@@ -231,6 +261,7 @@ bool KvdbSqlite::ReplaceKeyValue(const char *key, int key_size,
     LOG(L_ERROR) << "Failure to call sqlite3_bind_*";
     return false;
   }
+
   res = sqlite3_bind_blob(replace_stmt_, 2,
                           (const void *)value,
                           value_size,
@@ -254,6 +285,11 @@ bool KvdbSqlite::ReplaceKeyValue(const char *key, int key_size,
 
 bool KvdbSqlite::DeleteKeyValue(const char *key, int key_size) {
   int res = 0;
+  if (NULL == delete_stmt_) {
+    LOG(L_ERROR) << "DeleteKeyValue use NULL stmt";
+    return false;
+  }
+
   CheckTransaction();
   res = sqlite3_reset(delete_stmt_);
   LOG(L_INFO) << "Delete Key";
@@ -284,7 +320,15 @@ bool KvdbSqlite::DeleteKeyValue(const char *key, int key_size) {
 bool KvdbSqlite::SelectKeyValue(const char *key, int key_size,
                                 std::vector<char> &buffer) {
   int res = 0;
+  if (NULL == select_stmt_) {
+    LOG(L_ERROR) << "SelectKeyValue use NULL stmt";
+    return false;
+  }
+
   CheckTransaction();
+  LOG(L_WARNING) << "SelectKeyValue key " << key
+                 << " key_size " << key_size;
+
   res = sqlite3_reset(select_stmt_);
   if(res != SQLITE_OK) {
     LOG(L_ERROR) << "Failure to reset select_stmt_*";
@@ -298,17 +342,17 @@ bool KvdbSqlite::SelectKeyValue(const char *key, int key_size,
     LOG(L_ERROR) << "Failure to call sqlite3_bind_*";
     return false;
   }
+
   res = sqlite3_step(select_stmt_);
+
   if(res == SQLITE_ROW) {
     const void *data = sqlite3_column_blob(select_stmt_, 0);
     int data_size = sqlite3_column_bytes(select_stmt_, 0);
-    //buffer.resize(data_size + SIZE_OF_HEADER);
-    //memcpy(&buffer[SIZE_OF_HEADER], data, data_size);
-    buffer.resize(data_size);
-    memcpy(&buffer[0], data, data_size);
-    //LOG(L_INFO) << "key "<<key;
-    //LOGB_INFO((char*)data, data_size);
-    return true;
+    if (data != NULL) {
+      buffer.resize(data_size);
+      memcpy(&buffer[0], data, data_size);
+      return true;
+    }
   }
   LOGB_INFO(key, key_size);
   LOG(L_INFO).write(key, key_size);
@@ -355,6 +399,7 @@ bool KvdbSqlite::BackupDatabase() {
     return true;
   }
   CheckTransaction();
+#if 0
   sqlite3 *db_backup = NULL;
   int res = sqlite3_open(backup_path_.c_str(), &db_backup);
   if(res != SQLITE_OK) {
@@ -364,9 +409,99 @@ bool KvdbSqlite::BackupDatabase() {
   bool copy_res = CopyDatabase(db_instance_, db_backup);
   /* Close the database connection opened on database file zFilename
   ** and return the result of this function. */
-  sqlite3_close(db_backup);
-  LOG(L_ERROR)<<"backup database.";
+  res = sqlite3_close(db_backup);
+  LOG(L_ERROR)<<"backup database." << res;
   return copy_res;
+#else
+  UinitKvdb();
+  remove(backup_path_.c_str());
+
+  char scmd[1024] = { 0 };
+#ifdef _WIN32
+  sprintf(scmd, "copy /Y %s %s",
+#else
+  sprintf(scmd, "cp -arf %s %s;sync",
+#endif
+          kvdb_path_.c_str(),
+          backup_path_.c_str());
+
+  LOG(L_ERROR) << "cmd " << scmd;
+  system(scmd);
+
+  return InitKvdb(kvdb_path_.c_str(), backup_path_.c_str());
+#endif
+}
+
+bool KvdbSqlite::RestoreDatabase(std::string backup_path) {
+  if (backup_path.empty() ||
+      kvdb_path_.empty()) {
+    return true;
+  }
+#if 0
+  LOG(L_WARNING) << "backup database to local ....";
+  CheckTransaction();
+  sqlite3 *db_backup = NULL;
+  int res = sqlite3_open(backup_path.c_str(), &db_backup);
+  if(res != SQLITE_OK) {
+    LOG(L_ERROR) << "Failure to open the database " << backup_path;
+    return false;
+  }
+  bool copy_res = CopyDatabase(db_backup, db_instance_);
+  /* Close the database connection opened on database file zFilename
+  ** and return the result of this function. */
+  res = sqlite3_close(db_backup);
+  LOG(L_ERROR)<<"restore database." << res;
+
+  UinitKvdb();
+  InitKvdb(kvdb_path_.c_str(), backup_path_.c_str());
+  return copy_res;
+#else
+  UinitKvdb();
+  remove(kvdb_path_.c_str());
+
+  char scmd[1024] = { 0 };
+#ifdef _WIN32
+  sprintf(scmd, "copy /Y %s %s",
+#else
+  sprintf(scmd, "cp -arf %s %s;sync",
+#endif
+          backup_path_.c_str(),
+          kvdb_path_.c_str());
+
+  LOG(L_ERROR) << "cmd " << scmd;
+  system(scmd);
+
+  return InitKvdb(kvdb_path_.c_str(), backup_path_.c_str());
+#endif
+}
+
+bool KvdbSqlite::CopyDatabase(sqlite3 *from, sqlite3* to) {
+  sqlite3_backup *backup_stmt = NULL;
+  /* Set up the backup procedure to copy from the "main" database of
+  ** connection pFile to the main database of connection pInMemory.
+  ** If something goes wrong, pBackup will be set to NULL and an error
+  ** code and message left in connection pTo.
+  **
+  ** If the backup object is successfully created, call backup_step()
+  ** to copy data from pFile to pInMemory. Then call backup_finish()
+  ** to release resources associated with the pBackup object.  If an
+  ** error occurred, then an error code and message will be left in
+  ** connection pTo. If no error occurred, then the error code belonging
+  ** to pTo is set to SQLITE_OK.
+  */
+  backup_stmt = sqlite3_backup_init(to, "main",
+                                    from, "main");
+  if(backup_stmt == NULL) {
+    LOG(L_ERROR) << "Failure to call sqlite3_backup_init";
+    return false;
+  }
+
+  sqlite3_backup_step(backup_stmt, -1);
+  sqlite3_backup_finish(backup_stmt);
+
+  /* Close the database connection opened on database file zFilename
+  ** and return the result of this function. */
+  return true;
 }
 
 // check database is damage callback
@@ -403,7 +538,7 @@ static bool Sqlite3CheckError(std::string &db_path) {
                      &is_error,
                      &error_msg);
   if (res != SQLITE_OK) {
-    LOG(L_ERROR) << "PRAGMA integrity_check;";
+    LOG(L_ERROR) << "PRAGMA integrity_check;" << error_msg;
     sqlite3_free(error_msg);
     is_error = 1;
   }
@@ -434,20 +569,20 @@ bool KvdbSqlite::CheckDBBackup() {
                          &is_error,
                          &error_msg);
   if (res != SQLITE_OK) {
-    LOG(L_ERROR) << "PRAGMA integrity_check;";
+    LOG(L_ERROR) << "PRAGMA integrity_check;" << error_msg;
     sqlite3_free(error_msg);
     is_error = 1;
   }
 
   if (1 == is_error) {
-    UinitKvdb();
     LOG(L_ERROR) << "recover from backup database."<<is_error;
+    UinitKvdb();
     // TODO 从备份中恢复数据库
     char scmd[1024] = { 0 };
 #ifdef _WIN32
     sprintf(scmd, "copy /Y %s %s",
 #else
-    sprintf(scmd, "cp %s %s;sync",
+    sprintf(scmd, "cp -arf %s %s;sync",
 #endif
             kvdb_bak_path_.c_str(),
             kvdb_path_.c_str());
@@ -458,14 +593,14 @@ bool KvdbSqlite::CheckDBBackup() {
     return InitKvdb(kvdb_path_.c_str(), backup_path_.c_str());
   } else {
     if (is_db_update_ > 0) {
-      UinitKvdb();
       LOG(L_ERROR) << "backup database."<<is_error;
+      UinitKvdb();
       // TODO 备份数据库
       char scmd[1024] = { 0 };
 #ifdef _WIN32
       sprintf(scmd, "copy /Y %s %s",
 #else
-      sprintf(scmd, "cp %s %s;sync",
+      sprintf(scmd, "cp -arf %s %s;sync",
 #endif
               kvdb_path_.c_str(),
               kvdb_bak_path_.c_str());
@@ -482,7 +617,6 @@ bool KvdbSqlite::CheckDBBackup() {
 
 bool KvdbSqlite::CheckDBRecover() {
   LOG(L_WARNING) << "to check kvdb and recover ...";
-
   if (CheckFileExsits(kvdb_path_.c_str()) == false) {
     return false;
   }
@@ -508,7 +642,7 @@ bool KvdbSqlite::CheckDBRecover() {
 #ifdef _WIN32
       sprintf(scmd, "copy /Y %s %s",
 #else
-      sprintf(scmd, "cp %s %s;sync",
+      sprintf(scmd, "cp -arf %s %s;sync",
 #endif
               kvdb_bak_path_.c_str(),
               kvdb_path_.c_str());
@@ -524,56 +658,6 @@ bool KvdbSqlite::CheckDBRecover() {
       return false;
     }
   }
-  return true;
-}
-
-bool KvdbSqlite::RestoreDatabase(std::string backup_path) {
-  if (backup_path.empty()) {
-    return true;
-  }
-  LOG(L_WARNING) << "backup database to local ....";
-  CheckTransaction();
-  sqlite3 *db_backup = NULL;
-  int res = sqlite3_open(backup_path.c_str(), &db_backup);
-  if(res != SQLITE_OK) {
-    LOG(L_ERROR) << "Failure to open the database " << backup_path;
-    return false;
-  }
-  bool copy_res = CopyDatabase(db_backup, db_instance_);
-  /* Close the database connection opened on database file zFilename
-  ** and return the result of this function. */
-  sqlite3_close(db_backup);
-  LOG(L_ERROR)<<"restore database.";
-  return copy_res;
-}
-
-bool KvdbSqlite::CopyDatabase(sqlite3 *from, sqlite3* to) {
-
-  sqlite3_backup *backup_stmt = NULL;
-  /* Set up the backup procedure to copy from the "main" database of
-  ** connection pFile to the main database of connection pInMemory.
-  ** If something goes wrong, pBackup will be set to NULL and an error
-  ** code and message left in connection pTo.
-  **
-  ** If the backup object is successfully created, call backup_step()
-  ** to copy data from pFile to pInMemory. Then call backup_finish()
-  ** to release resources associated with the pBackup object.  If an
-  ** error occurred, then an error code and message will be left in
-  ** connection pTo. If no error occurred, then the error code belonging
-  ** to pTo is set to SQLITE_OK.
-  */
-  backup_stmt = sqlite3_backup_init(to, "main",
-                                    from, "main");
-  if(backup_stmt == NULL) {
-    LOG(L_ERROR) << "Failure to call sqlite3_backup_init";
-    return false;
-  }
-
-  sqlite3_backup_step(backup_stmt, -1);
-  sqlite3_backup_finish(backup_stmt);
-
-  /* Close the database connection opened on database file zFilename
-  ** and return the result of this function. */
   return true;
 }
 

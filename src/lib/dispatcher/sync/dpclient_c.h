@@ -345,6 +345,9 @@ EXPORT_DLL int SKvdb_BackupDatabase();
 // Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
 EXPORT_DLL int SKvdb_RestoreDatabase();
 
+// database use transaction
+// Return KVDB_RET_FAILURE, KVDB_RET_SUCCEED
+EXPORT_DLL int SKvdb_Transaction(int e_trans);
 
 #ifdef __cplusplus
 }

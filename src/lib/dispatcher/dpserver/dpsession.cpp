@@ -132,6 +132,9 @@ void Session::AddListenMessage(const char *message) {
   LOG(L_INFO) << "Add listen message >> " << message;
   if (cur_pos_ < MAX_METHOD_COUNT) {
     strncpy(listen_messages_[cur_pos_++], message, MAX_METHOD_SIZE);
+
+    // TODO ÅÐ¶ÏÖØ¸´Á´½Ó
+
   } else {
     LOG(L_ERROR) << "message method size big than MAX_METHOD_COUNT = 64";
   }

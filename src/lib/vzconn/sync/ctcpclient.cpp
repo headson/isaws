@@ -330,7 +330,7 @@ int32 CTcpClient::SyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
   } else {
     LOG(L_ERROR) << "send n failed.";
   }
-
+  LOG(L_INFO) << "send buffer length "<<n_data;
   set_socket_nonblocking(GetSocket());
   return n_data;
 }
