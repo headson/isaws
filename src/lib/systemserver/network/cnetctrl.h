@@ -28,6 +28,8 @@ class CNetCtrl : public vzbase::MessageHandler,
   bool Start();
   void Stop();
 
+  bool AfterAdjustNetwork();
+
   vzbase::Thread *GetThread() {
     return thread_fast_;
   }

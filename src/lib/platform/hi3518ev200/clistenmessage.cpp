@@ -19,7 +19,8 @@ static const char  *METHOD_SET[] = {
   MSG_IRCUT_CTRLS,
   MSG_GET_VDO_URL,
   MSG_GET_ENC_CFG,
-  MSG_SET_ENC_CFG
+  MSG_SET_ENC_CFG,
+  MSG_SET_ENC_OSD
 };
 
 CListenMessage::CListenMessage()
@@ -185,7 +186,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
         jresp[MSG_STATE] = RET_SUCCESS;
 
         char surl[128] = {0};
-        snprintf(surl, 127, "http://%s:%d/httpflv?chn=video%d", 
+        snprintf(surl, 127, "http://%s:%d/httpflv?chn=video%d",
                  jresp["net"]["ip_addr"].asString().c_str(),
                  jresp["net"]["http_port"].asInt(),
                  jreq["chn"].asInt());
@@ -200,6 +201,14 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     // TODO 获取编码参数
   } else if (0 == strncmp(dmp->method, MSG_SET_ENC_CFG, MAX_METHOD_SIZE)) {
     // TODO 设置编码参数
+  } else if (0 == strncmp(dmp->method, MSG_SET_ENC_OSD, MAX_METHOD_SIZE)) {
+    reply = true;
+    bool res = video_catch_.OSDAdjust(jreq[MSG_BODY]);
+    if (res) {
+      jresp[MSG_STATE] = RET_SUCCESS;
+    } else {
+      jresp[MSG_STATE] = RET_FAILED;
+    }
   }
 
   if (reply) {

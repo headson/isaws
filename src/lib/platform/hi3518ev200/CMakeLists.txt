@@ -76,6 +76,7 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/common/sample_comm_vpss.c
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/sendframe.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vpsschnosd.h
 	${CMAKE_CURRENT_SOURCE_DIR}/vpsschnosd.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/vpsschndump.cpp
 	
@@ -134,6 +135,7 @@ SOURCE_GROUP(common FILES
 
 SOURCE_GROUP(audio_video FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sendframe.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vpsschnosd.h
 	${CMAKE_CURRENT_SOURCE_DIR}/vpsschnosd.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/vpsschndump.cpp
 	

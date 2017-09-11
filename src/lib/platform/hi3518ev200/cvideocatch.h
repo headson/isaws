@@ -14,6 +14,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#include "json/json.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -31,8 +33,9 @@ extern "C"
 #include "systemv/shm/vzshm_c.h"
 #include "systemv/flvmux/cflvmux.h"
 
+#include "vpsschnosd.h"
+
 #define MAX_ENC_CHN   3
-#define MAX_OSD_SIZE  32
 
 class CVideoCatch {
  public:
@@ -43,7 +46,7 @@ class CVideoCatch {
   void Stop();
 
   void SetOsdChn2(const char *osd);
-  int  OSDAdjust(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, int bgalpha = 10);
+  bool OSDAdjust(const Json::Value &jchn);
 
  public:
   HI_S32 GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream);
@@ -63,14 +66,7 @@ class CVideoCatch {
     VENC_CHN      chn;
   } TAG_CHN_YUV;
 
-  typedef struct {
-    pthread_t     pid;
-    char          ch1[MAX_OSD_SIZE];
-    char          ch2[MAX_OSD_SIZE];
-    char          ch3[MAX_OSD_SIZE];
-  } TAG_OSD;
-
- private:
+ public:
   struct {
     pthread_t     pid;
     CShareBuffer  shm[MAX_ENC_CHN];
@@ -79,7 +75,7 @@ class CVideoCatch {
   TAG_USR_ENC     usr_enc;
   TAG_CHN_YUV     chn1_yuv;
 
-  TAG_OSD         osd_;
+  TAG_OSD         enc_osd_;
 };
 
 #endif  // LIBPLATFORM_CVIDEO_H

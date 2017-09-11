@@ -93,6 +93,8 @@ typedef enum _MSG_RET {
 #define MSG_GET_ENC_CFG       "get_enc_cfg"       // 获取编码配置
 #define MSG_SET_ENC_CFG       "set_enc_cfg"       // 设置编码配置
 
+#define MSG_SET_ENC_OSD       "set_enc_osd"       // 设置编码OSD
+
 #define MSG_IRCUT_CTRLS       "ircut_ctrls"       // IRCUT控制
 
 #define MSG_REMOTE_5_IR       "remote_5_ir"       // 远端5组IR
@@ -113,6 +115,8 @@ typedef enum _MSG_RET {
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_HW_INFO          "hw_info"           // 硬件信息
 #define KVDB_NETWORK          "network"           // 网络参数
+#define KVDB_ENC_OSD          "enc_osd"           // 编码OSD
 #define KVDB_TIME_INFO        "time_info"         // 时间信息
 #define KVDB_USER_LIST        "user_list"         // 登录用户;username\password
+
 #endif  // VMESSAGE_H

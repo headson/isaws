@@ -4,18 +4,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "cvideocatch.h"
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-#include "common/sample_comm.h"
-
-#ifdef __cplusplus
-};
-#endif
+#include "vpsschnosd.h"
+#include "systemv/shm/vzshm_c.h"
 
 #define FONT_PATH_ASC16 "/mnt/usr/asc16"
 
@@ -161,7 +151,7 @@ static int OSD_Draw_BitMap_ASC16(int len, const char *pdata, unsigned char *pbit
   return 0;
 }
 
-int OSD_Overlay_RGN_Handle_Init(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, int w, int h, int bgalpha=10) {
+int OSD_Overlay_RGN_Handle_Init(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, int w, int h, int bgalpha=10, HI_BOOL bShow=HI_TRUE) {
   HI_S32 s32Ret = HI_FAILURE;
   RGN_ATTR_S stRgnAttr;
   MPP_CHN_S stChn;
@@ -186,7 +176,7 @@ int OSD_Overlay_RGN_Handle_Init(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, 
   stChn.s32DevId = 0;
   stChn.s32ChnId = chn_id;
 
-  stChnAttr.bShow = HI_TRUE;
+  stChnAttr.bShow = bShow;
   stChnAttr.enType = OVERLAY_RGN;
   stChnAttr.unChnAttr.stOverlayChn.stPoint.s32X = x;
   stChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y = y;
@@ -205,44 +195,6 @@ int OSD_Overlay_RGN_Handle_Init(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, 
   stChnAttr.unChnAttr.stOverlayChn.stInvertColor.enChgMod = LESSTHAN_LUM_THRESH;
   stChnAttr.unChnAttr.stOverlayChn.stInvertColor.bInvColEn = HI_FALSE;
   s32Ret = HI_MPI_RGN_AttachToChn(Handle, &stChn, &stChnAttr);
-  if (HI_SUCCESS != s32Ret) {
-    printf("HI_MPI_RGN_AttachToChn (%d to %d) failed with %#x!\n", Handle, VencGrp, s32Ret);
-    return HI_FAILURE;
-  }
-
-  return HI_SUCCESS;
-}
-
-int CVideoCatch::OSDAdjust(HI_S32 chn_id, RGN_HANDLE Handle, int x, int y, int bgalpha) {
-  HI_S32 s32Ret = HI_FAILURE;
-  MPP_CHN_S stChn;
-  VENC_GRP VencGrp;
-  RGN_CHN_ATTR_S stChnAttr;
-
-  memset(&stChnAttr, 0, sizeof(stChnAttr));
-  stChn.enModId = HI_ID_VENC;
-  stChn.s32DevId = 0;
-  stChn.s32ChnId = chn_id;
-
-  stChnAttr.bShow = HI_TRUE;
-  stChnAttr.enType = OVERLAY_RGN;
-  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32X = x;
-  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y = y;
-  stChnAttr.unChnAttr.stOverlayChn.u32BgAlpha = bgalpha;
-  stChnAttr.unChnAttr.stOverlayChn.u32FgAlpha = 128;
-  stChnAttr.unChnAttr.stOverlayChn.u32Layer = Handle;
-
-  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.bAbsQp = HI_FALSE;
-  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.s32Qp = 0;
-  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.s32Qp = 0;
-  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.bQpDisable = HI_FALSE;
-
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Height = 16 * (Handle % 2 + 1);
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Width = 16 * (Handle % 2 + 1);
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.u32LumThresh = 128;
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.enChgMod = LESSTHAN_LUM_THRESH;
-  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.bInvColEn = HI_FALSE;
-  s32Ret = HI_MPI_RGN_SetDisplayAttr(Handle, &stChn, &stChnAttr);
   if (HI_SUCCESS != s32Ret) {
     printf("HI_MPI_RGN_AttachToChn (%d to %d) failed with %#x!\n", Handle, VencGrp, s32Ret);
     return HI_FAILURE;
@@ -304,9 +256,8 @@ HI_S32 Hi_LiteOs_OSD_Text_Start(int chn_id, RGN_HANDLE Handle, int x, int y, con
 }
 
 HI_S32 Hi_LiteOs_OSD_Cover_Start(int chn_id, RGN_HANDLE Handle, int x, int y, int w, int h) {
-  OSD_Overlay_RGN_Handle_Init(chn_id, Handle, x, y, w, h, 128);
+  OSD_Overlay_RGN_Handle_Init(chn_id, Handle, x, y, w, h, 128, HI_FALSE);
 }
-
 
 // 时间显示成功;
 HI_S32  Hi_LiteOs_OSD_Update(int channel, const char *text, int ncolor) {
@@ -334,35 +285,8 @@ int Get_Sys_DayTime(char *pTime) {
   return 0;
 }
 
-/*
-[
-{
-"handle": 0,
-"enable": 1,
-"x": 10,
-"y": 10,
-"size": 16
-},
-{
-"handle": 1,
-"enable": 1,
-"x": 10,
-"y": 10,
-"size": 16
-},
-{
-"handle": 2,
-"enable": 1,
-"x": 0,
-"y": 10,
-"size": 40
-}
-]
-*/
 // 调用并进行刷新时间
-void *osd_display(void *arg) {
-  CVideoCatch::TAG_OSD *posd = (CVideoCatch::TAG_OSD*)arg;
-
+void OSD_Init(TAG_OSD *posd) {
   Get_Sys_DayTime(posd->ch1);
   snprintf(posd->ch2, 31, "IN:0000000000 OUT:0000000000");
 
@@ -379,30 +303,74 @@ void *osd_display(void *arg) {
   Hi_LiteOs_OSD_Text_Start(1, hdl+0, 10, 10, posd->ch1);
   Hi_LiteOs_OSD_Text_Start(1, hdl+1, 10, SHM_VIDEO_1_H - 18, posd->ch2);
   Hi_LiteOs_OSD_Cover_Start(1, hdl+2, 0, SHM_VIDEO_1_H/2+28, SHM_VIDEO_1_W, 32);
+}
 
-  int ncolor = 0xFFFF;
-  while(1) {
-    if (ncolor == 0xFFFF) {
-      ncolor = 0x8000;
-    } else {
-      ncolor = 0xFFFF;
-    }
+void OSD_Overlay(TAG_OSD *posd) {
+  static int ncolor = 0xFFFF;
+  static time_t nnow = time(NULL);
+  if ((time(NULL) - nnow) == 0) {
+    return;
+  }
+  nnow = time(NULL);
 
-    Get_Sys_DayTime(posd->ch1);
+  if (ncolor == 0xFFFF) {
+    ncolor = 0x8000;
+  } else {
+    ncolor = 0xFFFF;
+  }
 
-    hdl = 0;
-    Hi_LiteOs_OSD_Update(hdl+0, posd->ch1, ncolor);
-    if (posd->ch2[0] != '\0') {
-      Hi_LiteOs_OSD_Update(hdl+1, posd->ch2, ncolor);
-    }
+  RGN_HANDLE hdl = 0;
 
-    hdl = 3;
-    Hi_LiteOs_OSD_Update(hdl+0, posd->ch1, ncolor);
-    if (posd->ch2[0] != '\0') {
-      Hi_LiteOs_OSD_Update(hdl+1, posd->ch2, ncolor);
-    }
+  Get_Sys_DayTime(posd->ch1);
 
-    usleep(800 * 1000);
+  hdl = 0;
+  Hi_LiteOs_OSD_Update(hdl + 0, posd->ch1, ncolor);
+  if (posd->ch2[0] != '\0') {
+    Hi_LiteOs_OSD_Update(hdl + 1, posd->ch2, ncolor);
+  }
+
+  hdl = 3;
+  Hi_LiteOs_OSD_Update(hdl + 0, posd->ch1, ncolor);
+  if (posd->ch2[0] != '\0') {
+    Hi_LiteOs_OSD_Update(hdl + 1, posd->ch2, ncolor);
   }
 }
 
+int OSD_Adjust(HI_S32 chn_id, RGN_HANDLE Handle,
+               int x, int y, int bgalpha, HI_BOOL bShow) {
+  HI_S32 s32Ret = HI_FAILURE;
+  MPP_CHN_S stChn;
+  VENC_GRP VencGrp;
+  RGN_CHN_ATTR_S stChnAttr;
+
+  memset(&stChnAttr, 0, sizeof(stChnAttr));
+  stChn.enModId = HI_ID_VENC;
+  stChn.s32DevId = 0;
+  stChn.s32ChnId = chn_id;
+
+  stChnAttr.bShow = bShow;
+  stChnAttr.enType = OVERLAY_RGN;
+  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32X = x;
+  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y = y;
+  stChnAttr.unChnAttr.stOverlayChn.u32BgAlpha = bgalpha;
+  stChnAttr.unChnAttr.stOverlayChn.u32FgAlpha = 128;
+  stChnAttr.unChnAttr.stOverlayChn.u32Layer = Handle;
+
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.bAbsQp = HI_FALSE;
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.s32Qp = 0;
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.s32Qp = 0;
+  stChnAttr.unChnAttr.stOverlayChn.stQpInfo.bQpDisable = HI_FALSE;
+
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Height = 16 * (Handle % 2 + 1);
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.stInvColArea.u32Width = 16 * (Handle % 2 + 1);
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.u32LumThresh = 128;
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.enChgMod = LESSTHAN_LUM_THRESH;
+  stChnAttr.unChnAttr.stOverlayChn.stInvertColor.bInvColEn = HI_FALSE;
+  s32Ret = HI_MPI_RGN_SetDisplayAttr(Handle, &stChn, &stChnAttr);
+  if (HI_SUCCESS != s32Ret) {
+    printf("HI_MPI_RGN_AttachToChn (%d to %d) failed with %#x!\n", Handle, VencGrp, s32Ret);
+    return HI_FAILURE;
+  }
+
+  return HI_SUCCESS;
+}

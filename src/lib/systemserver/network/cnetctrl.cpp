@@ -93,6 +93,10 @@ void CNetCtrl::Stop() {
   }
 }
 
+bool CNetCtrl::AfterAdjustNetwork() {
+  return true;
+}
+
 void CNetCtrl::OnMessage(vzbase::Message* msg) {
 #ifdef _WIN32
   // LOG(L_WARNING) << "get phy addr.";
@@ -158,8 +162,7 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
       bool b_ret = CListenMessage::Instance()->SetDevInfo(jreq[MSG_BODY]);
       if (b_ret) {
         j_resp[MSG_STATE] = 0;
-      }
-      else {
+      } else {
         j_resp[MSG_STATE] = 6;
       }
 

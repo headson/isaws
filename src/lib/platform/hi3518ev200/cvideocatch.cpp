@@ -1,9 +1,13 @@
 #include "cvideocatch.h"
 
+#include "vpsschnosd.h"
+
 #include "systemv/shm/vzshm_c.h"
 #include "vzbase/helper/stdafx.h"
 
-extern void *osd_display(void *arg);
+#include "vzbase/base/vmessage.h"
+#include "dispatcher/sync/dpclient_c.h"
+
 extern void *vpss_chn_dump(void* arg);
 extern void *send_usr_frame(void *arg);
 
@@ -76,6 +80,9 @@ HI_VOID SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p) {
    step 2:  Start to get streams of each channel.
   ******************************************/
   while (HI_TRUE == pstPara->bThreadStart) {
+
+    OSD_Overlay(&((CVideoCatch*)pstPara->p_usr_arg)->enc_osd_);
+
     FD_ZERO(&read_fds);
     for (i = 0; i < s32ChnTotal; i++) {
       FD_SET(VencFd[i], &read_fds);
@@ -415,6 +422,20 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   ex_attr.stAuto.enAEMode = AE_MODE_FIX_FRAME_RATE;
   HI_MPI_ISP_SetExposureAttr(IspDev, &ex_attr);
 
+  // OSD
+  OSD_Init(&((CVideoCatch*)p)->enc_osd_);
+  {
+    Json::Value josd;
+    Json::Reader jread;
+    std::string sosd = "";
+    Kvdb_GetKeyToString(KVDB_ENC_OSD,
+                        strlen(KVDB_ENC_OSD),
+                        &sosd);
+    if (!sosd.empty() && jread.parse(sosd, josd)) {
+      ((CVideoCatch*)p)->OSDAdjust(josd);
+    }
+  }
+
   /******************************************
    step 6: stream venc process -- get stream, then save it to file.
   ******************************************/
@@ -525,9 +546,6 @@ bool CVideoCatch::Start() {
   pthread_create(&sys_enc.pid, NULL, VideoVencClassic, this);
 
   usleep(2*1000*1000);
-  pthread_create(&osd_.pid, NULL, osd_display, &osd_);
-
-  usleep(2*1000*1000);
   chn1_yuv.chn = 1;
   pthread_create(&chn1_yuv.pid, NULL, vpss_chn_dump, &chn1_yuv);
 
@@ -541,9 +559,63 @@ void CVideoCatch::Stop() {
 }
 
 void CVideoCatch::SetOsdChn2(const char *osd) {
-  memset(osd_.ch2, 0, MAX_OSD_SIZE);
-  strncpy(osd_.ch2, osd, MAX_OSD_SIZE);
-  LOG(L_INFO) << "osd ch2: " << osd_.ch2;
+  memset(enc_osd_.ch2, 0, MAX_OSD_SIZE);
+  strncpy(enc_osd_.ch2, osd, MAX_OSD_SIZE);
+  LOG(L_INFO) << "osd ch2: " << enc_osd_.ch2;
+}
+
+/*
+[
+{
+"handle": 0,
+"enable": 1,
+"x": 10,
+"y": 10,
+"size": 16
+},
+{
+"handle": 1,
+"enable": 1,
+"x": 10,
+"y": 10,
+"size": 16
+},
+{
+"handle": 2,
+"enable": 1,
+"x": 0,
+"y": 10,
+"size": 40
+}
+]
+*/
+bool CVideoCatch::OSDAdjust(const Json::Value &jchn) {
+  for (int i = 0; i < MAX_OSD_HDL; i++) {
+    if (jchn[i]["handle"].isNull() ||
+        jchn[i]["enable"].isNull() ||
+        jchn[i]["x"].isNull() ||
+        jchn[i]["y"].isNull() ||
+        jchn[i]["size"].isNull()) {
+
+      OSD_Adjust(0,
+                 jchn[i]["handle"].asInt(),
+                 SHM_IMAGE_0_W * jchn[i]["x"].asInt() / 100,
+                 SHM_IMAGE_0_H * jchn[i]["y"].asInt() / 100,
+                 128,
+                 ((jchn[i]["enable"].asInt() > 0) ? HI_TRUE : HI_FALSE));
+
+      OSD_Adjust(0,
+                 MAX_OSD_HDL + jchn[i]["handle"].asInt(),
+                 SHM_IMAGE_1_W * jchn[i]["x"].asInt() / 100,
+                 SHM_IMAGE_1_H * jchn[i]["y"].asInt() / 100,
+                 128,
+                 ((jchn[i]["enable"].asInt() > 0) ? HI_TRUE : HI_FALSE));
+
+    }
+    return true;
+  }
+
+  return false;
 }
 
 HI_S32 CVideoCatch::GetOneFrame(HI_S32 chn, VENC_STREAM_S *pStream) {
