@@ -12,6 +12,14 @@ extern void *vpss_chn_dump(void* arg);
 extern void *send_usr_frame(void *arg);
 
 CVideoCatch::CVideoCatch() {
+  sys_enc.pid = 0;
+  sys_enc.have_start = 0;
+
+  usr_enc.pid = 0;
+  usr_enc.chn = -1;
+
+  chn1_yuv.pid = 0;
+  chn1_yuv.chn = -1;
 }
 
 CVideoCatch::~CVideoCatch() {
@@ -443,6 +451,8 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
   gs_stPara.bThreadStart  = HI_TRUE;
   gs_stPara.s32Cnt        = s32ChnNum;
   gs_stPara.p_usr_arg     = p;
+
+  ((CVideoCatch*)p)->sys_enc.have_start = 1;
   SAMPLE_COMM_VENC_GetVencStreamProc((HI_VOID*)&gs_stPara);
 
   printf("please press twice ENTER to exit this sample\n");
@@ -545,7 +555,11 @@ bool CVideoCatch::Start() {
   //
   pthread_create(&sys_enc.pid, NULL, VideoVencClassic, this);
 
-  usleep(2*1000*1000);
+  for (int i = 0; i < 20; i++) {
+    if (1 == sys_enc.have_start) {
+      break;
+    }
+  }
   chn1_yuv.chn = 1;
   pthread_create(&chn1_yuv.pid, NULL, vpss_chn_dump, &chn1_yuv);
 

@@ -69,6 +69,7 @@ class CVideoCatch {
  public:
   struct {
     pthread_t     pid;
+    unsigned int  have_start;
     CShareBuffer  shm[MAX_ENC_CHN];
   } sys_enc;
 

@@ -178,9 +178,7 @@ int32 CNetCtrl::HandleRecvPacket(vzconn::VSocket  *p_cli,
 }
 
 bool CNetCtrl::ModityNetwork(const TAG_SYS_INFO &sys_info) {
-#ifdef _LINUX
-  net_nic_up(PHY_ETH_NAME);
-#endif
+  vzbase::my_system("ifconfig eth0 up");
 
   if (1 == sys_info.net.dhcp_en) {
     vzbase::my_system("killall -9 udhcpc; udhcpc -i eth0 &");

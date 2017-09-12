@@ -33,6 +33,10 @@ int SignalHandle(int n_signal, short events, const void *p_usr_arg) {
 }
 
 int main(int argc, char *argv[]) {
+#ifndef _WIN32
+  signal(SIGCHLD, SIG_IGN);   // 调用popen避免产生僵死进程[sh]
+#endif
+
   InitVzLogging(argc, argv);
 #ifdef _WIN32
   ShowVzLoggingAlways();
