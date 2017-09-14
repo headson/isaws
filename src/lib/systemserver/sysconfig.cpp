@@ -14,18 +14,141 @@
 #include "vzbase/base/base64.h"
 
 #include "vzbase/base/mysystem.h"
+
+#include "systemserver/network/net_cfg.h"
 #include "systemserver/module/cmodulecontrol.h"
 
 namespace sys {
 
 #ifdef _WIN32
-#define SYS_CFG_PATH  "./system.json"
+#define SYS_CFG_PATH  "c:\\tools\\system.json"
 #else  // _LINUX
-#include "systemserver/network/net_cfg.h"
-
 #define SYS_CFG_PATH  "/mnt/etc/system.json"
 #endif
 
+int CListenMessage::SetIp(in_addr_t ip) {
+  int ret = -1;
+  struct in_addr sys_ip;
+  const char* nicname = nickname_.c_str();
+
+#ifdef _LINUX
+  if ((sys_ip.s_addr = net_get_ifaddr(nicname)) != -1) {
+    if (ip != sys_ip.s_addr) {
+
+      if (net_set_ifaddr(nicname, ip) >= 0) {
+        // 通知星型结构ip have changed
+        sys_info_.net.ip_addr = inet_ntoa(*((struct in_addr*)&ip));
+        ip_change_ = 1;
+        ret = 0;
+      }
+    } else {
+      ret = 0;
+    }
+  }
+#else
+  sys_info_.net.ip_addr = inet_ntoa(*((struct in_addr*)&ip));
+  ip_change_ = 1;
+  ret = 0;
+#endif
+  return ret;
+}
+
+int CListenMessage::SetNetmask(in_addr_t ip) {
+  int ret = -1;
+  struct in_addr sys_ip;
+  const char* nicname = nickname_.c_str();
+  std::string snetmask = inet_ntoa(*((struct in_addr*)&ip));
+
+#ifdef _LINUX
+  if ((sys_ip.s_addr = net_get_netmask(nicname)) != -1) {
+    int sucess_flag = 1;
+    if (ip != sys_ip.s_addr) {
+      if (net_set_netmask(nicname, ip) < 0) {
+        sucess_flag = 0;
+      }
+    }
+
+    if ((sucess_flag == 1) && 
+        (snetmask != sys_info_.net.netmask)) {
+      sys_info_.net.netmask = snetmask;
+      ip_change_ = 1;
+      ret = 0;
+    } else {
+      ret = 0;
+    }
+  }
+#else
+  sys_info_.net.netmask = snetmask;
+  ip_change_ = 1;
+  ret = 0;
+#endif
+  return ret;
+}
+
+int CListenMessage::SetGateway(in_addr_t ipaddr) {
+  int ret = -1;
+  struct in_addr sys_ip;
+  const char* nicname = nickname_.c_str();
+
+#ifdef _LINUX
+  sys_ip.s_addr = net_get_gateway_byname((char *)nicname);
+  LOG(L_INFO) << "ipaddr:" << ipaddr << ", sys_ip.s_addr:" << sys_ip.s_addr;
+  if (ipaddr != sys_ip.s_addr) {
+    struct in_addr ip, netmask, gateway;
+    ip.s_addr = net_get_ifaddr(nicname);
+    netmask.s_addr = net_get_netmask(nicname);
+    if ((unsigned int)(netmask.s_addr&ip.s_addr) != (unsigned int)(
+          ipaddr&netmask.s_addr)) {
+      // look a useable gateway
+      gateway.s_addr = net_search_gateway_byname((char *)nicname);
+      if ((unsigned int)(netmask.s_addr&ip.s_addr) == (unsigned int)(
+            gateway.s_addr&netmask.s_addr)) {
+        ipaddr = gateway.s_addr;
+      } else {
+        ipaddr = (netmask.s_addr&ip.s_addr) | 0x1000000;
+      }
+    }
+    LOG(L_INFO) << "ipaddr:" << ipaddr;
+    if (net_set_gateway_byname((char *)nicname, ipaddr) >= 0) {
+      sys_info_.net.gateway = inet_ntoa(*((struct in_addr*)&ipaddr));
+      ip_change_ = 1;
+      ret = 0;
+    }
+  } else {
+    ret = 0;
+  }
+#else
+  sys_info_.net.gateway = inet_ntoa(*((struct in_addr*)&ipaddr));
+  ip_change_ = 1;
+  ret = 0;
+#endif
+  LOG(L_INFO) << "SetGateway return:" << ret;
+  return ret;
+}
+
+int CListenMessage::SetDNS(in_addr_t ip) {
+  int ret = -1;
+  struct in_addr sys_ip;
+  std::string sdns = inet_ntoa(*((struct in_addr*)&ip));
+#ifdef _LINUX
+  if ((sys_ip.s_addr = net_get_dns()) != -1) {
+    if (ip != sys_ip.s_addr) {
+      if (net_set_dns(sdns.c_str()) >= 0) {
+        sys_info_.net.dns_addr = sdns;
+        ret = 0;
+      }
+    } else {
+      ret = 0;
+    }
+  }
+#else
+  sys_info_.net.dns_addr = sdns;
+  ret = 0;
+#endif
+  return ret;
+}
+
+//////////////////////////////////////////////////////////////////////////
 void CListenMessage::GetHwInfo() {
   Json::Reader jread;
   Json::Value  jinfo;
@@ -37,38 +160,35 @@ void CListenMessage::GetHwInfo() {
 
     // 生成默认参数
     jinfo["dev_name"] = "PC_001";
-    jinfo["dev_type"] = 100100;
     jinfo["ins_addr"] = "";
-    jinfo["sw_version"] = "1.0.0.1001707310";
-    jinfo["hw_version"] = "1.0.0.1001707310";
-    jinfo["alg_version"] = "1.0.0.1001707310";
 
     jinfo["net"]["wifi_en"] = 0;
     jinfo["net"]["dhcp_en"] = 0;
-    jinfo["net"]["ip_addr"] = "127.0.0.1";
+    jinfo["net"]["ip_addr"] = "192.168.1.88";
     jinfo["net"]["netmask"] = "255.255.255.0";
     jinfo["net"]["gateway"] = "192.168.1.1";
-    jinfo["net"]["phy_mac"] = "01:12:23:34:45:67";
     jinfo["net"]["dns_addr"] = "192.168.1.1";
-    jinfo["net"]["http_port"] = 8000;
-    jinfo["net"]["rtsp_port"] = 554;
+    jinfo["net"]["http_port"] = 80;
   }
 
   sys_info_.dev_name = jinfo["dev_name"].asString();
   sys_info_.dev_type = jinfo["dev_type"].asInt();
   sys_info_.ins_addr = jinfo["ins_addr"].asString();
-  // sys_info_.sw_version
-  // sys_info_.hw_version
-  // sys_info_.alg_version
   sys_info_.net.wifi_en = jinfo["net"]["wifi_en"].asInt();
   sys_info_.net.dhcp_en = jinfo["net"]["dhcp_en"].asInt();
-  sys_info_.net.ip_addr = jinfo["net"]["ip_addr"].asString();
-  sys_info_.net.netmask = jinfo["net"]["netmask"].asString();
-  sys_info_.net.gateway = jinfo["net"]["gateway"].asString();
-  // sys_info_.net.phy_mac = jinfo["net"]["phy_mac"].asString();
-  sys_info_.net.dns_addr = jinfo["net"]["dns_addr"].asString();
+  //sys_info_.net.ip_addr = jinfo["net"]["ip_addr"].asString();
+  //sys_info_.net.netmask = jinfo["net"]["netmask"].asString();
+  //sys_info_.net.gateway = jinfo["net"]["gateway"].asString();
+  //sys_info_.net.dns_addr = jinfo["net"]["dns_addr"].asString();
   sys_info_.net.http_port = jinfo["net"]["http_port"].asInt();
-  sys_info_.net.rtsp_port = jinfo["net"]["rtsp_port"].asInt();
+
+  SetDevInfo(jinfo);
+
+  // save to kvdb
+  std::string sjson = jinfo.toStyledString();
+  Kvdb_SetKey(KVDB_HW_INFO,
+              strlen(KVDB_HW_INFO),
+              sjson.c_str(), sjson.size());
 
   // dp获取算法信息
   std::string sresp = "";
@@ -80,6 +200,7 @@ void CListenMessage::GetHwInfo() {
   if (jread.parse(sresp, jresp)) {
     sys_info_.alg_version = jresp[MSG_BODY]["version"].asString();
   } else {
+    sys_info_.alg_version = "";
     LOG(L_ERROR) << "MSG_GET_IVAINFO failed.";
   }
 
@@ -88,16 +209,11 @@ void CListenMessage::GetHwInfo() {
 
   // hardware/uuid
   vzbase::get_hardware(sys_info_.hw_version, sys_info_.dev_uuid);
-
-  // save to kvdb
-  std::string sjson = jinfo["net"].toStyledString();
-  Kvdb_SetKey(KVDB_NETWORK, strlen(KVDB_NETWORK), sjson.c_str(), sjson.size());
 }
 
 bool CListenMessage::GetDevInfo(Json::Value &jbody) {
   jbody["dev_uuid"] = sys_info_.dev_uuid;
   jbody["dev_name"] = sys_info_.dev_name;
-  jbody["dev_type"] = sys_info_.dev_type;
 
   jbody["ins_addr"] = sys_info_.ins_addr;
 
@@ -108,15 +224,18 @@ bool CListenMessage::GetDevInfo(Json::Value &jbody) {
   jbody["net"]["wifi_en"] = sys_info_.net.wifi_en;
   jbody["net"]["dhcp_en"] = sys_info_.net.dhcp_en;
 
-  jbody["net"]["ip_addr"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::ip_addr_));
-  jbody["net"]["netmask"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::netmask_));
-  jbody["net"]["gateway"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::gateway_));
-  jbody["net"]["phy_mac"] = CNetCtrl::phy_mac_;
+  NET_CONFIG net_cfg = { 0 };
+#ifdef _LINUX
+  net_get_info(nickname_.c_str(), &net_cfg);
+#endif
+  jbody["net"]["ip_addr"] = inet_ntoa(*((struct in_addr*)&net_cfg.ifaddr));
+  jbody["net"]["netmask"] = inet_ntoa(*((struct in_addr*)&net_cfg.netmask));
+  jbody["net"]["gateway"] = inet_ntoa(*((struct in_addr*)&net_cfg.gateway));
+  jbody["net"]["phy_mac"] = net_cfg.mac;
 
-  jbody["net"]["dns_addr"] = inet_ntoa(*((struct in_addr*)&CNetCtrl::dns_addr_));
+  jbody["net"]["dns_addr"] = inet_ntoa(*((struct in_addr*)&net_cfg.dns));
 
   jbody["net"]["http_port"] = sys_info_.net.http_port;
-  jbody["net"]["rtsp_port"] = sys_info_.net.rtsp_port;
   return true;
 }
 
@@ -130,19 +249,12 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
     sys_info_.dev_name = jbody["dev_name"].asString();
   }
 
-  // sys_info_.dev_type
-  // sys_info_.dev_uuid
-
   if (jbody.isMember("ins_addr") &&
       jbody["ins_addr"].isString() &&
       sys_info_.ins_addr != jbody["ins_addr"].asString()) {
     bsave++;
     sys_info_.ins_addr  = jbody["ins_addr"].asString();
   }
-
-  // sys_info_.sw_version
-  // sys_info_.hw_version
-  // sys_info_.alg_version
 
   //////////////////////////////////////////////////////////////////////////
   if (!jbody.isMember("net")) {
@@ -165,38 +277,37 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
   }
   LOG(L_INFO) << "dhcp enable " << sys_info_.net.dhcp_en;
 
+  int res = 0;
   if (jbody["net"].isMember("ip_addr") &&
       jbody["net"]["ip_addr"].isString() &&
       sys_info_.net.ip_addr != jbody["net"]["ip_addr"].asString()) {
     bsave++;
-    sys_info_.net.ip_addr = jbody["net"]["ip_addr"].asString();
+
+    res = SetIp(inet_addr(jbody["net"]["ip_addr"].asCString()));
   }
 
   if (jbody["net"].isMember("netmask") &&
       jbody["net"]["netmask"].isString() &&
       sys_info_.net.netmask != jbody["net"]["netmask"].asString()) {
     bsave++;
-    sys_info_.net.netmask = jbody["net"]["netmask"].asString();
+
+    res = SetNetmask(inet_addr(jbody["net"]["netmask"].asCString()));
   }
 
   if (jbody["net"].isMember("gateway") &&
       jbody["net"]["gateway"].isString() &&
       sys_info_.net.gateway != jbody["net"]["gateway"].asString()) {
     bsave++;
-    sys_info_.net.gateway = jbody["net"]["gateway"].asString();
-  }
 
-  // sys_info_.net.phy_mac
+    res = SetGateway(inet_addr(jbody["net"]["gateway"].asCString()));
+  }
 
   if (jbody["net"].isMember("dns_addr") &&
       jbody["net"]["dns_addr"].isString() &&
       sys_info_.net.dns_addr != jbody["net"]["dns_addr"].asString()) {
     bsave++;
-    sys_info_.net.dns_addr = jbody["net"]["dns_addr"].asString();
+    res = SetDNS(inet_addr(jbody["net"]["dns_addr"].asCString()));
   }
-
-  // sys_info_.net.http_port
-  // sys_info_.net.rtsp_port
 
   //////////////////////////////////////////////////////////////////////////
   if (bsave == 0) {
@@ -210,10 +321,6 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
 
     fwrite(ss.c_str(), 1, ss.size(), file);
     fclose(file);
-  }
-
-  if (net_ctrl_->ModityNetwork(sys_info_)) {
-    // CModuleMonitor::ReStartModule();
   }
   return true;
 }

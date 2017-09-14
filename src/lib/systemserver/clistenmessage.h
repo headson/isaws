@@ -10,7 +10,7 @@
 #include "json/json.h"
 #include "vzbase/thread/thread.h"
 
-#include "network/cnetctrl.h"
+#include "network/cmcastdevinfo.h"
 #include "hwclock/chwclock.h"
 
 #include "vzbase/base/noncoypable.h"
@@ -48,8 +48,15 @@ class CListenMessage : public vzbase::noncopyable {
   bool GetDevInfo(Json::Value &j_body);       // 获取设备信息
   bool SetDevInfo(const Json::Value &j_body); // 设置设备信息
 
+  int SetIp(in_addr_t ip);
+  int SetNetmask(in_addr_t ip);
+  int SetGateway(in_addr_t ipaddr);
+  int SetDNS(in_addr_t ip);
+
  public:
   TAG_SYS_INFO    sys_info_;      // 硬件参数
+  std::string     nickname_;      // eth0\wlan0
+  unsigned int    ip_change_;     // 1=change,0=no change
 
  private:
   DPPollHandle    dp_cli_;
@@ -57,8 +64,8 @@ class CListenMessage : public vzbase::noncopyable {
   vzbase::Thread *thread_slow_;   // 耗时线程
 
  private:
-  CNetCtrl       *net_ctrl_;      // 网络控制
   CHwclock       *hw_clock_;      // 时间设置
+  CMCastDevInfo  *mcast_dev_;     // 网络控制
 };
 
 }  // namespace sys

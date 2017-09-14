@@ -268,7 +268,7 @@ int CMCastSocket::Open(const char* center_ip, int center_port) {
   }
 
   LOG(L_INFO) << "------------START FOUND DEVICES---------------";
-#if 0
+#ifdef _WIN32
   ChangeMulticastMembership(s, multicast_addr);
 #else
   bzero(&mreq, sizeof(struct ip_mreq));
@@ -336,6 +336,21 @@ int32 CMCastSocket::OnRecv() {
 int CMCastSocket::SendUdpData(const char* center_ip, int center_port,
                               const char* pdata, unsigned int ndata) {
   LOG(L_INFO) << (const char *)center_ip << "\t" << center_port;
+
+#ifdef _WIN32
+
+
+
+#endif
+
+  struct in_addr if_req;
+  if_req.s_addr = inet_addr("192.168.1.11"); // 绑定发送信息的IP
+  if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
+    (char*)&if_req, sizeof(struct in_addr)) < 0) {
+    perror("setsockopt:");
+    return -1;
+  }
+
   struct sockaddr_in scenter;
   scenter.sin_family = AF_INET;
   scenter.sin_port = htons(center_port);

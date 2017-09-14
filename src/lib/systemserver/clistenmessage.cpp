@@ -14,6 +14,7 @@
 #include "vzbase/base/helper.h"
 #include "vzbase/base/base64.h"
 
+#include "systemserver/network/net_cfg.h"
 #include "systemserver/module/cmodulecontrol.h"
 
 namespace sys {
@@ -30,9 +31,12 @@ static const char *K_METHOD_SET[] = {
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
-  , net_ctrl_(NULL)
+  , mcast_dev_(NULL)
   , hw_clock_(NULL)
   , thread_slow_(NULL) {
+
+  ip_change_ = 0;
+  nickname_ = PHY_ETH_NAME;
 }
 
 CListenMessage::~CListenMessage() {
@@ -65,19 +69,18 @@ bool CListenMessage::Start() {
   }
 
   // net ctrl
-  net_ctrl_ = CNetCtrl::Create(thread_fast_);
-  if (NULL == net_ctrl_) {
+  mcast_dev_ = CMCastDevInfo::Create(thread_fast_);
+  if (NULL == mcast_dev_) {
     LOG(L_ERROR) << "create net ctrl failed.";
     return false;
   }
-  net_ctrl_->ModityNetwork(sys_info_);
 
-  b_ret = net_ctrl_->Start();
+  b_ret = mcast_dev_->Start();
   if (b_ret == false) {
     LOG(L_ERROR) << "net ctrl start failed.";
     return false;
   }
-  
+
   // hw clock
   hw_clock_ = CHwclock::Create(thread_slow_);
   if (NULL == hw_clock_) {
@@ -115,9 +118,9 @@ void CListenMessage::Stop() {
     dp_cli_ = NULL;
   }
 
-  if (net_ctrl_) {
-    delete net_ctrl_;
-    net_ctrl_ = NULL;
+  if (mcast_dev_) {
+    delete mcast_dev_;
+    mcast_dev_ = NULL;
   }
 
   if (thread_slow_) {

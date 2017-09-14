@@ -27,8 +27,8 @@ SET(PROJECT_SOURCE_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.h
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.c
-	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
-	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/network/cmcastdevinfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/network/cmcastdevinfo.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.h
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.cpp
@@ -58,8 +58,8 @@ SOURCE_GROUP(module FILES
 SOURCE_GROUP(network FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.h
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.c
-	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
-	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/network/cmcastdevinfo.h
+	${CMAKE_CURRENT_SOURCE_DIR}/network/cmcastdevinfo.cpp
 )
 
 SOURCE_GROUP(message FILES

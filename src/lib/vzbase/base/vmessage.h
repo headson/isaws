@@ -34,7 +34,7 @@
 #define DB_PCOUNT_FILEPATH    "/mnt/usr/pcount.db"
 #endif
 
-#define DEF_MCAST_IP          "224.5.6.2"
+#define DEF_MCAST_IP          "228.5.6.2"
 #define DEF_MCAST_DEV_PORT    20003     // 设备监听端口,修改IP地址
 #define DEF_MCAST_CLI_PORT    20004     // 客户端监听端口,获取设备信息
 

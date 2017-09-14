@@ -15,15 +15,15 @@
 
 namespace sys {
 
-class CNetCtrl : public vzbase::MessageHandler,
+class CMCastDevInfo : public vzbase::MessageHandler,
   public vzconn::CClientInterface {
  protected:
-  CNetCtrl(vzbase::Thread *thread_fast);
+  CMCastDevInfo(vzbase::Thread *thread_fast);
 
  public:
-  static CNetCtrl* Create(vzbase::Thread *thread_fast);
+  static CMCastDevInfo* Create(vzbase::Thread *thread_fast);
 
-  virtual ~CNetCtrl();
+  virtual ~CMCastDevInfo();
 
   bool Start();
   void Stop();
@@ -48,20 +48,11 @@ class CNetCtrl : public vzbase::MessageHandler,
   }
 
  public:
-  static bool ModityNetwork(const TAG_SYS_INFO &sys_info);
   void BcastDevInfo();
 
  private:
   vzconn::CMCastSocket *mcast_sock_;
   vzbase::Thread       *thread_fast_;
-
- public:
-  static std::string    phy_mac_;     // 12:23:34:45:56:67
-
-  static in_addr_t      ip_addr_;     // inet_addr() inet_ntoa
-  static in_addr_t      netmask_;     //
-  static in_addr_t      gateway_;     //
-  static in_addr_t      dns_addr_;    //
 };
 
 }  // namespace sys

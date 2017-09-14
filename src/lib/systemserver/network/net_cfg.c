@@ -522,7 +522,6 @@ in_addr_t net_get_gateway(void) {
   fclose(fp);
   return (INADDR_ANY);
 }
-#ifdef WIFI_LAN
 
 int net_search_allgateway(char *buf, in_addr_t *gate_addr,in_addr_t *dest_addr,in_addr_t *mask_addr) {
   char iface[16];
@@ -672,8 +671,6 @@ int net_set_route_byname(char *ifname,in_addr_t gateaddr,in_addr_t ipaddr,in_add
   return ret;
 }
 
-
-#endif
 int net_add_gateway_byname(char *ifname,in_addr_t addr) {
   struct rtentry rt;
   int skfd;
