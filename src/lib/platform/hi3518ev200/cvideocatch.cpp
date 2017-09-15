@@ -439,7 +439,18 @@ HI_VOID *VideoVencClassic(HI_VOID *p) {
     Kvdb_GetKeyToString(KVDB_ENC_OSD,
                         strlen(KVDB_ENC_OSD),
                         &sosd);
-    if (!sosd.empty() && jread.parse(sosd, josd)) {
+    if (sosd.empty()) {
+      sosd = "[{\"handle\": 0, \"enable\" : 1, \"x\" : 3,  \"y\" : 3,  \"size\" : 16 },\
+               {\"handle\": 1, \"enable\" : 1, \"x\" : 3,  \"y\" : 3,  \"size\" : 16}, \
+               {\"handle\": 2, \"enable\" : 1, \"x\" : 0,  \"y\" : 10, \"size\" : 40}]";
+      if (jread.parse(sosd, josd)) {
+        sosd = josd.toStyledString();
+        Kvdb_SetKey(KVDB_ENC_OSD,
+                    strlen(KVDB_ENC_OSD),
+                    sosd.c_str(), sosd.size());
+      }
+    }
+    if (jread.parse(sosd, josd)) {
       ((CVideoCatch*)p)->OSDAdjust(josd);
     }
   }
@@ -492,7 +503,7 @@ END_VENC_1080P_CLASSIC_4:	//vpss stop
   switch(s32ChnNum) {
   case 3:
     VpssChn = 2;
-  // SAMPLE_COMM_VPSS_DisableChn(VpssGrp, VpssChn);
+// SAMPLE_COMM_VPSS_DisableChn(VpssGrp, VpssChn);
   case 2:
     VpssChn = 1;
     SAMPLE_COMM_VPSS_DisableChn(VpssGrp, VpssChn);
@@ -560,6 +571,7 @@ bool CVideoCatch::Start() {
       break;
     }
   }
+  usleep(4*1000*1000);
   chn1_yuv.chn = 1;
   pthread_create(&chn1_yuv.pid, NULL, vpss_chn_dump, &chn1_yuv);
 
@@ -605,31 +617,29 @@ void CVideoCatch::SetOsdChn2(const char *osd) {
 */
 bool CVideoCatch::OSDAdjust(const Json::Value &jchn) {
   for (int i = 0; i < MAX_OSD_HDL; i++) {
-    if (jchn[i]["handle"].isNull() ||
-        jchn[i]["enable"].isNull() ||
-        jchn[i]["x"].isNull() ||
-        jchn[i]["y"].isNull() ||
-        jchn[i]["size"].isNull()) {
-
+    if (!jchn[i]["handle"].isNull() &&
+        !jchn[i]["enable"].isNull() &&
+        !jchn[i]["x"].isNull() &&
+        !jchn[i]["y"].isNull() &&
+        !jchn[i]["size"].isNull()) {
       OSD_Adjust(0,
                  jchn[i]["handle"].asInt(),
                  SHM_IMAGE_0_W * jchn[i]["x"].asInt() / 100,
                  SHM_IMAGE_0_H * jchn[i]["y"].asInt() / 100,
-                 128,
+                 (i == 2) ? 128 : 10,
                  ((jchn[i]["enable"].asInt() > 0) ? HI_TRUE : HI_FALSE));
 
-      OSD_Adjust(0,
+      OSD_Adjust(1,
                  MAX_OSD_HDL + jchn[i]["handle"].asInt(),
                  SHM_IMAGE_1_W * jchn[i]["x"].asInt() / 100,
                  SHM_IMAGE_1_H * jchn[i]["y"].asInt() / 100,
-                 128,
+                 (i == 2) ? 128 : 10,
                  ((jchn[i]["enable"].asInt() > 0) ? HI_TRUE : HI_FALSE));
 
     }
-    return true;
   }
 
-  return false;
+  return true;
 }
 
 HI_S32 CVideoCatch::GetOneFrame(HI_S32 chn, VENC_STREAM_S *pStream) {

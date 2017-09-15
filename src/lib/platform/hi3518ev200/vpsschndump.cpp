@@ -90,7 +90,7 @@ void sample_yuv_dump(VIDEO_FRAME_S* pVBuf, CVideoCatch::TAG_CHN_YUV *pYuv) {
   if (HI_NULL == pUserPageAddr[0]) {
     return;
   }
-  //printf("stride: %d,%d\n",pVBuf->u32Stride[0],pVBuf->u32Stride[1] );
+  // LOG_INFO("stride: %d,%d\n",pVBuf->u32Stride[0],pVBuf->u32Stride[1] );
 
 #if 0
   pVBufVirt_Y = pUserPageAddr[0];

@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
-/* 看门狗超时时间 */
-#define DEF_WATCHDOG_TIMEOUT 21
+#define DEF_FEEDDOG_TIME     4
+#define DEF_WATCHDOG_TIMEOUT 21   /* 看门狗超时时间 */
 
 /************************************************************************
 *Description : 注册一个喂狗KEY, 并传入观察进程名, 进程描述

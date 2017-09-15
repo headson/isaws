@@ -23,7 +23,8 @@ class CMCastSocket : public vzconn::VSocket {
   void Stop();
 
   int SendUdpData(const char* center_ip, int center_port,
-                  const char* pdata, unsigned int ndata);
+                  const char* pdata, unsigned int ndata,
+                  const char *ip_addr=NULL);
 
  protected:
   // 接收事件

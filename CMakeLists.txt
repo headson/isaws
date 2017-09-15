@@ -71,7 +71,7 @@ IF(WIN32)
 ADD_SUBDIRECTORY(src/lib/curlclient)
 
 ADD_SUBDIRECTORY(src/run/icamera)
-#ADD_SUBDIRECTORY(src/run/pc_manage)
+ADD_SUBDIRECTORY(src/run/pc_manage)
 
 ADD_SUBDIRECTORY(src/web)
 ENDIF()
@@ -82,7 +82,7 @@ ENDIF()
 #ADD_SUBDIRECTORY(src/test/test_h264_to_flv)
 #ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_client)
 #ADD_SUBDIRECTORY(src/test/test_dispatch/test_dp_worker)
-ADD_SUBDIRECTORY(src/test/test_multicast)
+#ADD_SUBDIRECTORY(src/test/test_multicast)
 
 #ADD_SUBDIRECTORY(src/test/test_curl/test_curl_event)
 #ADD_SUBDIRECTORY(src/test/test_sqlite/restore)#ADD_SUBDIRECTORY(src/test/test_vzconn/test_vzconn_client)

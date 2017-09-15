@@ -21,17 +21,23 @@
 #ifdef WIN32
 #define DEF_WEB_SRV_PATH      "c:\\tools\\html\\htmldata"
 #define DEF_SYS_LOG_PATH      "c:\\tools\\html\\htmldata\\log"
-#define DEF_UPLOAD_FILENAME   "c:\\tools\\upload.tar"
 #define DEF_HARDWARE_FILE     "c:\\tools\\hardware.json"
 #define DEF_SOFTWARE_FILE     "c:\\tools\\software.ver"
+#define SYS_SYSTEM_CONFIG     "c:\\tools\\system.json"
 #define DB_PCOUNT_FILEPATH    "c:\\tools\\pcount.db"
+#define UPLINK_ADDR_CONFIG    "c:\\tools\\remote_address.json"
+#define DEF_ALG_CONFIG_FILE   "c:\\tools\\iva.json"
+#define DEF_UPLOAD_FILENAME   "c:\\tools\\upload.tar"
 #else
-#define DEF_WEB_SRV_PATH      "/tmp/web/"
-#define DEF_SYS_LOG_PATH      "/tmp/web/log"
-#define DEF_UPLOAD_FILENAME   "/tmp/upload.tar"
+#define DEF_WEB_SRV_PATH      "/tmp/app/web/"
+#define DEF_SYS_LOG_PATH      "/tmp/app/web/log"
+#define SYS_SYSTEM_CONFIG     "/mnt/usr/system.json"
 #define DEF_HARDWARE_FILE     "/etc/hardware.json"
-#define DEF_SOFTWARE_FILE     "/mnt/usr/software.ver"
+#define DEF_SOFTWARE_FILE     "/mnt/app/exec/software.ver"
 #define DB_PCOUNT_FILEPATH    "/mnt/usr/pcount.db"
+#define UPLINK_ADDR_CONFIG    "/mnt/usr/remote_address.json"
+#define DEF_ALG_CONFIG_FILE   "/mnt/etc/iva.json"
+#define DEF_UPLOAD_FILENAME   "/tmp/upload.tar"
 #endif
 
 #define DEF_MCAST_IP          "228.5.6.2"
@@ -76,6 +82,7 @@ typedef enum _MSG_RET {
   RET_USERNAME,
   RET_PASSWORD,
   RET_DP_REPLY_FAILED,
+  RET_KVDB_READ_FAILED,
 } MSG_RET;
 //////////////////////////////////////////////////////////////////////////
 #define MSG_ADDR_CHANGE       "addr_change"       // µÿ÷∑∏ƒ±‰
@@ -93,6 +100,7 @@ typedef enum _MSG_RET {
 #define MSG_GET_ENC_CFG       "get_enc_cfg"       // ªÒ»°±‡¬Î≈‰÷√
 #define MSG_SET_ENC_CFG       "set_enc_cfg"       // …Ë÷√±‡¬Î≈‰÷√
 
+#define MSG_GET_ENC_OSD       "get_enc_osd"       // …Ë÷√±‡¬ÎOSD
 #define MSG_SET_ENC_OSD       "set_enc_osd"       // …Ë÷√±‡¬ÎOSD
 
 #define MSG_IRCUT_CTRLS       "ircut_ctrls"       // IRCUTøÿ÷∆

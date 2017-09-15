@@ -61,10 +61,12 @@ void CDevCfgWidget::OnItemClickSlot(QTreeWidgetItem *item, int index) {
   if (item->text(0) == tr("设备信息")) {
     ui->pConfigWidget->setCurrentWidget(ui->pDevInfoPage);
   } else if (item->text(0) == tr("算法参数")) {
+    iva_cfg_->Initinal(dev_id_);
     ui->pConfigWidget->setCurrentWidget(iva_cfg_);
   } else if (item->text(0) == tr("级联配置")) {
     ui->pConfigWidget->setCurrentWidget(uplink_cfg_);
   } else if (item->text(0) == tr("视频参数")) {
+    vdo_cfg_->Initinal(dev_id_);
     ui->pConfigWidget->setCurrentWidget(vdo_cfg_);
   }
 }

@@ -12,7 +12,6 @@
 
 namespace hi3518e {
 
-static const unsigned int METHOD_SET_SIZE = 3;
 static const char  *METHOD_SET[] = {
   MSG_CATCH_EVENT,
   MSG_GET_I_FRAME,
@@ -20,8 +19,10 @@ static const char  *METHOD_SET[] = {
   MSG_GET_VDO_URL,
   MSG_GET_ENC_CFG,
   MSG_SET_ENC_CFG,
+  MSG_GET_ENC_OSD,
   MSG_SET_ENC_OSD
 };
+static const unsigned int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
@@ -103,12 +104,19 @@ void CListenMessage::RunLoop() {
   while (true) {
     main_thread_->ProcessMessages(4 * 1000);
 
-    static void *watchdog = NULL;
-    if (watchdog == NULL) {
-      watchdog = RegisterWatchDogKey("MAIN", 4, 21);
+    static void *hdl_watchdog = NULL;
+    if (hdl_watchdog == NULL) {
+      hdl_watchdog = RegisterWatchDogKey(
+                       "MAIN", 4, DEF_WATCHDOG_TIMEOUT);
     }
-    if (watchdog) {
-      FeedDog(watchdog);
+
+    static time_t old_time = time(NULL);
+    time_t now_time = time(NULL);
+    if (abs(now_time - old_time) >= DEF_FEEDDOG_TIME) {
+      old_time = now_time;
+      if (hdl_watchdog) {
+        FeedDog(hdl_watchdog);
+      }
     }
   }
 }
@@ -133,7 +141,8 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     LOG(L_ERROR) << "Json parse failed.";
     return;
   }
-  LOG(L_INFO) <<"\n" << jreq.toStyledString();
+  LOG(L_INFO) <<dmp->method
+              << "\n" << jreq.toStyledString();
 
   Json::Value jresp;
   jresp[MSG_CMD] = jreq[MSG_CMD].asString();
@@ -201,13 +210,35 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     // TODO 获取编码参数
   } else if (0 == strncmp(dmp->method, MSG_SET_ENC_CFG, MAX_METHOD_SIZE)) {
     // TODO 设置编码参数
+  } else if (0 == strncmp(dmp->method, MSG_GET_ENC_OSD, MAX_METHOD_SIZE)) {
+    reply = true;
+    jresp[MSG_STATE] = RET_KVDB_READ_FAILED;
+
+    std::string sbody = "";
+    Kvdb_GetKeyToString(KVDB_ENC_OSD, strlen(KVDB_ENC_OSD), &sbody);
+    if (!sbody.empty()) {
+      LOG(L_INFO) << sbody;
+      Json::Value jbody;
+      Json::Reader jread;
+      if (jread.parse(sbody, jbody)) {
+        jresp[MSG_STATE] = RET_SUCCESS;
+        jresp[MSG_BODY] = jbody;
+      }
+    }
   } else if (0 == strncmp(dmp->method, MSG_SET_ENC_OSD, MAX_METHOD_SIZE)) {
     reply = true;
+    jresp[MSG_STATE] = RET_FAILED;
+
     bool res = video_catch_.OSDAdjust(jreq[MSG_BODY]);
     if (res) {
-      jresp[MSG_STATE] = RET_SUCCESS;
-    } else {
-      jresp[MSG_STATE] = RET_FAILED;
+      Json::Value josd = jreq[MSG_BODY];
+      std::string sosd = josd.toStyledString();
+      LOG(L_INFO) << sosd;
+      int res = Kvdb_SetKey(KVDB_ENC_OSD, strlen(KVDB_ENC_OSD),
+                            sosd.c_str(), sosd.size());
+      if (res == KVDB_RET_SUCCEED) {
+        jresp[MSG_STATE] = RET_SUCCESS;
+      }
     }
   }
 

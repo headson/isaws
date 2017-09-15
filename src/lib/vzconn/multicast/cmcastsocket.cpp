@@ -333,8 +333,9 @@ int32 CMCastSocket::OnRecv() {
   return n_data;
 }
 
-int CMCastSocket::SendUdpData(const char* center_ip, int center_port,
-                              const char* pdata, unsigned int ndata) {
+int CMCastSocket::SendUdpData(const char *center_ip, int center_port,
+                              const char *pdata, unsigned int ndata, 
+                              const char *ip_addr) {
   LOG(L_INFO) << (const char *)center_ip << "\t" << center_port;
 
   int ret = -1;
@@ -361,6 +362,16 @@ int CMCastSocket::SendUdpData(const char* center_ip, int center_port,
                  (struct sockaddr*)&scenter, sizeof(struct sockaddr));
   }
 #else
+  if (ip_addr != NULL) {
+    // 绑定发送信息的IP
+    struct in_addr if_req;
+    if_req.s_addr = inet_addr(ip_addr);
+    if (setsockopt(GetSocket(), IPPROTO_IP, IP_MULTICAST_IF,
+      (char*)&if_req, sizeof(struct in_addr)) < 0) {
+      perror("setsockopt:");
+      return -1;
+    }
+  }
   struct sockaddr_in scenter;
   scenter.sin_family = AF_INET;
   scenter.sin_port = htons(center_port);

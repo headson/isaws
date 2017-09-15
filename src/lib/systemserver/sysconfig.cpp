@@ -20,12 +20,6 @@
 
 namespace sys {
 
-#ifdef _WIN32
-#define SYS_CFG_PATH  "c:\\tools\\system.json"
-#else  // _LINUX
-#define SYS_CFG_PATH  "/mnt/etc/system.json"
-#endif
-
 int CListenMessage::SetIp(in_addr_t ip) {
   int ret = -1;
   struct in_addr sys_ip;
@@ -172,7 +166,7 @@ void CListenMessage::GetHwInfo() {
   Json::Reader jread;
   Json::Value  jinfo;
   std::ifstream ifs;
-  ifs.open(SYS_CFG_PATH);
+  ifs.open(SYS_SYSTEM_CONFIG);
   if (!ifs.is_open() ||
       !jread.parse(ifs, jinfo)) {
     LOG(L_ERROR) << "system json parse failed. create the default config";
@@ -326,7 +320,7 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
     return true;
   }
 
-  FILE *file = fopen(SYS_CFG_PATH, "wt+");
+  FILE *file = fopen(SYS_SYSTEM_CONFIG, "wt+");
   if (file) {
     std::string ss = jbody.toStyledString();
     Kvdb_SetKey(KVDB_HW_INFO,

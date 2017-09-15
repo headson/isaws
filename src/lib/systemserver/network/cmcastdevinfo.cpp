@@ -114,8 +114,11 @@ int32 CMCastDevInfo::HandleRecvPacket(vzconn::VSocket  *p_cli,
       }
 
       sjson = j_resp.toStyledString();
+
+      NET_CONFIG net_cfg;
       mcast_sock_->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
-                               sjson.c_str(), sjson.size());
+                               sjson.c_str(), sjson.size(),
+                               CListenMessage::Instance()->sys_info_.net.ip_addr.c_str());
     }
   } else {
     LOG(L_ERROR) << "this message type is no function to process." << s_type;

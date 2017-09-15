@@ -20,10 +20,17 @@ class CVdoCfgWidget : public QWidget {
   ~CVdoCfgWidget();
 
   void Initinal(QString id);
-  
+
+ protected slots:
+  void OnGetOsdSlot();
+  void OnSetOsdSlot();
+
  private:
   Ui::CVdoCfgWidget *ui;
   QString            dev_id_;
+
+ private:
+   std::string       osd_cfg_;
 };
 
 #endif  // PC_MANAGE_CVDOCFGWIDGET_H

@@ -16,11 +16,6 @@
 #include <fstream>
 
 namespace alg {
-#ifdef _WIN32
-#define RDP_ADDR_CONFIG  "c:/tools/remote_address.json"
-#else  // _LINUX
-#define RDP_ADDR_CONFIG  "/mnt/etc/remote_address.json"
-#endif
 
 static const char  *METHOD_SET[] = {
   MSG_REMOTE_5_IR,
@@ -82,7 +77,7 @@ bool CListenMessage::Start() {
   param.output_callback_fun = AlgActionCallback;
   param.image_width         = SHM_IMAGE_0_W;
   param.image_height        = SHM_IMAGE_0_H;
-  snprintf(param.config_filename, 127, "/mnt/etc/iva.json");
+  snprintf(param.config_filename, 127, DEF_ALG_CONFIG_FILE);
 
   LOG_INFO("iva set image size %d, %d, %s.",
            param.image_width, param.image_height, param.config_filename);
@@ -116,7 +111,7 @@ bool CListenMessage::Start() {
     Json::Reader jread;
     Json::Value  jinfo;
     std::ifstream ifs;
-    ifs.open(RDP_ADDR_CONFIG);
+    ifs.open(UPLINK_ADDR_CONFIG);
     if (ifs.is_open() &&
         jread.parse(ifs, jinfo)) {
       if (!jinfo["ip"].isNull()
@@ -165,12 +160,19 @@ void CListenMessage::RunLoop() {
   while (true) {
     main_thread_->ProcessMessages(4 * 1000);
 
-    static void *watchdog = NULL;
-    if (watchdog == NULL) {
-      watchdog = RegisterWatchDogKey("MAIN", 4, 21);
+    static void *hdl_watchdog = NULL;
+    if (hdl_watchdog == NULL) {
+      hdl_watchdog = RegisterWatchDogKey(
+        "MAIN", 4, DEF_WATCHDOG_TIMEOUT);
     }
-    if (watchdog) {
-      FeedDog(watchdog);
+
+    static time_t old_time = time(NULL);
+    time_t now_time = time(NULL);
+    if (abs(now_time - old_time) >= DEF_FEEDDOG_TIME) {
+      old_time = now_time;
+      if (hdl_watchdog) {
+        FeedDog(hdl_watchdog);
+      }
     }
   }
 }

@@ -79,31 +79,26 @@ int main(int argc, char *argv[]) {
                               "/mnt/usr/kvdb_backup.db");
 #endif
 
-  kvdb::KvdbServer skvdb_server(main_thread);
-#ifdef WIN32
-  skvdb_server.StartKvdbServer("0.0.0.0", 5499,
-                               "c:\\tools\\secret_kvdb.db",
-                               "c:\\tools\\secret_kvdb_backup.db");
-#else
-  skvdb_server.StartKvdbServer("0.0.0.0", 5499,
-                               "/mnt/usr/secret_kvdb.db",
-                               "/mnt/usr/secret_kvdb_backup.db");
-#endif
-
   while (true) {
     main_thread->ProcessMessages(4 * 1000);
 
-    static void *watchdog = NULL;
-    if (watchdog == NULL) {
-      watchdog = RegisterWatchDogKey("MAIN", 4, 21);
+    static void *hdl_watchdog = NULL;
+    if (hdl_watchdog == NULL) {
+      hdl_watchdog = RegisterWatchDogKey(
+        "MAIN", 4, DEF_WATCHDOG_TIMEOUT);
     }
-    if (watchdog) {
-      FeedDog(watchdog);
+
+    static time_t old_time = time(NULL);
+    time_t now_time = time(NULL);
+    if (abs(now_time - old_time) >= DEF_FEEDDOG_TIME) {
+      old_time = now_time;
+      if (hdl_watchdog) {
+        FeedDog(hdl_watchdog);
+      }
     }
   }
 
   dpserver.StopDpServer();
   kvdb_server.StopKvdbServer();
-  skvdb_server.StopKvdbServer();
   return 0;
 }

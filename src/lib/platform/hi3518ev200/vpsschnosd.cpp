@@ -6,8 +6,9 @@
 
 #include "vpsschnosd.h"
 #include "systemv/shm/vzshm_c.h"
+#include "vzbase/helper/stdafx.h"
 
-#define FONT_PATH_ASC16 "/mnt/usr/asc16"
+#define FONT_PATH_ASC16 "/mnt/app/exec/asc16"
 
 static const int FONT_WIDTH = 8;
 static const int FONT_HEIGHT = 16;
@@ -92,6 +93,11 @@ char *open_font_lib(char* fontPath) {
   char *pFont = NULL;
 
   fileSize = (int)OSD_GetFileSize(fontPath);
+  if (fileSize < 0) {
+    LOG(L_ERROR) << "osd get file size failed.";
+    return NULL;
+  }
+
   pFont = (char*)malloc(fileSize);
   if (!pFont) {
     printf("memory not enough !!\n");
@@ -350,8 +356,8 @@ int OSD_Adjust(HI_S32 chn_id, RGN_HANDLE Handle,
 
   stChnAttr.bShow = bShow;
   stChnAttr.enType = OVERLAY_RGN;
-  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32X = x;
-  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y = y;
+  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32X = x/2*2;
+  stChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y = y/2*2;
   stChnAttr.unChnAttr.stOverlayChn.u32BgAlpha = bgalpha;
   stChnAttr.unChnAttr.stOverlayChn.u32FgAlpha = 128;
   stChnAttr.unChnAttr.stOverlayChn.u32Layer = Handle;

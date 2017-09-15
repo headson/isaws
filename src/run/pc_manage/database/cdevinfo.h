@@ -44,6 +44,13 @@ class CDevInfo {
     return false;
   }
 
+  std::string GetUrl() {
+    char surl[128] = {0};
+    sprintf(surl, "http://%s:%d/dispatch",
+             ip_.c_str(), port_);
+    return surl;
+  }
+
  public:
   std::string   id_;                // Éè±¸ID
   std::string   ip_;

@@ -206,6 +206,8 @@ TARGET_LINK_LIBRARIES (${BUILD_PROJECT_NAME}
 	Qt5::Sql
 	Qt5::Multimedia
 	
+	libcurlclient
+	libcurl
 	libvzconn
 	libjsoncpp
 	${VZPROJECT_LINK_LIB}
