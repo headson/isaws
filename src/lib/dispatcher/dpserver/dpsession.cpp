@@ -130,11 +130,17 @@ bool Session::ReplyDpMessage(const DpMessage *dmsg, uint8 type, uint8 channel) {
 //////////////////////////////////////////////////////////////////////////
 void Session::AddListenMessage(const char *message) {
   LOG(L_INFO) << "Add listen message >> " << message;
+
+  // TODO ÅÐ¶ÏÖØ¸´¼àÌý
+  for (int i = 0; i < cur_pos_; i++) {
+    if (0 == strncmp(listen_messages_[i], message, MAX_METHOD_SIZE)) {
+      LOG(L_INFO) << "this message is exist.>> " << message;
+      return;
+    }
+  }
+
   if (cur_pos_ < MAX_METHOD_COUNT) {
     strncpy(listen_messages_[cur_pos_++], message, MAX_METHOD_SIZE);
-
-    // TODO ÅÐ¶ÏÖØ¸´Á´½Ó
-
   } else {
     LOG(L_ERROR) << "message method size big than MAX_METHOD_COUNT = 64";
   }

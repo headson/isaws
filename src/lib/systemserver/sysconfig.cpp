@@ -68,7 +68,7 @@ int CListenMessage::SetNetmask(in_addr_t ip) {
       }
     }
 
-    if ((sucess_flag == 1) && 
+    if ((sucess_flag == 1) &&
         (snetmask != sys_info_.net.netmask)) {
       sys_info_.net.netmask = snetmask;
       ip_change_ = 1;
@@ -149,6 +149,25 @@ int CListenMessage::SetDNS(in_addr_t ip) {
 }
 
 //////////////////////////////////////////////////////////////////////////
+void CListenMessage::GetAlgVer() {
+  if (!sys_info_.alg_version.empty()) {
+    // dp获取算法信息
+    std::string sresp = "";
+    DpClient_SendDpReqToString(MSG_GET_IVAINFO, 0,
+                               NULL, 0, &sresp,
+                               DEF_TIMEOUT_MSEC);
+    LOG(L_INFO) << sresp;
+    Json::Value jresp;
+    Json::Reader jread;
+    if (jread.parse(sresp, jresp)) {
+      sys_info_.alg_version = jresp[MSG_BODY]["version"].asString();
+    } else {
+      sys_info_.alg_version = "";
+      LOG(L_ERROR) << "MSG_GET_IVAINFO failed.";
+    }
+  }
+}
+
 void CListenMessage::GetHwInfo() {
   Json::Reader jread;
   Json::Value  jinfo;
@@ -176,6 +195,7 @@ void CListenMessage::GetHwInfo() {
   sys_info_.ins_addr = jinfo["ins_addr"].asString();
   sys_info_.net.wifi_en = jinfo["net"]["wifi_en"].asInt();
   sys_info_.net.dhcp_en = jinfo["net"]["dhcp_en"].asInt();
+  // 注释,后续SetDevInfo会获取网络信息
   //sys_info_.net.ip_addr = jinfo["net"]["ip_addr"].asString();
   //sys_info_.net.netmask = jinfo["net"]["netmask"].asString();
   //sys_info_.net.gateway = jinfo["net"]["gateway"].asString();
@@ -190,19 +210,8 @@ void CListenMessage::GetHwInfo() {
               strlen(KVDB_HW_INFO),
               sjson.c_str(), sjson.size());
 
-  // dp获取算法信息
-  std::string sresp = "";
-  DpClient_SendDpReqToString(MSG_GET_IVAINFO, 0,
-                             NULL, 0, &sresp,
-                             DEF_TIMEOUT_MSEC);
-  LOG(L_INFO) << sresp;
-  Json::Value jresp;
-  if (jread.parse(sresp, jresp)) {
-    sys_info_.alg_version = jresp[MSG_BODY]["version"].asString();
-  } else {
-    sys_info_.alg_version = "";
-    LOG(L_ERROR) << "MSG_GET_IVAINFO failed.";
-  }
+  // version
+  GetAlgVer();
 
   // software
   vzbase::get_software(sys_info_.sw_version);
@@ -219,6 +228,8 @@ bool CListenMessage::GetDevInfo(Json::Value &jbody) {
 
   jbody["sw_version"] = sys_info_.sw_version;
   jbody["hw_version"] = sys_info_.hw_version;
+
+  GetAlgVer();  // if alg_version is empty
   jbody["alg_version"] = sys_info_.alg_version;
 
   jbody["net"]["wifi_en"] = sys_info_.net.wifi_en;
@@ -318,11 +329,15 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
   FILE *file = fopen(SYS_CFG_PATH, "wt+");
   if (file) {
     std::string ss = jbody.toStyledString();
+    Kvdb_SetKey(KVDB_HW_INFO,
+                strlen(KVDB_HW_INFO),
+                ss.c_str(), ss.size());
 
     fwrite(ss.c_str(), 1, ss.size(), file);
     fclose(file);
+    return true;
   }
-  return true;
+  return false;
 }
 
 }

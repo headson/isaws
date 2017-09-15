@@ -44,6 +44,7 @@ class CListenMessage : public vzbase::noncopyable {
 
  public:
   void GetHwInfo();                           // 获取硬件信息
+  void GetAlgVer();                           // 获取算法版本
 
   bool GetDevInfo(Json::Value &j_body);       // 获取设备信息
   bool SetDevInfo(const Json::Value &j_body); // 设置设备信息

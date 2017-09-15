@@ -8,7 +8,7 @@
 #define __NET_CONFIG_H_
 
 #define PHY_ETH_NAME    "eth0"
-#define PHY_WIFI_NAME   "wifi0"
+#define PHY_WIFI_NAME   "wlan0"
 
 typedef struct NET_CONFIG {
   unsigned char   mac[8];

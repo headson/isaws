@@ -219,6 +219,10 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     if (alg_handle_) {
       nret = sdk_iva_set_control_command(alg_handle_,
                                          CONTROL_COMMAND_RESET_COUNTER);
+      if (nret == IVA_ERROR_NO_ERROR) {
+        nret = RET_SUCCESS;
+      }
+      LOG(L_INFO) << "reset pcount " << nret;
     }
   }
 

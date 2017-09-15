@@ -95,7 +95,7 @@ bool CHwclock::SetDevTime(const Json::Value &jbody) {
 #ifdef _LINUX
         char scmd[1024] = {0};
         snprintf(scmd, 1023,
-                 "date -s \"%s\"; hwclock -uw",
+                 "date -s \"%s\";clock -w",
                  str.c_str());
         LOG(L_INFO) << scmd;
         vzbase::my_system(scmd);
@@ -112,7 +112,6 @@ bool CHwclock::SetDevTime(const Json::Value &jbody) {
 
 bool CHwclock::SetTimeZone(int timezone) {
   timezone_ = timezone;
-
   // 设置系统时区
 
   return true;

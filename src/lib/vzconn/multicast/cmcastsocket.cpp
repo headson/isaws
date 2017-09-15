@@ -337,30 +337,39 @@ int CMCastSocket::SendUdpData(const char* center_ip, int center_port,
                               const char* pdata, unsigned int ndata) {
   LOG(L_INFO) << (const char *)center_ip << "\t" << center_port;
 
+  int ret = -1;
 #ifdef _WIN32
+  std::vector<NetworkInterfaceState> net_inter;
+  UpdateNetworkInterface(net_inter);
+  for (std::size_t i = 0; i < net_inter.size(); i++) {
+    // 绑定发送信息的IP
+    struct in_addr if_req;
+    if_req.s_addr = net_inter[i].ip_addr.S_un.S_addr;
+    if (setsockopt(GetSocket(), IPPROTO_IP, IP_MULTICAST_IF,
+                   (char*)&if_req, sizeof(struct in_addr)) < 0) {
+      perror("setsockopt:");
+      return -1;
+    }
 
-
-
-#endif
-
-  struct in_addr if_req;
-  if_req.s_addr = inet_addr("192.168.1.11"); // 绑定发送信息的IP
-  if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
-    (char*)&if_req, sizeof(struct in_addr)) < 0) {
-    perror("setsockopt:");
-    return -1;
+    struct sockaddr_in scenter;
+    scenter.sin_family = AF_INET;
+    scenter.sin_port = htons(center_port);
+    scenter.sin_addr.s_addr = inet_addr((char*)center_ip);
+    ret = sendto(GetSocket(),
+                 (const char*)pdata, ndata,
+                 0,
+                 (struct sockaddr*)&scenter, sizeof(struct sockaddr));
   }
-
+#else
   struct sockaddr_in scenter;
   scenter.sin_family = AF_INET;
   scenter.sin_port = htons(center_port);
   scenter.sin_addr.s_addr = inet_addr((char*)center_ip);
-  int ret = sendto(GetSocket(),
-                   (const char*)pdata,
-                   ndata,
-                   0,
-                   (struct sockaddr*)&scenter,
-                   sizeof(struct sockaddr));
+  ret = sendto(GetSocket(),
+               (const char*)pdata, ndata,
+               0,
+               (struct sockaddr*)&scenter, sizeof(struct sockaddr));
+#endif
   return ret;
 }
 }  // namespace vzconn

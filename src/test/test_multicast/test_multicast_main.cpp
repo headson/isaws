@@ -2,6 +2,7 @@
 #include "vzbase/helper/stdafx.h"
 
 #include "vzconn/multicast/cmcastsocket.h"
+#include "vzbase/base/vmessage.h"
 using namespace vzconn;
 
 #if 1
@@ -23,14 +24,16 @@ class CClientProcess : public CClientInterface {
   }
 };
 
-static const char DEF_CERTER_IP[] = "224.5.6.122";
-static const int  DEF_CENTER_PORT = 28888;
-
 int32 timer_cb(SOCKET          fd,
                short           events,
                const void      *p_usr_arg) {
-  ((CMCastSocket*)p_usr_arg)->SendUdpData(DEF_CERTER_IP, DEF_CENTER_PORT,
+#ifdef _WIN32
+  ((CMCastSocket*)p_usr_arg)->SendUdpData(DEF_MCAST_IP, DEF_MCAST_DEV_PORT,
                                           "hello wolrds\0", 13);
+#else
+  ((CMCastSocket*)p_usr_arg)->SendUdpData(DEF_MCAST_IP, DEF_MCAST_CLI_PORT,
+                                          "hello wolrds\0", 13);
+#endif
   return 0;
 }
 
@@ -52,7 +55,11 @@ int main(int argc, char* argv[]) {
   CMCastSocket *cmcast =
     CMCastSocket::Create(&c_evt_loop, &c_cli_proc);
 
-  n_ret = cmcast->Open(DEF_CERTER_IP, DEF_CENTER_PORT);
+#ifdef WIN32
+  n_ret = cmcast->Open(DEF_MCAST_IP, DEF_MCAST_CLI_PORT);
+#else
+  n_ret = cmcast->Open(DEF_MCAST_IP, DEF_MCAST_DEV_PORT);
+#endif
   if (n_ret != 0) {
     LOG(L_ERROR) << "open failed.";
     return -1;

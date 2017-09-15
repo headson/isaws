@@ -32,8 +32,8 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	SET(VZPROJECT_LIBRARY_DIR
 		${INTERFACE_LIBRARY_DIR}
 		${PROJECT_SOURCE_DIR}/lib/hi3518
-		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/linux/lib
-		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/linux/lib
+		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/linux/lib32
+		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/linux/lib32
 	)
 	SET(VZPROJECT_LINK_LIB
 		libvzlogging.so
@@ -50,8 +50,8 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
 	SET(VZPROJECT_LIBRARY_DIR
 		${INTERFACE_LIBRARY_DIR}
 		${PROJECT_SOURCE_DIR}/lib/hi3518
-		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/linux/lib
-		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/linux/lib
+		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/linux/lib32
+		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/linux/lib32
 	)
 	SET(VZPROJECT_LINK_LIB
 		vzlogging
