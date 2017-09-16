@@ -46,23 +46,23 @@ class CVideoCatch {
   void Stop();
 
   void SetOsdChn2(const char *osd);
+
   bool OSDAdjust(const Json::Value &jchn);
 
  public:
   HI_S32 GetOneFrame(HI_S32 n_chn, VENC_STREAM_S *p_stream);
 
-  static void* GetYUVThread(void* pArg);
+  int    GetOneImage(void *pdata, unsigned int ndata);
+  void   EncUsrImage(const void *pdata, unsigned int ndata,
+                     unsigned int nwidth, unsigned int nheight);
 
  public:
   typedef struct {
-    pthread_t     pid;
-    CShareBuffer  shm;
     VENC_CHN      chn;
   } TAG_USR_ENC;
 
   typedef struct {
     pthread_t     pid;
-    CShareBuffer  shm;
     VENC_CHN      chn;
   } TAG_CHN_YUV;
 

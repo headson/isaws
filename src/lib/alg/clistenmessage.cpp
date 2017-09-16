@@ -19,8 +19,8 @@ namespace alg {
 
 static const char  *METHOD_SET[] = {
   MSG_REMOTE_5_IR,
-  MSG_GET_IVAINFO,
-  MSG_SET_IVAINFO,
+  MSG_GET_ALGINFO,
+  MSG_SET_ALGINFO,
   MSG_RESET_PCNUM
 };
 static const unsigned int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
@@ -204,7 +204,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
                   ir_remote_.ir[0], ir_remote_.ir[1], ir_remote_.ir[2],
                   ir_remote_.ir[3], ir_remote_.ir[4]);
     }
-  } else if (strncmp(dmp->method, MSG_GET_IVAINFO, MAX_METHOD_SIZE) == 0) {
+  } else if (strncmp(dmp->method, MSG_GET_ALGINFO, MAX_METHOD_SIZE) == 0) {
     // 获取算法参数
     char sver[64] = {0};
     if (IVA_ERROR_NO_ERROR == sdk_iva_get_version(sver)) {
@@ -213,7 +213,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
       std::string ss = sver;
       jresp[MSG_BODY]["version"] = ss;
     }
-  } else if (strncmp(dmp->method, MSG_SET_IVAINFO, MAX_METHOD_SIZE) == 0) {
+  } else if (strncmp(dmp->method, MSG_SET_ALGINFO, MAX_METHOD_SIZE) == 0) {
     // 配置算法参数
 
   } else if (strncmp(dmp->method, MSG_RESET_PCNUM, MAX_METHOD_SIZE) == 0) {

@@ -8,26 +8,28 @@
 
 #include "json/json.h"
 
-#include "alg/basedefine.h"
+#include "basedefines.h"
 
-namespace hi3518e {
+namespace platform {
 
 static const char  *METHOD_SET[] = {
-  MSG_CATCH_EVENT,
-  MSG_GET_I_FRAME,
-  MSG_IRCUT_CTRLS,
-  MSG_GET_VDO_URL,
-  MSG_GET_ENC_CFG,
-  MSG_SET_ENC_CFG,
-  MSG_GET_ENC_OSD,
-  MSG_SET_ENC_OSD
+  MSG_CATCH_EVENT,        //
+  MSG_GET_I_FRAME,        //
+  MSG_IRCUT_CTRLS,        //
+  MSG_GET_VDO_URL,        //
+  MSG_GET_ENC_CFG,        //
+  MSG_SET_ENC_CFG,        //
+  MSG_GET_ENC_OSD,        //
+  MSG_SET_ENC_OSD,        //
+  MSG_GET_ALGINFO,        // 获取算法信息
 };
 static const unsigned int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
   , main_thread_(NULL)
-  , video_catch_() {
+  , alg_ctrl_(NULL)
+  , vdo_catch_(NULL) {
   // GPIO8_0 output
   HI_MPI_SYS_SetReg(0x200f0100, 0x1);
 
@@ -57,11 +59,7 @@ CListenMessage *CListenMessage::Instance() {
 }
 
 bool CListenMessage::Start() {
-  bool bret = video_catch_.Start();
-  if (false == bret) {
-    LOG(L_ERROR) << "vdo encode start failed.";
-    return false;
-  }
+
 
   //////////////////////////////////////////////////////////////////////////
   main_thread_ = vzbase::Thread::Current();
@@ -82,11 +80,40 @@ bool CListenMessage::Start() {
 
     DpClient_HdlAddListenMessage(dp_cli_, METHOD_SET, METHOD_SET_SIZE);
   }
+  bool bret = false;
+
+  // vdo and enc
+  vdo_catch_ = new CVideoCatch();
+  if (NULL != vdo_catch_) {
+    bret = vdo_catch_->Start();
+  }
+  if (NULL == vdo_catch_ || false == bret) {
+    LOG(L_ERROR) << "vdo encode start failed.";
+    return false;
+  }
+
+  // alg
+  alg_ctrl_ = new CAlgCtrl(main_thread_);
+  if (NULL != alg_ctrl_) {
+    bret = alg_ctrl_->Start();
+  }
+  if (NULL == alg_ctrl_ || false == bret) {
+    LOG(L_ERROR) << "alg ctrl create or start failed.";
+  }
+
   return true;
 }
 
 void CListenMessage::Stop() {
-  video_catch_.Stop();
+  if (vdo_catch_) {
+    delete vdo_catch_;
+    vdo_catch_ = NULL;
+  }
+
+  if (alg_ctrl_) {
+    delete alg_ctrl_;
+    alg_ctrl_ = NULL;
+  }
 
   if (dp_cli_) {
     DpClient_ReleasePollHandle(dp_cli_);
@@ -121,9 +148,6 @@ void CListenMessage::RunLoop() {
   }
 }
 
-vzbase::Thread *CListenMessage::MainThread() {
-  return main_thread_;
-}
 void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
   if (p_usr_arg) {
     ((CListenMessage*)p_usr_arg)->OnDpMessage(p_hdl, dmp);
@@ -160,7 +184,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     char osd[32] = {0};
     snprintf(osd, 31, "IN:%d OUT:%d", n1, n2);
 
-    video_catch_.SetOsdChn2(osd);
+    vdo_catch_->SetOsdChn2(osd);
   } else if (0 == strncmp(dmp->method, MSG_IRCUT_CTRLS, MAX_METHOD_SIZE)) {
     reply = true;
 
@@ -184,6 +208,9 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     }
     jresp[MSG_STATE] = RET_SUCCESS;
   } else if (0 == strncmp(dmp->method, MSG_GET_VDO_URL, MAX_METHOD_SIZE)) {
+    reply = true;
+    jresp[MSG_STATE] = RET_FAILED;
+
     std::string sresp = "";
     DpClient_SendDpReqToString(MSG_GET_DEVINFO, 0,
                                NULL, 0, &sresp, DEF_TIMEOUT_MSEC);
@@ -229,7 +256,7 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     reply = true;
     jresp[MSG_STATE] = RET_FAILED;
 
-    bool res = video_catch_.OSDAdjust(jreq[MSG_BODY]);
+    bool res = vdo_catch_->OSDAdjust(jreq[MSG_BODY]);
     if (res) {
       Json::Value josd = jreq[MSG_BODY];
       std::string sosd = josd.toStyledString();
@@ -239,6 +266,18 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
       if (res == KVDB_RET_SUCCEED) {
         jresp[MSG_STATE] = RET_SUCCESS;
       }
+    }
+  } else if (0 == strncmp(dmp->method, MSG_GET_ALGINFO, MAX_METHOD_SIZE)) {
+    reply = true;
+    jresp[MSG_STATE] = RET_FAILED;
+
+    // 获取算法参数
+    char sver[64] = { 0 };
+    if (IVA_ERROR_NO_ERROR == sdk_iva_get_version(sver)) {
+      jresp[MSG_STATE] = RET_SUCCESS;
+
+      std::string ss = sver;
+      jresp[MSG_BODY]["version"] = ss;
     }
   }
 
@@ -274,4 +313,4 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
   //vzbase::Thread::Current()->PostDelayed(2*1000, this, THREAD_MSG_SET_DEV_ADDR);
   //}
 }
-}  // namespace imx6q
+}  // namespace platform

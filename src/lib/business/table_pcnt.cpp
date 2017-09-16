@@ -8,7 +8,7 @@
 
 #include "vzbase/helper/stdafx.h"
 
-#include "alg/basedefine.h"
+#include "platform/basedefines.h"
 #include "vzbase/base/vmessage.h"
 #include "vzbase/base/timeutils.h"
 

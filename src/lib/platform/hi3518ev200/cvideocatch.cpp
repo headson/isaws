@@ -5,17 +5,17 @@
 #include "systemv/shm/vzshm_c.h"
 #include "vzbase/helper/stdafx.h"
 
+#include "platform/clistenmessage.h"
+
 #include "vzbase/base/vmessage.h"
 #include "dispatcher/sync/dpclient_c.h"
 
 extern void *vpss_chn_dump(void* arg);
-extern void *send_usr_frame(void *arg);
 
 CVideoCatch::CVideoCatch() {
   sys_enc.pid = 0;
   sys_enc.have_start = 0;
 
-  usr_enc.pid = 0;
   usr_enc.chn = -1;
 
   chn1_yuv.pid = 0;
@@ -554,15 +554,6 @@ bool CVideoCatch::Start() {
   sys_enc.shm[2].SetWidth(SHM_VIDEO_2_W);
   sys_enc.shm[2].SetHeight(SHM_VIDEO_2_H);
 
-  // image 0 to alg
-  bres = chn1_yuv.shm.Create(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
-  if (bres == false) {
-    LOG(L_ERROR) << "can't open share memory.";
-    return -1;
-  }
-  chn1_yuv.shm.SetWidth(SHM_IMAGE_0_W);
-  chn1_yuv.shm.SetHeight(SHM_IMAGE_0_H);
-
   //
   pthread_create(&sys_enc.pid, NULL, VideoVencClassic, this);
 
@@ -576,7 +567,6 @@ bool CVideoCatch::Start() {
   pthread_create(&chn1_yuv.pid, NULL, vpss_chn_dump, &chn1_yuv);
 
   usr_enc.chn = 2;
-  pthread_create(&usr_enc.pid, NULL, send_usr_frame, &usr_enc);
   return true;
 }
 
@@ -673,4 +663,19 @@ HI_S32 CVideoCatch::GetOneFrame(HI_S32 chn, VENC_STREAM_S *pStream) {
     }
   }
   return 0;
+}
+
+int CVideoCatch::GetOneImage(void *pdata, unsigned int ndata) {
+  if (platform::CListenMessage::Instance()->GetAlgCtrl()) {
+    platform::CListenMessage::Instance()->GetAlgCtrl()->OnImage(pdata, ndata);
+  }
+  return 0;
+}
+
+extern void SendUsrImageToEncode(VENC_CHN chn,
+                                 const void *pimg, unsigned int nimg,
+                                 unsigned int nwidth, unsigned int nheight);
+void CVideoCatch::EncUsrImage(const void *pdata, unsigned int ndata,
+                             unsigned int nwidth, unsigned int nheight) {
+  SendUsrImageToEncode(usr_enc.chn, pdata, ndata, nwidth, nheight);
 }

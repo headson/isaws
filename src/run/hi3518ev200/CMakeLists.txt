@@ -74,6 +74,7 @@ MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
+		libcount.so
 		platform
 		systemv
 		dpclient

@@ -3,7 +3,7 @@
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
 
-#include "platform/hi3518ev200/clistenmessage.h"
+#include "platform/clistenmessage.h"
 
 int SignalHandle(int n_signal, short events, const void *p_usr_arg) {
   if (n_signal == SIGINT) {
@@ -24,7 +24,7 @@ int SignalHandle(int n_signal, short events, const void *p_usr_arg) {
       n_signal == SIGTERM ||
       n_signal == SIGSEGV ||
       n_signal == SIGABRT) {
-    hi3518e::CListenMessage::Instance()->Stop();
+    platform::CListenMessage::Instance()->Stop();
     LOG(L_WARNING) << "End of the platform app";
     exit(EXIT_SUCCESS);
   }
@@ -48,9 +48,9 @@ int main(int argc, char* argv[]) {
   DpClient_Init(DEF_DP_SRV_IP, DEF_DP_SRV_PORT);
   Kvdb_Start(DEF_KVDB_SRV_IP, DEF_KVDB_SRV_PORT);
 
-  bool b_ret = hi3518e::CListenMessage::Instance()->Start();
+  bool b_ret = platform::CListenMessage::Instance()->Start();
   while (b_ret) {
-    hi3518e::CListenMessage::Instance()->RunLoop();
+    platform::CListenMessage::Instance()->RunLoop();
   }
 
   return 0;

@@ -64,7 +64,6 @@ else()
 		systemserver
 		dpclient
 		vzconn
-		vzlogging
 		vzbase
 		${VZPROJECT_LINK_LIB}
 	)

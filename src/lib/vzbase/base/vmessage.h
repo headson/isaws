@@ -108,8 +108,8 @@ typedef enum _MSG_RET {
 #define MSG_REMOTE_5_IR       "remote_5_ir"       // 远端5组IR
 
 //////////////////////////////////////////////////////////////////////////
-#define MSG_GET_IVAINFO       "get_ivainfo"       // 获取算法信息
-#define MSG_SET_IVAINFO       "set_ivainfo"       // 设置算法信息
+#define MSG_GET_ALGINFO       "get_alginfo"       // 获取算法信息
+#define MSG_SET_ALGINFO       "set_alginfo"       // 设置算法信息
 
 #define MSG_RESET_PCNUM       "reset_pcnum"       // 重置计数
 

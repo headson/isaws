@@ -62,7 +62,7 @@ static HI_U32             u32Size = 0;
   } while (0)
 
 /*When saving a file,sp420 will be denoted by p420 and sp422 will be denoted by p422 in the name of the file */
-void sample_yuv_dump(VIDEO_FRAME_S* pVBuf, CVideoCatch::TAG_CHN_YUV *pYuv) {
+void sample_yuv_dump(VIDEO_FRAME_S* pVBuf, CVideoCatch *pThiz) {
   unsigned int w, h;
   char* pVBufVirt_Y;
   char* pVBufVirt_C;
@@ -141,10 +141,12 @@ void sample_yuv_dump(VIDEO_FRAME_S* pVBuf, CVideoCatch::TAG_CHN_YUV *pYuv) {
   fprintf(stderr, "done %d!\n", pVBuf->u32TimeRef);
   fflush(stderr);
 #else
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  pYuv->shm.Write((const char*)pUserPageAddr[0], u32Size,
-                   tv.tv_sec, tv.tv_usec);
+  //struct timeval tv;
+  //gettimeofday(&tv, NULL);
+  //pYuv->shm.Write((const char*)pUserPageAddr[0], u32Size,
+  //                 tv.tv_sec, tv.tv_usec);
+  pThiz->GetOneImage(pUserPageAddr[0], u32Size);
+
 #endif
 
   HI_MPI_SYS_Munmap(pUserPageAddr[0], u32Size);
@@ -340,7 +342,7 @@ void* vpss_chn_dump(void* pArg) {
       }
       hHandle = -1;
       /* save VO frame to file */
-      sample_yuv_dump(&stFrmInfo.stVFrame, (CVideoCatch::TAG_CHN_YUV*)pArg);
+      sample_yuv_dump(&stFrmInfo.stVFrame, (CVideoCatch*)pArg);
 
       HI_MPI_VB_ReleaseBlock(stMem.hBlock);
 
@@ -356,7 +358,7 @@ void* vpss_chn_dump(void* pArg) {
       }
 
     } else {
-      sample_yuv_dump(&stFrmInfo.stVFrame, (CVideoCatch::TAG_CHN_YUV*)pArg);
+      sample_yuv_dump(&stFrmInfo.stVFrame, (CVideoCatch*)pArg);
     }
 
     HI_MPI_VPSS_ReleaseChnFrame(vGrp, vChn, &stFrame);

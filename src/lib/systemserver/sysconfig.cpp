@@ -147,7 +147,7 @@ void CListenMessage::GetAlgVer() {
   if (!sys_info_.alg_version.empty()) {
     // dp获取算法信息
     std::string sresp = "";
-    DpClient_SendDpReqToString(MSG_GET_IVAINFO, 0,
+    DpClient_SendDpReqToString(MSG_GET_ALGINFO, 0,
                                NULL, 0, &sresp,
                                DEF_TIMEOUT_MSEC);
     LOG(L_INFO) << sresp;
@@ -157,7 +157,7 @@ void CListenMessage::GetAlgVer() {
       sys_info_.alg_version = jresp[MSG_BODY]["version"].asString();
     } else {
       sys_info_.alg_version = "";
-      LOG(L_ERROR) << "MSG_GET_IVAINFO failed.";
+      LOG(L_ERROR) << "MSG_GET_ALGINFO failed.";
     }
   }
 }
