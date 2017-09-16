@@ -60,3 +60,10 @@ MESSAGE(STATUS "Step 6 : link with other library")
 
 TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 )
+
+IF(UNIX)
+    add_custom_command(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
+        COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libjsoncpp.so
+        COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libjsoncpp.so ${FTP_DIR}/libjsoncpp.so
+	)
+ENDIF()

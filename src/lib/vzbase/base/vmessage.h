@@ -7,7 +7,15 @@
 
 #define SW_VERSION_ "V100.00.00 "
 #define HW_VERSION_ "V100.00.00 "
+#ifdef _WIN32
+// DpClient_Init设置dispatcher_server dp地址
+#define DEF_DP_SRV_IP         "192.168.1.86"
+#define DEF_DP_SRV_PORT       5291
 
+// KvdbClient_Init设置dispatcher_server kvdb地址
+#define DEF_KVDB_SRV_IP       "192.168.1.86"
+#define DEF_KVDB_SRV_PORT     5299
+#else
 // DpClient_Init设置dispatcher_server dp地址
 #define DEF_DP_SRV_IP         "127.0.0.1"
 #define DEF_DP_SRV_PORT       5291
@@ -15,6 +23,7 @@
 // KvdbClient_Init设置dispatcher_server kvdb地址
 #define DEF_KVDB_SRV_IP       "127.0.0.1"
 #define DEF_KVDB_SRV_PORT     5299
+#endif
 
 // WEB Server 监听端口和网页存储路径
 #define DEF_WEB_SRV_PORT      80
@@ -36,7 +45,7 @@
 #define DEF_SOFTWARE_FILE     "/mnt/app/exec/software.ver"
 #define DB_PCOUNT_FILEPATH    "/mnt/usr/pcount.db"
 #define UPLINK_ADDR_CONFIG    "/mnt/usr/remote_address.json"
-#define DEF_ALG_CONFIG_FILE   "/mnt/etc/iva.json"
+#define DEF_ALG_CONFIG_FILE   "/mnt/use/iva.json"
 #define DEF_UPLOAD_FILENAME   "/tmp/upload.tar"
 #endif
 

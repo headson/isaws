@@ -10,19 +10,15 @@ void SendUsrImageToEncode(VENC_CHN chn,
                           const void *pimg, unsigned int nimg,
                           unsigned int nwidth, unsigned int nheight) {
   int nres = 0;
-  HI_U32 frame = 0;
-  unsigned int w_sec = 0, w_usec = 0;
   const HI_U32 IMAGE_WIDTH = SHM_IMAGE_1_W;
   const HI_U32 IMAGE_HEIGHT = SHM_IMAGE_1_H;
 
-  HI_U32 phyYaddr;
-  HI_U8 *pVirYaddr;
   VIDEO_FRAME_INFO_S vdo_frm_info_;
-  VB_BLK handleY = VB_INVALID_HANDLE;
 
   /* 分配物理buffer并且映射到用户空间 */
+  VB_BLK handleY = VB_INVALID_HANDLE;
   do {
-    handleY = HI_MPI_VB_GetBlock(VB_INVALID_POOLID, 
+    handleY = HI_MPI_VB_GetBlock(VB_INVALID_POOLID,
                                  IMAGE_WIDTH * IMAGE_HEIGHT * 3 / 2, NULL);
   } while (VB_INVALID_HANDLE == handleY);
   if (handleY == VB_INVALID_HANDLE) {
@@ -31,12 +27,13 @@ void SendUsrImageToEncode(VENC_CHN chn,
   }
   VB_POOL poolID = HI_MPI_VB_Handle2PoolId(handleY);
 
-  phyYaddr = HI_MPI_VB_Handle2PhysAddr(handleY);
+  HI_U32 phyYaddr = HI_MPI_VB_Handle2PhysAddr(handleY);
   if (phyYaddr == 0) {
     printf("HI_MPI_VB_Handle2PhysAddr for handleY failed\n");
     return;
   }
-  pVirYaddr = (HI_U8*)HI_MPI_SYS_Mmap(phyYaddr, IMAGE_WIDTH * IMAGE_HEIGHT * 3 / 2);
+  HI_U8 *pVirYaddr = (HI_U8*)HI_MPI_SYS_Mmap(
+                       phyYaddr, IMAGE_WIDTH * IMAGE_HEIGHT * 3 / 2);
 
   /* 图像帧结构初始化 */
   memset(&(vdo_frm_info_.stVFrame), 0x00, sizeof(VIDEO_FRAME_S));
@@ -57,10 +54,16 @@ void SendUsrImageToEncode(VENC_CHN chn,
   vdo_frm_info_.stVFrame.u32Field = VIDEO_FIELD_FRAME;/* Intelaced D1,otherwise VIDEO_FIELD_FRAME */
 
   memcpy(pVirYaddr, pimg, IMAGE_WIDTH * IMAGE_HEIGHT);
-  memset(pVirYaddr + IMAGE_WIDTH * IMAGE_HEIGHT, 
+  memset(pVirYaddr + IMAGE_WIDTH * IMAGE_HEIGHT,
          128, IMAGE_WIDTH * IMAGE_HEIGHT / 2);
-  nres = HI_MPI_VENC_SendFrame(chn, &vdo_frm_info_, 400);
-   
+
+  static HI_U32 frame = 0;
+  vdo_frm_info_.stVFrame.u64pts = frame++ * 40; // (HI_U64)w_sec << 32 | w_usec;
+  vdo_frm_info_.stVFrame.u32TimeRef = frame * 2;
+  nres = HI_MPI_VENC_SendFrame(chn, &vdo_frm_info_, 1000);
+  /*LOG_INFO("HI_MPI_VENC_SendFrame 0x%x %d %d.", nres, 
+           IMAGE_WIDTH, IMAGE_HEIGHT);*/
+
   /* 释放掉获取的vb物理地址和虚拟地址 */
   HI_MPI_SYS_Munmap(pVirYaddr, IMAGE_WIDTH * IMAGE_HEIGHT * 3 / 2);
   HI_MPI_VB_ReleaseBlock(handleY);

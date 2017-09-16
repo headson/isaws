@@ -144,11 +144,13 @@ int CListenMessage::SetDNS(in_addr_t ip) {
 
 //////////////////////////////////////////////////////////////////////////
 void CListenMessage::GetAlgVer() {
-  if (!sys_info_.alg_version.empty()) {
+  if (sys_info_.alg_version.empty()) {
+    std::string sreq = "{\"cmd\":\"get_alginfo\" }";
     // dp获取算法信息
     std::string sresp = "";
     DpClient_SendDpReqToString(MSG_GET_ALGINFO, 0,
-                               NULL, 0, &sresp,
+                               sreq.c_str(), sreq.size(),
+                               &sresp,
                                DEF_TIMEOUT_MSEC);
     LOG(L_INFO) << sresp;
     Json::Value jresp;
@@ -199,10 +201,10 @@ void CListenMessage::GetHwInfo() {
   SetDevInfo(jinfo);
 
   // save to kvdb
-  std::string sjson = jinfo.toStyledString();
-  Kvdb_SetKey(KVDB_HW_INFO,
-              strlen(KVDB_HW_INFO),
-              sjson.c_str(), sjson.size());
+  //std::string sjson = jinfo.toStyledString();
+  //Kvdb_SetKey(KVDB_HW_INFO,
+  //            strlen(KVDB_HW_INFO),
+  //            sjson.c_str(), sjson.size());
 
   // version
   GetAlgVer();

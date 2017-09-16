@@ -162,11 +162,11 @@ bool CAlgCtrl::OnImage(void *pimg, unsigned int nimg) {
         frame.param[MAX_IR_NUM + i] = ir_remote_.ir[i];
       }
     }
-    LOG_WARNING("ir value: %d %d %d %d %d, remote ir value: %d %d %d %d %d",
-                frame.param[0], frame.param[1], frame.param[2],
-                frame.param[3], frame.param[4],
-                frame.param[MAX_IR_NUM+0], frame.param[MAX_IR_NUM+1], frame.param[MAX_IR_NUM+2],
-                frame.param[MAX_IR_NUM+3], frame.param[MAX_IR_NUM+4]);
+    //LOG_WARNING("ir value: %d %d %d %d %d, remote ir value: %d %d %d %d %d",
+    //            frame.param[0], frame.param[1], frame.param[2],
+    //            frame.param[3], frame.param[4],
+    //            frame.param[MAX_IR_NUM+0], frame.param[MAX_IR_NUM+1], frame.param[MAX_IR_NUM+2],
+    //            frame.param[MAX_IR_NUM+3], frame.param[MAX_IR_NUM+4]);
 
     if (remote_dp_client_) {
       remote_dp_client_->SendDpMessage(MSG_REMOTE_5_IR, 0,

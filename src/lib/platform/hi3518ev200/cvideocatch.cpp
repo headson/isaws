@@ -614,15 +614,15 @@ bool CVideoCatch::OSDAdjust(const Json::Value &jchn) {
         !jchn[i]["size"].isNull()) {
       OSD_Adjust(0,
                  jchn[i]["handle"].asInt(),
-                 SHM_IMAGE_0_W * jchn[i]["x"].asInt() / 100,
-                 SHM_IMAGE_0_H * jchn[i]["y"].asInt() / 100,
+                 SHM_VIDEO_0_W * jchn[i]["x"].asInt() / 100,
+                 SHM_VIDEO_0_H * jchn[i]["y"].asInt() / 100,
                  (i == 2) ? 128 : 10,
                  ((jchn[i]["enable"].asInt() > 0) ? HI_TRUE : HI_FALSE));
 
       OSD_Adjust(1,
                  MAX_OSD_HDL + jchn[i]["handle"].asInt(),
-                 SHM_IMAGE_1_W * jchn[i]["x"].asInt() / 100,
-                 SHM_IMAGE_1_H * jchn[i]["y"].asInt() / 100,
+                 SHM_VIDEO_1_W * jchn[i]["x"].asInt() / 100,
+                 SHM_VIDEO_1_H * jchn[i]["y"].asInt() / 100,
                  (i == 2) ? 128 : 10,
                  ((jchn[i]["enable"].asInt() > 0) ? HI_TRUE : HI_FALSE));
 
@@ -677,5 +677,5 @@ extern void SendUsrImageToEncode(VENC_CHN chn,
                                  unsigned int nwidth, unsigned int nheight);
 void CVideoCatch::EncUsrImage(const void *pdata, unsigned int ndata,
                              unsigned int nwidth, unsigned int nheight) {
-  SendUsrImageToEncode(usr_enc.chn, pdata, ndata, nwidth, nheight);
+  SendUsrImageToEncode(2, pdata, ndata, nwidth, nheight);
 }
