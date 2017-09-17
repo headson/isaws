@@ -121,6 +121,7 @@ typedef enum _MSG_RET {
 #define MSG_SET_ALGINFO       "set_alginfo"       // 设置算法信息
 
 #define MSG_RESET_PCNUM       "reset_pcnum"       // 重置计数
+#define MSG_EVENT_RESULT      "event_result"      // 事件结果;business 发出
 
 #define MSG_CATCH_EVENT       "catch_event"       // 算法事件
 

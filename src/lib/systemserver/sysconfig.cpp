@@ -228,6 +228,10 @@ bool CListenMessage::GetDevInfo(Json::Value &jbody) {
   GetAlgVer();  // if alg_version is empty
   jbody["alg_version"] = sys_info_.alg_version;
 
+  // 系统设备状态
+  jbody["sys_dev_sta"] = 0;
+  
+  // net
   jbody["net"]["wifi_en"] = sys_info_.net.wifi_en;
   jbody["net"]["dhcp_en"] = sys_info_.net.dhcp_en;
 
@@ -238,11 +242,18 @@ bool CListenMessage::GetDevInfo(Json::Value &jbody) {
   jbody["net"]["ip_addr"] = inet_ntoa(*((struct in_addr*)&net_cfg.ifaddr));
   jbody["net"]["netmask"] = inet_ntoa(*((struct in_addr*)&net_cfg.netmask));
   jbody["net"]["gateway"] = inet_ntoa(*((struct in_addr*)&net_cfg.gateway));
-  jbody["net"]["phy_mac"] = net_cfg.mac;
+  char smac[32] = {0};
+  snprintf(smac, 31, "%02x:%02x:%02x:%02x:%02x:%02x\n", 
+           net_cfg.mac[0], net_cfg.mac[1], net_cfg.mac[2], 
+           net_cfg.mac[3], net_cfg.mac[4], net_cfg.mac[5]);
+  jbody["net"]["phy_mac"] = smac;
 
   jbody["net"]["dns_addr"] = inet_ntoa(*((struct in_addr*)&net_cfg.dns));
 
   jbody["net"]["http_port"] = sys_info_.net.http_port;
+
+  // record
+  jbody["rec_size"] = 0;
   return true;
 }
 
@@ -270,10 +281,10 @@ bool CListenMessage::SetDevInfo(const Json::Value &jbody) {
   }
 
   if (jbody["net"].isMember("wifi_en") &&
-      jbody["net"]["wifi_en"].isUInt() &&
-      sys_info_.net.wifi_en != jbody["net"]["wifi_en"].asUInt()) {
+      jbody["net"]["wifi_en"].isInt() &&
+      sys_info_.net.wifi_en != jbody["net"]["wifi_en"].asInt()) {
     bsave++;
-    sys_info_.net.wifi_en = jbody["net"]["wifi_en"].asUInt();
+    sys_info_.net.wifi_en = jbody["net"]["wifi_en"].asInt();
   }
 
   if (jbody["net"].isMember("dhcp_en") &&

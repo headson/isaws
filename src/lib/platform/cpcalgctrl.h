@@ -33,6 +33,8 @@ class CAlgCtrl {
 
   bool  OnImage(void *pimg, unsigned int nimg);
 
+  void  GetAlgVer(DpMessage *dmp);
+
  protected:
   //智能视频分析回调函数，用于调试
   static void AlgDebugCallback(sdk_iva_debug_info *pDebug);

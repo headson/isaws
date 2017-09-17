@@ -25,18 +25,6 @@
 #define SHM_VIDEO_2_H     288
 #define SHM_VIDEO_2_SIZE  (SHM_VIDEO_2_W * SHM_VIDEO_2_H + 512)
 
-// 采集图像1-送给算法
-#define SHM_IMAGE_0       "/dev/shm/image_0"
-#define SHM_IMAGE_0_W     352
-#define SHM_IMAGE_0_H     288
-#define SHM_IMAGE_0_SIZE  (SHM_IMAGE_0_W * SHM_IMAGE_0_H * 3 / 2 + 512)
-
-// 算法处理后图像1-调试图像
-#define SHM_IMAGE_1       "/dev/shm/image_1"
-#define SHM_IMAGE_1_W     352
-#define SHM_IMAGE_1_H     288
-#define SHM_IMAGE_1_SIZE  (SHM_IMAGE_1_W * SHM_IMAGE_1_H * 3 / 2 + 512)
-
 #define SHM_AUDIO_0       "/dev/shm/audio_0"
 #define SHM_AUDIO_0_SIZE  1024
 

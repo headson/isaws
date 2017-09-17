@@ -24,7 +24,9 @@
 #include <arpa/inet.h>
 
 typedef int             SOCKET;
+#ifndef INVALID_SOCKET
 #define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 #endif
 
 #include "vzlogging/base/vzbases.h"

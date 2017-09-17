@@ -20,7 +20,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#define INVALID_SOCKET -1
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 
 typedef int       HANDLE;
 #define HDL_NULL  -1

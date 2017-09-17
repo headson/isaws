@@ -401,7 +401,9 @@ long long strtoll(const char *, char **, int);
 #endif
 
 typedef int sock_t;
-#define INVALID_SOCKET (-1)
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 #define SIZE_T_FMT "zu"
 typedef struct stat cs_stat_t;
 #define DIRSEP '/'
@@ -595,7 +597,9 @@ typedef struct stat cs_stat_t;
 #undef timeval 
 
 typedef int sock_t;
-#define INVALID_SOCKET (-1)
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 
 #define to64(x) strtoll(x, NULL, 10)
 #define INT64_FMT PRId64
@@ -646,7 +650,9 @@ int inet_pton(int af, const char *src, void *dst);
 /* Amalgamated: #include "common/platforms/simplelink/cs_simplelink.h" */
 
 typedef int sock_t;
-#define INVALID_SOCKET (-1)
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 #define SIZE_T_FMT "u"
 typedef struct stat cs_stat_t;
 #define DIRSEP '/'
@@ -762,7 +768,9 @@ int _stat(const char *pathname, struct stat *st);
 /* Amalgamated: #include "common/platforms/simplelink/cs_simplelink.h" */
 
 typedef int sock_t;
-#define INVALID_SOCKET (-1)
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 #define SIZE_T_FMT "u"
 typedef struct stat cs_stat_t;
 #define DIRSEP '/'
@@ -963,7 +971,9 @@ struct timeval {
 #include <simplelink.h>
 
 typedef int sock_t;
-#define INVALID_SOCKET (-1)
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 
 #define to64(x) strtoll(x, NULL, 10)
 #define INT64_FMT PRId64
@@ -1603,7 +1613,9 @@ typedef struct stat cs_stat_t;
 #define LWIP_SOCKET 0
 #endif
 
-#define INVALID_SOCKET (-1)
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET  -1
+#endif  // INVALID_SOCKET
 #define SOMAXCONN 10
 typedef int sock_t;
 

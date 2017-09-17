@@ -17,7 +17,7 @@
 #include "web_server/clistenmessage.h"
 
 CFlvOverHttp::CFlvOverHttp()
-  : thiz_ptr_(this)
+  : thiz_ptr_(NULL)
   , exit_flag_(0)
   , evt_loop_(NULL)
   , sock_(NULL)
@@ -53,6 +53,7 @@ bool CFlvOverHttp::Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop,
   set_socket_nonblocking(sock);
 
   evt_loop_ = evt_loop;
+  thiz_ptr_.reset(this);
   evt_send_.Init(evt_loop_, EvtSend, &thiz_ptr_);
   evt_timer_.Init(evt_loop_, EvtTimer, &thiz_ptr_);
 
@@ -61,7 +62,6 @@ bool CFlvOverHttp::Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop,
     LOG(L_ERROR) << "shm video failed.";
     return false;
   }
-
   // file = fopen("./test2.flv", "wb+");
   return true;
 }
@@ -87,7 +87,7 @@ int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead) {
   }
 
   int ndata = 0;
-  char sdata[2048] = {0};
+  char sdata[1024] = {0};
   char *p_dst = NULL;
   p_dst = flv_shm_.HeaderAndMetaDataTag(sdata,
                                         width, height,

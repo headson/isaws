@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 #########################################################################
 
 # Basic environment setting
-SET(BUILD_PROJECT_NAME "platform_app")
+SET(BUILD_PROJECT_NAME "pack_image")
 
 #########################################################################
 MESSAGE(STATUS "Print the include directores")
@@ -13,7 +13,6 @@ foreach(inc_dir ${inc_dirs})
 endforeach()
 
 #########################################################################
-LINK_DIRECTORIES(${PROJECT_SOURCE_DIR}/src/lib/platform/hi3516a/mpp/lib/)
 MESSAGE(STATUS "Print the link directores")
 get_property(link_dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
 	PROPERTY LINK_DIRECTORIES)
@@ -24,48 +23,35 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project source")
 SET(SRC_LIST 
-	${CMAKE_CURRENT_SOURCE_DIR}/hi3516a_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/pack_image_main.cpp
 )
+
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/hi3516a_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/getopt.h
+	${CMAKE_CURRENT_SOURCE_DIR}/getopt.c
+	${CMAKE_CURRENT_SOURCE_DIR}/pack_image_main.cpp
 )
 #########################################################################
 MESSAGE(STATUS "Step 4 : Add project define")
 
 #########################################################################
 MESSAGE(STATUS "Step 5 : Add executable or library target")
+IF(WIN32)
+SET(SRC_OPT_LIST 
+	${CMAKE_CURRENT_SOURCE_DIR}/getopt.h
+	${CMAKE_CURRENT_SOURCE_DIR}/getopt.c
+)
+ADD_EXECUTABLE(${BUILD_PROJECT_NAME} ${SRC_LIST} ${SRC_OPT_LIST})
+ELSE()
 ADD_EXECUTABLE(${BUILD_PROJECT_NAME} ${SRC_LIST})
+ENDIF()
+
 SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} PROPERTY FOLDER ${PROJECT_SET_NAME_RUN})
 IF(UNIX)
     ADD_CUSTOM_COMMAND(TARGET ${BUILD_PROJECT_NAME} POST_BUILD 
         COMMAND ${CMAKE_STRIP} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME}
-        #COMMAND mv ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} ${FTP_DIR}/${BUILD_PROJECT_NAME})
-		COMMAND mv ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} /tftpboot/hi3516a/nfs/${BUILD_PROJECT_NAME})
+        COMMAND mv ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${BUILD_PROJECT_NAME} ${FTP_DIR}/${BUILD_PROJECT_NAME})
 ENDIF()
 
 #########################################################################
 MESSAGE(STATUS "Step 6 : link with other library")
-if(WIN32)
-	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libplatform.lib
-	)
-else()
-	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		${YHPROJECT_LINK_LIB}
-		libplatform.a
-		libshm.a
-		libmpi.a 
-		libVoiceEngine.a 
-		libvqev2.a 
-		libresampler.a 
-		libdvqe.a  
-		libisp.a 
-		libsns_imx178.a 
-		lib_cmoscfg.a 
-		lib_iniparser.a 
-		lib_hiae.a 
-		lib_hiawb.a 
-		lib_hiaf.a 
-		lib_hidefog.a
-	)
-endif()
