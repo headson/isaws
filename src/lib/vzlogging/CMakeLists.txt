@@ -121,5 +121,5 @@ IF(UNIX)
     add_custom_command(TARGET ${BUILD_PROJECT_NAME_LOGGING} POST_BUILD 
         COMMAND ${CMAKE_STRIP} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzlogging.so
         COMMAND cp ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_DEBUG}/libvzlogging.so ${FTP_DIR}/libvzlogging.so
-		)
+    )
 ENDIF()

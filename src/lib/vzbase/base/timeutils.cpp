@@ -99,6 +99,10 @@ uint32 Time() {
   return static_cast<uint32>(TimeNanos() / kNumNanosecsPerMillisec);
 }
 
+uint64 TimeMsec() {
+  return static_cast<uint64>(TimeNanos() / kNumNanosecsPerMillisec);
+}
+
 #if defined(WIN32)
 static const uint64 kFileTimeToUnixTimeEpochOffset = 116444736000000000ULL;
 
@@ -145,14 +149,14 @@ static struct tm *gmtime_r(const time_t *timep, struct tm *result) {
 #endif  // WIN32
 
 void CurrentTmTime(struct tm *tm, int *microseconds) {
-  struct timeval timeval;
-  if (gettimeofday(&timeval, NULL) < 0) {
+  struct timeval tv;
+  if (gettimeofday(&tv, NULL) < 0) {
     // Incredibly unlikely code path.
-    timeval.tv_sec = timeval.tv_usec = 0;
+    tv.tv_sec = tv.tv_usec = 0;
   }
-  time_t secs = timeval.tv_sec;
+  time_t secs = tv.tv_sec;
   gmtime_r(&secs, tm);
-  *microseconds = timeval.tv_usec;
+  *microseconds = tv.tv_usec;
 }
 
 uint32 TimeAfter(int32 elapsed) {
@@ -227,7 +231,7 @@ int64 CurrentSystemTicket() {
   return 0;
 }
 
-uint32 ToTimet(int32 year, int32 month, int32 day,
+time_t ToTimet(int32 year, int32 month, int32 day,
                int32 hour, int32 minute, int32 second) {
   struct tm tt;
   tt.tm_year = year - 1900;
@@ -237,7 +241,7 @@ uint32 ToTimet(int32 year, int32 month, int32 day,
   tt.tm_min = minute;
   tt.tm_sec = second;
   tt.tm_isdst = -1;
-  return (uint32)mktime(&tt);
+  return mktime(&tt);
 }
 
 #ifdef __cplusplus
@@ -271,7 +275,7 @@ static bool isLoopYear(int32 ny) {
 
 static int32 kMonOfDays[] = {31, 28, 31, 30, 31, 30,
                              31, 31, 30, 31, 30, 31};
-int32 GetMonthOfDays(int32 ny, int32 month) {
+int32 GetMonthOfDays(int32 year, int32 month) {
   if (month < 1 || month > 12) {
     printf("param is error.\n");
     return -1;

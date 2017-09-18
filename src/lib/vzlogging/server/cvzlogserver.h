@@ -120,8 +120,8 @@ class CVzLogFile {
 
  protected:
   int     n_file_limit_size_;                // 单个文件大小
-  char    s_err_fname_[LEN_FILEPATH + 1];    // 错误文件名
-  char    s_filename_[2][LEN_FILEPATH + 1];  // 文件名
+  char    s_err_fname_[LEN_FILEPATH + 4];    // 错误文件名
+  char    s_filename_[2][LEN_FILEPATH + 4];  // 文件名
   int     n_filename_idx_;                   // 文件名索引
 
  protected:

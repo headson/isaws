@@ -57,6 +57,8 @@ namespace vzbase {
 
   // Returns the current time in milliseconds.
   uint32 Time();
+  uint64 TimeMsec();
+
   // Returns the current time in nanoseconds.
   uint64 TimeNanos();
 
@@ -104,13 +106,13 @@ namespace vzbase {
 
   int64  CurrentSystemTicket();
 
-  uint32 ToTimet(int32 year, int32 month, int32 day,
+  time_t ToTimet(int32 year, int32 month, int32 day,
                  int32 hour, int32 minute, int32 second);
 
 #ifdef __cplusplus
   std::string SecToString(uint32 sec);
 
-  int32       GetMonthOfDays(int32 ny, int32 month);
+  int32       GetMonthOfDays(int32 year, int32 month);
 #endif
 
 }  // namespace vzbase

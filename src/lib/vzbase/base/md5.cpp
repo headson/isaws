@@ -113,9 +113,11 @@ bool CompereFileKey(const char *path_name, const char *file_key){
   for (int i = 0; i < 16; i++){
     printf("%02x", digest[i]);
     if (digest[i] != file_key[i]){
+      fclose(fp);
       return false;
     }
   }
+  fclose(fp);
   return true;
 }
 
