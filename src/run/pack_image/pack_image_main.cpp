@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <string>
 
@@ -150,7 +151,7 @@ int UnpackImage(int argc, char* argv[]) {
   }
   char sboot[256] = "hello worlds:";
   TAG_HEADER *phead = (TAG_HEADER *)pimg;
-  char sver[65] = "101.100.101.100.100....";
+  char sver[65] = "100.101.100.101.100....";
   const char *sep = "."; //可按多个字符来分割
   char *p = strtok(sver, sep);
   for (int i = 0; i < DEF_IMG_CNT && p; i++) {
@@ -174,6 +175,9 @@ int UnpackImage(int argc, char* argv[]) {
     sprintf(spos, "%dK(%s),",
             phead->fimg[i].part_size, phead->fimg[i].fname);
     memcpy(sboot + strlen(sboot), spos, strlen(spos));
+
+    abs_pos += phead->fimg[i].file_pos * 1024;
+
     // the same version is not update
     if (phead->fimg[i].part_vers == phead->fimg[i].last_vers) {
       printf("%s is not new version.\n", phead->fimg[i].fname);
@@ -188,7 +192,7 @@ int UnpackImage(int argc, char* argv[]) {
       printf("open %s failed.\n", sf.c_str());
       continue;
     }
-    abs_pos += phead->fimg[i].file_pos * 1024;
+    
 
     char *img_bng = pimg + abs_pos + 32;
     int   img_len = phead->fimg[i].file_size;
@@ -213,8 +217,8 @@ int UnpackImage(int argc, char* argv[]) {
 }
 
 int main(int argc, char *argv[]) {
-  return PacketImage(argc, argv);
-  //printf("---------------------------------------------------\n");
-  //UnpackImage(argc, argv);
-  //return 0;
+  PacketImage(argc, argv);
+  printf("---------------------------------------------------\n");
+  UnpackImage(argc, argv);
+  return 0;
 }
