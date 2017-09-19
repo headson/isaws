@@ -8,6 +8,8 @@
 #include "platform/basedefines.h"
 #include "vzbase/thread/thread.h"
 
+#include "hi3518ev200/cgpioevent.h"
+
 class CExtDevEvt : public vzbase::MessageHandler {
  public:
   CExtDevEvt(vzbase::Thread *fast_thread);

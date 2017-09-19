@@ -72,6 +72,8 @@ int PacketImage(int argc, char* argv[]) {
 
         std::string sf = img_path;
         sf  +=  head.fimg[i].fname;
+        FILE *img_file = fopen(sf.c_str(), "rb+");
+
         head.fimg[i].file_size = 0;
         while (img_file) {
           char sdata[1024] = {0};
@@ -85,8 +87,11 @@ int PacketImage(int argc, char* argv[]) {
           fwrite(sdata, 1, ndata, out_file);
           head.fimg[i].file_size += ndata;
         }
-        if (head.fimg[i].file_size > head.fimg[i].part_size) {\
-          printf("++++++++++++++++++++this file %s is large part size.\n", head.fimg[i].fname);
+        if (head.fimg[i].file_size > (head.fimg[i].part_size*1024)) {
+          printf("++++++++++++++++++++this file %s size %d is large part size %d.\n",
+                 head.fimg[i].fname, 
+                 head.fimg[i].file_size, 
+                 (head.fimg[i].part_size * 1024));
           return -1;
         }
 
@@ -176,7 +181,7 @@ int UnpackImage(int argc, char* argv[]) {
     }
     // version
     char sv[4] = {0};
-    sprintf(sv, "%03d.", 
+    sprintf(sv, "%03d.",
             phead->fimg[i].part_vers);
     memcpy(sver + i*4, sv, 4);
     // bootargs
@@ -201,7 +206,7 @@ int UnpackImage(int argc, char* argv[]) {
       printf("open %s failed.\n", sf.c_str());
       continue;
     }
-    
+
 
     char *img_bng = pimg + abs_pos;
     int   img_len = phead->fimg[i].file_size;
@@ -220,14 +225,14 @@ int UnpackImage(int argc, char* argv[]) {
   if (strlen(sboot) > 0) {
     sboot[strlen(sboot)-1] = '\0';
   }
-  
+
   printf("%s\n%s\n", sver, sboot);
   return 0;
 }
 
 int main(int argc, char *argv[]) {
   PacketImage(argc, argv);
-  printf("---------------------------------------------------\n");
-  UnpackImage(argc, argv);
+  //printf("---------------------------------------------------\n");
+  //UnpackImage(argc, argv);
   return 0;
 }

@@ -281,7 +281,7 @@ int32 GetMonthOfDays(int32 year, int32 month) {
     return -1;
   }
 
-  if (month == 2 && isLoopYear(ny)) {
+  if (month == 2 && isLoopYear(year)) {
     return 29;
   }
   return kMonOfDays[month-1];

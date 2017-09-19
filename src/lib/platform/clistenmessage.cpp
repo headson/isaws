@@ -8,12 +8,12 @@
 
 #include "json/json.h"
 
+#include "cextdevevt.h"
 #include "basedefines.h"
 
 namespace platform {
 
 static const char  *METHOD_SET[] = {
-  MSG_CATCH_EVENT,        //
   MSG_GET_I_FRAME,        //
   MSG_IRCUT_CTRLS,        //
   MSG_GET_VDO_URL,        //
@@ -30,23 +30,7 @@ CListenMessage::CListenMessage()
   , main_thread_(NULL)
   , alg_ctrl_(NULL)
   , vdo_catch_(NULL) {
-  // GPIO8_0 output
-  HI_MPI_SYS_SetReg(0x200f0100, 0x1);
-
-  HI_U32 nval = 0;
-  HI_MPI_SYS_GetReg(0x201C0400, &nval);
-  nval |= 0x1;
-  HI_MPI_SYS_SetReg(0x201C0400, nval);
-  HI_MPI_SYS_SetReg(0x201c0004, 0x0);   // default value
-
-  // GPIO0_3 output
-  HI_MPI_SYS_SetReg(0x200F0030, 0x0);
-
-  nval = 0;
-  HI_MPI_SYS_GetReg(0x20140400, &nval);
-  nval |= 0x8;
-  HI_MPI_SYS_SetReg(0x20140400, nval);
-  HI_MPI_SYS_SetReg(0x20140020, 0x0);   // default value
+  CGpioEvent::GpioInit();
 }
 
 CListenMessage::~CListenMessage() {
@@ -173,38 +157,14 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
   jresp[MSG_ID] = jreq[MSG_ID].asInt();
 
   bool reply = false;
-  if (0 == strncmp(dmp->method, MSG_CATCH_EVENT, MAX_METHOD_SIZE)) {
-    int n1=0, n2=0;
-    if (jreq[MSG_BODY][ALG_POSITIVE_NUMBER].isInt()) {
-      n1 = jreq[MSG_BODY][ALG_POSITIVE_NUMBER].asInt();
-    }
-    if (jreq[MSG_BODY][ALG_NEGATIVE_NUMBER].isInt()) {
-      n2 = jreq[MSG_BODY][ALG_NEGATIVE_NUMBER].asInt();
-    }
-    char osd[32] = {0};
-    snprintf(osd, 31, "IN:%d OUT:%d", n1, n2);
-
-    vdo_catch_->SetOsdChn2(osd);
-  } else if (0 == strncmp(dmp->method, MSG_IRCUT_CTRLS, MAX_METHOD_SIZE)) {
+  if (0 == strncmp(dmp->method, MSG_IRCUT_CTRLS, MAX_METHOD_SIZE)) {
     reply = true;
 
     // GPIO8_0
     if (jreq[MSG_BODY]["switch"].asInt() > 0) {
-      HI_MPI_SYS_SetReg(0x201c0004, 1);
-      HI_MPI_SYS_SetReg(0x20140020, 0x8);
-
-      /*VENC_COLOR2GREY_S vcs;
-      vcs.bColor2Grey = HI_TRUE;
-      HI_MPI_VENC_SetColor2Grey(0, &vcs);
-      HI_MPI_VENC_SetColor2Grey(1, &vcs);*/
+      CGpioEvent::IRCutOpen();
     } else {
-      HI_MPI_SYS_SetReg(0x201c0004, 0);
-      HI_MPI_SYS_SetReg(0x20140020, 0);
-
-      /*VENC_COLOR2GREY_S vcs;
-      vcs.bColor2Grey = HI_FALSE;
-      HI_MPI_VENC_SetColor2Grey(0, &vcs);
-      HI_MPI_VENC_SetColor2Grey(1, &vcs);*/
+      CGpioEvent::IRCutClose();
     }
     jresp[MSG_STATE] = RET_SUCCESS;
   } else if (0 == strncmp(dmp->method, MSG_GET_VDO_URL, MAX_METHOD_SIZE)) {

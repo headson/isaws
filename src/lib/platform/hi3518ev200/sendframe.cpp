@@ -10,8 +10,8 @@ void SendUsrImageToEncode(VENC_CHN chn,
                           const void *pimg, unsigned int nimg,
                           unsigned int nwidth, unsigned int nheight) {
   int nres = 0;
-  const HI_U32 IMAGE_WIDTH = SHM_IMAGE_1_W;
-  const HI_U32 IMAGE_HEIGHT = SHM_IMAGE_1_H;
+  const HI_U32 IMAGE_WIDTH = SHM_VIDEO_2_W;
+  const HI_U32 IMAGE_HEIGHT = SHM_VIDEO_2_H;
 
   VIDEO_FRAME_INFO_S vdo_frm_info_;
 

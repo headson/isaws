@@ -17,7 +17,7 @@
 #include "web_server/clistenmessage.h"
 
 CFlvOverHttp::CFlvOverHttp()
-  : thiz_ptr_(NULL)
+  : thiz_ptr_()
   , exit_flag_(0)
   , evt_loop_(NULL)
   , sock_(NULL)

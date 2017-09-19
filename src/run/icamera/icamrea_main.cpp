@@ -14,8 +14,8 @@
 
 #pragma comment(lib, "x264/libs/32bit/libx264.lib")
 
-#define VIDEO_WIDTH   SHM_IMAGE_0_W
-#define VIDEO_HEIGHT  SHM_IMAGE_0_H
+#define VIDEO_WIDTH   SHM_VIDEO_2_W
+#define VIDEO_HEIGHT  SHM_VIDEO_2_H
 
 #include "asc8.h"
 #include "yuv420.h"

@@ -3,6 +3,7 @@
 /* Description :
 /************************************************************************/
 #include "cpcalgctrl.h"
+#include "cextdevevt.h"
 #include "basedefines.h"
 #include "clistenmessage.h"
 
@@ -30,13 +31,7 @@ void CAlgCtrl::AlgActionCallback(sdk_iva_output_info *paction) {
 
     Json::FastWriter jfw;
     std::string sjson = jfw.write(jroot);
-    int res = DpClient_SendDpMessage(MSG_CATCH_EVENT, 0,
-                                     sjson.c_str(), sjson.size());
-    if (VZNETDP_FAILURE == res) {
-      // 无论什么原因,send失败,再传一次
-      /*DpClient_SendDpMessage(MSG_CATCH_EVENT, 0,
-                             sjson.c_str(), sjson.size());*/
-    }
+    DpClient_SendDpMessage(MSG_CATCH_EVENT, 0, sjson.c_str(), sjson.size());
 
     last_positive_number = paction->positive_number;
     last_negative_number = paction->negative_number;
@@ -45,31 +40,10 @@ void CAlgCtrl::AlgActionCallback(sdk_iva_output_info *paction) {
                 << " negative_number " << last_negative_number;
   } else if (paction->event_type == IVA_EVENT_SET_DAY_MODE
              || paction->event_type == IVA_EVENT_SET_NIGHT_MODE) {
-    Json::Value jreq;
-    jreq[MSG_CMD] = MSG_IRCUT_CTRLS;
-    jreq[MSG_ID]  = 1;
     if (paction->event_type == IVA_EVENT_SET_DAY_MODE) {
-      jreq[MSG_BODY]["switch"] = 0;
-    } else {
-      jreq[MSG_BODY]["switch"] = 1;
-    }
-    std::string sreq = jreq.toStyledString();
-    std::string sresp = "";
-    int res = DpClient_SendDpReqToString(MSG_IRCUT_CTRLS, 0,
-                                         sreq.c_str(), sreq.size(),
-                                         &sresp, DEF_TIMEOUT_MSEC);
-    if (res == VZNETDP_SUCCEED) {
-      Json::Value jresp;
-      Json::Reader jparse;
-      if (!jparse.parse(sresp, jresp)) {
-        LOG(L_ERROR) << "";
-        return;
-      }
-      if (jresp[MSG_STATE].asInt() == RET_SUCCESS) {
-        LOG(L_INFO) << "ircut control success";
-      } else {
-        LOG(L_INFO) << "ircut control failed";
-      }
+      CGpioEvent::IRCutOpen();
+    } else if (paction->event_type == IVA_EVENT_SET_NIGHT_MODE){
+      CGpioEvent::IRCutClose();
     }
 
     // 更新人数统计OSD

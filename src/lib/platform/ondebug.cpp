@@ -11,10 +11,6 @@
 
 void CAlgCtrl::AlgDebugCallback(sdk_iva_debug_info *pDebug) {
   int nsize = pDebug->debug_image_width*pDebug->debug_image_height*3/2;
-  if (nsize > SHM_IMAGE_1_SIZE) {
-    return;
-  }
-
   if (platform::CListenMessage::Instance()->GetVdoCatch()) {
     platform::CListenMessage::Instance()->GetVdoCatch()->EncUsrImage(
       pDebug->debug_image, nsize,

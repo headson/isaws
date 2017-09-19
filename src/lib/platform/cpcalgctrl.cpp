@@ -43,8 +43,8 @@ bool CAlgCtrl::Start() {
   memset(&param, 0, sizeof(param));
   param.debug_callback_fun  = AlgDebugCallback;
   param.output_callback_fun = AlgActionCallback;
-  param.image_width         = SHM_IMAGE_0_W;
-  param.image_height        = SHM_IMAGE_0_H;
+  param.image_width         = SHM_VIDEO_2_W;
+  param.image_height        = SHM_VIDEO_2_H;
   snprintf(param.config_filename, 127, DEF_ALG_CONFIG_FILE);
 
   LOG_INFO("iva set image size %d, %d, %s.",
