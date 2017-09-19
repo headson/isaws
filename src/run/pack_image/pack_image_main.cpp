@@ -23,6 +23,7 @@ typedef struct {
     unsigned int  part_size;  // 文件大小
     unsigned int  part_vers;  // 文件版本
     unsigned int  last_vers;  // 上个版本
+    int           reserved[3];  // 凑齐64字节
   } fimg[DEF_IMG_CNT];
 } TAG_HEADER;
 
@@ -71,10 +72,6 @@ int PacketImage(int argc, char* argv[]) {
 
         std::string sf = img_path;
         sf  +=  head.fimg[i].fname;
-        FILE *img_file = fopen(sf.c_str(), "rb+");
-        if (img_file) {
-          fwrite(head.fimg[i].fname, 1, 32, out_file);
-        }
         head.fimg[i].file_size = 0;
         while (img_file) {
           char sdata[1024] = {0};
@@ -87,6 +84,18 @@ int PacketImage(int argc, char* argv[]) {
           // 写入到输出文件
           fwrite(sdata, 1, ndata, out_file);
           head.fimg[i].file_size += ndata;
+        }
+        if (head.fimg[i].file_size > head.fimg[i].part_size) {\
+          printf("++++++++++++++++++++this file %s is large part size.\n", head.fimg[i].fname);
+          return -1;
+        }
+
+        int left_size = head.fimg[i].part_size - head.fimg[i].file_size;
+        while (left_size > 0) {
+          char sdata[1024] = {0xff};
+          int ndata = (left_size > 1024) ? 1024 : left_size;
+          int nw = fwrite(sdata, 1, ndata, out_file);
+          left_size -= nw;
         }
         printf("%s \n\twrite pos %d\n\tfile size %d\n\tpart size %d\n\tpart vers %d.\n",
                sf.c_str(), abs_pos, head.fimg[i].file_size,
@@ -194,7 +203,7 @@ int UnpackImage(int argc, char* argv[]) {
     }
     
 
-    char *img_bng = pimg + abs_pos + 32;
+    char *img_bng = pimg + abs_pos;
     int   img_len = phead->fimg[i].file_size;
     fwrite(img_bng, 1, img_len, img_file);
 
