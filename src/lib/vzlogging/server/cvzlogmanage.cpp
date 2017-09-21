@@ -47,7 +47,7 @@ int CVzLogManage::Start(const char* log_path,
   /* 初始化看门狗监控模块 */
   res = InitMonitorModule(DEF_WDG_MODULE_FILE);
   if (res < 0) {
-    VZ_ERROR("Open monitor module config file failed.%d.\n", res);
+    VZ_ERROR("Open monitor %s failed.%d.\n", DEF_WDG_MODULE_FILE);
   }
 
   /* 打开网络监听 */
@@ -63,7 +63,7 @@ void CVzLogManage::RunLoop(int ms) {
   k_log_srv.Loop(ms);
 }
 
-void CVzLogManage::SetLogAddrAndLevel(const char *lhost, unsigned short port, 
+void CVzLogManage::SetLogAddrAndLevel(const char *lhost, unsigned short port,
                                       unsigned int level) {
   k_shm_mod.snd_level = level;
 
@@ -83,11 +83,10 @@ void CVzLogManage::SetDisableWatchdog() {
 }
 
 void CVzLogManage::ShareBuffer() {
-  k_shm_arg.Share(&k_shm_mod, sizeof(k_shm_mod));
-  k_shm_arg.Share(&k_shm_mod, sizeof(k_shm_mod));
+  k_shm_arg.SetShmArg(&k_shm_mod);
 }
 
-int CVzLogManage::InitLogRecord(const char* path, 
+int CVzLogManage::InitLogRecord(const char* path,
                                 const char* log_fname, const char* wdg_fname) {
   int ret = -1;
 
@@ -151,7 +150,7 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
           n_timeout = atoi(p_desc + 1);
           if (s_app_name[0] == '\0' ||
               s_descrebe[0] == '\0' ||
-              n_timeout < 5 || n_timeout > 180) {
+              n_timeout < 5 || n_timeout > MAX_WATCHDOG_TIMEOUT) {
             VZ_ERROR("get a error config %s.\n", s_line);
             continue;
           }
@@ -171,6 +170,7 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
           if (b_find == false) {
             k_shm_mod.mod_state[i].mark = DEF_TAG_MARK;
             k_shm_mod.mod_state[i].timeout = n_timeout;
+            k_shm_mod.mod_state[i].join_time = GetSysSec();
             k_shm_mod.mod_state[i].last_heartbeat = GetSysSec();
             strncpy(k_shm_mod.mod_state[i].app_name, s_app_name, LEN_APP_NAME);
             strncpy(k_shm_mod.mod_state[i].descrebe, s_descrebe, LEN_DESCREBE);
@@ -187,6 +187,9 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
     fclose(file);
 
     ShareBuffer();
+#ifndef _WIN32
+    sleep(1);
+#endif
     return 0;
   }
   return -1;
@@ -195,7 +198,7 @@ int CVzLogManage::InitMonitorModule(const char* s_path) {
 int CVzLogManage::InitSrvSocket(const char *ip, unsigned short port,
                                 const char *trans_addr) {
   k_log_srv.SetCallback(callback_receive, this,
-                         callback_timeout, this);
+                        callback_timeout, this);
 
   int ret = -1;
   // 打开网络监听
@@ -220,12 +223,12 @@ int CVzLogManage::OnReceive(SOCKET sock, const sockaddr_in *raddr,
     fflush(stdout);
   }
 
-  if (smsg[0] != L_C_HEARTBEAT) {
-    // 普通日志
-    k_log_file.Write(smsg, nmsg);
+  if (smsg[0] == L_C_HEARTBEAT) {    
+    WatchdogProcess(smsg, nmsg);            // 心跳,发送给看门狗处理
+  } else if (smsg[0] == L_C_RESET) {
+    InitMonitorModule(DEF_WDG_MODULE_FILE); // 重新初始化
   } else {
-    // 心跳,发送给看门狗处理
-    WatchdogProcess(smsg, nmsg);
+    k_log_file.Write(smsg, nmsg);           // 普通日志
   }
 
   // 透传接收到的日志信息
@@ -248,7 +251,7 @@ int CVzLogManage::OnTimeout() {
           n_now - k_shm_mod.mod_state[i].last_heartbeat;
         if (n_diff_time > k_shm_mod.mod_state[i].timeout) {
           OnModuleLostHeartbeat(n_now);
-          memset(&k_shm_mod.mod_state[i], 0, sizeof(k_shm_mod.mod_state[i]));
+          memset(&k_shm_mod.mod_state[i], 0, sizeof(TAG_MODULE_STATE));
           break;
         }
       }
@@ -283,15 +286,12 @@ int CVzLogManage::WatchdogProcess(const char* smsg, unsigned int nmsg) {
     if (k_shm_mod.mod_state[i].mark == DEF_TAG_MARK &&
         !strncmp(k_shm_mod.mod_state[i].descrebe, s_descrebe, LEN_DESCREBE)       // 描述符
         && !strncmp(k_shm_mod.mod_state[i].app_name, s_app_name, LEN_APP_NAME)) {  // 进程名
-      if (5 <= n_timeout && n_timeout < 180) {
+      if (5 <= n_timeout && n_timeout < MAX_WATCHDOG_TIMEOUT) {
         k_shm_mod.mod_state[i].timeout = n_timeout;
       }
-      unsigned int nlast = k_shm_mod.mod_state[i].last_heartbeat;
       k_shm_mod.mod_state[i].last_heartbeat = GetSysSec();
 
-      if (0 == nlast) {
-        ShareBuffer();
-      }
+      ShareBuffer();
       return 0;
     }
 
@@ -312,6 +312,7 @@ int CVzLogManage::WatchdogProcess(const char* smsg, unsigned int nmsg) {
   strncpy(k_shm_mod.mod_state[n_empty].app_name, s_app_name, LEN_APP_NAME);
   strncpy(k_shm_mod.mod_state[n_empty].descrebe, s_descrebe, LEN_DESCREBE);
   k_shm_mod.mod_state[n_empty].timeout = n_timeout;
+  k_shm_mod.mod_state[n_empty].join_time = GetSysSec();
   k_shm_mod.mod_state[n_empty].last_heartbeat = GetSysSec();
   VZ_PRINT("%s %s register.\n", s_app_name, s_descrebe);
   ShareBuffer();
@@ -359,7 +360,7 @@ int CVzLogManage::OnModuleLostHeartbeat(time_t n_now) {
   }
   VZ_ERROR("%s", slog);
   k_wdg_file.Write(slog, nlog);
-  k_wdg_file.WriteSome("watchdog stop");
+  // k_wdg_file.WriteSome("watchdog stop");
 
   // 使能看门狗
   if (k_en_watchdog) {
@@ -372,3 +373,4 @@ int CVzLogManage::OnModuleLostHeartbeat(time_t n_now) {
   return 0;
 }
 }  // namespace vzlogging
+

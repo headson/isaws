@@ -11,9 +11,10 @@
 #define MAX_THREAD_A_PROCESS      16    // 单进程中最多线程数
 #define MAX_WATCHDOG_A_PROCESS    4     // 单进程中最多看门狗数
 #define MAX_WATCHDOG_A_DEVICE     32    // 单设备中最多进程数
+#define MAX_WATCHDOG_TIMEOUT      180  /* 3minute */
 
 #define LEN_APP_NAME              32
-#define LEN_DESCREBE              16    // 线程描述,用于区分一个进程多个喂狗调用
+#define LEN_DESCREBE              12    // 线程描述,用于区分一个进程多个喂狗调用
 
 #define LEN_FILEPATH              256   // PATH+FILENAME
 #define MAX_FILE_CNT              2     // 记录错误文件个数+1;

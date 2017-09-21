@@ -36,10 +36,12 @@ typedef struct _TAG_WATCHDOG {
 
   char          app_name[LEN_APP_NAME];    // 进程名
   char          descrebe[LEN_DESCREBE];    // 用户描述
+  unsigned int  join_time;                 // 加入组时间
 
   unsigned int  status;                    // 
 
   unsigned int  timeout;                   // 超时
+  
   unsigned int  last_heartbeat;            // 最好一次心跳时间
 } TAG_MODULE_STATE;
 
@@ -52,6 +54,7 @@ typedef struct {
   TAG_MODULE_STATE    mod_state[MAX_WATCHDOG_A_DEVICE];
 } TAG_SHM_ARG;
 
+class VShm;
 class CVzLogShm {
  public:
   CVzLogShm();
@@ -59,18 +62,16 @@ class CVzLogShm {
 
   // 打开
   bool  Open();
-  void  Close();
 
-  int Share(const void* data, unsigned int size);
+  int GetShmArg(TAG_SHM_ARG *arg);
+  int SetShmArg(const TAG_SHM_ARG *arg);
 
   // 获取参数
   unsigned int        GetLevel() const;
   struct sockaddr_in* GetSockAddr() const;
 
-  int GetShmArg(TAG_SHM_ARG *arg);
-
  private:
-  HANDLE      vshm_;
+  VShm*       vshm_;
   bool        valid_;   // 有意义的传参
 };
 

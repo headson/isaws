@@ -92,12 +92,13 @@ const char *GetFileName(const char *filepath) {
 struct TAG_LOG_LEVEL {
   int   level;
   char  option;
-} k_log_level[5] = {
+} k_log_level[6] = {
   { L_DEBUG,      L_C_DEBUG },
   { L_INFO,       L_C_INFO },
   { L_WARNING,    L_C_WARNING },
   { L_ERROR,      L_C_ERROR },
   { L_HEARTBEAT,  L_C_HEARTBEAT },
+  { L_RESET,      L_C_RESET },
 };
 int VzLogHead(unsigned int  level,
               const char *file, int line,

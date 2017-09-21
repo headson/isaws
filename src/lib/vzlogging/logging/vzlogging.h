@@ -70,12 +70,14 @@ enum {
   L_WARNING   = 2,
   L_ERROR     = 3,
   L_HEARTBEAT = 4,
+  L_RESET     = 5,
 };
 #define L_C_DEBUG     'D'
 #define L_C_INFO      'I'
 #define L_C_WARNING   'W'
 #define L_C_ERROR     'E'
 #define L_C_HEARTBEAT 'H'
+#define L_C_RESET     'S'
 
 /*C Style*/
 #define VZLOG(V, VZ_FM, ...)        \
@@ -86,6 +88,7 @@ enum {
 #define LOG_INFO(VZ_FM, ...)      VZLOG(L_INFO, VZ_FM, ##__VA_ARGS__)
 #define LOG_WARNING(VZ_FM, ...)   VZLOG(L_WARNING, VZ_FM, ##__VA_ARGS__)
 #define LOG_ERROR(VZ_FM, ...)     VZLOG(L_ERROR, VZ_FM, ##__VA_ARGS__)
+#define LOG_RESET(VZ_FM, ...)     VZLOG(L_RESET, VZ_FM, ##__VA_ARGS__)
 
 #define DLOG_INFO(VZ_FM, ...)     VZDLOG(L_INFO, VZ_FM, ##__VA_ARGS__)
 #define DLOG_WARNING(VZ_FM, ...)  VZDLOG(L_WARNING, VZ_FM, ##__VA_ARGS__)

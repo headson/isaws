@@ -13,11 +13,20 @@
 
 #ifdef WIN32
 #include <process.h>
+
+#include <windows.h>
+#define HDL_NULL  NULL
 #else  // WIN32
 #include <sys/mman.h>
 #include <sys/stat.h>        /* For mode constants */
 #include <fcntl.h>           /* For O_* constants */
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
+typedef int       HANDLE;
+#define HDL_NULL  -1
 #endif  // WIN32
 
 bool k_log_print = false;             // 输出使能
@@ -128,110 +137,169 @@ vzlogging::CVzLogSock* GetVzLogSock() {
 namespace vzlogging {
 
 /**VShm******************************************************************/
-#ifdef _WIN32
-#include <windows.h>
-#define HDL_NULL  NULL
-HANDLE vzShmOpen(const char* name, int size) {
-  HANDLE shm_id = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, (LPCSTR)name);
-  if (shm_id == NULL) {
-    shm_id = ::CreateFileMapping(INVALID_HANDLE_VALUE,
-                                 NULL,
-                                 PAGE_READWRITE,
-                                 0,
-                                 size,
-                                 (LPCSTR)name);
+class VShm {
+ public:
+  VShm() {
+    shm_id_   = HDL_NULL;
+    shm_ptr_  = NULL;
+    shm_size_ = 0;
   }
-  if (shm_id == NULL) {
-    printf("OpenFileMapping failed.\n");
-    return NULL;
-  }
-
-  printf("shm_id = 0x%x\n", shm_id);
-  return shm_id;
-}
-
-void *vzShmAt(HANDLE shm_id) {
-  void *p_ptr = ::MapViewOfFile(shm_id, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if (p_ptr == NULL) {
-    printf("MapViewOfFile failed.\n");
-    return NULL;
-  }
-  return p_ptr;
-}
-
-void vzShmDt(void *p_ptr) {
-  if (p_ptr) {
-    if (FALSE == ::UnmapViewOfFile(p_ptr)) {
-      printf("UnmapViewOfFile failed.\n");
+  virtual ~VShm() {
+    if (shm_ptr_) {
+      vzShmDt(shm_ptr_);
+      shm_ptr_ = NULL;
     }
-    p_ptr = NULL;
   }
-}
+
+#ifdef _WIN32
+  bool Open(const char* name, int size) {
+    shm_id_ = ::OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, (LPCSTR)name);
+    if (shm_id_ == NULL) {
+      shm_id_ = ::CreateFileMapping(INVALID_HANDLE_VALUE,
+                                    NULL,
+                                    PAGE_READWRITE,
+                                    0,
+                                    size,
+                                    (LPCSTR)name);
+    }
+    if (shm_id_ == NULL) {
+      printf("OpenFileMapping failed.\n");
+      return false;
+    }
+
+    printf("shm_id = 0x%x\n", shm_id_);
+
+    shm_ptr_ = vzShmAt();
+    if (shm_ptr_ != NULL) {
+      shm_size_ = size;
+      return true;
+    }
+
+    shm_id_ = HDL_NULL;
+    return false;
+  }
+
+  void *vzShmAt() {
+    void *p_ptr = ::MapViewOfFile(shm_id_, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+    if (p_ptr == NULL) {
+      printf("MapViewOfFile failed.\n");
+      return NULL;
+    }
+    return p_ptr;
+  }
+
+  void vzShmDt(void *p_ptr) {
+    if (p_ptr) {
+      if (FALSE == ::UnmapViewOfFile(p_ptr)) {
+        printf("UnmapViewOfFile failed.\n");
+      }
+      p_ptr = NULL;
+    }
+  }
+
 #else
-#include <sys/types.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
+  int create_file(const char *filename) {
+    if (access(filename, 0) == 0) {
+      return 0;
+    }
 
-typedef int       HANDLE;
-#define HDL_NULL  -1
+    if (creat(filename, 0755) < 0) {
+      printf("create file %s failure!\n", filename);
+      return -1;
+    }
 
-static int create_file(const char *filename) {
-  if (access(filename, 0) == 0) {
+    printf("create file %s success!\n", filename);
     return 0;
   }
 
-  if (creat(filename, 0755) < 0) {
-    printf("create file %s failure!\n", filename);
-    return -1;
+  bool Open(const char* name, int size) {
+    create_file(name);
+    key_t k = ftok(name, 1);
+    if (k < 0) {
+      return false;
+    }
+
+    shm_id_ = shmget(k, size, IPC_CREAT | 0660);
+    if (shm_id_ < 0) {
+      shm_id_ = shmget(k, 0, 0);
+    }
+    if (shm_id_ < 0) {
+      return false;
+    }
+
+    printf("shm_id = %d, %d\n", shm_id_, k);
+    shm_ptr_ = vzShmAt();
+    if (shm_ptr_ != NULL) {
+      shm_size_ = size;
+      return true;
+    }
+
+    shm_id_ = HDL_NULL;
+    return false;
   }
 
-  printf("create file %s success!\n", filename);
-  return 0;
-}
-
-HANDLE vzShmOpen(const char* name, int size) {
-  create_file(name);
-  key_t k = ftok(name, 1);
-  if (k < 0) {
-    return -2;
+  void *vzShmAt() {
+    void *p_ptr = shmat(shm_id_, 0, 0);
+    if (p_ptr == NULL) {
+      printf("shmat failed.\n");
+      return NULL;
+    }
+    return p_ptr;
   }
 
-  HANDLE shm_id = shmget(k, size, IPC_CREAT | 0660);
-  if (shm_id < 0) {
-    shm_id = shmget(k, 0, 0);
+  void vzShmDt(void *p_ptr) {
+    if (p_ptr) {
+      shmdt(p_ptr);
+    }
   }
-  if (shm_id < 0) {
-    return -1;
-  }
-
-  printf("shm_id = %d, %d\n", shm_id, k);
-  return shm_id;
-}
-
-void *vzShmAt(HANDLE shm_id) {
-  void *p_ptr = shmat(shm_id, 0, 0);
-  if (p_ptr == NULL) {
-    printf("shmat failed.\n");
-    return NULL;
-  }
-  return p_ptr;
-}
-
-void vzShmDt(void *p_ptr) {
-  if (p_ptr) {
-    shmdt(p_ptr);
-  }
-}
 #endif
+  void* GetData() const {
+    return shm_ptr_;
+  }
+  int GetSize() const {
+    return shm_size_;
+  }
+
+  int GetData(void *pdata, int ndata) {
+    void *pshm = vzShmAt();
+    if (pshm) {
+      int nn = shm_size_ > ndata ? ndata : shm_size_;
+      memcpy(pdata, pshm, nn);
+      vzShmDt(pshm);
+      return nn;
+    }
+    return -1;
+  }
+
+  int SetData(const void *pdata, int ndata) {
+    void *pshm = vzShmAt();
+    if (pshm) {
+      int nn = shm_size_ > ndata ? ndata : shm_size_;
+      memcpy(pshm, pdata, nn);
+      vzShmDt(pshm);
+      return nn;
+    }
+    return -1;
+  }
+
+ private:
+  HANDLE        shm_id_;
+  void *        shm_ptr_;     //
+  int           shm_size_;    //
+};
 
 /**共享内存-参数*********************************************************/
-CVzLogShm::CVzLogShm() {
-  vshm_  = HDL_NULL;
+CVzLogShm::CVzLogShm()
+  : vshm_(NULL) {
+  vshm_  = NULL;
   valid_ = false;
 }
 
 CVzLogShm::~CVzLogShm() {
-  Close();
+  if (vshm_) {
+    delete vshm_;
+    vshm_ = NULL;
+  }
 }
 
 bool CVzLogShm::Open() {
@@ -240,24 +308,19 @@ bool CVzLogShm::Open() {
 #else
   const char *shm_file = "/dev/shm/log_shm";
 #endif
-  vshm_ = vzShmOpen(shm_file, sizeof(TAG_SHM_ARG));
-  return (vshm_ == HDL_NULL);
-}
+  vshm_ = new VShm();
+  if (vshm_ != NULL) {
+    return vshm_->Open(shm_file, sizeof(TAG_SHM_ARG));
 
-void CVzLogShm::Close() {
-}
-
-int CVzLogShm::Share(const void* data, unsigned int size) {
-  void *pshm = vzShmAt(vshm_);
-  if (pshm) {
-    memcpy(pshm, data, size);
-    return 0;
   }
-  return -1;
+  return false;
 }
 
 unsigned int CVzLogShm::GetLevel() const {
-  TAG_SHM_ARG* pArg = (TAG_SHM_ARG*)vzShmAt(vshm_);
+  if (vshm_ == NULL) {
+    return 3;
+  }
+  TAG_SHM_ARG* pArg = (TAG_SHM_ARG*)vshm_->GetData();
   if (pArg) {
     return pArg->snd_level;
   }
@@ -265,7 +328,10 @@ unsigned int CVzLogShm::GetLevel() const {
 }
 
 struct sockaddr_in* CVzLogShm::GetSockAddr() const {
-  TAG_SHM_ARG* pArg = (TAG_SHM_ARG*)vzShmAt(vshm_);
+  if (vshm_ == NULL) {
+    return NULL;
+  }
+  TAG_SHM_ARG* pArg = (TAG_SHM_ARG*)vshm_->GetData();
   if (pArg) {
     return &pArg->sock_addr;
   }
@@ -273,12 +339,19 @@ struct sockaddr_in* CVzLogShm::GetSockAddr() const {
 }
 
 int CVzLogShm::GetShmArg(TAG_SHM_ARG *arg) {
-  void *pshm = vzShmAt(vshm_);
-  if (pshm) {
-    memcpy(arg, pshm, sizeof(TAG_SHM_ARG));
-    return 0;
+  if (vshm_ == NULL || arg == NULL) {
+    return -1;
   }
-  return -1;
+
+  return vshm_->GetData(arg, sizeof(TAG_SHM_ARG));
+}
+
+int CVzLogShm::SetShmArg(const TAG_SHM_ARG *arg) {
+  if (vshm_ == NULL || arg == NULL) {
+    return -1;
+  }
+
+  return vshm_->SetData(arg, sizeof(TAG_SHM_ARG));
 }
 
 //////////////////////////////////////////////////////////////////////////

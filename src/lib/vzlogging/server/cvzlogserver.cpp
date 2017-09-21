@@ -13,6 +13,10 @@
 #include "vzlogging/base/vzbases.h"
 
 namespace vzlogging {
+const char MONTH_TABLE[12][4] = {
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
 
 CVzLogSrv::CVzLogSrv()
   : cb_receive_(NULL)
@@ -32,9 +36,9 @@ CVzLogSrv::~CVzLogSrv() {
 }
 
 void CVzLogSrv::SetCallback(CALLBACK_RECEIVE receive_cb,
-                               void *recv_usr_arg,
-                               CALLBACK_TIMEOUT timeout_cb,
-                               void *timeout_usr_arg) {
+                            void *recv_usr_arg,
+                            CALLBACK_TIMEOUT timeout_cb,
+                            void *timeout_usr_arg) {
   cb_receive_ = receive_cb;
   receive_usr_arg_ = recv_usr_arg;
 
@@ -171,9 +175,9 @@ void CVzLogSrv::Loop(int ms) {
 
           raddr_len = sizeof(sockaddr);
           nlog_ = recvfrom(rsock_, slog_, A_LOG_SIZE,
-                                0,
-                                (sockaddr*)&raddr,
-                                &raddr_len);
+                           0,
+                           (sockaddr*)&raddr,
+                           &raddr_len);
           if (nlog_ > 0) {
             if (cb_receive_) {
               if (nlog_ < A_LOG_SIZE) {
@@ -217,8 +221,8 @@ CVzLogFile::~CVzLogFile() {
 }
 
 int CVzLogFile::Open(const char*  s_path,
-                         const char*  s_filename,
-                         unsigned int n_limit_size) {
+                     const char*  s_filename,
+                     unsigned int n_limit_size) {
   // 组文件名
   for (int i = 0; i < 2; i++) {
     memset(s_filename_[i], 0, LEN_FILEPATH+1);
@@ -283,9 +287,9 @@ int CVzLogFile::WriteSome(const char* s_usr_cmd) {
 
   char s_log[64] = { 0 };
   int n_log = snprintf(s_log, 63,
-                       "%s at [%02d/%02d/%04d %02d:%02d:%02d %04d]\n",
+                       "%s at [%02d/%s/%04d %02d:%02d:%02d %04d]\n",
                        s_usr_cmd,
-                       wtm->tm_mday, wtm->tm_mon+1, wtm->tm_year + 1900,
+                       wtm->tm_mday, MONTH_TABLE[wtm->tm_mon], wtm->tm_year + 1900,
                        wtm->tm_hour, wtm->tm_min, wtm->tm_sec,
                        (int)(tv.tv_usec / 1000));
   return Write(s_log, n_log);
@@ -482,8 +486,8 @@ CVzWdgFile::~CVzWdgFile() {
 }
 
 int CVzWdgFile::Open(const char* s_path,
-                          const char* s_filename,
-                          unsigned int n_limit_size) {
+                     const char* s_filename,
+                     unsigned int n_limit_size) {
   // 组文件名
   snprintf(s_filename_[0], LEN_FILEPATH,
            "%s%s.log", s_path, s_filename);

@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-06-27
-*Description : 
+*Description :
 ************************************************************************/
 #include "vzlogging/logging/vzwatchdog.h"
 
@@ -16,7 +16,7 @@
 
 namespace vzlogging {
 
-  // 看门狗结构
+// 看门狗结构
 typedef struct {
   unsigned int n_mark;                                  // 校验字
   unsigned int n_max_timeout;                           // 最大超时时长
@@ -76,9 +76,13 @@ int IsAllModuleRuning() {
   int no_run_mod = 0;
   unsigned int nsec = vzlogging::GetSysSec();
   for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
-    if (shm_arg.mod_state[i].mark == DEF_TAG_MARK 
-        && shm_arg.mod_state[i].app_name[0] != '\0') {
-      if ((nsec - shm_arg.mod_state[i].last_heartbeat) >= DEF_WATCHDOG_TIMEOUT) {
+    vzlogging::TAG_MODULE_STATE &cmod = shm_arg.mod_state[i];
+    if (cmod.mark == DEF_TAG_MARK
+        && cmod.app_name[0] != '\0') {
+      // 加入时间和最后一次心跳时间一致,认为没收到心跳
+      // 最后一次心跳有变化, 判断是否超时
+      if (cmod.last_heartbeat == cmod.join_time ||
+          (nsec - cmod.last_heartbeat) >= cmod.timeout) {
         no_run_mod++;
       }
     }
@@ -96,10 +100,21 @@ int IsModuleRuning(const char *name, const char *desc) {
   int no_run_mod = 0;
   unsigned int nsec = vzlogging::GetSysSec();
   for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
-    if (shm_arg.mod_state[i].mark == DEF_TAG_MARK
-        && strcmp(shm_arg.mod_state[i].app_name, name) == 0
-        && strcmp(shm_arg.mod_state[i].descrebe, desc) == 0) {
-      if ((nsec - shm_arg.mod_state[i].last_heartbeat) >= DEF_WATCHDOG_TIMEOUT) {
+    vzlogging::TAG_MODULE_STATE &cmod = shm_arg.mod_state[i];
+    //printf("0x%x app_name %s, desc %s. heartbeat %d.\n", 
+    //       cmod.mark, cmod.app_name, cmod.descrebe,
+    //       cmod.last_heartbeat);
+    if (cmod.mark == DEF_TAG_MARK
+        && strcmp(cmod.app_name, name) == 0
+        && strcmp(cmod.descrebe, desc) == 0) {
+
+      // 加入时间和最后一次心跳时间一致,认为没收到心跳
+      if (cmod.last_heartbeat == cmod.join_time) {
+        return 0;
+      }
+
+      // 最后一次心跳有变化, 判断是否超时
+      if ((nsec - cmod.last_heartbeat) >= cmod.timeout) {
         return 0;
       } else {
         return 1;
