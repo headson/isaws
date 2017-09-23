@@ -43,6 +43,15 @@ typedef struct _TAG_WATCHDOG {
   unsigned int  timeout;                   // 超时
   
   unsigned int  last_heartbeat;            // 最好一次心跳时间
+
+  //////////////////////////////////////////////////////////////////////////
+  bool Init(const char *name, const char* desc,
+            unsigned int ms_timeout);
+  bool UpdateTimeout(unsigned int ms_timeout);
+  bool Heartbeat();
+  bool isSame(const char *name, const char* desc);
+  bool isEmpty();
+  bool isTimeout(unsigned int cur_time);
 } TAG_MODULE_STATE;
 
 typedef struct {
@@ -54,25 +63,50 @@ typedef struct {
   TAG_MODULE_STATE    mod_state[MAX_WATCHDOG_A_DEVICE];
 } TAG_SHM_ARG;
 
-class VShm;
-class CVzLogShm {
- public:
-  CVzLogShm();
-  virtual ~CVzLogShm();
+class VShm {
+public:
+  VShm() {
+    shm_id_ = HDL_NULL;
+    shm_ptr_ = NULL;
+    shm_size_ = 0;
+  }
+  virtual ~VShm() {
+    if (shm_ptr_) {
+      vzShmDt(shm_ptr_);
+      shm_ptr_ = NULL;
+    }
+  }
 
-  // 打开
-  bool  Open();
+#ifdef _WIN32
+  bool Open(const char* name, int size);
 
-  int GetShmArg(TAG_SHM_ARG *arg);
-  int SetShmArg(const TAG_SHM_ARG *arg);
+protected:
+  void *vzShmAt();
+  void vzShmDt(void *p_ptr);
 
-  // 获取参数
-  unsigned int        GetLevel() const;
-  struct sockaddr_in* GetSockAddr() const;
+#else
+  int create_file(const char *filename);
+  bool Open(const char* name, int size);
 
- private:
-  VShm*       vshm_;
-  bool        valid_;   // 有意义的传参
+protected:
+  void *vzShmAt();
+  void vzShmDt(void *p_ptr);
+#endif
+public:
+  void* GetData() const {
+    return shm_ptr_;
+  }
+  int GetSize() const {
+    return shm_size_;
+  }
+
+  int GetData(void *pdata, int ndata);
+  int SetData(const void *pdata, int ndata);
+
+private:
+  HANDLE  shm_id_;
+  void *  shm_ptr_;     //
+  int     shm_size_;    //
 };
 
 /**日志线程私有数据*******************************************************/
@@ -102,7 +136,7 @@ public:
 
 extern bool k_log_print;                        // 输出使能
 extern char k_app_name[LEN_APP_NAME];           // 进程名
-extern vzlogging::CVzLogShm   k_shm_arg;        // 共享内存
+extern vzlogging::VShm        k_shm_arg;
 extern vzlogging::CVzLogSock *GetVzLogSock();   // 获取日志SOCKET句柄(tls)
 
 #endif  // LIBVZLOGGING_VZCOMMON_H

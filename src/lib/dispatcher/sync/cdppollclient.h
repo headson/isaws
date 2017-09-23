@@ -66,8 +66,24 @@ class CDpPollClient : public CDpClient {
 
   int32 OnEvtTimer();
 
+ public:
+  class CFlagLive {
+   public:
+    CFlagLive(uint32 &flag)
+      : flag_(flag) {
+      flag_ = 1;
+    }
+    ~CFlagLive() {
+      flag_ = 0;
+    }
+   private:
+    uint32 &flag_;
+  };
+
  protected:
   vzconn::EVT_TIMER            c_evt_timer_;   // 检查断网
+
+  uint32                       is_add_msg_;    // 1=正在注册消息;正在注册时接收到消息,会陷入死循环
   uint32                       had_reg_msg_;   // 0=需要注册消息,1=已注册消息
 
  protected:

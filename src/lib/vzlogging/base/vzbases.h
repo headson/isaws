@@ -40,7 +40,7 @@
 #define DEF_WDG_REC_FILE    "watchdog"        // 默认看门狗存储名
 
 #define DEF_WDG_MODULE_FILE "c:\\tools\\module.cfg"    // 看门狗监控模块配置文件
-
+#define DEF_WDG_SHM_ARG     "c:\\tools\\wdg_shm_arg"
 #else
 typedef int         SOCKET;
 
@@ -49,6 +49,7 @@ typedef int         SOCKET;
 #define DEF_WDG_REC_FILE    "watchdog"
 
 #define DEF_WDG_MODULE_FILE "/mnt/usr/module.cfg"
+#define DEF_WDG_SHM_ARG     "/dev/shm/wdg_shm_arg"
 #endif
 
 #ifdef __cplusplus

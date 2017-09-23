@@ -44,7 +44,7 @@ typedef struct _TagDpMsg {
   unsigned char channel_id;               // 一般是0[* bits]
   unsigned char reply_type;               // 返回时存type[8bits]
   unsigned char method_size;              // 消息的类型的长度[8 bits]
-  char          method[MAX_METHOD_SIZE];  // 消息类型[32*8bits]
+  char          method[MAX_METHOD_SIZE];  // 消息类型[64*8bits]
   unsigned int  id;                       // [消息序号]32 bits;8+24
   unsigned int  data_size;                // [数据长度]32 bits
   unsigned int  reserved02;               // [保留] 对齐48bits

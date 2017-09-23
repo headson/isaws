@@ -53,9 +53,9 @@ class CVzLogStream {
   CVzLogStream& write(const char* s_msg, int n_msg);
 
  private:
-  void*         p_tls_;
-  unsigned int  n_level_;
-  unsigned int  b_local_print_;
+  void*         ptls_;
+  unsigned int  nlevel_;
+  unsigned int  local_print_;
 };
 
 }  // namespace vzlogging

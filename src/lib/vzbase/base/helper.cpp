@@ -136,154 +136,6 @@ int Ascii2Plate(const char *plate, uint32 plate_size,
   return 0;
 }
 
-bool IsUtf8String(const char *pText, int nLen) {
-  // octets to go in this UTF-8 encoded character
-  uint32 dwOctets;
-  uint8 chr;
-  bool bAllAscii= true;
-  // 循环检测
-  dwOctets = 0;
-  for (int i = 0; i < nLen; i++) {
-    // 取出当前字符
-    chr = *(pText + i);
-    if ((chr & 0x80) != 0)
-      // 当前字符不是 ascii
-      bAllAscii = false;
-    if (dwOctets == 0) {
-      // 7 bit ascii after 7 bit ascii is just fine.  Handle start of encoding case
-      if (chr >= 0x80) {
-        // count of the leading 1 bits is the number of characters encoded
-        do {
-          chr <<= 1;
-          dwOctets++;
-        } while ((chr & 0x80) != 0);
-        // count includes this character
-        dwOctets--;
-        //if (dwOctets == 0)
-        if (dwOctets < 2)
-          // must start with 11xxxxxx
-          return false;
-      }
-    } else {
-      // non-leading bytes must start as 10xxxxxx
-      if ((chr & 0xC0) != 0x80)
-        return false;
-      // processed another octet in encoding
-      dwOctets--;
-    }
-  }
-  // End of text.  Check for consistency
-  if (dwOctets > 0)
-    // anything left over at the end is an error
-    return false;
-  if (bAllAscii)
-    // Not utf-8 if all ascii.  Forces caller to use code pages for conversion
-    return false;
-  return true;
-}
-
-std::string Gb2312ToUtf8(const std::string src) {
-  if(IsUtf8String(src.c_str(), src.size())) {
-    return src;
-  }
-  std::string result;
-  char temp[128];
-  int res = vzbase::Gb2312ToUtf8(src.c_str(), src.size(), temp, 128);
-  if(res == 0) {
-    result = src;
-  } else {
-    result.append(temp, res);
-  }
-  return result;
-}
-
-#ifdef WIN32
-int Gb2312ToUtf8(const char *src,
-                 std::size_t src_size,
-                 char *des_buffer,
-                 std::size_t des_buffer_size) {
-  if(src == NULL || des_buffer == NULL) {
-    return 0;
-  }
-  std::size_t need_size = WideCharToMultiByte(CP_UTF8,
-                          0,
-                          (LPCWCH)src,
-                          src_size,
-                          NULL,
-                          0,
-                          NULL,
-                          NULL);
-  if(need_size > des_buffer_size) {
-    return 0;
-  }
-  int convert_size = WideCharToMultiByte(CP_UTF8,
-                                         0,
-                                         (LPCWCH)src,
-                                         src_size,
-                                         (LPSTR)des_buffer,
-                                         need_size,
-                                         NULL,
-                                         NULL);
-  if(convert_size == 0) {
-    return 0;
-  }
-  return convert_size;
-}
-#else
-
-bool EncodeConvert(
-  const char *from_charset,
-  const char *to_charset,
-  char *inbuf,
-  size_t inlen,
-  char *outbuf,
-  size_t *outlen) {
-  // _DBG("\t >> [%s],%d\n", inbuf, inlen);
-  // 1.
-  iconv_t cd;
-  char **pin = &inbuf;
-  char **pout = &outbuf;
-
-  // 2.
-  cd = iconv_open(to_charset,from_charset);
-  if(cd == (iconv_t) -1) {
-    // _DBG("ICONV OPEN ERROR %s TO %s \n", from_charset, to_charset);
-    return false;
-  }
-  if (iconv(cd, (char**)pin, &inlen, pout, outlen)==(size_t)-1) {
-    //_DBG("THE FORMAT ERROR %s to %s [%s %d] [%s %d]\n", from_charset, to_charset,
-    //     inbuf, inlen, outbuf, *outlen);
-    iconv_close(cd);
-    return false;
-  } else {
-    //_DBG("CONVERT SUCCEED %s to %s\n", from_charset, to_charset);
-  }
-  iconv_close(cd);
-  return true;
-}
-
-int Gb2312ToUtf8(const char *src,
-                 std::size_t src_size,
-                 char *des_buffer,
-                 std::size_t des_buffer_size) {
-
-  char in_buf[255] = { 0 };
-  //char out_buffer[255] = { 0 };
-  size_t out_size = des_buffer_size;
-  size_t in_size = src_size;
-
-  memcpy(in_buf, src, src_size);
-
-  bool res = EncodeConvert("GB2312", "UTF-8",
-                           in_buf, in_size, des_buffer, &out_size);
-
-  if(res) {
-    return des_buffer_size - out_size;
-  }
-  return 0;
-}
-#endif
-
 const std::string CalculationsFileMd5(const std::string &file_name) {
   FILE * fp = fopen(file_name.c_str(), "rb");
   if (fp == NULL) {
@@ -311,7 +163,6 @@ const std::string Md5DigestToString(unsigned char digest[16]) {
   }
   return result;
 }
-
 
 const int  MAX_CHAR                   =    8;
 const int  MAX_NUM_STR                =    32;
@@ -359,9 +210,7 @@ const std::string NumberToVoiceString(int n) {
     return result;
   }
 
-
   int Last = 1;
-
   for(int i = 0 ; i < num_str_size; i++) {
     //判断后面的所有数是否全部为零，如果是，处理一下 结束
     if(IsAllZero(num_str,i)) {
@@ -387,16 +236,6 @@ const std::string NumberToVoiceString(int n) {
       result += NUMBER_INDEX[num_str[i] - '0'];
       result += DIGIT_INDEX[num_str_size - i - 1];
     }
-  }
-  return result;
-}
-
-const char RANDOM_KEY[] = "abcdefghijkrmnopqlstuvwxyzABCDEFGHIJKRMNOPQLSTUVWXYZ0123456789";
-const int MAX_RANDOM_KEY_SIZE = 62;
-const std::string GetRandomString(std::size_t size) {
-  std::string result;
-  for(std::size_t i = 0; i < size; i++) {
-    result.push_back(RANDOM_KEY[rand() % MAX_RANDOM_KEY_SIZE]);
   }
   return result;
 }

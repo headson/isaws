@@ -220,19 +220,19 @@ CVzLogFile::~CVzLogFile() {
   //VZ_PRINT("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-int CVzLogFile::Open(const char*  s_path,
-                     const char*  s_filename,
-                     unsigned int n_limit_size) {
+int CVzLogFile::Open(const char*  spath,
+                     const char*  sfilename,
+                     unsigned int limit_size) {
   // 组文件名
   for (int i = 0; i < 2; i++) {
     memset(s_filename_[i], 0, LEN_FILEPATH+1);
     snprintf(s_filename_[i], LEN_FILEPATH,
-             "%s%s_%d.log", s_path, s_filename, i+1);
+             "%s%s_%d.log", spath, sfilename, i+1);
   }
   // 错误文件名名称
   memset(s_err_fname_, 0, LEN_FILEPATH+1);
   snprintf(s_err_fname_, LEN_FILEPATH,
-           "%s%s_err_%d.log", s_path, s_filename, MAX_FILE_CNT);
+           "%s%s_err_%d.log", spath, sfilename, MAX_FILE_CNT);
   // 此错误文件已存在,干掉之前的错误文件
 #ifdef WIN32
   if (_access(s_err_fname_, 0) == 0) {
@@ -244,11 +244,11 @@ int CVzLogFile::Open(const char*  s_path,
       // i文件
       memset(s_temp_fname, 0, LEN_FILEPATH + 1);
       snprintf(s_temp_fname, LEN_FILEPATH,
-               "%s%s_err_%d.log", s_path, s_filename, i);
+               "%s%s_err_%d.log", spath, sfilename, i);
       // i+1文件
       memset(s_err_fname_, 0, LEN_FILEPATH + 1);
       snprintf(s_err_fname_, LEN_FILEPATH,
-               "%s%s_err_%d.log", s_path, s_filename, i + 1);
+               "%s%s_err_%d.log", spath, sfilename, i + 1);
       // 删除第一个文件,否则第二个不能rename成功
       if (i == 0 && (remove(s_temp_fname) == 0)) {
         VZ_PRINT("remove file %s success.\n", s_temp_fname);
@@ -262,7 +262,7 @@ int CVzLogFile::Open(const char*  s_path,
   }
 
   n_filename_idx_     = 0;                  // 从第一个文件写
-  n_file_limit_size_  = n_limit_size / 2;   // 文件限制大小
+  n_file_limit_size_  = limit_size / 2;   // 文件限制大小
   if (n_file_limit_size_ == 0) {
     n_file_limit_size_ = MAX_LOG_FILE_SIZE / 2;
   }

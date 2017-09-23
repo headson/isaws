@@ -15,6 +15,7 @@ CDpPollClient::CDpPollClient(const char *server, unsigned short port,
                              vzconn::EVT_LOOP          *p_evt_loop)
   : CDpClient(server, port, p_evt_loop)
   , c_evt_timer_()
+  , is_add_msg_(0)
   , had_reg_msg_(0)
   , p_poll_msg_cb_(p_msg_cb)
   , p_poll_msg_usr_arg_(p_msg_usr_arg)
@@ -58,6 +59,8 @@ int32 CDpPollClient::ListenMessage(uint8        e_type,
                                    const char  *method_set[],
                                    unsigned int set_size,
                                    uint16       n_flag) {
+  CFlagLive flag(is_add_msg_);
+
   // 组method包
   uint32 n_data = 0;
   char   s_data[MAX_METHOD_COUNT*MAX_METHOD_SIZE] = { 0 };
@@ -103,7 +106,7 @@ int32 CDpPollClient::ListenMessage(uint8        e_type,
   iov[1].iov_len = n_data;
 
   n_ret_type_ = (uint32)TYPE_INVALID;
-  int32 n_ret = AsyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
+  int32 n_ret = SyncWrite(iov, 2, FLAG_DISPATCHER_MESSAGE);
   if (n_ret <= 0) {
     LOG(L_ERROR) << "async write failed " << n_dp_msg + n_data;
     return n_ret;
@@ -149,8 +152,19 @@ int32 CDpPollClient::HandleRecvPacket(vzconn::VSocket *p_cli,
   if (p_cur_dp_msg_ == NULL) {
     return -2;
   }
-
   LOG(L_INFO) << "message seq "<<p_cur_dp_msg_->method <<"  "<<get_msg_id();
+
+  // 注册消息成功;
+  if (p_cur_dp_msg_->reply_type == TYPE_ADD_MESSAGE) {
+    had_reg_msg_ = 1;
+
+    if (NULL != p_evt_loop_) {
+      p_evt_loop_->LoopExit(0);
+    }
+  }
+  if (is_add_msg_) {  // 1=正在注册消息;正在注册时接收到消息,会陷入死循环
+    return 0;
+  }
 
   // 注:理论上poll只会收到TYPE_MESSAGE\TYPE_REQUEST 消息
   // TYPE_GET_SESSION_ID\TYPE_ADD_MESSAGE的回执结果
@@ -165,10 +179,6 @@ int32 CDpPollClient::HandleRecvPacket(vzconn::VSocket *p_cli,
     // 获取ID
     n_session_id_ = (p_cur_dp_msg_->channel_id << 24);
     LOG(L_WARNING) << "get session id " << p_cur_dp_msg_->channel_id;
-  }
-  // 注册消息成功;
-  if (p_cur_dp_msg_->reply_type == TYPE_ADD_MESSAGE) {
-    had_reg_msg_ = 1;
   }
 
   // 如果是轮询,接收到一个包就退出event的run_loop

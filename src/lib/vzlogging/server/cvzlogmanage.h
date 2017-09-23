@@ -19,9 +19,9 @@ class CVzLogManage {
  public:
   static CVzLogManage *Instance();
 
-  int Start(const char* log_path, 
-            unsigned short log_port,
-            const char* tran_addr);
+  int  Start(const char* log_path,
+             unsigned short log_port,
+             const char* tran_addr);
 
   void RunLoop(int ms);
 
@@ -34,9 +34,6 @@ class CVzLogManage {
   void SetDisableWatchdog();
 
  protected:
-  /*共享参数*/
-  void ShareBuffer();
-
   /*初始化日志记录*/
   int InitLogRecord(const char* path,
                     const char* log_fname,
@@ -52,23 +49,19 @@ class CVzLogManage {
   /*看门狗处理*/
   int WatchdogProcess(const char* smsg, unsigned int nmsg);
 
-  int OnModuleLostHeartbeat(time_t n_now);
+  int OnModuleLostHeartbeat(time_t nnow);
 
  protected:
-  static int callback_receive(SOCKET      sock,
-                              const sockaddr_in *sa_remote,
-                              const char        *smsg,
-                              unsigned int       nmsg,
-                              void              *usr_arg) {
+  static int callback_receive(SOCKET sock, const sockaddr_in *sa_remote,
+                              const char *smsg, unsigned int nmsg,
+                              void *usr_arg) {
     if (usr_arg) {
       return ((CVzLogManage*)usr_arg)->OnReceive(sock, sa_remote, smsg, nmsg);
     }
     return -1;
   }
-  int OnReceive(SOCKET             sock,
-                const sockaddr_in *raddr,
-                const char        *smsg,
-                unsigned int       nmsg);
+  int OnReceive(SOCKET sock, const sockaddr_in *raddr,
+                const char *smsg, unsigned int nmsg);
 
   static int callback_timeout(void *usr_arg) {
     if (usr_arg) {
@@ -79,16 +72,18 @@ class CVzLogManage {
   int OnTimeout();
 
  protected:
-  TAG_SHM_ARG     k_shm_mod;
+  TAG_SHM_ARG    *shm_mod_;
 
-  unsigned int    k_en_stdout;    // 使能输出
-  unsigned int    k_en_watchdog;  // 使能看门狗
+  unsigned int    is_stdout_;     // 使能输出
+  unsigned int    is_reboot_;     // 使能看门狗
 
  private:
-  CVzLogShm       k_shm_arg;      // 共享参数
-  CVzLogSrv       k_log_srv;      // 网络服务
-  CVzLogFile      k_log_file;     // 普通日志
-  CVzWdgFile      k_wdg_file;     // 看门狗日志
+  CVzLogSrv       log_srv_;       // 网络服务
+  CVzLogFile      log_file_;      // 普通日志
+  CVzWdgFile      wdg_file_;      // 看门狗日志
+
+ private:
+  unsigned int    stride_watch_time_;  // 比GetSysSec大,跳过记录日志和心跳检查;
 };
 }  // namespace vzlogging
 #endif  // LIBVZLOGSERVER_CVZLOGMANAGE_H_

@@ -70,13 +70,17 @@ void *RegisterWatchDogKey(const char   *s_descrebe,
 *Return      : 1=所有模块运行正常,<0有1个或几个模块运行失败
 ************************************************************************/
 int IsAllModuleRuning() {
-  vzlogging::TAG_SHM_ARG shm_arg;
-  int res = k_shm_arg.GetShmArg(&shm_arg);
+  vzlogging::TAG_SHM_ARG *shm_arg = 
+    (vzlogging::TAG_SHM_ARG*)k_shm_arg.GetData();
+  if (shm_arg == NULL) {
+    VZ_ERROR("get share arg failed.");
+    return -1;
+  }
 
   int no_run_mod = 0;
   unsigned int nsec = vzlogging::GetSysSec();
   for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
-    vzlogging::TAG_MODULE_STATE &cmod = shm_arg.mod_state[i];
+    vzlogging::TAG_MODULE_STATE &cmod = shm_arg->mod_state[i];
     if (cmod.mark == DEF_TAG_MARK
         && cmod.app_name[0] != '\0') {
       // 加入时间和最后一次心跳时间一致,认为没收到心跳
@@ -94,13 +98,17 @@ int IsAllModuleRuning() {
 }
 
 int IsModuleRuning(const char *name, const char *desc) {
-  vzlogging::TAG_SHM_ARG shm_arg;
-  int res = k_shm_arg.GetShmArg(&shm_arg);
+  vzlogging::TAG_SHM_ARG *shm_arg =
+    (vzlogging::TAG_SHM_ARG*)k_shm_arg.GetData();
+  if (shm_arg == NULL) {
+    VZ_ERROR("get share arg failed.");
+    return -1;
+  }
 
   int no_run_mod = 0;
   unsigned int nsec = vzlogging::GetSysSec();
   for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
-    vzlogging::TAG_MODULE_STATE &cmod = shm_arg.mod_state[i];
+    vzlogging::TAG_MODULE_STATE &cmod = shm_arg->mod_state[i];
     //printf("0x%x app_name %s, desc %s. heartbeat %d.\n", 
     //       cmod.mark, cmod.app_name, cmod.descrebe,
     //       cmod.last_heartbeat);

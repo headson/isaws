@@ -43,9 +43,9 @@ bool CBlockBuffer::ReallocBuffer(uint32 size) {
   uint32 new_size = 3 * buffer_size_ / 2;
   while ((new_size - UsedSize()) < size) {  // 计算新的剩余空间是否够用
     new_size = 3 * new_size / 2;
-    if (new_size > SOCK_MAX_BUFFER_SIZE) {  // 超过了最大空间
-      return false;
-    }
+    //if (new_size > SOCK_MAX_BUFFER_SIZE) {  // 超过了最大空间
+    //  return false;
+    //}
   }
 
   uint8 *new_buffer = new uint8[new_size];
