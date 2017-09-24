@@ -44,8 +44,8 @@ bool CListenMessage::Start(unsigned short n_web_port, const char *s_web_path) {
       main_thread_->socketserver()->GetEvtService();
 
     dp_cli_ = DpClient_CreatePollHandle(dpcli_poll_msg_cb, this,
-                                          dpcli_poll_state_cb, this,
-                                          p_evt_srv);
+                                        dpcli_poll_state_cb, this,
+                                        p_evt_srv);
     if (dp_cli_ == NULL) {
       LOG(L_ERROR) << "dp client create poll handle failed.";
 
@@ -74,22 +74,20 @@ void CListenMessage::Stop() {
 }
 
 void CListenMessage::RunLoop() {
-  while (true) {
-    main_thread_->ProcessMessages(4 * 1000);
+  main_thread_->ProcessMessages(4 * 1000);
 
-    static void *hdl_watchdog = NULL;
-    if (hdl_watchdog == NULL) {
-      hdl_watchdog = RegisterWatchDogKey(
-        "MAIN", 4, DEF_WATCHDOG_TIMEOUT);
-    }
+  static void *hdl_watchdog = NULL;
+  if (hdl_watchdog == NULL) {
+    hdl_watchdog = RegisterWatchDogKey(
+                     "MAIN", 4, DEF_WATCHDOG_TIMEOUT);
+  }
 
-    static time_t old_time = time(NULL);
-    time_t now_time = time(NULL);
-    if (abs(now_time - old_time) >= DEF_FEEDDOG_TIME) {
-      old_time = now_time;
-      if (hdl_watchdog) {
-        FeedDog(hdl_watchdog);
-      }
+  static time_t old_time = time(NULL);
+  time_t now_time = time(NULL);
+  if (abs(now_time - old_time) >= DEF_FEEDDOG_TIME) {
+    old_time = now_time;
+    if (hdl_watchdog) {
+      FeedDog(hdl_watchdog);
     }
   }
 }

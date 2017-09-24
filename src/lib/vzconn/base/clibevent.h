@@ -145,32 +145,15 @@ typedef EVT_LOOP EventService;
 extern "C" {
 #endif
 
-///SIGNAL/////////////////////////////////////////////////////////////////
 /************************************************************************
-*Description : 创建信号监听
-*Parameters  : p_evt_service[IN] 事件分发器指针
-*              n_signal_no[IN] 信号 SIGINT\SIGTERM\SIGKILL
-*              p_callback[IN] 信号触发时回调函数
-*              p_user_arg[IN] 信号触发函数回调传出用户指针
-*Return      : !=NULL 成功, ==NULL失败
-************************************************************************/
-typedef void* EventSignal;   // 信号量
-// libevent监听signal事件
-typedef int(*Event_SignalCallback)(int         n_signal,
-                                   short       events,
-                                   const void *p_usr_arg);
-
-EventSignal Event_CreateSignalHandle(const vzconn::EventService*  evt_service,
-                                     int                  signal_no,
-                                     Event_SignalCallback callback,
-                                     void                *user_arg);
-
-/************************************************************************
-*Description : 释放信号监听
-*Parameters  : p_evt_sig[IN] 信号监听句柄
+*Description : 退出信号监听
+*Parameters  : evt_srv[IN] 事件分发器指针
+*              is_exit[IN]
 *Return      :
 ************************************************************************/
-void Event_ReleaseSignalHandle(EventSignal p_evt_sig);
+void ExitSignalHandle(vzconn::EventService *evt_srv,
+                      unsigned int *is_exit);
+
 #ifdef __cplusplus
 };
 #endif

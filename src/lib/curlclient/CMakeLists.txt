@@ -23,13 +23,23 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-    ${CMAKE_CURRENT_SOURCE_DIR}/chttpclient.h
-	${CMAKE_CURRENT_SOURCE_DIR}/chttpclient.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/chttpeasysync.h
+	${CMAKE_CURRENT_SOURCE_DIR}/chttpeasysync.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/chttpeasyasync.h
+	${CMAKE_CURRENT_SOURCE_DIR}/chttpeasyasync.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cmultiserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cmultiserver.cpp
 )
 
 SOURCE_GROUP(httpclient FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/chttpclient.h
-	${CMAKE_CURRENT_SOURCE_DIR}/chttpclient.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/chttpeasysync.h
+	${CMAKE_CURRENT_SOURCE_DIR}/chttpeasysync.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/chttpeasyasync.h
+	${CMAKE_CURRENT_SOURCE_DIR}/chttpeasyasync.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/cmultiserver.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cmultiserver.cpp
 )
 
 #########################################################################

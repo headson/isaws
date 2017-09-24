@@ -30,8 +30,7 @@ static size_t OnRespData(void* buffer, size_t size, size_t nmemb, void* lpVoid) 
   if(NULL == str || NULL == buffer) {
     return -1;
   }
-  char* pData = (char*)buffer;
-  str->append(pData, size * nmemb);
+  str->append((char*)buffer, size * nmemb);
   return nmemb;
 }
 

@@ -12,6 +12,7 @@ SET(VZPROJECT_INCLUDE_DIR
 	${PROJECT_SOURCE_DIR}/src/lib
 	${PROJECT_SOURCE_DIR}/src/third_part
 	${PROJECT_SOURCE_DIR}/src/third_part/boost
+	${PROJECT_SOURCE_DIR}/src/third_part/libiconv/win32/include
 	${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/vs2010/include
 	${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2010/include
 )
@@ -23,6 +24,7 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 	SET(VZPROJECT_LIBRARY_DIR
 		${INTERFACE_LIBRARY_DIR}
 		${PROJECT_SOURCE_DIR}/lib/vs2013
+		${PROJECT_SOURCE_DIR}/src/third_part/libiconv/win32/lib
 		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/vs2010/lib
 		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2010/lib
 	)
@@ -39,6 +41,7 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
 	SET(VZPROJECT_LIBRARY_DIR
 		${INTERFACE_LIBRARY_DIR}
 		${PROJECT_SOURCE_DIR}/lib/vs2013
+		${PROJECT_SOURCE_DIR}/src/third_part/libiconv/win32/lib
 		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/vs2010/lib
 		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2010/lib
 	)
