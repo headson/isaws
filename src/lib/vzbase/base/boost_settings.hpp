@@ -31,6 +31,6 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/weak_ptr.hpp"
 #include "boost/enable_shared_from_this.hpp"
-#include "vzbase/base/noncoypable.h"
+#include "boost/noncopyable.hpp"
 
 #endif  // THIRED_PART_BOOST_BOOST_SETTINGS_H_

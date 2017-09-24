@@ -6,7 +6,7 @@
 #define _CDATABASE_H_
 
 #include "vzbase/base/basictypes.h"
-#include "vzbase/base/noncoypable.h"
+#include "vzbase/base/boost_settings.hpp"
 
 #include "json/json.h"
 #include "sqlite3/sqlite3.h"
@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-class CDataBase : public vzbase::noncopyable {
+class CDataBase : public boost::noncopyable {
  public:
   CDataBase();
   virtual ~CDataBase();

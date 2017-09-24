@@ -59,7 +59,6 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/constructormagic.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
 	${WIN32_LOAD_FILE}
@@ -115,7 +114,6 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/constructormagic.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
 	${WIN32_LOAD_FILE}
