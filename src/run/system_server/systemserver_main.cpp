@@ -40,20 +40,19 @@ int main(int argc, char *argv[]) {
 
   DpEvtService evt_service =
     (DpEvtService)vzbase::Thread::Current()->socketserver()->GetEvtService();
-
-  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGINT, SignalHandle, NULL);
-  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGTERM, SignalHandle, NULL);
-  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGSEGV, SignalHandle, NULL);
-  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGABRT, SignalHandle, NULL);
-#ifdef POSIX
-  Event_CreateSignalHandle((vzconn::EventService*)evt_service, SIGPIPE, SignalHandle, NULL);
-#endif
+  
+  unsigned int is_exit = false;
+  ExitSignalHandle((vzconn::EventService*)evt_service, &is_exit);
 
   DpClient_Init(DEF_DP_SRV_IP, DEF_DP_SRV_PORT);
   Kvdb_Start(DEF_KVDB_SRV_IP, DEF_KVDB_SRV_PORT);
 
-  bool b_ret = sys::CListenMessage::Instance()->Start();
-  while (b_ret) {
+  bool res = sys::CListenMessage::Instance()->Start();
+  if (false == res) {
+    LOG(L_ERROR) << "start failed.";
+    return -1;
+  }
+  while (1 == is_exit) {
     sys::CListenMessage::Instance()->RunLoop();
   }
 

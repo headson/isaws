@@ -5,15 +5,14 @@
 #ifndef LIBCURLCLIENT_CHTTPCLIENT_H
 #define LIBCURLCLIENT_CHTTPCLIENT_H
 
+#include "curlclient/base/basedefines.h"
+
 #include <string>
 
-#define HTTP_TIMEOUT_CONN    5
-#define HTTP_TIMEOUT_RESP    5
-
-class CHttpClient {
+class CHttpEasySync {
  public:
-  CHttpClient(void);
-  ~CHttpClient(void);
+  CHttpEasySync(void);
+  ~CHttpEasySync(void);
  public:
   /**
   * @brief HTTP POST请求

@@ -77,7 +77,7 @@ class CInetAddr {
 class CClientInterface;
 class CTcpServerInterface;
 
-class VSocket : public vzbase::noncopyable,
+class VSocket : public boost::noncopyable,
   public boost::enable_shared_from_this<VSocket> {
 
  public:

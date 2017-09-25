@@ -1,13 +1,13 @@
-#include "chttpclient.h"
+#include "chttpeasysync.h"
 #include "curl/curl.h"
 
 #include <string>
 
-CHttpClient::CHttpClient(void) 
+CHttpEasySync::CHttpEasySync(void) 
   : is_debug_(0) {
 }
 
-CHttpClient::~CHttpClient(void) {
+CHttpEasySync::~CHttpEasySync(void) {
 }
 
 static int OnDebug(CURL *, curl_infotype itype, char * pData, size_t size, void *) {
@@ -30,12 +30,11 @@ static size_t OnRespData(void* buffer, size_t size, size_t nmemb, void* lpVoid) 
   if(NULL == str || NULL == buffer) {
     return -1;
   }
-  char* pData = (char*)buffer;
-  str->append(pData, size * nmemb);
+  str->append((char*)buffer, size * nmemb);
   return nmemb;
 }
 
-int CHttpClient::Post(const std::string &surl, unsigned int nport,
+int CHttpEasySync::Post(const std::string &surl, unsigned int nport,
                       const std::string &spost, std::string &sresp) {
   CURLcode res;
   CURL* curl = curl_easy_init();
@@ -54,14 +53,14 @@ int CHttpClient::Post(const std::string &surl, unsigned int nport,
   curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnRespData);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&sresp);
   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, HTTP_TIMEOUT_CONN);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, HTTP_TIMEOUT_RESP);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, HTTP_TIMEOUT_CONN);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, HTTP_TIMEOUT_RESP);
   res = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   return res;
 }
 
-int CHttpClient::Get(const std::string &surl, unsigned int nport,
+int CHttpEasySync::Get(const std::string &surl, unsigned int nport,
                      std::string &sresp) {
   CURLcode res;
   CURL *curl = curl_easy_init();
@@ -82,14 +81,14 @@ int CHttpClient::Get(const std::string &surl, unsigned int nport,
   * 如果不设置这个选项，libcurl将会发信号打断这个wait从而导致程序退出。
   */
   curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
-  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, HTTP_TIMEOUT_CONN);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, HTTP_TIMEOUT_RESP);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, HTTP_TIMEOUT_CONN);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, HTTP_TIMEOUT_RESP);
   res = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   return res;
 }
 
-int CHttpClient::Posts(const std::string &surl, unsigned int nport,
+int CHttpEasySync::Posts(const std::string &surl, unsigned int nport,
                        const std::string &spost, std::string &sresp,
                        const char *pCaPath) {
   CURLcode res;
@@ -118,14 +117,14 @@ int CHttpClient::Posts(const std::string &surl, unsigned int nport,
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, true);
     curl_easy_setopt(curl, CURLOPT_CAINFO, pCaPath);
   }
-  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, HTTP_TIMEOUT_CONN);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, HTTP_TIMEOUT_RESP);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, HTTP_TIMEOUT_CONN);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, HTTP_TIMEOUT_RESP);
   res = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   return res;
 }
 
-int CHttpClient::Gets(const std::string &surl, unsigned int nport, 
+int CHttpEasySync::Gets(const std::string &surl, unsigned int nport, 
                       std::string &sresp,
                       const char *pCaPath) {
   CURLcode res;
@@ -150,18 +149,18 @@ int CHttpClient::Gets(const std::string &surl, unsigned int nport,
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, true);
     curl_easy_setopt(curl, CURLOPT_CAINFO, pCaPath);
   }
-  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, HTTP_TIMEOUT_CONN);
-  curl_easy_setopt(curl, CURLOPT_TIMEOUT, HTTP_TIMEOUT_RESP);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT_MS, HTTP_TIMEOUT_CONN);
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, HTTP_TIMEOUT_RESP);
   res = curl_easy_perform(curl);
   curl_easy_cleanup(curl);
   return res;
 }
 
-void CHttpClient::SetDebug(bool bDebug) {
+void CHttpEasySync::SetDebug(bool bDebug) {
   is_debug_ = bDebug ? 1 : 0;
 }
 
-const char *CHttpClient::GetErr(int error) {
+const char *CHttpEasySync::GetErr(int error) {
   switch (error) {
   case CURLE_OK:
     return "No error";

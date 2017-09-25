@@ -82,22 +82,20 @@ void CListenMessage::Stop() {
 }
 
 void CListenMessage::RunLoop() {
-  while (true) {
-    main_thread_->ProcessMessages(4*1000);
+  main_thread_->ProcessMessages(4*1000);
 
-    static void *hdl_watchdog = NULL;
-    if (hdl_watchdog == NULL) {
-      hdl_watchdog = RegisterWatchDogKey(
-        "MAIN", 4, DEF_WATCHDOG_TIMEOUT);
-    }
+  static void *hdl_watchdog = NULL;
+  if (hdl_watchdog == NULL) {
+    hdl_watchdog = RegisterWatchDogKey(
+                     "MAIN", 4, DEF_WATCHDOG_TIMEOUT);
+  }
 
-    static time_t old_time = time(NULL);
-    time_t now_time = time(NULL);
-    if (abs(now_time - old_time) >= DEF_FEEDDOG_TIME) {
-      old_time = now_time;
-      if (hdl_watchdog) {
-        FeedDog(hdl_watchdog);
-      }
+  static time_t old_time = time(NULL);
+  time_t now_time = time(NULL);
+  if (abs(now_time - old_time) >= DEF_FEEDDOG_TIME) {
+    old_time = now_time;
+    if (hdl_watchdog) {
+      FeedDog(hdl_watchdog);
     }
   }
 }

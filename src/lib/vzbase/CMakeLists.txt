@@ -55,14 +55,10 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/stringhelper.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/stringhelper.cpp
-	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/constructormagic.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
 	${WIN32_LOAD_FILE}
@@ -86,8 +82,8 @@ SET(SRC_LIST
 
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
-	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.c
-	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.h
+	${CMAKE_CURRENT_SOURCE_DIR}/helper/stringhelper.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/helper/stringhelper.h
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/thread/thread.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/thread/thread.h
@@ -114,14 +110,10 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/stringhelper.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/stringhelper.cpp
-	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/common.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/criticalsection.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/constructormagic.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
 	${WIN32_LOAD_FILE}
@@ -147,8 +139,8 @@ SOURCE_GROUP(base FILES
 SOURCE_GROUP(helper FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
-	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.c
-	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.h
+	${CMAKE_CURRENT_SOURCE_DIR}/helper/stringhelper.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/helper/stringhelper.h
 )
 
 SOURCE_GROUP(thread FILES

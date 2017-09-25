@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #include "vzlogging/base/vzbases.h"
 #include "vzlogging/server/cvzlogmanage.h"
 
@@ -19,27 +18,8 @@
 #include "getopt.h"
 #endif
 
-/*喂狗回调*/
-int sys_feeddog();
-
-static void PrintUsage() {
-  printf("\n");
-  printf("\n");
-  printf("  usage:\n");
-  printf("\n");
-  printf(
-    "      -v  <trans level 123> Defualt value is 3 L_ERROR send to server\n");
-  printf(
-    "      -p  <trans port> Defualt value is 5760\n");
-  printf(
-    "      -s  <PATH> change log save path\n");
-  printf(
-    "      -d  print all log in console\n");
-  printf(
-    "      -h  print usage\n");
-  printf("\n");
-  exit(1);
-}
+static void PrintUsage();
+static void HardwareFeeddog();
 
 #ifdef _WIN32
 
@@ -64,7 +44,6 @@ int main(int argc, char* argv[]) {
   // system("killall watchdog");
   system("killall feeddog");
   usleep(1000);
-
 
   unsigned int  is_print = 0;              // 默认关闭日志控制台打印
   unsigned int  is_reboot = 1;
@@ -140,7 +119,7 @@ int main(int argc, char* argv[]) {
     now_sec = vzlogging::GetSysSec();
     if ((now_sec - old_sec) >= 1) {
       old_sec = now_sec;
-      sys_feeddog();
+      HardwareFeeddog();
     }
   }
 
@@ -158,10 +137,21 @@ int main(int argc, char* argv[]) {
 #include <sys/ioctl.h>
 #include <linux/watchdog.h>
 #endif
-int sys_feeddog() {
-#ifndef _WIN32
-
-#endif
-  return 0;
+void HardwareFeeddog() {
 }
+
+static void PrintUsage() {
+  printf("\n");
+  printf("\n");
+  printf("  usage:\n");
+  printf("\n");
+  printf("      -v  <trans level 123> Defualt value is 3 L_ERROR send to server\n");
+  printf("      -p  <trans port> Defualt value is 5760\n");
+  printf("      -s  <PATH> change log save path\n");
+  printf("      -d  print all log in console\n");
+  printf("      -h  print usage\n");
+  printf("\n");
+  exit(1);
+}
+
 

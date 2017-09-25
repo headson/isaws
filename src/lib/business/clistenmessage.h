@@ -6,7 +6,7 @@
 #define _CLISTENMESSAGE_H
 
 #include "vzbase/base/basictypes.h"
-#include "vzbase/base/noncoypable.h"
+#include "vzbase/base/boost_settings.hpp"
 
 #include "vzbase/thread/thread.h"
 
@@ -16,7 +16,7 @@
 
 namespace bs {
 
-class CListenMessage : public vzbase::noncopyable,
+class CListenMessage : public boost::noncopyable,
   public vzbase::MessageHandler {
  protected:
   CListenMessage();

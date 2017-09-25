@@ -15,7 +15,7 @@
 namespace vzconn {
 
 class CEvtTcpClient : public VSocket,
-  public vzbase::noncopyable,
+  public boost::noncopyable,
   public boost::enable_shared_from_this<CEvtTcpClient> {
 
  public:

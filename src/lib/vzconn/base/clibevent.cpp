@@ -244,43 +244,62 @@ void EVT_IO::evt_callback(evutil_socket_t fd, short events, void *ctx) {
 #ifdef __cplusplus
 extern "C" {
 #endif
+#include <signal.h>
 
-EventSignal Event_CreateSignalHandle(const vzconn::EventService* evt_service,
-                                     int signal_no,
-                                     Event_SignalCallback callback,
-                                     void *user_arg) {
-  vzconn::EVT_IO *p_evt_io = new vzconn::EVT_IO();
-  if (NULL == p_evt_io) {
+static int EvtSignalCallback(int sgl_num, short events, const void *usr_arg) {
+  if (sgl_num == SIGINT) {
+    LOG(L_ERROR) << "revive SIGINT,End of the sysyem server";
+  } else if (sgl_num == SIGTERM) {
+    LOG(L_ERROR) << "revive SIGTERM,End of the sysyem server";
+  } else if (sgl_num == SIGSEGV) {
+    LOG(L_ERROR) << "revive SIGSEGV,End of the sysyem server";
+  } else if (sgl_num == SIGABRT) {
+    LOG(L_ERROR) << "revive SIGSEGV,End of the sysyem server";
+  }
+#ifdef POSIX
+  else if (sgl_num == SIGPIPE) {
+    LOG(L_INFO) << "revive SIGSEGV, sysyem server";
+  }
+#endif
+  if (sgl_num == SIGINT || sgl_num == SIGTERM ||
+      sgl_num == SIGSEGV || sgl_num == SIGABRT) {
+    *((unsigned int*)usr_arg) = 1;
+    LOG(L_ERROR) << "End of the sysyem server";
+  }
+  return 0;
+}
+
+static vzconn::EVT_IO *CreateSignalHandle(vzconn::EventService* evt_service,
+    int signal_no, void *user_arg) {
+  vzconn::EVT_IO *evt_io = new vzconn::EVT_IO();
+  if (NULL == evt_io) {
     LOG(L_ERROR) << "new evt_io failed.";
     return NULL;
   }
 
-  p_evt_io->Init((vzconn::EVT_LOOP*)evt_service,
-                 (vzconn::EVT_FUNC)callback, user_arg);
-  int32 n_ret = p_evt_io->Start(signal_no, EV_SIGNAL | EVT_PERSIST);
+  evt_io->Init((vzconn::EVT_LOOP*)evt_service,
+               (vzconn::EVT_FUNC)EvtSignalCallback, user_arg);
+  int32 n_ret = evt_io->Start(signal_no, EV_SIGNAL | EVT_PERSIST);
   if (n_ret != 0) {
     LOG(L_ERROR) << "listening signal failed.";
 
-    delete p_evt_io;
-    p_evt_io = NULL;
+    delete evt_io;
+    evt_io = NULL;
   }
-  return p_evt_io;
+  return evt_io;
 }
 
-
-void Event_ReleaseSignalHandle(EventSignal p_evt_handle) {
-  vzconn::EVT_IO *p_evt_io = (vzconn::EVT_IO*)p_evt_handle;
-  if (p_evt_io == NULL) {
-    LOG(L_ERROR) << "param is null.";
-    return;
-  }
-
-  p_evt_io->Stop();
-
-  delete p_evt_io;
-  p_evt_io = NULL;
+void ExitSignalHandle(vzconn::EventService *evt_srv,
+                      unsigned int *is_exit) {
+  CreateSignalHandle(evt_srv, SIGINT,  is_exit);
+  CreateSignalHandle(evt_srv, SIGTERM, is_exit);
+  CreateSignalHandle(evt_srv, SIGSEGV, is_exit);
+  CreateSignalHandle(evt_srv, SIGABRT, is_exit);
+#ifdef POSIX
+  CreateSignalHandle(evt_srv, SIGPIPE, is_exit);
+#endif
 }
+
 #ifdef __cplusplus
 };
 #endif
-
