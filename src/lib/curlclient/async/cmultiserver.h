@@ -1,30 +1,32 @@
 /************************************************************************
-*Author      : Sober.Peng 17-09-24
-*Description :
+*Author      : Sober.Peng 17-07-03
+*Description : 封装curl multi+libevent实现异步http
 ************************************************************************/
-#ifndef LIBCURLCLIENT_CMULTISERVER_H
-#define LIBCURLCLIENT_CMULTISERVER_H
+#ifndef LIBHTTPSENDER_CCURLMULTI_H_
+#define LIBHTTPSENDER_CCURLMULTI_H_
 
-#include "curlclient/base/basedefines.h"
+#include "vzbase/base/basictypes.h"
 
-#include "curl/curl.h"
+#include <string>
+#include <curl/curl.h>
+
 #include "vzconn/base/clibevent.h"
 
 class CMultiServer {
  public:
-  class CEvtCurl {
+  class CCurlEvent {
    public:
-    explicit CEvtCurl(curl_socket_t fd);
-    ~CEvtCurl();
+    explicit CCurlEvent(curl_socket_t fd);
+    ~CCurlEvent();
 
     friend class CMultiServer;
 
    protected:
-    static int32 event_cb(SOCKET fd, short kind, const void *userp);
+    static int event_cb(SOCKET fd, short kind, const void *userp);
 
    public:
-    curl_socket_t  fd_sock_;
-    vzconn::EVT_IO c_evt_io_;
+    vzconn::EVT_IO evt_io_;
+    curl_socket_t  curl_sock_;
   };
 
  protected:
@@ -38,16 +40,11 @@ class CMultiServer {
   static CMultiServer *Create(vzconn::EVT_LOOP *p_evt_loop);
   static void Remove(CMultiServer *curl_service);
 
-  bool PostData(HttpConn *p_conn);
+  CURLM *curlm() {
+    return curl_multi_;
+  }
 
-  bool PostDevRegData(HttpConn *p_conn, DeviceRegData &regdata);
-
-  bool PostImageFile(HttpConn       *p_conn,
-                     UserGetImgInfo *p_img_info,
-                     std::string     s_user,
-                     std::string     s_password);
-
-  static bool isSuccess(int errcode, std::string &serr);
+  static const char *CurlEasyError(int error);
 
  private:
   bool InitCurlServices();
@@ -57,21 +54,18 @@ class CMultiServer {
   static int multi_sock_cb(CURL *e, curl_socket_t s, int what, void *cbp, void *sockp);
   static int multi_timer_cb(CURLM *multi, long timeout_ms, CMultiServer *g);
 
-  static int32 timer_cb(SOCKET fd, short kind, const void *pthiz);
-
-  /* CURLOPT_WRITEFUNCTION */
-  static size_t easy_recv_cb(void *ptr, size_t size, size_t nmemb, void *p_thiz);
+  static int timer_cb(SOCKET fd, short kind, const void *pthiz);
 
  public:
-  void         easy_check_info();
+  void easy_check_info();
 
  public:
-  const vzconn::EVT_LOOP *p_evt_loop_;
-  vzconn::EVT_TIMER       c_evt_timer_;
+  const vzconn::EVT_LOOP *evt_loop_;
+  vzconn::EVT_TIMER       evt_timer_;
 
-  CURLM                  *p_curl_multi_;
-  int32                   n_still_running_;
+  CURLM                  *curl_multi_;
+  int32                   still_running_;
 };
 
+#endif  // LIBHTTPSENDER_CCURLMULTI_H_
 
-#endif  // LIBCURLCLIENT_CMULTISERVER_H

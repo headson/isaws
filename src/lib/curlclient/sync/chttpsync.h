@@ -9,10 +9,10 @@
 
 #include <string>
 
-class CHttpEasySync {
+class CHttpSync {
  public:
-  CHttpEasySync(void);
-  ~CHttpEasySync(void);
+  CHttpSync(void);
+  ~CHttpSync(void);
  public:
   /**
   * @brief HTTP POST请求

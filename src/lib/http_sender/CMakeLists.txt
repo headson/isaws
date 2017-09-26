@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 
 if(WIN32)
-    SET(BUILD_PROJECT_NAME "libsyscfg")
+    SET(BUILD_PROJECT_NAME "libhttpsender")
 elseif(UNIX)
-    SET(BUILD_PROJECT_NAME "syscfg")
+    SET(BUILD_PROJECT_NAME "httpsender")
 endif()
 
 #########################################################################
@@ -23,17 +23,13 @@ endforeach()
 #########################################################################
 MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
-	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.h
-	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
-	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
 
-SOURCE_GROUP(network FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.h
-	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.h
-	${CMAKE_CURRENT_SOURCE_DIR}/network/cnetctrl.cpp
+SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
 
 #########################################################################
@@ -43,4 +39,5 @@ MESSAGE(STATUS "Step 4 : Add project define")
 MESSAGE(STATUS "Step 5 : Add executable or library target")
 ADD_LIBRARY(${BUILD_PROJECT_NAME} ${PROJECT_SOURCE_LIST})
 SET_PROPERTY(TARGET ${BUILD_PROJECT_NAME} 
-	PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
+	PROPERTY FOLDER ${PROJECT_SET_NAME_LIB}
+)

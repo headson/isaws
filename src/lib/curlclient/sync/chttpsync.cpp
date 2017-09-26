@@ -1,13 +1,13 @@
-#include "chttpeasysync.h"
+#include "chttpsync.h"
 #include "curl/curl.h"
 
 #include <string>
 
-CHttpEasySync::CHttpEasySync(void) 
+CHttpSync::CHttpSync(void) 
   : is_debug_(0) {
 }
 
-CHttpEasySync::~CHttpEasySync(void) {
+CHttpSync::~CHttpSync(void) {
 }
 
 static int OnDebug(CURL *, curl_infotype itype, char * pData, size_t size, void *) {
@@ -34,7 +34,7 @@ static size_t OnRespData(void* buffer, size_t size, size_t nmemb, void* lpVoid) 
   return nmemb;
 }
 
-int CHttpEasySync::Post(const std::string &surl, unsigned int nport,
+int CHttpSync::Post(const std::string &surl, unsigned int nport,
                       const std::string &spost, std::string &sresp) {
   CURLcode res;
   CURL* curl = curl_easy_init();
@@ -60,7 +60,7 @@ int CHttpEasySync::Post(const std::string &surl, unsigned int nport,
   return res;
 }
 
-int CHttpEasySync::Get(const std::string &surl, unsigned int nport,
+int CHttpSync::Get(const std::string &surl, unsigned int nport,
                      std::string &sresp) {
   CURLcode res;
   CURL *curl = curl_easy_init();
@@ -88,7 +88,7 @@ int CHttpEasySync::Get(const std::string &surl, unsigned int nport,
   return res;
 }
 
-int CHttpEasySync::Posts(const std::string &surl, unsigned int nport,
+int CHttpSync::Posts(const std::string &surl, unsigned int nport,
                        const std::string &spost, std::string &sresp,
                        const char *pCaPath) {
   CURLcode res;
@@ -124,7 +124,7 @@ int CHttpEasySync::Posts(const std::string &surl, unsigned int nport,
   return res;
 }
 
-int CHttpEasySync::Gets(const std::string &surl, unsigned int nport, 
+int CHttpSync::Gets(const std::string &surl, unsigned int nport, 
                       std::string &sresp,
                       const char *pCaPath) {
   CURLcode res;
@@ -156,11 +156,11 @@ int CHttpEasySync::Gets(const std::string &surl, unsigned int nport,
   return res;
 }
 
-void CHttpEasySync::SetDebug(bool bDebug) {
+void CHttpSync::SetDebug(bool bDebug) {
   is_debug_ = bDebug ? 1 : 0;
 }
 
-const char *CHttpEasySync::GetErr(int error) {
+const char *CHttpSync::GetErr(int error) {
   switch (error) {
   case CURLE_OK:
     return "No error";

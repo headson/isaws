@@ -25,10 +25,10 @@ endforeach()
 #########################################################################
 #Step 3 : Add code source
 SET(SRC_LIST 
-	${CMAKE_CURRENT_SOURCE_DIR}/http_curl_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/http_send_main.cpp
 	)
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/http_curl_main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/http_send_main.cpp
 )
 #########################################################################
 #Step 4 : Add PROJECT define 
@@ -49,7 +49,6 @@ ENDIF()
 MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
-		libcachedclient
 		libhttpsender
 		libdpclient
 		libvzbase
@@ -63,7 +62,6 @@ else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		httpsender
 		dpclient
-		cachedclient
 		jsoncpp
 		#vzbase
 		#cachedclient

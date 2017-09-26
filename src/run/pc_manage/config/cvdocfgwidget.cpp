@@ -2,7 +2,7 @@
 #include "ui_cvdocfgwidget.h"
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
-#include "curlclient/chttpclient.h"
+#include "curlclient/sync/chttpsync.h"
 
 CVdoCfgWidget::CVdoCfgWidget(QWidget *parent)
   : QWidget(parent)
@@ -42,7 +42,7 @@ void CVdoCfgWidget::OnGetOsdSlot() {
   
   osd_cfg_ = "";
 
-  CHttpClient cli;
+  CHttpSync cli;
   cli.Post(dev.GetUrl(), 80, sreq, osd_cfg_);
   LOG(L_INFO) << osd_cfg_;
 
@@ -133,7 +133,7 @@ void CVdoCfgWidget::OnSetOsdSlot() {
   CDeviceDetect::Instance()->GetDev(dev, dev_id_);
 
   std::string sresp = "";
-  CHttpClient cli;
+  CHttpSync cli;
   cli.Post(dev.GetUrl(), 80, sreq, sresp);
   LOG(L_INFO) << sresp;
 }

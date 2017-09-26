@@ -25,11 +25,11 @@ MESSAGE(STATUS "Step 3 : Add project code")
 SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.h
 	
-    ${CMAKE_CURRENT_SOURCE_DIR}/sync/chttpeasysync.h
-	${CMAKE_CURRENT_SOURCE_DIR}/sync/chttpeasysync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/sync/chttpsync.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/chttpsync.cpp
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/async/chttpeasyasync.h
-	${CMAKE_CURRENT_SOURCE_DIR}/async/chttpeasyasync.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/async/chttpasync.h
+	${CMAKE_CURRENT_SOURCE_DIR}/async/chttpasync.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cmultiserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cmultiserver.cpp
 )
@@ -39,15 +39,15 @@ SOURCE_GROUP(base FILES
 )
 
 SOURCE_GROUP(async FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/async/chttpeasyasync.h
-	${CMAKE_CURRENT_SOURCE_DIR}/async/chttpeasyasync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/async/chttpasync.h
+	${CMAKE_CURRENT_SOURCE_DIR}/async/chttpasync.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cmultiserver.h
 	${CMAKE_CURRENT_SOURCE_DIR}/async/cmultiserver.cpp
 )
 
 SOURCE_GROUP(sync FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/sync/chttpeasysync.h
-	${CMAKE_CURRENT_SOURCE_DIR}/sync/chttpeasysync.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/sync/chttpsync.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/chttpsync.cpp
 )
 
 #########################################################################
