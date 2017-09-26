@@ -70,7 +70,7 @@ void *RegisterWatchDogKey(const char   *s_descrebe,
 *Return      : 1=所有模块运行正常,<0有1个或几个模块运行失败
 ************************************************************************/
 int IsAllModuleRuning() {
-  vzlogging::TAG_SHM_ARG *shm_arg = 
+  vzlogging::TAG_SHM_ARG *shm_arg =
     (vzlogging::TAG_SHM_ARG*)k_shm_arg.GetData();
   if (shm_arg == NULL) {
     VZ_ERROR("get share arg failed.");
@@ -109,7 +109,7 @@ int IsModuleRuning(const char *name, const char *desc) {
   unsigned int nsec = vzlogging::GetSysSec();
   for (int i = 0; i < MAX_WATCHDOG_A_DEVICE; i++) {
     vzlogging::TAG_MODULE_STATE &cmod = shm_arg->mod_state[i];
-    //printf("0x%x app_name %s, desc %s. heartbeat %d.\n", 
+    //printf("0x%x app_name %s, desc %s. heartbeat %d.\n",
     //       cmod.mark, cmod.app_name, cmod.descrebe,
     //       cmod.last_heartbeat);
     if (cmod.mark == DEF_TAG_MARK
@@ -135,19 +135,17 @@ int IsModuleRuning(const char *name, const char *desc) {
 /************************************************************************
 *Description : 喂狗接口, 定时调用, 否则看门狗服务判断此key相关线程挂掉
 *Parameters  : key[IN] 注册看门狗时使用传入的key值
-*Return      : true 喂狗成功, false 喂狗失败
+*Return      : >0 喂狗成功, -1 喂狗失败
 ************************************************************************/
 int FeedDog(const void *p_arg) {
   vzlogging::TAG_WATCHDOG* p_wdg = (vzlogging::TAG_WATCHDOG*)p_arg;
   if (p_wdg && p_wdg->n_mark == DEF_TAG_MARK) {
-    int n_ret = ::VzLog(L_HEARTBEAT, 0, __FILE__, __LINE__,
+    int res = ::VzLog(L_HEARTBEAT, 0, __FILE__, __LINE__,
                         "%s %d %s",
                         k_app_name,
                         p_wdg->n_max_timeout,
                         p_wdg->s_descrebe);
-    if (n_ret == 0) {
-      return 0;
-    }
+    return res;
   }
   return -1;
 }

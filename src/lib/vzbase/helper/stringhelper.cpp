@@ -20,9 +20,9 @@
 namespace vzbase {
 #endif // __cplusplus
 
-static int Convert(const char *from, const char *to,
-                   char *src, int srclen,
-                   char *dst, int dstlen) {
+int Convert(const char *from, const char *to,
+            char *src, int srclen,
+            char *dst, int dstlen) {
   // _DBG("\t >> [%s],%d\n", inbuf, inlen);
   // 1.
   char **pin = &src;
@@ -112,9 +112,9 @@ std::string GB2312ToUTF8(const std::string src) {
   return "";
 }
 
-int GB2312ToUTF8_C(const char *src, std::size_t src_size,
-                 char *dst, std::size_t dst_size) {
-  if (isUTF8String(src, src_size)) {
+int GB2312ToUTF8_C(const char *src, size_t src_size,
+                   char *dst, size_t dst_size) {
+  if (true == isUTF8String(src, src_size)) {
     if (dst_size >= src_size) {
       memcpy(dst, src, src_size);
       return src_size;
@@ -126,8 +126,28 @@ int GB2312ToUTF8_C(const char *src, std::size_t src_size,
   src_str.append(src, src_size);
 
   size_t out_size = dst_size;
-
   out_size = Convert("GB2312", "UTF-8",
+                     (char *)src_str.c_str(), src_str.size(),
+                     (char *)dst, out_size);
+
+  return out_size;
+}
+
+int UTF8ToGB2312_C(const char *src, size_t src_size,
+                   char *dst, size_t dst_size) {
+  if (false == isUTF8String(src, src_size)) {
+    if (dst_size >= src_size) {
+      memcpy(dst, src, src_size);
+      return src_size;
+    }
+    return 0;
+  }
+
+  std::string src_str;
+  src_str.append(src, src_size);
+
+  size_t out_size = dst_size;
+  out_size = Convert("UTF-8", "GB2312",
                      (char *)src_str.c_str(), src_str.size(),
                      (char *)dst, out_size);
 

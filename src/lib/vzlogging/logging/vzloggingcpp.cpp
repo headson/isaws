@@ -53,11 +53,11 @@ vzlogging::CVzLogStream::~CVzLogStream() {
 
     if (psock->nlog <= psock->max_nlog) {  // 分配日志buffer多了4字节,可存'\n\0'
       psock->slog[psock->nlog++] = '\n';
-      psock->slog[psock->nlog++] = '\0';
     }
 
     if (nlevel_ != L_HEARTBEAT) {
       if (local_print_ == 1 || k_log_print) {
+        psock->slog[psock->nlog] = '\0';
         VzLogPrint(psock->slog, psock->nlog);
       }
     }

@@ -12,6 +12,8 @@
 #include <string.h>
 
 #ifdef WIN32
+#include <io.h>
+#include <fcntl.h>
 #include <process.h>
 
 #include <windows.h>
@@ -149,7 +151,7 @@ bool VShm::Open(const char* name, int size) {
                                   (LPCSTR)name);
   }
   if (shm_id_ == NULL) {
-    printf("OpenFileMapping failed.\n");
+    perror("OpenFileMapping failed.\n");
     return false;
   }
 

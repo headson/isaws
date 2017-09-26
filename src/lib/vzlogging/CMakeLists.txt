@@ -49,6 +49,11 @@ SET(SRC_LIST_LOGGING
 	${CMAKE_CURRENT_SOURCE_DIR}/logging/vzwatchdog.cpp
 )
 
+#SET(SRC_HISI_DOG
+#	${CMAKE_CURRENT_SOURCE_DIR}/dog/vzhardwaredog.cpp
+#	${CMAKE_CURRENT_SOURCE_DIR}/dog/vzhardwaredog.h
+#)
+
 SET(SRC_LIST_LOGSERVER
 	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.c
@@ -76,6 +81,9 @@ SOURCE_GROUP(logging FILES
 )
 
 SOURCE_GROUP(server FILES
+	#${CMAKE_CURRENT_SOURCE_DIR}/dog/vzhardwaredog.cpp
+	#${CMAKE_CURRENT_SOURCE_DIR}/dog/vzhardwaredog.h
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/server/getopt.c
 	${CMAKE_CURRENT_SOURCE_DIR}/server/cvzlogserver.h
@@ -88,7 +96,9 @@ SOURCE_GROUP(server FILES
 MESSAGE(STATUS "Build vzlogserver library")
 add_library(${BUILD_PROJECT_NAME_LOGSERVER} STATIC
         ${SRC_LIST_BASE}
-        ${SRC_LIST_LOGSERVER})
+        ${SRC_LIST_LOGSERVER}
+        ${SRC_HISI_DOG}
+)
 set_property(TARGET ${BUILD_PROJECT_NAME_LOGSERVER} 
 	PROPERTY FOLDER ${PROJECT_SET_NAME_LIB})
 

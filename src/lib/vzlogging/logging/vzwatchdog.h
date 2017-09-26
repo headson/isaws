@@ -41,7 +41,7 @@ int IsModuleRuning(const char *name, const char *desc);
 /************************************************************************
 *Description: 喂狗接口, 定时调用, 否则看门狗服务判断此key相关线程挂掉
 *Parameters : key[IN] 注册看门狗时使用传入的key值
-*Return     : 0 喂狗成功,-1 喂狗失败
+*Return     : >0 喂狗成功, -1 喂狗失败
 *************************************************************************/
 int FeedDog(const void *p_wdg_hdl);
 

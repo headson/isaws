@@ -192,7 +192,7 @@ bool CachedService::AddFile(CachedStanza::Ptr stanza, bool is_cached) {
     stanza_msg->stanza = stanza;
     vzbase::MessageData::Ptr msg_data(stanza_msg);
 
-    cached_thread_->Post(this, 0, msg_data);
+    cached_thread_->Post(this, CACHED_ADD, msg_data);
   }
   return true;
 }
@@ -399,18 +399,29 @@ bool CachedService::ReadFile(const std::string path,
 void CachedService::RemoveOutOfDataStanza() {
   BOOST_ASSERT(cachedstanza_pool_ != NULL);
   LOG(L_INFO) << "cached stanza = " << cached_stanzas_.size()
-            << " cache_size_ " << cache_size_;
-  /*##rjx## 如果缓存队首数据未被存储，但队列中数据存在已经存储的则不能及时回收*/
-  while(cached_stanzas_.size() > cache_size_) {
+              << " cache_size_ " << cache_size_;
+  /*while(cached_stanzas_.size() > cache_size_) {
     CachedStanza::Ptr stanza = cached_stanzas_.front();
     if(stanza && stanza->IsSaved()) {
       cached_stanzas_.pop_front();
     } else {
-      //break;
-      vzsleep(1);
+      // break;
+      vsleep(1);
+    }
+  }*/
+
+  if (cached_stanzas_.size() < cache_size_) {
+    return;
+  }
+
+  std::deque<CachedStanza::Ptr>::iterator iter;
+  for (iter = cached_stanzas_.begin();
+       iter != cached_stanzas_.end(); ++iter) {
+    if ((*iter)->IsSaved()) {
+      cached_stanzas_.erase(iter);
+      break;
     }
   }
 }
-
 
 }

@@ -39,8 +39,8 @@
 // 看门狗文件,存储名为 watchdog.log
 #define DEF_WDG_REC_FILE    "watchdog"        // 默认看门狗存储名
 
-#define DEF_WDG_MODULE_FILE "c:\\tools\\module.cfg"    // 看门狗监控模块配置文件
-#define DEF_WDG_SHM_ARG     "c:\\tools\\wdg_shm_arg"
+#define DEF_WDG_MODULE_FILE "d:\\log\\module.cfg"    // 看门狗监控模块配置文件
+#define DEF_WDG_SHM_ARG     "Local\\wdg_shm_arg"
 #else
 typedef int         SOCKET;
 

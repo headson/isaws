@@ -442,7 +442,7 @@ int CVzLogFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       }
       do {
         n_log = fread(s_log, 1, A_LOG_SIZE, file);
-        if (n_log > 0 && n_log < A_LOG_SIZE) {
+        if (n_log > 0) {
           fwrite(s_log, 1, n_log, fd_err);
         }
       } while (!feof(file) && n_log > 0);
@@ -458,7 +458,7 @@ int CVzLogFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       if (p_file_) {
         do {
           n_log = fread(s_log, 1, A_LOG_SIZE, p_file_);
-          if (n_log > 0 && n_log < A_LOG_SIZE) {
+          if (n_log > 0) {
             fwrite(s_log, 1, n_log, fd_err);
           }
         } while (!feof(p_file_) && n_log > 0);

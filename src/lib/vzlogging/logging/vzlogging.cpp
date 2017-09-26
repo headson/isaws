@@ -120,11 +120,11 @@ int VzLog(unsigned int  nlevel,
 
     if (nlog <= ptls->max_nlog) {     // 分配日志buffer多了4字节,可存'\n\0'
       slog[nlog++] = '\n';
-      slog[nlog++] = '\0';
     }
 
     if (nlevel != L_HEARTBEAT) {
       if (local_print == 1 || k_log_print) {
+        slog[nlog] = '\0';
         vzlogging::VzLogPrint(slog, nlog);
       }
     }
@@ -180,10 +180,10 @@ int VzLogBin(unsigned int nlevel,
     nlog += buffer_index;
     if (nlog <= ptls->max_nlog) {      // 分配日志buffer多了4字节,可存'\n\0'
       slog[nlog++] = '\n';
-      slog[nlog++] = '\0';
     }
 
     if (local_print == 1 || k_log_print) {
+      slog[nlog] = '\0';
       vzlogging::VzLogPrint(slog, nlog);
     }
 

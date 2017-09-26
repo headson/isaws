@@ -96,7 +96,15 @@ bool CachedServer::ProcessCacheService(const CacheMessage *cache_msg,
                                        const uint8 *data,
                                        uint32 size) {
   if (cache_msg->type == CACHED_REPLACE) {
+    cache_service_->RemoveOutOfDataStanza();
     CachedStanza::Ptr stanza = CachedStanzaPool::Instance()->TakeStanza(size);
+    if (stanza.get() == NULL) {
+      // 第一次获取失败,cachedservice释放一次再尝试获取buffer;
+      // 只有当触发太快,cachedservice还没把数据真正写入磁盘才不能获取到buffer
+      cache_service_->RemoveOutOfDataStanza();
+      stanza = CachedStanzaPool::Instance()->TakeStanza(size);
+    }
+
     if (stanza) {
       stanza->SetPath(cache_msg->path);
       stanza->SetData(data, size);
