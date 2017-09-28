@@ -100,12 +100,12 @@ void CachedService::CheckFileLimit() {
   }
 #endif
   LOG(L_INFO) << "The file info "
-            << stanza.max_size << "\t"
-            << file_size << "\t"
-            << stanza.path;
+              << stanza.max_size << "\t"
+              << file_size << "\t"
+              << stanza.path;
   if (stanza.max_size < file_size) {
     // std::remove(stanza.path.c_str());
-	remove(stanza.path.c_str());
+    remove(stanza.path.c_str());
   }
 }
 
@@ -147,7 +147,7 @@ bool CachedService::InitFileLimitCheck() {
     Json::Value  value;
     if (!reader.parse(data, value)) {
       LOG(L_ERROR) << "Parse the file data error "
-                 << reader.getFormattedErrorMessages();
+                   << reader.getFormattedErrorMessages();
       break;
     }
 
@@ -177,8 +177,8 @@ bool CachedService::InitFileLimitCheck() {
 
 bool CachedService::AddFile(CachedStanza::Ptr stanza, bool is_cached) {
   LOG(L_INFO) << "Cached file = " << stanza->path()
-            <<" is cached "<< is_cached
-            <<" stanza use count "<<stanza.use_count();
+              <<" is cached "<< is_cached
+              <<" stanza use count "<<stanza.use_count();
   ReplaceCachedFile(stanza);
   // Try to remove out of data stanza
   RemoveOutOfDataStanza();
@@ -341,7 +341,7 @@ void CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
     //          << "\t" << stanza->size();
     if (ferror(fp) && try_write_times) {
       LOG(L_ERROR) << "Write file error: size != stanza->data.size() "
-                 << ferror(fp);
+                   << ferror(fp);
       perror("Failure to write file");
       LOG(L_ERROR) << "Try times " << MAX_TRY_TIMES - try_write_times;
       clearerr(fp);
@@ -363,11 +363,11 @@ void CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
   }
   if(write_size != stanza->size()) {
     LOG(L_ERROR) << "Write file error: size != stanza->data.size() "
-               << ferror(fp);
+                 << ferror(fp);
     perror("Failure to write file");
   } else {
     LOG(L_INFO) << "save cached file " << stanza->path()
-              << " stanze use count " << stanza.use_count();
+                << " stanze use count " << stanza.use_count();
   }
   stanza->SaveConfimation();
   fclose(fp);

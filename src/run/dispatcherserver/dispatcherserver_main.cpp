@@ -9,23 +9,20 @@
 #include "vzbase/thread/thread.h"
 
 int main(int argc, char *argv[]) {
-  //signal(SIGSEGV, &dump);
-
   InitVzLogging(argc, argv);
 #ifdef WIN32
   ShowVzLoggingAlways();
 #endif
-
+  
   vzbase::Thread *main_thread = vzbase::Thread::Current();
-  vzconn::EventService *evt_service =
+  vzconn::EventService *event_service =
     (vzconn::EventService *)main_thread->socketserver()->GetEvtService();
 
-  unsigned int is_exit = false;
-  ExitSignalHandle((vzconn::EventService*)evt_service, &is_exit);
+  unsigned int is_exit = 0;
+  ExitSignalHandle(event_service, "dispatcher_server", &is_exit);
 
-  dp::DpServer dpserver(*evt_service);
+  dp::DpServer dpserver(*event_service);
   dpserver.StartDpServer("0.0.0.0", 5291);
-
 
   kvdb::KvdbServer kvdb_server(main_thread);
 #ifdef WIN32
@@ -36,7 +33,7 @@ int main(int argc, char *argv[]) {
                               "/mnt/usr/kvdb_backup.db");
 #endif
 
-  while (1 == is_exit) {
+  while (0 == is_exit) {
     main_thread->ProcessMessages(4 * 1000);
 
     static void *hdl_watchdog = NULL;

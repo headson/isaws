@@ -31,7 +31,7 @@ int EVT_LOOP::Start() {
     }
   }
 
-  evt_exit_timer_.Init(this, exit_callback, this);
+  exit_timer_.Init(this, exit_callback, this);
   return 0;
 }
 
@@ -47,7 +47,7 @@ void EVT_LOOP::Stop() {
 int EVT_LOOP::RunLoop(unsigned int ms_timeout) {
   int n_ret = -1;
   if (base_event_) {
-    evt_exit_timer_.Stop();
+    exit_timer_.Stop();
 
     if (ms_timeout > 0) {
       LoopExit(ms_timeout);
@@ -73,7 +73,7 @@ void EVT_LOOP::LoopExit(unsigned int ms_timeout) {
       struct timeval tv;
       tv.tv_sec = ms_timeout / 1000;
       tv.tv_usec = ms_timeout % 1000 * 1000;
-      evt_exit_timer_.Start(ms_timeout, 0);
+      exit_timer_.Start(ms_timeout, 0);
     } else {
       n_ret = event_base_loopbreak(base_event_);
     }
@@ -246,25 +246,26 @@ extern "C" {
 #endif
 #include <signal.h>
 
+static char k_app_name[32] = {0};
 static int EvtSignalCallback(int sgl_num, short events, const void *usr_arg) {
   if (sgl_num == SIGINT) {
-    LOG(L_ERROR) << "revive SIGINT,End of the sysyem server";
+    LOG(L_ERROR) << "revive SIGINT, End of the " << k_app_name;
   } else if (sgl_num == SIGTERM) {
-    LOG(L_ERROR) << "revive SIGTERM,End of the sysyem server";
+    LOG(L_ERROR) << "revive SIGTERM, End of the " << k_app_name;
   } else if (sgl_num == SIGSEGV) {
-    LOG(L_ERROR) << "revive SIGSEGV,End of the sysyem server";
+    LOG(L_ERROR) << "revive SIGSEGV, End of the " << k_app_name;
   } else if (sgl_num == SIGABRT) {
-    LOG(L_ERROR) << "revive SIGSEGV,End of the sysyem server";
+    LOG(L_ERROR) << "revive SIGSEGV, End of the " << k_app_name;
   }
 #ifdef POSIX
   else if (sgl_num == SIGPIPE) {
-    LOG(L_INFO) << "revive SIGSEGV, sysyem server";
+    LOG(L_INFO) << "revive SIGSEGV, " << k_app_name;
   }
 #endif
   if (sgl_num == SIGINT || sgl_num == SIGTERM ||
       sgl_num == SIGSEGV || sgl_num == SIGABRT) {
     *((unsigned int*)usr_arg) = 1;
-    LOG(L_ERROR) << "End of the sysyem server";
+    LOG(L_ERROR) << "End of the " << k_app_name;
   }
   return 0;
 }
@@ -290,7 +291,9 @@ static vzconn::EVT_IO *CreateSignalHandle(vzconn::EventService* evt_service,
 }
 
 void ExitSignalHandle(vzconn::EventService *evt_srv,
-                      unsigned int *is_exit) {
+                      const char *app_name, unsigned int *is_exit) {
+  strncpy(k_app_name, app_name, 31);
+
   CreateSignalHandle(evt_srv, SIGINT,  is_exit);
   CreateSignalHandle(evt_srv, SIGTERM, is_exit);
   CreateSignalHandle(evt_srv, SIGSEGV, is_exit);

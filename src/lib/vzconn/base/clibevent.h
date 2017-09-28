@@ -80,7 +80,7 @@ class EVT_IO {
 
   EVT_FUNC        callback_;        // 消息回调
   void*           usr_args_;        // 回调参数
-  unsigned int          init_, start_;
+  unsigned int    init_, start_;
 
  public:
   EVT_IO();
@@ -95,13 +95,13 @@ class EVT_IO {
   *Return      : 0 成功
   ************************************************************************/
   int           Start(SOCKET hdl, int evt, unsigned int ms_timeout=0);
-  void            Stop();
+  void          Stop();
 
   // 用户主动唤醒事件,调用事件回调时使用
-  void            ActiceEvent();
+  void          ActiceEvent();
 
  private:
-  static void     evt_callback(evutil_socket_t fd, short events, void *ctx);
+  static void   evt_callback(evutil_socket_t fd, short events, void *ctx);
 };
 
 ///LOOP////////////////////////////////////////////////////////////////////////
@@ -109,8 +109,8 @@ class EVT_LOOP {
  private:
   struct event_base* base_event_;     // 只能在第一位
 
-  unsigned int             running_;        // 运行状态
-  EVT_TIMER          evt_exit_timer_; // 退出定时器
+  unsigned int       running_;        // 运行状态
+  EVT_TIMER          exit_timer_;     // 退出定时器
 
  public:
   EVT_LOOP();
@@ -148,11 +148,12 @@ extern "C" {
 /************************************************************************
 *Description : 退出信号监听
 *Parameters  : evt_srv[IN] 事件分发器指针
-*              is_exit[IN]
+*              app_name[IN] 进程名
+*              is_exit[IN] 0=进程不退出,1=进程退出; [事件回调中修改]
 *Return      :
 ************************************************************************/
-void ExitSignalHandle(vzconn::EventService *evt_srv,
-                      unsigned int *is_exit);
+extern void ExitSignalHandle(vzconn::EventService *evt_srv,
+                             const char *app_name, unsigned int *is_exit);
 
 #ifdef __cplusplus
 };

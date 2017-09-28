@@ -20,34 +20,31 @@
 namespace vzbase {
 #endif // __cplusplus
 
-int Convert(const char *from, const char *to,
-            char *src, int srclen,
-            char *dst, int dstlen) {
+bool Convert(const char *from_charset, const char *to_charset,
+             char *inbuf, size_t inlen,
+             char *outbuf, size_t *outlen) {
   // _DBG("\t >> [%s],%d\n", inbuf, inlen);
   // 1.
-  char **pin = &src;
-  size_t inlen = srclen;
-
-  char **pout = &dst;
-  size_t outlen = dstlen;
-  memset(dst, 0, dstlen);
+  iconv_t cd;
+  char **pin = &inbuf;
+  char **pout = &outbuf;
 
   // 2.
-  iconv_t cd = iconv_open(to, from);
+  cd = iconv_open(to_charset, from_charset);
   if (cd == (iconv_t)-1) {
     // _DBG("ICONV OPEN ERROR %s TO %s \n", from_charset, to_charset);
-    return -1;
+    return false;
   }
-  if (iconv(cd, (ICONV_CONST char**)pin, &inlen, pout, &outlen) == (size_t)-1) {
+  if (iconv(cd, (const char**)pin, &inlen, pout, outlen) == (size_t)-1) {
     //_DBG("THE FORMAT ERROR %s to %s [%s %d] [%s %d]\n", from_charset, to_charset,
     //     inbuf, inlen, outbuf, *outlen);
     iconv_close(cd);
-    return -2;
+    return false;
   } else {
     //_DBG("CONVERT SUCCEED %s to %s\n", from_charset, to_charset);
   }
   iconv_close(cd);
-  return (dstlen - outlen);
+  return true;
 }
 
 bool isUTF8String(const char *pText, int nLen) {
@@ -101,13 +98,18 @@ std::string GB2312ToUTF8(const std::string src) {
     return src;
   }
 
-  std::vector<unsigned char> dst(2 * src.length() + 16);
-  std::size_t dstlen = Convert("GB2312", "UTF-8",
-                               (char *)src.c_str(), src.length(),
-                               (char *)&dst[0], dst.size());
-  if (dstlen > 0) {
-    dst.resize(dstlen);  // È¥³ý¶àÓà×Ö·û
-    return std::string(dst.begin(), dst.end());
+  int dst_size = 2 * src.length() + 16;
+  std::vector<unsigned char> dst_buff(dst_size);
+
+  size_t dst_out = dst_size;
+  bool res = Convert("GB2312", "UTF-8",
+                     (char *)src.c_str(), src.length(),
+                     (char *)&dst_buff[0], &dst_out);
+  if (res) {
+    int dstlen = dst_size - dst_out;
+    dst_buff.resize(dstlen);  // È¥³ý¶àÓà×Ö·û
+
+    return std::string(dst_buff.begin(), dst_buff.end());
   }
   return "";
 }
@@ -125,12 +127,14 @@ int GB2312ToUTF8_C(const char *src, size_t src_size,
   std::string src_str;
   src_str.append(src, src_size);
 
-  size_t out_size = dst_size;
-  out_size = Convert("GB2312", "UTF-8",
+  size_t dst_out = dst_size;
+  bool res = Convert("GB2312", "UTF-8",
                      (char *)src_str.c_str(), src_str.size(),
-                     (char *)dst, out_size);
-
-  return out_size;
+                     (char *)dst, &dst_out);
+  if (res) {
+    return (dst_size - dst_out);
+  }
+  return 0;
 }
 
 int UTF8ToGB2312_C(const char *src, size_t src_size,
@@ -146,12 +150,14 @@ int UTF8ToGB2312_C(const char *src, size_t src_size,
   std::string src_str;
   src_str.append(src, src_size);
 
-  size_t out_size = dst_size;
-  out_size = Convert("UTF-8", "GB2312",
+  size_t dst_out = dst_size;
+  bool res = Convert("UTF-8", "GB2312",
                      (char *)src_str.c_str(), src_str.size(),
-                     (char *)dst, out_size);
-
-  return out_size;
+                     (char *)dst, &dst_out);
+  if (res) {
+    return (dst_size - dst_out);
+  }
+  return 0;
 }
 
 std::string UTF8ToGB2312(const std::string src) {
@@ -159,13 +165,18 @@ std::string UTF8ToGB2312(const std::string src) {
     return src;
   }
 
-  std::vector<unsigned char> dst(2 * src.length() + 16);
-  std::size_t dstlen = Convert("UTF-8", "GB2312",
-                               (char *)src.c_str(), src.length(),
-                               (char *)&dst[0], dst.size());
-  if (dstlen > 0) {
-    dst.resize(dstlen);  // È¥³ý¶àÓà×Ö·û
-    return std::string(dst.begin(), dst.end());
+  size_t dst_size = 2 * src.length() + 16;
+  std::vector<unsigned char> dst_buff(dst_size);
+
+  size_t dst_out = dst_size;
+  bool res = Convert("UTF-8", "GB2312",
+                     (char *)src.c_str(), src.length(),
+                     (char *)&dst_buff[0], &dst_out);
+  if (res) {
+    int dstlen = dst_size - dst_out;
+    dst_buff.resize(dstlen);  // È¥³ý¶àÓà×Ö·û
+
+    return std::string(dst_buff.begin(), dst_buff.end());
   }
   return "";
 }

@@ -30,8 +30,8 @@ CachedStanza::Ptr CachedStanzaPool::TakeStanza(std::size_t mini_size) {
   /*return CachedStanza::Ptr(new CachedStanza());*/
   //}
   LOG(L_WARNING) << "The stanza size reach limit "
-               << MAX_CACHED_STANZA_SIZE
-               << "\t" << stanzas_.size();
+                 << MAX_CACHED_STANZA_SIZE
+                 << "\t" << stanzas_.size();
   return CachedStanza::Ptr();
 }
 
@@ -65,7 +65,7 @@ CachedStanza::Ptr CachedStanzaPool::TaskPerfectStanza(std::size_t mini_size) {
       perfect_stanza.reset(*iter, &CachedStanzaPool::RecyleBuffer);
       stanzas_.erase(iter);
       LOG(L_INFO) << "Take stanza by mini size = " << mini_size
-                << "\t" << stanzas_.size();
+                  << "\t" << stanzas_.size();
       return perfect_stanza;
     }
   }
@@ -73,7 +73,7 @@ CachedStanza::Ptr CachedStanzaPool::TaskPerfectStanza(std::size_t mini_size) {
   perfect_stanza.reset(stanzas_.front(), &CachedStanzaPool::RecyleBuffer);
   stanzas_.pop_front();
   LOG(L_INFO) << "Task stanza by back size = " << stanzas_.size()
-    << " perfect_stanza use count " << perfect_stanza.use_count();
+              << " perfect_stanza use count " << perfect_stanza.use_count();
   return perfect_stanza;
 }
 

@@ -84,13 +84,11 @@ int32 CachedServer::HandleRecvPacket(vzconn::VSocket *p_cli,
                           p_data + sizeof(CacheMessage),
                           n_data - sizeof(CacheMessage))) {
     ResponseKvdb(p_cli, CACHED_SUCCEED);
-
   } else {
     ResponseKvdb(p_cli, CACHED_FAILURE);
   }
   return 0;
 }
-
 
 bool CachedServer::ProcessCacheService(const CacheMessage *cache_msg,
                                        const uint8 *data,
