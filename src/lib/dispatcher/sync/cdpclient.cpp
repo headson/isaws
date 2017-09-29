@@ -87,7 +87,7 @@ int CDpClient::SendDpMessage(const char *p_method,
   if (get_ret_type() == TYPE_SUCCEED) {
     return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) <<p_method<<" "<<get_ret_type();
+  LOG(L_ERROR) << get_ret_type();
   return VZNETDP_FAILURE;
 }
 
@@ -120,7 +120,7 @@ int CDpClient::SendDpRequest(const char *p_method,
     }
     return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) <<p_method<<" "<<get_ret_type();
+  LOG(L_ERROR) << get_ret_type();
   return VZNETDP_FAILURE;
 }
 
@@ -150,7 +150,7 @@ int CDpClient::SendDpRequest(const char *p_method,
     p_reply->append(p_cur_dp_msg_->data, p_cur_dp_msg_->data_size);
     return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) <<p_method<<" "<<get_ret_type();
+  LOG(L_ERROR) << get_ret_type();
   return VZNETDP_FAILURE;
 }
 
@@ -177,7 +177,7 @@ int CDpClient::SendDpReply(const char *p_method,
   if (get_ret_type() == TYPE_SUCCEED) {
     return VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) <<p_method<<" "<<get_ret_type();
+  LOG(L_ERROR) << get_ret_type();
   return VZNETDP_FAILURE;
 }
 
