@@ -37,12 +37,12 @@ vzlogging::VShm           k_shm_arg;
 //////////////////////////////////////////////////////////////////////////
 #ifdef WIN32
 #include <process.h>
-typedef DWORD               TlsKey;
-#define TLS_NULL            0
+typedef DWORD             TlsKey;
+#define TLS_NULL          0
 #else
 #include <pthread.h>
-typedef pthread_key_t       TlsKey;
-#define TLS_NULL            (pthread_key_t)-1
+typedef pthread_key_t     TlsKey;
+#define TLS_NULL          (pthread_key_t)-1
 #endif
 class VTls {
  public:
@@ -154,7 +154,6 @@ bool VShm::Open(const char* name, int size) {
     perror("OpenFileMapping failed.\n");
     return false;
   }
-
   printf("shm_id = 0x%x\n", shm_id_);
 
   shm_ptr_ = vzShmAt();
@@ -167,21 +166,24 @@ bool VShm::Open(const char* name, int size) {
   return false;
 }
 
-void * VShm::vzShmAt() {
-  void *p_ptr = ::MapViewOfFile(shm_id_, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if (p_ptr == NULL) {
+void *VShm::vzShmAt() {
+  if (shm_id_ == HDL_NULL) {
+    return NULL;
+  }
+  void *ptr = ::MapViewOfFile(shm_id_, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+  if (ptr == NULL) {
     printf("MapViewOfFile failed.\n");
     return NULL;
   }
-  return p_ptr;
+  return ptr;
 }
 
-void VShm::vzShmDt(void *p_ptr) {
-  if (p_ptr) {
-    if (FALSE == ::UnmapViewOfFile(p_ptr)) {
+void VShm::vzShmDt(void *ptr) {
+  if (ptr) {
+    if (FALSE == ::UnmapViewOfFile(ptr)) {
       printf("UnmapViewOfFile failed.\n");
     }
-    p_ptr = NULL;
+    ptr = NULL;
   }
 }
 
@@ -227,18 +229,22 @@ bool VShm::Open(const char* name, int size) {
   return false;
 }
 
-void * VShm::vzShmAt() {
-  void *p_ptr = shmat(shm_id_, 0, 0);
-  if (p_ptr == NULL) {
+void *VShm::vzShmAt() {
+  if (shm_id_ == HDL_NULL) {
+    return NULL;
+  }
+  void *ptr = shmat(shm_id_, 0, 0);
+  if (ptr == NULL) {
     printf("shmat failed.\n");
     return NULL;
   }
-  return p_ptr;
+  return ptr;
 }
 
-void VShm::vzShmDt(void *p_ptr) {
-  if (p_ptr) {
-    shmdt(p_ptr);
+void VShm::vzShmDt(void *ptr) {
+  if (ptr) {
+    shmdt(ptr);
+    ptr = NULL;
   }
 }
 #endif

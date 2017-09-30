@@ -105,7 +105,7 @@ bool Session::ProcessDpMessage(const DpMessage *dmp,
   for (int i = 0; i < cur_pos_; i++) {
     if (strncmp(listen_messages_[i], dmp->method, MAX_METHOD_SIZE) == 0) {
       if (session_interface_) {
-        //LOG(L_INFO) << "dispatch";
+        // LOG(L_INFO) << "dispatch";
         session_interface_->AsyncWrite(this, vz_socket_, dmp, data, size);
       }
       return true;
