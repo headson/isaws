@@ -3,13 +3,13 @@
 
 #include "vzconn/async/cevttcpserver.h"
 #include "dispatcher/dpserver/dpsession.h"
-#include "vzbase/base/noncoypable.h"
+#include "vzbase/base/boost_settings.hpp"
 
 namespace dp {
 
 #define MAX_SESSION_SIZE 128
 
-class DpServer : public vzbase::noncopyable,
+class DpServer : public boost::noncopyable,
   public vzconn::CTcpServerInterface,
   public vzconn::CClientInterface,
   public SessionInterface {

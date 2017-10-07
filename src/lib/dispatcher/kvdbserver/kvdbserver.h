@@ -1,8 +1,8 @@
 #ifndef KVDB_KBDBSERVER_H_
 #define KVDB_KBDBSERVER_H_
 
-#include "vzbase/base/noncoypable.h"
 #include "vzbase/thread/thread.h"
+#include "vzbase/base/boost_settings.hpp"
 #include "vzconn/async/cevtipcserver.h"
 #include "dispatcher/kvdbserver/kvdbsqlite.h"
 #include "dispatcher/base/pkghead.h"
@@ -10,7 +10,7 @@
 namespace kvdb {
 
 
-class KvdbServer : public vzbase::noncopyable,
+class KvdbServer : public boost::noncopyable,
   public vzconn::CTcpServerInterface,
   public vzconn::CClientInterface,
   public vzbase::MessageHandler {

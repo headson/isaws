@@ -6,11 +6,12 @@
 #define LIBVZCONN_CEVTTCPCLIENT_H_
 
 #include "vzbase/base/basictypes.h"
+#include "vzbase/base/boost_settings.hpp"
 
 #include "vzconn/base/vsocket.h"
 #include "vzconn/base/clibevent.h"
 #include "vzconn/buffer/cblockbuffer.h"
-#include "vzbase/base/boost_settings.hpp"
+#include "vzconn/buffer/perfectbufferpool.h"
 
 namespace vzconn {
 
@@ -37,13 +38,6 @@ class CEvtTcpClient : public VSocket,
   virtual bool  Open(SOCKET s, bool is_block=false);
 
  public:
-  // 链接到服务端;无需调用Open
-  virtual bool  Connect(const CInetAddr *remote_addr,
-                        bool             is_block,
-                        bool             is_reuse,
-                        uint32           ms_timeout=5000);
-
- public:
   /***********************************************************************
   *Description : 发送一包数据;缓存到发送cache中
   *Parameters  : pdata[IN] 数据(body区)
@@ -51,9 +45,7 @@ class CEvtTcpClient : public VSocket,
   *              eflag[IN] VZ为包头的flag[uint16]
   *Return      : >0 缓存数据长度,<=0 发送失败
   ***********************************************************************/
-  virtual int32 AsyncWrite(const void *pdata,
-                           uint32      ndata,
-                           uint16      eflag);
+  virtual int32 AsyncWrite(const void *pdata, uint32 ndata, uint16 eflag);
 
   /***********************************************************************
   *Description : 发送一包数据;缓存到发送cache中
@@ -62,55 +54,39 @@ class CEvtTcpClient : public VSocket,
   *              eflag[IN] VZ为包头的flag[uint16]
   *Return      : >0 缓存数据长度,<=0 发送失败
   ***********************************************************************/
-  virtual int32 AsyncWrite(struct iovec aiov[],
-                           uint32       niov,
-                           uint16       eflag);
+  virtual int32 AsyncWrite(struct iovec aiov[], uint32 niov, uint16 eflag);
+
+  virtual int32 AsyncWrite(ByteBuffer::Ptr buffer, uint16 eflag);
 
  protected:
   friend class CEvtTcpServer;
 
  protected:
   // 接收事件
-  static int32  EvtRecv(SOCKET        fd,
-                        short         events,
-                        const void   *usr_arg);
-  virtual int32 OnRecv();
+  static int  EvtRecv(SOCKET fd, short events, const void *usr_arg);
+  virtual int OnRecv();
 
   // 发送事件
-  static int32  EvtSend(SOCKET        fd,
-                        short         events,
-                        const void   *usr_arg);
-  virtual int32 OnSend();
-
-  // 异步链接服务器,暂时不成功,待研究
-  static int32  EvtConnect(SOCKET      fd,
-                           short       events,
-                           const void *usr_arg);
-  virtual int32 OnConnect(SOCKET fd);
-
- public:
-  EVT_IO& GetEvtRecv() {
-    return c_evt_recv_;
-  }
-  EVT_IO& GetEvtSend() {
-    return c_evt_send_;
-  }
-  CBlockBuffer& GetRecvData() {
-    return c_recv_data_;
-  }
-  CBlockBuffer& GetSendData() {
-    return c_send_data_;
-  }
+  static int  EvtSend(SOCKET fd, short events, const void *usr_arg);
+  virtual int OnSend();
 
  protected:
-  const EVT_LOOP   *p_evt_loop_;    // 随进程退出而销毁,不必关心生命周期
+  const EVT_LOOP   *evt_loop_;    // 随进程退出而销毁,不必关心生命周期
 
  protected:
-  EVT_IO            c_evt_recv_;    // 接收事件
-  CBlockBuffer      c_recv_data_;   // 接收buffer
+  EVT_IO            evt_recv_;    // 接收事件
+  ByteBuffer::Ptr   recv_data_;
 
-  EVT_IO            c_evt_send_;    // 发送事件
-  CBlockBuffer      c_send_data_;   // 发送buffer
+  char             *head_data_;     // 头
+  unsigned int      head_size_;     // 头长度
+  uint32            wait_recv_size_;   // 待接收数据大小
+
+ protected:
+  EVT_IO            evt_send_;    // 发送事件
+
+  typedef std::list<ByteBuffer::Ptr> SEND_LIST;
+  SEND_LIST         send_list_;
+  ByteBuffer::Ptr   send_data_;
 };
 
 typedef CEvtTcpClient TcpConnect;

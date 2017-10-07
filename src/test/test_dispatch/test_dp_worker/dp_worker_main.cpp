@@ -73,9 +73,9 @@ void DpMsgCallback(DPPollHandle p_hdl, const DpMessage *dmp, void* p_usr_arg) {
   }
 
   if (dmp->type == TYPE_REQUEST) {
-    std::string broadcast("broadcastMsg");
-    DpClient_SendDpMessage("broadcast", 0,
-                           broadcast.c_str(), broadcast.length());
+    //std::string broadcast("broadcastMsg");
+    //DpClient_SendDpMessage("broadcast", 0,
+    //                       broadcast.c_str(), broadcast.length());
 
     DpClient_SendDpReply(dmp->method,
                          dmp->channel_id,

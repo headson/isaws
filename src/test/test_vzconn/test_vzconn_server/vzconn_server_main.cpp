@@ -1,7 +1,8 @@
 #include "vzbase/helper/stdafx.h"
 
-#include "vzconn/base/connhead.h"
-#include "vzconn/base/byteorder.h"
+#include "vzconn/base/basedefines.h"
+#include "vzconn/buffer/byteorder.h"
+
 #include "vzconn/async/cevtipcclient.h"
 #include "vzconn/async/cevtipcserver.h"
 

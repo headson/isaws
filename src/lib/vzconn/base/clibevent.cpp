@@ -182,10 +182,10 @@ void EVT_IO::Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg) {
 }
 
 int EVT_IO::Start(SOCKET vHdl, int nEvt, unsigned int ms_timeout) {
-  int n_ret = -1;
+  int res = -1;
   if (!base_event_ || !base_event_->get_event()) {
     LOG(L_ERROR)<<"param error.";
-    return n_ret;
+    return res;
   }
 
   if (0 == init_ ||
@@ -194,10 +194,10 @@ int EVT_IO::Start(SOCKET vHdl, int nEvt, unsigned int ms_timeout) {
     Stop();
 
     event_set(&event_, vHdl, nEvt, evt_callback, this);
-    n_ret = event_base_set(base_event_->get_event(), &event_);
-    if (n_ret != 0) {
+    res = event_base_set(base_event_->get_event(), &event_);
+    if (res != 0) {
       LOG(L_ERROR) << "event base set failed.";
-      return n_ret;
+      return res;
     }
     init_  = 1;
     //LOG(L_INFO) << "Set "<<vHdl<<" event "<<nEvt<<"-"<<c_evt_.ev_events;
@@ -205,18 +205,18 @@ int EVT_IO::Start(SOCKET vHdl, int nEvt, unsigned int ms_timeout) {
 
   if (start_ == 0) {
     if (ms_timeout == 0) {
-      n_ret = event_add(&event_, NULL);
+      res = event_add(&event_, NULL);
     } else {
       struct timeval tv = { 0, 0 };
       tv.tv_sec = ms_timeout / 1000;
       tv.tv_usec = (ms_timeout % 1000) * 1000;
-      n_ret = event_add(&event_, &tv);
+      res = event_add(&event_, &tv);
     }
   }
-  if (n_ret == 0) {
+  if (res == 0) {
     start_ = 1;
   }
-  return n_ret;
+  return res;
 }
 
 void EVT_IO::Stop() {

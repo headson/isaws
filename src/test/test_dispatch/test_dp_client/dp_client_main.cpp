@@ -70,6 +70,7 @@ int main(int argc, char* argv[]) {
                            3000);
     LOG(L_ERROR) << "end.\n\n";
     getchar();
+    // usleep(20*1000);
   }
   getchar();
 

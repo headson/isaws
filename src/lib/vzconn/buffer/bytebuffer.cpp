@@ -1,6 +1,6 @@
 /************************************************************************
 *Author      : Sober.Peng 17-08-22
-*Description : 
+*Description :
 ************************************************************************/
 #include "vzconn/buffer/bytebuffer.h"
 
@@ -13,14 +13,14 @@
 
 namespace vzconn {
 
-static const int DEFAULT_SIZE = 4096;
+static const int DEF_BYTE_BUFFER_SIZE = 1024;
 
 ByteBuffer::ByteBuffer() {
-  Construct(NULL, DEFAULT_SIZE, ORDER_NETWORK);
+  Construct(NULL, DEF_BYTE_BUFFER_SIZE, ORDER_NETWORK);
 }
 
 ByteBuffer::ByteBuffer(ByteOrder byte_order) {
-  Construct(NULL, DEFAULT_SIZE, byte_order);
+  Construct(NULL, DEF_BYTE_BUFFER_SIZE, byte_order);
 }
 
 ByteBuffer::ByteBuffer(const char *bytes, size_t len) {
@@ -35,9 +35,8 @@ ByteBuffer::ByteBuffer(const char* bytes) {
   Construct(bytes, strlen(bytes), ORDER_NETWORK);
 }
 
-void ByteBuffer::Construct(const char *bytes, 
-                           size_t      len,
-                           ByteOrder   byte_order) {
+void ByteBuffer::Construct(const char *bytes, size_t len, ByteOrder byte_order) {
+  LOG(L_INFO) << "Construct Buffer";
   version_    = 0;
   start_      = 0;
   size_       = len;
@@ -50,11 +49,18 @@ void ByteBuffer::Construct(const char *bytes,
   } else {
     end_ = 0;
   }
+
+  head_size_ = 0;
+  head_data_ = NULL;
 }
 
 ByteBuffer::~ByteBuffer() {
-  LOG(L_INFO) << "Delete Buffer";
-  delete[] bytes_;
+  LOG(L_INFO) << "Release Buffer";
+  if (bytes_) {
+    delete[] bytes_;
+    bytes_ = NULL;
+  }
+  HeadExit();
 }
 
 bool ByteBuffer::ReadUInt8(uint8* val) {
@@ -171,7 +177,21 @@ void ByteBuffer::WriteString(const std::string& val) {
 }
 
 void ByteBuffer::WriteBytes(const char* val, size_t len) {
+  if (val == NULL) {
+    return;
+  }
   memcpy(ReserveWriteBuffer(len), val, len);
+}
+
+void ByteBuffer::WriteBytes(const struct iovec iov[], uint32 n_iov) {
+  for (uint32 i = 0; i < n_iov; i++) {
+    if (!iov[i].iov_base) {
+      continue;
+    }
+
+    memcpy(ReserveWriteBuffer(iov[i].iov_len),
+           iov[i].iov_base, iov[i].iov_len);
+  }
 }
 
 char* ByteBuffer::ReserveWriteBuffer(size_t len) {
@@ -185,13 +205,13 @@ char* ByteBuffer::ReserveWriteBuffer(size_t len) {
 }
 
 void ByteBuffer::Resize(size_t size) {
-  size_t len = std::min(end_ - start_, size);
+  size_t len = min(end_ - start_, size);
   if (size <= size_) {
     // Don't reallocate, just move data backwards
     // memmove(bytes_, bytes_ + start_, len);
   } else {
     // Reallocate a larger buffer.
-    size_ = std::max(size, 3 * size_ / 2);
+    size_ = max(size, 3 * size_ / 2);
     char* new_bytes = new char[size_];
     memcpy(new_bytes, bytes_ + start_, len);
     delete [] bytes_;
@@ -203,13 +223,13 @@ void ByteBuffer::Resize(size_t size) {
 }
 
 void ByteBuffer::ResetSize(size_t size) {
-  size_t len = std::min(end_ - start_, size);
+  size_t len = min(end_ - start_, size);
   if (size <= size_) {
     // Don't reallocate, just move data backwards
     // memmove(bytes_, bytes_ + start_, len);
   } else {
     // Reallocate a larger buffer.
-    size_ = std::max(size, 3 * size_ / 2);
+    size_ = max(size, 3 * size_ / 2);
     char* new_bytes = new char[size_];
     delete [] bytes_;
     bytes_ = new_bytes;
@@ -217,25 +237,6 @@ void ByteBuffer::ResetSize(size_t size) {
   start_ = 0;
   end_ = size;
   ++version_;
-}
-
-bool ByteBuffer::Consume(size_t size) {
-  if (size > Length())
-    return false;
-  start_ += size;
-  return true;
-}
-
-ByteBuffer::ReadPosition ByteBuffer::GetReadPosition() const {
-  return ReadPosition(start_, version_);
-}
-
-bool ByteBuffer::SetReadPosition(const ReadPosition &position) {
-  if (position.version_ != version_) {
-    return false;
-  }
-  start_ = position.start_;
-  return true;
 }
 
 void ByteBuffer::Clear() {

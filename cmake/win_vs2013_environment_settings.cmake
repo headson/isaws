@@ -15,6 +15,7 @@ SET(VZPROJECT_INCLUDE_DIR
 	${PROJECT_SOURCE_DIR}/src/third_part/libiconv/win32/include
 	${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/vs2010/include
 	${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/vs2010/include
+	${PROJECT_SOURCE_DIR}/src/third_part/googletest/googletest/include
 )
 
 MESSAGE(STATUS "       Add library path and name")

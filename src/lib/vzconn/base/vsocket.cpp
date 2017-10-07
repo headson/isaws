@@ -432,61 +432,61 @@ uint32 CClientInterface::NetHeadSize() {
   return sizeof(NetHead);
 }
 
-int32 CClientInterface::NetHeadParse(const uint8 *p_data,
-                                     uint32       n_data,
-                                     uint16      *n_flag) {
-  if (n_data < (uint32)NetHeadSize()) {
+int32 CClientInterface::NetHeadParse(const uint8 *pdata,
+                                     uint32       ndata,
+                                     uint16      *eflag) {
+  if (ndata < NetHeadSize()) {
     return 0;
   }
 
-  int32 n_len = 0;
-  if ((((uint32)p_data) % sizeof(uint32)) == 0) {
+  int32 pkg_size = 0;
+  if ((((uint32)pdata) % sizeof(uint32)) == 0) {
     // 对齐解析
-    NetHead* p_head = (NetHead*)p_data;
+    NetHead* p_head = (NetHead*)pdata;
     if (p_head->mark[0] == NET_MARK_0
         && p_head->mark[1] == NET_MARK_1) {
-      n_len = NetHeadSize();
-      n_len += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
-               NetworkToHost32(p_head->data_size) : p_head->data_size;
-      *n_flag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
-                NetworkToHost16(p_head->type_flag) : p_head->type_flag;
+      pkg_size = NetHeadSize();
+      pkg_size += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+                  NetworkToHost32(p_head->data_size) : p_head->data_size;
+      *eflag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+               NetworkToHost16(p_head->type_flag) : p_head->type_flag;
     } else {
       return -1;
     }
   } else {
     // 未对齐解析
     NetHead c_head;
-    memcpy(&c_head, p_data, NetHeadSize());
+    memcpy(&c_head, pdata, NetHeadSize());
     if (c_head.mark[0] == NET_MARK_0
         && c_head.mark[1] == NET_MARK_1) {
-      n_len = NetHeadSize();
-      n_len += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
-               NetworkToHost32(c_head.data_size) : c_head.data_size;
+      pkg_size = NetHeadSize();
+      pkg_size += (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+                  NetworkToHost32(c_head.data_size) : c_head.data_size;
 
-      *n_flag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
-                NetworkToHost16(c_head.type_flag) : c_head.type_flag;;
+      *eflag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+               NetworkToHost16(c_head.type_flag) : c_head.type_flag;;
     } else {
       return -1;
     }
   }
-  return n_len;
+  return pkg_size;
 }
 
-int32 CClientInterface::NetHeadPacket(uint8 *p_data,
-                                      uint32 n_data,
-                                      uint32 n_body,
-                                      uint16 n_flag) {
-  if (p_data == NULL || n_data < (uint32)NetHeadSize()) {
+int32 CClientInterface::NetHeadPacket(uint8 *pdata,
+                                      uint32 ndata,
+                                      uint32 nbody,
+                                      uint16 eflag) {
+  if (pdata == NULL || ndata < NetHeadSize()) {
     return -1;
   }
-  NetHead c_head;
-  c_head.mark[0] = NET_MARK_0;
-  c_head.mark[1] = NET_MARK_1;
-  c_head.type_flag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
-                     HostToNetwork16(n_flag) : n_flag;
-  c_head.data_size = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
-                     HostToNetwork32(n_body) : n_body;
-  memcpy(p_data, &c_head, NetHeadSize());
+  NetHead chead;
+  chead.mark[0] = NET_MARK_0;
+  chead.mark[1] = NET_MARK_1;
+  chead.type_flag = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+                     HostToNetwork16(eflag) : eflag;
+  chead.data_size = (ORDER_NETWORK == VZ_ORDER_BYTE) ?
+                     HostToNetwork32(nbody) : nbody;
+  memcpy(pdata, &chead, NetHeadSize());
 
   return NetHeadSize();
 }

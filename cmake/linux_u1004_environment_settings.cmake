@@ -31,7 +31,7 @@ IF(CMAKE_BUILD_TYPE MATCHES Debug)
 	MESSAGE(STATUS "       Debug Mode")
 	SET(VZPROJECT_LIBRARY_DIR
 		${INTERFACE_LIBRARY_DIR}
-		${PROJECT_SOURCE_DIR}/lib/hi3518
+		${PROJECT_SOURCE_DIR}/lib/linux
 		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/linux/lib32
 		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/linux/lib32
 	)
@@ -49,7 +49,7 @@ ELSEIF(CMAKE_BUILD_TYPE MATCHES Release)
 	MESSAGE(STATUS "       UNIX")
 	SET(VZPROJECT_LIBRARY_DIR
 		${INTERFACE_LIBRARY_DIR}
-		${PROJECT_SOURCE_DIR}/lib/hi3518
+		${PROJECT_SOURCE_DIR}/lib/linux
 		${PROJECT_SOURCE_DIR}/src/third_part/libcurl-7.54.0/linux/lib32
 		${PROJECT_SOURCE_DIR}/src/third_part/libevent-2.1.8/linux/lib32
 	)

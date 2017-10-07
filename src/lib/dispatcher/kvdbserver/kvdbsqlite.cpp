@@ -199,7 +199,7 @@ bool KvdbSqlite::InitStmt() {
     LOG(L_ERROR) << REPLACE_STMT_SQL;
     return false;
   }
-  LOG_WARNING("replace_stmt_ 0x%x.\n", replace_stmt_);
+  LOG_WARNING("replace_stmt_ 0x%x.", replace_stmt_);
 
   res = sqlite3_prepare_v2(db_instance_,
                            DELETE_STMT_SQL,
@@ -210,7 +210,7 @@ bool KvdbSqlite::InitStmt() {
     LOG(L_ERROR) << DELETE_STMT_SQL;
     return false;
   }
-  LOG_WARNING("delete_stmt_ 0x%x.\n", delete_stmt_);
+  LOG_WARNING("delete_stmt_ 0x%x.", delete_stmt_);
 
   res = sqlite3_prepare_v2(db_instance_,
                            SELECT_STMT_SQL,
@@ -221,7 +221,7 @@ bool KvdbSqlite::InitStmt() {
     LOG(L_ERROR) << SELECT_STMT_SQL;
     return false;
   }
-  LOG_WARNING("select_stmt_ 0x%x.\n", select_stmt_);
+  LOG_WARNING("select_stmt_ 0x%x.", select_stmt_);
   return true;
 }
 

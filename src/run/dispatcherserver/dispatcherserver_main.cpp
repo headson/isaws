@@ -35,6 +35,7 @@ int main(int argc, char *argv[]) {
 
   while (0 == is_exit) {
     main_thread->ProcessMessages(4 * 1000);
+    // event_service->RunLoop(4*1000);
 
     static void *hdl_watchdog = NULL;
     if (hdl_watchdog == NULL) {

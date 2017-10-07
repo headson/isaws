@@ -36,7 +36,7 @@ bool CEvtIpcClient::Connect(const CInetAddr *p_remote_addr,
                              bool             b_block,
                              bool             b_reuse,
                              uint32           n_timeout/*=5000*/) {
-  if (NULL == p_evt_loop_) {
+  if (NULL == evt_loop_) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
   }
@@ -122,8 +122,8 @@ bool CEvtIpcClient::Connect(const CInetAddr *p_remote_addr,
 #endif  // WIN32
       }
 #else  // 异步链接服务器,暂时不成功,待研究
-      c_evt_send_.Init(p_evt_loop_, EvtConnect, this);
-      ret = c_evt_send_.Start(s, EVT_WRITE, n_timeout);
+      evt_send_.Init(evt_loop_, EvtConnect, this);
+      ret = evt_send_.Start(s, EVT_WRITE, n_timeout);
       if (0 != ret) {
         LOG(L_ERROR) << "set connect event failed." << error_no();
         return false;

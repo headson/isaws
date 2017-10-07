@@ -38,7 +38,7 @@ CEvtIpcServer::~CEvtIpcServer() {
 bool CEvtIpcServer::Open(const CInetAddr *p_addr,
                           bool             b_block,
                           bool             b_reuse) {
-  if (NULL == p_evt_loop_ ) {
+  if (NULL == evt_loop_ ) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
   }
@@ -112,8 +112,8 @@ bool CEvtIpcServer::Open(const CInetAddr *p_addr,
   }
 
   // 关联SOCKET的READ事件
-  c_evt_accept_.Init(p_evt_loop_, EvtAccept, this);
-  ret = c_evt_accept_.Start(GetSocket(), EVT_READ | EVT_PERSIST);
+  evt_accept_.Init(evt_loop_, EvtAccept, this);
+  ret = evt_accept_.Start(GetSocket(), EVT_READ | EVT_PERSIST);
   if (0 != ret) {
     LOG(L_ERROR) << "set recv event failed." << error_no();
     return false;
@@ -135,7 +135,7 @@ int32 CEvtIpcServer::OnAccept() {
     return -1;
   }
 
-  CEvtIpcClient *cli_ptr = CEvtIpcClient::Create(p_evt_loop_,
+  CEvtIpcClient *cli_ptr = CEvtIpcClient::Create(evt_loop_,
                            cli_hdl_ptr_);
   if (cli_ptr) {
     bool b_open = false;
@@ -144,7 +144,7 @@ int32 CEvtIpcServer::OnAccept() {
     }
 
     if (b_open) {
-      cli_ptr->Open(s, true);
+      cli_ptr->Open(s, false);
     } else {
       closesocket(s);
       s = INVALID_SOCKET;

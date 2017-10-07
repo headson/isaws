@@ -43,10 +43,10 @@ class CEvtTcpServer : public VSocket {
   virtual int32  OnAccept();
 
  protected:
-  const EVT_LOOP        *p_evt_loop_;   // 随进程退出而销毁,不必关心生命周期
+  const EVT_LOOP        *evt_loop_;   // 随进程退出而销毁,不必关心生命周期
 
  protected:
-  EVT_IO                c_evt_accept_;  // 接收事件
+  EVT_IO                 evt_accept_;  // 接收事件
 
  protected:
   CClientInterface      *cli_hdl_ptr_;

@@ -49,7 +49,7 @@ CTcpClient::~CTcpClient() {
   //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
-bool CTcpClient::Open(SOCKET s, bool b_block) {
+bool CTcpClient::Open(SOCKET s, bool is_block) {
   if (NULL == p_evt_loop_) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
@@ -65,7 +65,7 @@ bool CTcpClient::Open(SOCKET s, bool b_block) {
   SetOption(IPPROTO_TCP, TCP_NODELAY, (char*)&chOpt, sizeof(char));
 
   //设置异步模式
-  if (false == b_block) {
+  if (false == is_block) {
     set_socket_nonblocking(GetSocket());
   } else {
     set_socket_blocking(GetSocket());
@@ -90,15 +90,15 @@ bool CTcpClient::Open(SOCKET s, bool b_block) {
   return true;
 }
 
-bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
-                         bool             b_block,
-                         bool             b_reuse,
-                         uint32           n_timeout) {
+bool CTcpClient::Connect(const CInetAddr *remote_addr,
+                         bool             is_block,
+                         bool             is_reuse,
+                         uint32           ms_timeout) {
   if (NULL == p_evt_loop_) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
   }
-  if (NULL == p_remote_addr || p_remote_addr->IsNull()) {
+  if (NULL == remote_addr || remote_addr->IsNull()) {
     LOG(L_ERROR) << "param is error.";
     return false;
   }
@@ -114,17 +114,17 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
     LOG(L_ERROR) << "socket open failed.";
     return false;
   }
-  if (b_reuse) {
+  if (is_reuse) {
     int32 val = 1;
     setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (char *)&val, sizeof(int32));
   }
 
   set_socket_nonblocking(s);
   int32 ret = connect(s,
-                      (sockaddr*)p_remote_addr->GetAddr(),
+                      (sockaddr*)remote_addr->GetAddr(),
                       (socklen_t)sizeof(sockaddr_in));
   if (0 == ret) {
-    return Open(s, b_block);
+    return Open(s, is_block);
   } else {
     if (XEAGAIN == error_no() ||
         XEINPROGRESS == error_no()) {
@@ -135,8 +135,8 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
 
       fdr = efds = fdw;
       struct timeval tv;
-      tv.tv_sec  = n_timeout / 1000;
-      tv.tv_usec = (n_timeout % 1000)*1000;
+      tv.tv_sec  = ms_timeout / 1000;
+      tv.tv_usec = (ms_timeout % 1000)*1000;
       ret = select(s + 1, &fdr, &fdw, &efds, &tv);
       if (ret > 0) {
 #ifndef WIN32
@@ -144,17 +144,17 @@ bool CTcpClient::Connect(const CInetAddr *p_remote_addr,
         socklen_t nLen = sizeof(nError);
         getsockopt(s, SOL_SOCKET, SO_ERROR, (char*)&nError, &nLen);
         if (nError == 0) {
-          return Open(s, b_block);
+          return Open(s, is_block);
         }
 #else  // WIN32
         if (FD_ISSET(s, &fdw)) {
-          return Open(s, b_block);
+          return Open(s, is_block);
         }
 #endif  // WIN32
       }
 #else  // 异步链接服务器,暂时不成功,待研究
       c_evt_send_.Init(p_evt_loop_, EvtConnect, this);
-      ret = c_evt_send_.Start(s, EVT_WRITE, n_timeout);
+      ret = c_evt_send_.Start(s, EVT_WRITE, ms_timeout);
       if (0 != ret) {
         LOG(L_ERROR) << "set connect event failed." << error_no();
         return false;
@@ -336,17 +336,17 @@ int32 CTcpClient::SyncWrite(struct iovec iov[], uint32 n_iov, uint16 e_flag) {
 }
 
 int32 CTcpClient::SendN(const uint8 *p_data, uint32 n_data) {
-  uint32 n_pos = 0;
-  int32 n_send = 0;
+  uint32 npos = 0;
+  int32 nsend = 0;
   do {
-    n_send = VSocket::Send(p_data + n_pos, n_data - n_pos);
-    if (n_send <= 0) {
-      LOG(L_ERROR) << "socket send failed." << n_send;
-      return n_send;
+    nsend = VSocket::Send(p_data + npos, n_data - npos);
+    if (nsend <= 0) {
+      LOG(L_ERROR) << "socket send failed." << nsend;
+      return nsend;
     }
-    n_pos += n_send;
+    npos += nsend;
     // LOG_INFO("send message %d %d.\n", n_send, n_pos);
-  } while (n_pos < n_data);
+  } while (npos < n_data);
   return n_data;
 }
 
