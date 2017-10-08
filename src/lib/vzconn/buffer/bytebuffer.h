@@ -24,12 +24,12 @@ class ByteBuffer : public boost::noncopyable,
 
  public:
   // |byte_order| defines order of bytes in the buffer.
-  ByteBuffer();
-  explicit ByteBuffer(ByteOrder byte_order);
-  ByteBuffer(const char* bytes, size_t len);
-  ByteBuffer(const char* bytes, size_t len, ByteOrder byte_order);
+  ByteBuffer(size_t nhead);
+  explicit ByteBuffer(size_t nhead, ByteOrder byte_order);
+  ByteBuffer(size_t nhead, const char* bytes, size_t len);
+  ByteBuffer(size_t nhead, const char* bytes, size_t len, ByteOrder byte_order);
   // Initializes buffer from a zero-terminated string.
-  explicit ByteBuffer(const char* bytes);
+  explicit ByteBuffer(size_t nhead, const char* bytes);
   ~ByteBuffer();
 
  public:
@@ -58,7 +58,7 @@ class ByteBuffer : public boost::noncopyable,
 
   // read
   const char *DataRead() const {
-    return bytes_ + start_;
+    return body_ + start_;
   }
 
   bool MoveDataRead(size_t size) {
@@ -93,7 +93,7 @@ class ByteBuffer : public boost::noncopyable,
   void WriteBytes(const struct iovec iov[], uint32 n_iov);
 
   char *DataWrite() {
-    return bytes_ + end_;
+    return body_ + end_;
   }
   bool MoveDataWrite(size_t size) {
     if (size > Free())
@@ -122,10 +122,10 @@ class ByteBuffer : public boost::noncopyable,
   void ReClearStart();
 
  private:
-  void Construct(const char* bytes, size_t size, ByteOrder byte_order);
+  void Construct(size_t nhead, const char* bytes, size_t size, ByteOrder byte_order);
 
  private:
-  char       *bytes_;
+  char       *body_;
   size_t      size_;
   size_t      start_;
   size_t      end_;
@@ -136,39 +136,42 @@ class ByteBuffer : public boost::noncopyable,
 
  public:
   void HeadInit(size_t nhead) {
-    if (NULL == head_data_) {
-      head_size_ = nhead;
-      head_data_ = new char[nhead];
-    }
+    send_size_ = 0;
+    head_size_ = nhead;
   }
-  void HeadExit() {
-    if (head_data_) {
-      delete []head_data_;
-      head_data_ = NULL;
-    }
-    head_size_ = 0;
+  char *SendData() {
+    return head_data_;
   }
-  bool Head(const char *phead, size_t nhead) {
-    if (NULL == phead || nhead != head_size_) {
+  size_t SendSize() {
+    return send_size_;
+  }
+  bool MoveDataSend(size_t size) {
+    if (size > send_size_)
       return false;
-    }
 
-    if (NULL != head_data_) {
-      memcpy(head_data_, phead, nhead);
-      return true;
-    }
-    return false;
+    send_size_ -= size;
+    return true;
   }
+
   char *HeadData() {
     return head_data_;
   }
   size_t HeadSize() {
     return head_size_;
   }
+  bool Head(const char *phead, size_t nhead) {
+    if (nhead != head_size_) {
+      return false;
+    }
+    memcpy(head_data_, phead, head_size_);
+    return true;
+  }
 
  private:
   char       *head_data_;
   size_t      head_size_;
+ public:
+  size_t      send_size_;
 };
 }  // namespace vzconn
 

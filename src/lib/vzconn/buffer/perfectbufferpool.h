@@ -23,6 +23,7 @@ class PerfectBufferPool : public boost::noncopyable {
   virtual ~PerfectBufferPool();
 
  public:
+  void SetOwnHeadSize(size_t nhead);
   static PerfectBufferPool *Instance();
 
   // Thread safed
@@ -39,6 +40,9 @@ class PerfectBufferPool : public boost::noncopyable {
   typedef std::list<ByteBuffer *> Buffers;
   Buffers                         buffers_;
   vzbase::CriticalSection         pool_mutex_;
+
+ private:
+  size_t  head_size_;
 };
 
 #define VzConnBufferPool() PerfectBufferPool::Instance()

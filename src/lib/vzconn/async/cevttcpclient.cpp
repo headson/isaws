@@ -139,6 +139,7 @@ int32 CEvtTcpClient::AsyncWrite(ByteBuffer::Ptr sptr, uint16 eflag) {
   sptr->HeadInit(cli_hdl_ptr_->NetHeadSize());
   cli_hdl_ptr_->NetHeadPacket((uint8*)sptr->HeadData(), sptr->HeadSize(),
                               sptr->Length(), eflag);
+  sptr->send_size_ = sptr->HeadSize() + sptr->Length();
 
   // insert send list
   send_list_.push_back(sptr);
@@ -239,29 +240,18 @@ int CEvtTcpClient::EvtSend(SOCKET fd, short events, const void *usr_arg) {
 int CEvtTcpClient::OnSend() {
   if (NULL == send_data_.get()) {
     send_data_ = send_list_.front();
-
     send_list_.pop_front();
   }
+
   int nhdl = 0;
   int nsend = 0;
-#if 0
-  char sdata[4096] = {0};
-  memcpy(sdata, send_data_->HeadData(), send_data_->HeadSize());
-  memcpy(sdata+send_data_->HeadSize(), send_data_->DataRead(), send_data_->Length());
-  nsend = VSocket::Send(sdata, send_data_->HeadSize() + send_data_->Length());
-  if (send_list_.size() <= 0) {
-    evt_send_.Stop();
-  }
-  send_data_.reset();
-#else
-  nsend = VSocket::Send(send_data_->HeadData(), send_data_->HeadSize());
-  nsend = VSocket::Send(send_data_->DataRead(), send_data_->Length());
+  nsend = VSocket::Send(send_data_->SendData(), send_data_->SendSize());
   if (nsend > 0) {
-    send_data_->MoveDataRead(nsend);
+    send_data_->MoveDataSend(nsend);
   }
 
   /* is send all */
-  if (send_data_->Length() == 0) {
+  if (send_data_->SendSize() == 0) {
     send_data_.reset();
     if (cli_hdl_ptr_) {
       nhdl = cli_hdl_ptr_->HandleSendPacket(this); // 发送完成回调
@@ -274,7 +264,6 @@ int CEvtTcpClient::OnSend() {
     cli_hdl_ptr_->HandleClose(this);
     return -1;
   }
-#endif
   return 0;
 }
 

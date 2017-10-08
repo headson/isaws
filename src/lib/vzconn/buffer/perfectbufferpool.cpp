@@ -4,6 +4,7 @@
 ************************************************************************/
 #include "vzconn/buffer/perfectbufferpool.h"
 
+#include "vzconn/base/basedefines.h"
 #include "vzconn/buffer/byteorder.h"
 
 #include "vzbase/helper/stdafx.h"
@@ -15,7 +16,12 @@ PerfectBufferPool *PerfectBufferPool::Instance() {
   return &pbp;
 }
 
+void PerfectBufferPool::SetOwnHeadSize(size_t nhead) {
+  head_size_ = nhead;
+}
+
 PerfectBufferPool::PerfectBufferPool() {
+  head_size_ = sizeof(NetHead);
 }
 
 PerfectBufferPool::~PerfectBufferPool() {
@@ -27,7 +33,7 @@ ByteBuffer::Ptr PerfectBufferPool::TakeBuffer(std::size_t mini_size) {
 
   if(0 == buffers_.size()) {
     LOG(L_INFO) << "Create ByteBuffer " << buffers_.size() + 1;
-    return ByteBuffer::Ptr(new ByteBuffer(),
+    return ByteBuffer::Ptr(new ByteBuffer(head_size_),
                            PerfectBufferPool::RecyleBuffer);
   }
 
