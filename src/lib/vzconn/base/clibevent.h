@@ -145,6 +145,8 @@ typedef EVT_LOOP EventService;
 extern "C" {
 #endif
 
+typedef void (*SignalCallback)(void *usr_arg);
+
 /************************************************************************
 *Description : 退出信号监听
 *Parameters  : evt_srv[IN] 事件分发器指针
@@ -153,7 +155,8 @@ extern "C" {
 *Return      :
 ************************************************************************/
 extern void ExitSignalHandle(vzconn::EventService *evt_srv,
-                             const char *app_name, unsigned int *is_exit);
+                             const char *app_name, 
+                             SignalCallback callback, void *usr_arg);
 
 #ifdef __cplusplus
 };

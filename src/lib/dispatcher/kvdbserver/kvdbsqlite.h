@@ -1,14 +1,14 @@
 #ifndef VZCONN_SERVER_KVDB_SQLITE_H_
 #define VZCONN_SERVER_KVDB_SQLITE_H_
 
-#include "vzbase/base/boost_settings.hpp"
+#include "vzbase/base/noncoypable.h"
 #include "sqlite3/sqlite3.h"
 #include <string>
 #include <vector>
 
 namespace kvdb {
 
-class KvdbSqlite : public boost::noncopyable {
+class KvdbSqlite : public vzbase::noncopyable {
  public:
   KvdbSqlite();
   virtual ~KvdbSqlite();

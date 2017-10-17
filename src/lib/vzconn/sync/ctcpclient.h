@@ -15,23 +15,24 @@ namespace vzconn {
 
 class CTcpClient : public VSocket {
  protected:
-  CTcpClient(const EVT_LOOP *evt_loop, CClientInterface *cli_hdl);
+  CTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl);
   void StopEvent();
 
  public:
-  static CTcpClient* Create(const EVT_LOOP *evt_loop, CClientInterface *cli_hdl);
+  static CTcpClient* Create(const EVT_LOOP   *p_loop,
+                            CClientInterface *cli_hdl);
   virtual ~CTcpClient();
 
  public:
   // 设置已打开的SCOKET
-  virtual bool  Open(SOCKET s, bool is_block=false);
+  virtual bool  Open(SOCKET s, bool b_block=false);
 
  public:
   // 链接到服务端;无需调用Open
-  virtual bool  Connect(const CInetAddr *remote_addr,
-                        bool             is_block,
-                        bool             is_reuse,
-                        uint32           ms_timeout=5000);
+  virtual bool  Connect(const CInetAddr *p_remote_addr,
+                        bool             b_block,
+                        bool             b_reuse,
+                        uint32           n_timeout=5000);
 
  public:
   /***********************************************************************

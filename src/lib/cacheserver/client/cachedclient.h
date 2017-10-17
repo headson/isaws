@@ -76,6 +76,10 @@ class CachedClient : public vzconn::CTcpClient,
 
   uint32                    n_cur_msg_;
   CacheMessage             *p_cur_msg_;
+  
+  Cached_GetFileCallback    p_callback_;
+  void                     *p_usr_arg_;
+  std::string               s_filepath_;
 
  protected:
   uint32                    n_message_id_;    // °üÐòºÅ[32bit]

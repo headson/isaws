@@ -14,8 +14,8 @@ CEvtTcpServer::CEvtTcpServer(const EVT_LOOP      *p_loop,
                              CClientInterface    *cli_hdl,
                              CTcpServerInterface *srv_hdl)
   : VSocket(cli_hdl)
-  , evt_loop_(p_loop)
-  , evt_accept_()
+  , p_evt_loop_(p_loop)
+  , c_evt_accept_()
   , cli_hdl_ptr_(cli_hdl)
   , srv_handle_ptr_(srv_hdl) {
 }
@@ -36,7 +36,7 @@ CEvtTcpServer *CEvtTcpServer::Create(const EVT_LOOP      *p_loop,
 }
 
 CEvtTcpServer::~CEvtTcpServer() {
-  evt_accept_.Stop();
+  c_evt_accept_.Stop();
 
   Close();
 }
@@ -44,7 +44,7 @@ CEvtTcpServer::~CEvtTcpServer() {
 bool CEvtTcpServer::Open(const CInetAddr *p_addr,
                          bool            b_block,
                          bool            b_reuse) {
-  if (NULL == evt_loop_ ) {
+  if (NULL == p_evt_loop_ ) {
     LOG(L_ERROR) << "event loop is NULL.";
     return false;
   }
@@ -90,8 +90,8 @@ bool CEvtTcpServer::Open(const CInetAddr *p_addr,
   }
 
   // 关联SOCKET的READ事件
-  evt_accept_.Init(evt_loop_, EvtAccept, this);
-  ret = evt_accept_.Start(GetSocket(), EVT_READ | EVT_PERSIST);
+  c_evt_accept_.Init(p_evt_loop_, EvtAccept, this);
+  ret = c_evt_accept_.Start(GetSocket(), EVT_READ | EVT_PERSIST);
   if (0 != ret) {
     LOG(L_ERROR) << "set recv event failed." << error_no();
     return false;
@@ -126,17 +126,17 @@ int32 CEvtTcpServer::OnAccept() {
     return -1;
   }
 
-  CEvtTcpClient *cli_ptr = CEvtTcpClient::Create(evt_loop_,
+  CEvtTcpClient *cli_ptr = CEvtTcpClient::Create(p_evt_loop_,
                            cli_hdl_ptr_);
   if (cli_ptr) {
-    cli_ptr->Open(s, false);
+    cli_ptr->Open(s, true);
     cli_ptr->SetRemoteAddr(c_addr);
-    bool res = false;
+    bool b_open = false;
     if (srv_handle_ptr_) {
-      res = srv_handle_ptr_->HandleNewConnection(this, cli_ptr);
+      b_open = srv_handle_ptr_->HandleNewConnection(this, cli_ptr);
     }
 
-    if (!res) {
+    if (!b_open) {
       delete cli_ptr;
       evutil_closesocket(s);
       s = INVALID_SOCKET;

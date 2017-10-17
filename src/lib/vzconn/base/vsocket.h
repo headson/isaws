@@ -77,7 +77,7 @@ class CInetAddr {
 class CClientInterface;
 class CTcpServerInterface;
 
-class VSocket : public boost::noncopyable,
+class VSocket : public vzbase::noncopyable,
   public boost::enable_shared_from_this<VSocket> {
 
  public:
@@ -117,7 +117,9 @@ class VSocket : public boost::noncopyable,
   *              e_flag[IN] VZ为包头的flag[uint16]
   *Return      : >0 缓存数据长度,<=0 发送失败
   ************************************************************************/
-  virtual int32 AsyncWrite(const void *pdata, uint32 ndata, uint16 eflag);
+  virtual int32 AsyncWrite(const void  *p_data,
+                           uint32       n_data,
+                           uint16       e_flag);
 
   /************************************************************************
   *Description : 发送一包数据;缓存到发送cache中
@@ -126,7 +128,9 @@ class VSocket : public boost::noncopyable,
   *              e_flag[IN] VZ为包头的flag[uint16]
   *Return      : >0 缓存数据长度,<=0 发送失败
   ***********************************************************************/
-  virtual int32 AsyncWrite(struct iovec iov[], uint32 niov,uint16 eflag);
+  virtual int32 AsyncWrite(struct iovec iov[],
+                           uint32       n_iov,
+                           uint16       e_flag);
 
   /***************************************************************************
   *Author        : Sober.Peng 28:12:2016
@@ -135,8 +139,7 @@ class VSocket : public boost::noncopyable,
   *Return        : >0 数据长度，0 没收到数据，-1 断网
   ***************************************************************************/
   virtual int32 Recv(void *pData, uint32 nData);
-  virtual int32 Recv(void *pData, uint32 nData,
-                     CInetAddr& cRemoteAddr);
+  virtual int32 Recv(void *pData, uint32 nData, CInetAddr& cRemoteAddr);
 
   /***************************************************************************
   *Author        : Sober.Peng 28:12:2016
@@ -145,8 +148,9 @@ class VSocket : public boost::noncopyable,
   *Return        : >0 数据长度，0 没发送数据，-1 断网
   ****************************************************************************/
   virtual int32 Send(const void* pData, uint32 nData);
-  virtual int32 Send(const void* pData, uint32 nData, 
-                     const CInetAddr &cRemoteAddr);
+  virtual int32 Send(const void*      pData,
+                     uint32           nData,
+                     const CInetAddr  &cRemoteAddr);
 
   friend class CSockRecvData;
   friend class CSockSendData;

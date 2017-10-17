@@ -29,14 +29,12 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 
 */
 
-
 /*****************************************************************************/
 /* Includes:                                                                 */
 /*****************************************************************************/
 #include <stdint.h>
 #include <string.h> // CBC mode, for memset
 #include "vzbase/base/aes.h"
-
 
 /*****************************************************************************/
 /* Defines:                                                                  */
@@ -56,7 +54,6 @@ NOTE:   String length must be evenly divisible by 16byte (str_len % 16 == 0)
 #ifndef MULTIPLY_AS_A_FUNCTION
 #define MULTIPLY_AS_A_FUNCTION 0
 #endif
-
 
 /*****************************************************************************/
 /* Private variables:                                                        */
@@ -140,7 +137,6 @@ static const uint8_t Rcon[255] = {
   0xc6, 0x97, 0x35, 0x6a, 0xd4, 0xb3, 0x7d, 0xfa, 0xef, 0xc5, 0x91, 0x39, 0x72, 0xe4, 0xd3, 0xbd,
   0x61, 0xc2, 0x9f, 0x25, 0x4a, 0x94, 0x33, 0x66, 0xcc, 0x83, 0x1d, 0x3a, 0x74, 0xe8, 0xcb
 };
-
 
 /*****************************************************************************/
 /* Private functions:                                                        */
@@ -328,7 +324,6 @@ static void InvMixColumns(void) {
   }
 }
 
-
 // The SubBytes Function Substitutes the values in the
 // state matrix with values in an S-box.
 static void InvSubBytes(void) {
@@ -366,7 +361,6 @@ static void InvShiftRows(void) {
   (*state)[2][3]=(*state)[3][3];
   (*state)[3][3]=temp;
 }
-
 
 // Cipher is the main function that encrypts the PlainText.
 static void Cipher(void) {
@@ -422,13 +416,10 @@ static void BlockCopy(uint8_t* output, const uint8_t* input) {
   }
 }
 
-
-
 /*****************************************************************************/
 /* Public functions:                                                         */
 /*****************************************************************************/
 #if defined(ECB) && ECB
-
 
 void AES128_ECB_encrypt(const uint8_t* input, const uint8_t* key, uint8_t* output) {
   // Copy input to output, and work in-memory on output
@@ -454,15 +445,10 @@ void AES128_ECB_decrypt(uint8_t* input, const uint8_t* key, uint8_t *output) {
   InvCipher();
 }
 
-
 #endif // #if defined(ECB) && ECB
 
 
-
-
-
 #if defined(CBC) && CBC
-
 
 static void XorWithIv(uint8_t* buf) {
   uint8_t i;

@@ -182,10 +182,10 @@ void EVT_IO::Init(const EVT_LOOP* loop, EVT_FUNC func, void* pArg) {
 }
 
 int EVT_IO::Start(SOCKET vHdl, int nEvt, unsigned int ms_timeout) {
-  int res = -1;
+  int n_ret = -1;
   if (!base_event_ || !base_event_->get_event()) {
     LOG(L_ERROR)<<"param error.";
-    return res;
+    return n_ret;
   }
 
   if (0 == init_ ||
@@ -194,10 +194,10 @@ int EVT_IO::Start(SOCKET vHdl, int nEvt, unsigned int ms_timeout) {
     Stop();
 
     event_set(&event_, vHdl, nEvt, evt_callback, this);
-    res = event_base_set(base_event_->get_event(), &event_);
-    if (res != 0) {
+    n_ret = event_base_set(base_event_->get_event(), &event_);
+    if (n_ret != 0) {
       LOG(L_ERROR) << "event base set failed.";
-      return res;
+      return n_ret;
     }
     init_  = 1;
     //LOG(L_INFO) << "Set "<<vHdl<<" event "<<nEvt<<"-"<<c_evt_.ev_events;
@@ -205,18 +205,18 @@ int EVT_IO::Start(SOCKET vHdl, int nEvt, unsigned int ms_timeout) {
 
   if (start_ == 0) {
     if (ms_timeout == 0) {
-      res = event_add(&event_, NULL);
+      n_ret = event_add(&event_, NULL);
     } else {
       struct timeval tv = { 0, 0 };
       tv.tv_sec = ms_timeout / 1000;
       tv.tv_usec = (ms_timeout % 1000) * 1000;
-      res = event_add(&event_, &tv);
+      n_ret = event_add(&event_, &tv);
     }
   }
-  if (res == 0) {
+  if (n_ret == 0) {
     start_ = 1;
   }
-  return res;
+  return n_ret;
 }
 
 void EVT_IO::Stop() {
@@ -246,8 +246,9 @@ extern "C" {
 #endif
 #include <signal.h>
 
-static char k_app_name[32] = {0};
-static int EvtSignalCallback(int sgl_num, short events, const void *usr_arg) {
+static char         k_app_name[32] = {0};
+static SignalCallback k_signal_callback = NULL;
+static int EvtSignalCallback(int sgl_num, short events, void *usr_arg) {
   if (sgl_num == SIGINT) {
     LOG(L_ERROR) << "revive SIGINT, End of the " << k_app_name;
   } else if (sgl_num == SIGTERM) {
@@ -264,8 +265,11 @@ static int EvtSignalCallback(int sgl_num, short events, const void *usr_arg) {
 #endif
   if (sgl_num == SIGINT || sgl_num == SIGTERM ||
       sgl_num == SIGSEGV || sgl_num == SIGABRT) {
-    *((unsigned int*)usr_arg) = 1;
     LOG(L_ERROR) << "End of the " << k_app_name;
+
+    if (k_signal_callback) {
+      k_signal_callback(usr_arg);
+    }
   }
   return 0;
 }
@@ -291,15 +295,17 @@ static vzconn::EVT_IO *CreateSignalHandle(vzconn::EventService* evt_service,
 }
 
 void ExitSignalHandle(vzconn::EventService *evt_srv,
-                      const char *app_name, unsigned int *is_exit) {
+                      const char *app_name,
+                      SignalCallback callback, void *usr_arg) {
+  k_signal_callback = callback;
   strncpy(k_app_name, app_name, 31);
 
-  CreateSignalHandle(evt_srv, SIGINT,  is_exit);
-  CreateSignalHandle(evt_srv, SIGTERM, is_exit);
-  CreateSignalHandle(evt_srv, SIGSEGV, is_exit);
-  CreateSignalHandle(evt_srv, SIGABRT, is_exit);
+  CreateSignalHandle(evt_srv, SIGINT,  usr_arg);
+  CreateSignalHandle(evt_srv, SIGTERM, usr_arg);
+  CreateSignalHandle(evt_srv, SIGSEGV, usr_arg);
+  CreateSignalHandle(evt_srv, SIGABRT, usr_arg);
 #ifdef POSIX
-  CreateSignalHandle(evt_srv, SIGPIPE, is_exit);
+  CreateSignalHandle(evt_srv, SIGPIPE, usr_arg);
 #endif
 }
 

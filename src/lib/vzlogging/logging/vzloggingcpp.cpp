@@ -15,7 +15,8 @@
 #include "vzlogging/base/vzcommon.h"
 
 extern int Write(vzlogging::CVzLogSock *ptls,
-                 bool local_print, int level,
+                 int local_print,
+                 unsigned int level,
                  const char *slog, int nlog);
 
 namespace vzlogging {

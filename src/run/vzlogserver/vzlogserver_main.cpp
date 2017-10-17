@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #include "vzlogging/base/vzbases.h"
 #include "vzlogging/server/cvzlogmanage.h"
 
@@ -16,10 +17,43 @@
 #include "vzlogging/server/getopt.h"
 #else
 #include "getopt.h"
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
+#include <linux/watchdog.h>
 #endif
 
-static void PrintUsage();
-static void HardwareFeeddog();
+#ifdef HISI_R
+#include "hisi_dog/vzhardwaredog.h"
+#endif
+
+/*喂狗回调*/
+int sys_feeddog();
+
+#ifdef HISI_R
+/*持续15s时间喂狗 阻塞WATCHDOG 启动时间...*/
+void FeedHardwareDog();
+#endif  // HISI_R
+
+static void PrintUsage() {
+  printf("\n");
+  printf("\n");
+  printf("  usage:\n");
+  printf("\n");
+  printf(
+    "      -v  <trans level 123> Defualt value is 3 L_ERROR send to server\n");
+  printf(
+    "      -p  <trans port> Defualt value is 5760\n");
+  printf(
+    "      -s  <PATH> change log save path\n");
+  printf(
+    "      -d  print all log in console\n");
+  printf(
+    "      -h  print usage\n");
+  printf("\n");
+  exit(1);
+}
 
 #ifdef _WIN32
 
@@ -44,6 +78,7 @@ int main(int argc, char* argv[]) {
   // system("killall watchdog");
   system("killall feeddog");
   usleep(1000);
+
 
   unsigned int  is_print = 0;              // 默认关闭日志控制台打印
   unsigned int  is_reboot = 1;
@@ -119,7 +154,7 @@ int main(int argc, char* argv[]) {
     now_sec = vzlogging::GetSysSec();
     if ((now_sec - old_sec) >= 1) {
       old_sec = now_sec;
-      HardwareFeeddog();
+      sys_feeddog();
     }
   }
 
@@ -130,28 +165,28 @@ int main(int argc, char* argv[]) {
 }
 
 /*喂狗回调*/
+int sys_feeddog() {
 #ifndef _WIN32
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
-#include <linux/watchdog.h>
+#ifdef HISI_R
+  /* 检测是否进行硬件喂狗 */
+  vzlog::PWMWatchDog::FeedPwmWatchDog();
+#else
+  static int wdt_fd = 0;
+  if (wdt_fd <= 0) {
+    wdt_fd = open("/dev/watchdog", O_WRONLY);
+    if (wdt_fd < 0) {
+      perror("open device /dev/watchdog");
+      exit(1);
+    }
+
+    ioctl(wdt_fd, WDIOC_SETOPTIONS, WDIOS_ENABLECARD);
+    ioctl(wdt_fd, WDIOC_SETTIMEOUT, 6);
+  }
+
+  if (wdt_fd > 0) {
+    ioctl(wdt_fd, WDIOC_KEEPALIVE, 1);
+  }
+#endif  // HISI_R
 #endif
-void HardwareFeeddog() {
+  return 0;
 }
-
-static void PrintUsage() {
-  printf("\n");
-  printf("\n");
-  printf("  usage:\n");
-  printf("\n");
-  printf("      -v  <trans level 123> Defualt value is 3 L_ERROR send to server\n");
-  printf("      -p  <trans port> Defualt value is 5760\n");
-  printf("      -s  <PATH> change log save path\n");
-  printf("      -d  print all log in console\n");
-  printf("      -h  print usage\n");
-  printf("\n");
-  exit(1);
-}
-
-

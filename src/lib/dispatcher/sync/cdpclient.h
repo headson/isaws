@@ -99,11 +99,13 @@ class CDpClient : public vzconn::CTcpClient,
   }
 
  protected:
-  vzconn::EVT_LOOP         *p_evt_loop_;    //
+  vzconn::EVT_LOOP         *p_evt_loop_;      //
 
  public:
   uint32                    n_ret_type_;      // 回执结果,也做evt loop退出标签
-  DpMessage                *p_cur_dp_msg_;  //
+  DpMessage                *p_cur_dp_msg_;    //
+  DpClient_MessageCallback  p_callback_;
+  void                     *p_usr_arg_;
 
  protected:
   int32                     n_session_id_;    // SESSION ID

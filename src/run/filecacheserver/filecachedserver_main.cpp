@@ -5,6 +5,15 @@
 #include "vzbase/helper/stdafx.h"
 #include "dispatcher/sync/dpclient_c.h"
 
+void SignalHandle(void *usr_arg) {
+  cached::CachedServer *server = 
+    (cached::CachedServer*)usr_arg;
+  if (server) {
+    server->StopCachedServer();
+    exit(EXIT_SUCCESS);
+  }
+}
+
 int main(int argc, char *argv[]) {
   InitVzLogging(argc, argv);
 #ifdef _WIN32
@@ -14,13 +23,14 @@ int main(int argc, char *argv[]) {
   vzconn::EventService event_service;
   event_service.Start();
 
-  unsigned int is_exit = 0;
-  ExitSignalHandle(&event_service, "filecachedserver", &is_exit);
-
   cached::CachedServer cached_server(event_service);
   cached_server.StartCachedServer("0.0.0.0", 5320);
 
-  while (0 == is_exit) {
+  ExitSignalHandle(&event_service, 
+                   "filecachedserver", 
+                   SignalHandle, &cached_server);
+
+  while (true) {
     event_service.RunLoop(4 * 1000);
 
     static void *hdl_watchdog = NULL;

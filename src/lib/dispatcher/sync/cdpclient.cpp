@@ -15,6 +15,8 @@ CDpClient::CDpClient(const char *server, unsigned short port,
   , p_evt_loop_(p_evt_loop)
   , n_ret_type_((uint32)TYPE_INVALID)
   , p_cur_dp_msg_(NULL)
+  , p_callback_(NULL)
+  , p_usr_arg_(NULL)
   , n_session_id_(-1)
   , n_message_id_(1)
   , n_cur_msg_id_(0) {
@@ -112,22 +114,29 @@ int CDpClient::SendDpRequest(const char *p_method,
     return VZNETDP_FAILURE;
   }
 
+  p_callback_ = p_callback;
+  p_usr_arg_ = p_user_arg;
   RunLoop(n_timeout);
   if ((get_ret_type() == TYPE_REPLY) ||
       (get_ret_type() == TYPE_SUCCEED)) {
-    if (p_callback) {
+    /*if (p_callback) {
       p_callback(this, p_cur_dp_msg_, p_user_arg);
-    }
-    return VZNETDP_SUCCEED;
+      }*/
+    n_ret = VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) << get_ret_type();
-  return VZNETDP_FAILURE;
+  p_callback_ = NULL;
+  p_usr_arg_ = NULL;
+
+  if (n_ret != VZNETDP_SUCCEED) {
+    LOG(L_ERROR) << get_ret_type();
+  }
+  return n_ret;
 }
 
-int CDpClient::SendDpRequest(const char *p_method, 
+int CDpClient::SendDpRequest(const char *p_method,
                              unsigned char n_session_id,
-                             const char *p_data, 
-                             int n_data, 
+                             const char *p_data,
+                             int n_data,
                              std::string *p_reply,
                              unsigned int n_timeout) {
   if (!CheckAndConnected()) {
@@ -143,15 +152,20 @@ int CDpClient::SendDpRequest(const char *p_method,
   if (n_ret <= 0) {
     return VZNETDP_FAILURE;
   }
-
+  p_callback_ = NULL;
+  p_usr_arg_  = p_reply;
   RunLoop(n_timeout);
   if ((get_ret_type() == TYPE_REPLY) ||
       (get_ret_type() == TYPE_SUCCEED)) {
-    p_reply->append(p_cur_dp_msg_->data, p_cur_dp_msg_->data_size);
-    return VZNETDP_SUCCEED;
+    //p_reply->append(p_cur_dp_msg_->data, p_cur_dp_msg_->data_size);
+    n_ret = VZNETDP_SUCCEED;
   }
-  LOG(L_ERROR) << get_ret_type();
-  return VZNETDP_FAILURE;
+  p_callback_ = NULL;
+  p_usr_arg_ = NULL;
+  if (n_ret == VZNETDP_SUCCEED) {
+    LOG(L_ERROR) << get_ret_type();
+  }
+  return n_ret;
 }
 
 int CDpClient::SendDpReply(const char *p_method,
@@ -272,6 +286,12 @@ int32 CDpClient::HandleRecvPacket(vzconn::VSocket *p_cli,
       p_evt_loop_->LoopExit(0);
     }
     n_ret_type_ = static_cast<uint32>(p_cur_dp_msg_->type);
+    if (p_callback_) {
+      p_callback_(this, p_cur_dp_msg_, p_usr_arg_);
+    } else if (p_usr_arg_) {
+      ((std::string*)p_usr_arg_)->append(p_cur_dp_msg_->data,
+                                         p_cur_dp_msg_->data_size);
+    }
   }
 
   if (n_flag == FLAG_GET_CLIENT_ID

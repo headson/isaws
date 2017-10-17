@@ -9,7 +9,6 @@
 //#include "byteorder.h"
 #ifdef __cplusplus
 namespace vzconn {
-extern "C" {
 #endif
 
 #define NET_MARK_0  'V'
@@ -31,14 +30,7 @@ const int32 VZ_ORDER_BYTE = 0;  // 0=ORDER_NETWORK;1=ORDER_HOST
 #define SOCK_DEF_BUFFER_SIZE (4096)
 // ×î´ó°ü³ß´ç
 #define SOCK_MAX_BUFFER_SIZE (2 * 1024 * 1024)
-
-unsigned int VzNetHeadSize();
-unsigned int VzNetHeadPacket(char *pdata, int ndata,
-                             unsigned int nbody, unsigned short eflag);
-int VzNetHeadParse(const char *pdata, int ndata, unsigned short *eflag);
-
 #ifdef __cplusplus
-};
 }  // namespace vzconn
 #endif
 

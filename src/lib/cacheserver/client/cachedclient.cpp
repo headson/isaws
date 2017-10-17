@@ -11,7 +11,9 @@ namespace cached {
 CachedClient::CachedClient(const char *server, unsigned short port)
   : vzconn::CTcpClient(&evt_loop_, this)
   , n_cur_msg_(0)
-  , p_cur_msg_(NULL) {
+  , p_cur_msg_(NULL) 
+  , p_callback_(NULL) 
+  , p_usr_arg_(NULL) {
   evt_loop_.Start();
 
   n_port_ = port;
@@ -105,14 +107,15 @@ bool CachedClient::SaveCachedFile(const char *p_path, int n_path,
 bool CachedClient::GetCachedFile(const char *p_path, int n_path,
                                  Cached_GetFileCallback call_back,
                                  void *user_data) {
+  bool bres = false;
   try {
     if (n_path > (MAX_CACHED_PATH_SIZE-1)) {
       LOG(L_ERROR) << "key is length than "<<MAX_CACHED_PATH_SIZE;
-      return false;
+      return bres;
     }
 
     if (CheckAndConnected() == false) {
-      return false;
+      return bres;
     }
 
     // Write Requestion
@@ -120,28 +123,32 @@ bool CachedClient::GetCachedFile(const char *p_path, int n_path,
     CacheMessage c_head;
     EncCacheMsg(&c_head, CACHED_SELECT, p_path, n_path, 0);
 
-    n_ret = AsyncWrite(&c_head, sizeof(c_head), 0);
+    n_ret = SyncWrite(&c_head, sizeof(c_head), 0);
     if (n_ret < 0) {
       LOG(L_ERROR) << "async write failed.";
-      return false;
+      return bres;
     }
-
-    n_ret = RunLoop(DEF_TIMEOUT_MSEC);
-    if (n_ret == 0) {
-      LOG(L_ERROR) << "get cache time out";
-      return false;
-    }
+    
+    p_callback_ = call_back;
+    p_usr_arg_ = user_data;
+    s_filepath_.append(p_path, n_path);
+    RunLoop(DEF_TIMEOUT_MSEC);
     if (n_ret_type_ == CACHED_SUCCEED) {
-      call_back(p_path, n_path,
+      /*call_back(p_path, n_path,
                 p_cur_msg_->data,
                 n_cur_msg_ - sizeof(CacheMessage),
                 user_data);
-      return true;
+      return true;*/
+      bres = true;
     }
   } catch (std::exception &e) {
     LOG(L_ERROR) << e.what();
   }
-  return false;
+  p_callback_ = NULL;
+  p_usr_arg_ = NULL;
+  s_filepath_ = "";
+  //return false;
+  return bres;
 }
 
 void CachedGetCallback(const char *s_path,
@@ -209,6 +216,12 @@ int32 CachedClient::HandleRecvPacket(vzconn::VSocket *p_cli,
 
     evt_loop_.LoopExit(0);
     n_ret_type_ = (uint32)p_cur_msg_->type;
+    if (p_callback_) {
+      p_callback_(s_filepath_.c_str(), s_filepath_.size(),
+                  p_cur_msg_->data,
+                  n_cur_msg_ - sizeof(CacheMessage),
+                  p_usr_arg_);
+    }
   } else {
     n_ret_type_ = CACHED_FAILURE;
     LOG(L_ERROR) << "unkown the response.";

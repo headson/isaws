@@ -68,7 +68,7 @@ void ShowVzLoggingAlways() {
 }
 
 int Write(vzlogging::CVzLogSock *ptls,
-          bool local_print, int level,
+          int local_print, unsigned int level,
           const char *slog, int nlog) {
   if (k_arg &&
       (local_print == 0) &&

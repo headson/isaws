@@ -50,8 +50,10 @@ MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libcachedserver
+		libvzlogging
 		libvzconn
 		libvzbase
+		libjsoncpp
 		${VZPROJECT_LINK_LIB}
 		Winmm.lib
 	)
@@ -61,7 +63,9 @@ else()
 		vzconn
 		vzlogging
 		vzbase
-        -Wl,-rpath=.
+		#iconv
+		jsoncpp        
 		${VZPROJECT_LINK_LIB}
+		-Wl,-rpath=.
 	)
 endif()

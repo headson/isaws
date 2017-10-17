@@ -49,6 +49,10 @@ SET(SRC_CLI_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/dplogging.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/dplogging.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.h
@@ -79,6 +83,10 @@ SOURCE_GROUP(kvdbserver FILES
 SOURCE_GROUP(client FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.h 
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/dpclient_c.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/dplogging.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/dplogging.cpp
+	
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdpclient.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/cdppollclient.h

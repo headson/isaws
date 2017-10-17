@@ -10,13 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifndef min
-#define min(a,b) (((a)<(b))?(a):(b))
-#endif
-#ifndef max
-#define max(a,b) (((a)>(b))?(a):(b))
-#endif
-
 #ifdef WIN32
 #define NOMINMAX // warning C4003: not enough actual parameters for macro min, max
 
@@ -105,6 +98,7 @@ inline int gettimeofday(struct timeval *tp, void *tzp) {
 #else  // LINUX GCC
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/time.h>
 
 #include "vzbase/base/basictypes.h"
 

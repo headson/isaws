@@ -50,7 +50,7 @@ MESSAGE(STATUS "Step 6 : link with other library")
 if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		libdispatch
-		libdpclient
+		#libdpclient
 		libvzconn
 		libvzbase
 		libvzlogging
@@ -60,9 +60,16 @@ if(WIN32)
 else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		dispatch
+		#dpclient
 		vzconn
 		vzbase
+		#iconv
+		vzlogging
 		sqlite3
+		libevent_core.so
+		libevent_pthreads.so
+		pthread
 		${VZPROJECT_LINK_LIB}
+        -Wl,-rpath=.
 	)
 endif()

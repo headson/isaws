@@ -30,7 +30,6 @@ endforeach()
 #Step 3 : Add code source
 SET(SRC_LIST 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.h  
-	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.cpp
@@ -66,7 +65,6 @@ SET(SRC_LIST
 
 SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/basedefines.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vsocket.cpp
