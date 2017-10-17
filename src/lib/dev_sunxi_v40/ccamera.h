@@ -23,20 +23,21 @@ class CCamera : public vzbase::noncopyable {
  protected:
   CCamera(const char *dev_name,
           int width, int height);
+ public:
   virtual ~CCamera();
 
  public:
   static CCamera *Create(const char *dev_name,
                          int width, int height);
 
-  int GetFrame(bool *bexit, CameraCallback callback, void *usr_arg);
+  int GetFrame(unsigned int *is_exit, CameraCallback callback, void *usr_arg);
 
  protected:
   int capture_init();
   int capture_quit();
 
  private:
-  int             videofd;
+  int             vdo_fd_;
 
  private:
   std::string     dev_name_;

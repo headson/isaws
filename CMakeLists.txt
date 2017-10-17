@@ -3,6 +3,7 @@
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3516 -DCMAKE_BUILD_TYPE=Release
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=IMX6Q -DCMAKE_BUILD_TYPE=Release
 # cmake ../.. -DCMAKE_BUILD_PLATFORM=HI3518 -DCMAKE_BUILD_TYPE=Release
+# cmake ../.. -DCMAKE_BUILD_PLATFORM=SUNXIV40 -DCMAKE_BUILD_TYPE=Release
 cmake_minimum_required(VERSION 2.8)
 project(isaw_project)
 INCLUDE(cmake/global_environment_settings.cmake)
@@ -23,14 +24,13 @@ ELSEIF(UNIX)
         INCLUDE(cmake/arm_hi3516_environment_settings.cmake)
     ELSEIF(CMAKE_BUILD_PLATFORM MATCHES HI3518)
         INCLUDE(cmake/arm_hi3518_environment_settings.cmake)
+    ELSEIF(CMAKE_BUILD_PLATFORM MATCHES SUNXIV40)
+        INCLUDE(cmake/arm_sunxi_v40_environment_settings.cmake)
     ENDIF()
 ENDIF()
 
 INCLUDE_DIRECTORIES(${VZPROJECT_INCLUDE_DIR})
 LINK_DIRECTORIES(${VZPROJECT_LIBRARY_DIR})
-
-## add lib
-ADD_SUBDIRECTORY(cmake)
 
 ## add third sdk
 ADD_SUBDIRECTORY(src/third_part/json)
@@ -56,12 +56,11 @@ ADD_SUBDIRECTORY(src/lib/business)
 ## add run
 #ADD_SUBDIRECTORY(src/run/onvif)
 ADD_SUBDIRECTORY(src/run/web_server)
-ADD_SUBDIRECTORY(src/run/feeddog)
 ADD_SUBDIRECTORY(src/run/vzlogserver)
 ADD_SUBDIRECTORY(src/run/system_server)
 ADD_SUBDIRECTORY(src/run/dispatcherserver)
 #ADD_SUBDIRECTORY(src/run/hi3518ev200)
-#ADD_SUBDIRECTORY(src/run/imx6q)
+ADD_SUBDIRECTORY(src/run/sunxi_v40)
 ADD_SUBDIRECTORY(src/run/pack_image)
 ADD_SUBDIRECTORY(src/run/business)
 #ADD_SUBDIRECTORY(src/run/fix_sqlite)
@@ -70,6 +69,8 @@ ADD_SUBDIRECTORY(src/run/http_sender)
 #ADD_SUBDIRECTORY(src/run/web_for_dp)
 
 IF(WIN32)
+ADD_SUBDIRECTORY(cmake)
+
 ADD_SUBDIRECTORY(src/lib/curlclient)
 
 ADD_SUBDIRECTORY(src/run/icamera)

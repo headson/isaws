@@ -41,15 +41,21 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/view.h
 	${CMAKE_CURRENT_SOURCE_DIR}/disp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/drv_display.h
+
+	${CMAKE_CURRENT_SOURCE_DIR}/cvideocapture.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cvideocapture.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
 
-SOURCE_GROUP(base FILES
+SOURCE_GROUP(camera FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/videodev2.h
 	${CMAKE_CURRENT_SOURCE_DIR}/ccamera.h
 	${CMAKE_CURRENT_SOURCE_DIR}/ccamera.cpp
 )
 
-SOURCE_GROUP(codec FILES
+SOURCE_GROUP(encodec FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocodec.h
 	${CMAKE_CURRENT_SOURCE_DIR}/cvideocodec.cpp
 )
@@ -58,6 +64,14 @@ SOURCE_GROUP(display FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/view.h
 	${CMAKE_CURRENT_SOURCE_DIR}/disp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/drv_display.h
+)
+
+SOURCE_GROUP(listen FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/cvideocapture.h
+	${CMAKE_CURRENT_SOURCE_DIR}/cvideocapture.cpp
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
+	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
 #########################################################################
 #Step 4 : Add PROJECT define 

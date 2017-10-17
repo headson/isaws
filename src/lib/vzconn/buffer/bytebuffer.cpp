@@ -14,6 +14,12 @@
 namespace vzconn {
 
 static const int DEF_BYTE_BUFFER_SIZE = 1024;
+#ifndef min
+#define min(a,b) (((a)<(b))?(a):(b))
+#endif
+#ifndef max
+#define max(a,b) (((a)>(b))?(a):(b))
+#endif
 
 ByteBuffer::ByteBuffer(size_t nhead) {
   Construct(nhead, NULL, DEF_BYTE_BUFFER_SIZE, ORDER_NETWORK);

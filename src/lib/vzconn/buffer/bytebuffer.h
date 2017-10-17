@@ -12,7 +12,7 @@
 
 namespace vzconn {
 
-class ByteBuffer : public boost::noncopyable,
+class ByteBuffer : public vzbase::noncopyable,
   public boost::enable_shared_from_this<ByteBuffer>  {
  public:
   typedef boost::shared_ptr<ByteBuffer> Ptr;

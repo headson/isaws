@@ -17,7 +17,7 @@ typedef unsigned int (*NetHeadPacketCB)(char *phead, int nhead,
                                         unsigned int nbody, unsigned short eflag);
 typedef int          (*NetHeadParseCB)(const char *phead, int nhead, unsigned short *eflag);
 
-class PerfectBufferPool : public boost::noncopyable {
+class PerfectBufferPool : public vzbase::noncopyable {
  protected:
   PerfectBufferPool();
   virtual ~PerfectBufferPool();

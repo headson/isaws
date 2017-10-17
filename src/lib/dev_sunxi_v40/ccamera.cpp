@@ -5,13 +5,16 @@
 #include "ccamera.h"
 #include "videodev2.h"
 
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+
 #include "vzbase/helper/stdafx.h"
 
 CCamera::CCamera(const char *dev_name, int width, int height) {
-  videofd   = 0;
+  vdo_fd_   = 0;
   dev_name_ = dev_name;
-  cap_w_     = width;
-  cap_h_     = height;
+  cap_w_    = width;
+  cap_h_    = height;
   cap_fps_  = 30;
   buf_cnt_  = 10;
   cap_fmt_  = V4L2_PIX_FMT_NV12;
@@ -40,16 +43,16 @@ int CCamera::capture_init() {
   struct v4l2_requestbuffers req;
   struct v4l2_buffer buf;
 
-  if ((videofd = open(dev_name_.c_str(), O_RDWR, S_IRWXU)) < 0) {
-    LOG_ERROR("can't open %s(%s)\n", dev_name, strerror(errno));
+  if ((vdo_fd_ = open(dev_name_.c_str(), O_RDWR, S_IRWXU)) < 0) {
+    LOG_ERROR("can't open %s(%s)\n", dev_name_.c_str(), strerror(errno));
     return -1;
   }
-  fcntl(videofd, F_SETFD, FD_CLOEXEC);
+  fcntl(vdo_fd_, F_SETFD, FD_CLOEXEC);
 
   /* set capture input */
   inp.index = 0;
   inp.type = V4L2_INPUT_TYPE_CAMERA;
-  if (ioctl(videofd, VIDIOC_S_INPUT, &inp) == -1) {
+  if (ioctl(vdo_fd_, VIDIOC_S_INPUT, &inp) == -1) {
     LOG_ERROR("VIDIOC_S_INPUT failed! s_input: %d\n", inp.index);
     return -1;
   }
@@ -58,7 +61,7 @@ int CCamera::capture_init() {
   parms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   parms.parm.capture.timeperframe.numerator = 1;
   parms.parm.capture.timeperframe.denominator = cap_fps_;
-  if (ioctl(videofd, VIDIOC_S_PARM, &parms) == -1) {
+  if (ioctl(vdo_fd_, VIDIOC_S_PARM, &parms) == -1) {
     LOG_ERROR("VIDIOC_S_PARM failed!\n");
     return -1;
   }
@@ -66,7 +69,7 @@ int CCamera::capture_init() {
   /* get and print capture parms */
   memset(&parms, 0, sizeof(struct v4l2_streamparm));
   parms.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl(videofd, VIDIOC_G_PARM, &parms) == 0) {
+  if (ioctl(vdo_fd_, VIDIOC_G_PARM, &parms) == 0) {
     LOG_INFO(" Camera capture framerate is %u/%u\n",
              parms.parm.capture.timeperframe.denominator, \
              parms.parm.capture.timeperframe.numerator);
@@ -81,7 +84,7 @@ int CCamera::capture_init() {
   fmt.fmt.pix.height = cap_h_;
   fmt.fmt.pix.pixelformat = cap_fmt_;
   fmt.fmt.pix.field = V4L2_FIELD_NONE;
-  if (ioctl(videofd, VIDIOC_S_FMT, &fmt) < 0) {
+  if (ioctl(vdo_fd_, VIDIOC_S_FMT, &fmt) < 0) {
     LOG_ERROR("VIDIOC_S_FMT failed!\n");
     return -1;
   }
@@ -91,7 +94,7 @@ int CCamera::capture_init() {
   req.count = buf_cnt_;
   req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   req.memory = V4L2_MEMORY_MMAP;
-  if (ioctl(videofd, VIDIOC_REQBUFS, &req) < 0) {
+  if (ioctl(vdo_fd_, VIDIOC_REQBUFS, &req) < 0) {
     LOG_ERROR("VIDIOC_REQBUFS failed\n");
     return -1;
   }
@@ -104,15 +107,15 @@ int CCamera::capture_init() {
     buf.memory = V4L2_MEMORY_MMAP;
     buf.index = n_buffers;
 
-    if (ioctl(videofd, VIDIOC_QUERYBUF, &buf) == -1) {
+    if (ioctl(vdo_fd_, VIDIOC_QUERYBUF, &buf) == -1) {
       LOG_ERROR("VIDIOC_QUERYBUF error\n");
       return -1;
     }
 
     buffers_[n_buffers].length = buf.length;
     buffers_[n_buffers].start = (void*)mmap(NULL, buf.length,
-                                            PROT_READ | PROT_WRITE, \
-                                            MAP_SHARED, videofd, \
+                                            PROT_READ | PROT_WRITE,
+                                            MAP_SHARED, vdo_fd_,
                                             buf.m.offset);
     LOG_INFO("map buffer index: %d, mem: 0x%x, len: %x, offset: %x\n",
              n_buffers, (int)buffers_[n_buffers].start, buf.length, buf.m.offset);
@@ -124,7 +127,7 @@ int CCamera::capture_init() {
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     buf.memory = V4L2_MEMORY_MMAP;
     buf.index = n_buffers;
-    if (ioctl(videofd, VIDIOC_QBUF, &buf) == -1) {
+    if (ioctl(vdo_fd_, VIDIOC_QBUF, &buf) == -1) {
       LOG_ERROR("VIDIOC_QBUF error\n");
       return -1;
     }
@@ -136,10 +139,10 @@ int CCamera::capture_quit() {
   LOG_INFO("capture quit!\n");
 
   /* streamoff */
-  if (videofd > 0) {
+  if (vdo_fd_ > 0) {
     enum v4l2_buf_type type;
     type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    if (ioctl(videofd, VIDIOC_STREAMOFF, &type) == -1) {
+    if (ioctl(vdo_fd_, VIDIOC_STREAMOFF, &type) == -1) {
       LOG_ERROR("VIDIOC_STREAMOFF error! %s\n", strerror(errno));
       return -1;
     }
@@ -157,14 +160,14 @@ int CCamera::capture_quit() {
     free(buffers_);
     buffers_ = NULL;
   }
-  if (videofd > 0) {
-    close(videofd);
-    videofd = 0;
+  if (vdo_fd_ > 0) {
+    close(vdo_fd_);
+    vdo_fd_ = 0;
   }
   return 0;
 }
 
-int CCamera::GetFrame(bool *bexit, CameraCallback callback, void *usr_arg) {
+int CCamera::GetFrame(unsigned int *is_exit, CameraCallback callback, void *usr_arg) {
   int ret;
   ret = capture_init();
   if (0 != ret) {
@@ -174,7 +177,7 @@ int CCamera::GetFrame(bool *bexit, CameraCallback callback, void *usr_arg) {
   /* streamon */
   enum v4l2_buf_type type;
   type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl(videofd, VIDIOC_STREAMON, &type) == -1) {
+  if (ioctl(vdo_fd_, VIDIOC_STREAMON, &type) == -1) {
     LOG_ERROR("VIDIOC_STREAMON error! %s\n", strerror(errno));
     return -1;
   }
@@ -182,13 +185,13 @@ int CCamera::GetFrame(bool *bexit, CameraCallback callback, void *usr_arg) {
   fd_set fds;
   struct timeval tv;
   struct v4l2_buffer buf;
-  while ((*bexit) == false) {
+  while (0 == (*is_exit)) {
     /* wait for sensor capture data */
     tv.tv_sec = 2;
     tv.tv_usec = 0;
     FD_ZERO(&fds);
-    FD_SET(videofd, &fds);
-    ret = select(videofd + 1, &fds, NULL, NULL, &tv);
+    FD_SET(vdo_fd_, &fds);
+    ret = select(vdo_fd_ + 1, &fds, NULL, NULL, &tv);
     if (ret == -1) {
       if (errno == EINTR) {
         continue;
@@ -202,22 +205,22 @@ int CCamera::GetFrame(bool *bexit, CameraCallback callback, void *usr_arg) {
     memset(&buf, 0, sizeof(struct v4l2_buffer));
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     buf.memory = V4L2_MEMORY_MMAP;
-    ret = ioctl(videofd, VIDIOC_DQBUF, &buf);
+    ret = ioctl(vdo_fd_, VIDIOC_DQBUF, &buf);
     if (ret == 0) {
       unsigned int phyaddr = buf.m.offset;
       void *vir_addr = buffers_[buf.index].start + phyaddr - buf.m.offset;
 
       int frameszie = cap_w_ * cap_h_ * 1.5;
-      LOG_INFO("buf.length %d, vaddr: 0x%x, phy_addr 0x%x\n",
-               buf.length, (unsigned int)vir_addr, phyaddr);
-      LOG_INFO("buf.length %d, vaddr: 0x%x, phy_addr 0x%x\n",
-               frameszie,  (unsigned int)vir_addr, buffers_[buf.index].phy_addr);
+      //LOG_INFO("buf.length %d, vaddr: 0x%x, phy_addr 0x%x\n",
+      //         buf.length, (unsigned int)vir_addr, phyaddr);
+      //LOG_INFO("buf.length %d, vaddr: 0x%x, phy_addr 0x%x\n",
+      //         frameszie,  (unsigned int)vir_addr, buffers_[buf.index].phy_addr);
 
       if (callback) {
         callback(vir_addr, phyaddr, cap_w_, cap_h_, usr_arg);
       }
 
-      ioctl(videofd, VIDIOC_QBUF, &buf);
+      ioctl(vdo_fd_, VIDIOC_QBUF, &buf);
     }
   }
   capture_quit();
