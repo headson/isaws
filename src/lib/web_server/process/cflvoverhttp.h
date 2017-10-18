@@ -9,8 +9,8 @@
 #include "vzconn/base/clibevent.h"
 #include "vzconn/buffer/cblockbuffer.h"
 
-#include "systemv/shm/vzshm_c.h"
-#include "systemv/flvmux/cflvmux.h"
+#include "vzbase/system/vshm.h"
+#include "web_server/process/cflvmux.h"
 
 #include "vzbase/base/boost_settings.hpp"
 
@@ -22,8 +22,7 @@ class CFlvOverHttp : public vzbase::noncopyable {
   CFlvOverHttp();
   virtual ~CFlvOverHttp();
 
-  bool Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop,
-            const char* shm_key, unsigned int shm_size);
+  bool Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop, int dev_num);
   void Close();
 
   int AsyncHeader(const void *presp, unsigned int nresp);
@@ -53,7 +52,9 @@ class CFlvOverHttp : public vzbase::noncopyable {
   vzconn::EVT_TIMER      evt_timer_;
 
  private:
-  CShareBuffer           shm_vdo_;
+  int                    dev_num_;
+  vzbase::VShm           shm_vdo_;
+  TAG_SHM_VDO           *shm_vdo_ptr_;
   unsigned int           w_sec_, w_usec_;
 
  private:
@@ -65,8 +66,6 @@ class CFlvOverHttp : public vzbase::noncopyable {
 
   int                    avcc_data_size_;
   char                   avcc_data_[1024];
-
-  FILE                  *file;
 };
 
 

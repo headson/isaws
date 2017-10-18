@@ -382,12 +382,17 @@ int CFlvMux::MakeAVCc(char* sps_pps, int sps_size, int pps_size) {
   p_out[0] = 1;
   p_out += 1;
 
-  size = fastHtons(pps_size - 4);
+#ifdef _WIN32
+  int nleft = 4;
+#else
+  int nleft = 5;
+#endif
+  size = fastHtons(pps_size - nleft);
   memcpy(p_out, &size, 2);
   p_out += 2;
 
-  memcpy(p_out, p_pps + 4, pps_size - 4);
-  p_out += (pps_size - 4);
+  memcpy(p_out, p_pps + nleft, pps_size - nleft);
+  p_out += (pps_size - nleft);
 
   avcc_size_ = p_out - avcc_;
 

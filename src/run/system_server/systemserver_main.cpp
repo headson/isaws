@@ -5,31 +5,9 @@
 
 #include "systemserver/clistenmessage.h"
 
-int SignalHandle(int n_signal, short events, const void *p_usr_arg) {
-  if (n_signal == SIGINT) {
-    LOG(L_WARNING) << "revive SIGINT,End of the sysyem server";
-  } else if (n_signal == SIGTERM) {
-    LOG(L_WARNING) << "revive SIGTERM,End of the sysyem server";
-  } else if (n_signal == SIGSEGV) {
-    LOG(L_ERROR) << "revive SIGSEGV,End of the sysyem server";
-  } else if (n_signal == SIGABRT) {
-    LOG(L_ERROR) << "revive SIGSEGV,End of the sysyem server";
-  }
-#ifdef POSIX
-  else if (n_signal == SIGPIPE) {
-    LOG(L_INFO) << "revive SIGSEGV, sysyem server";
-  }
-#endif
-  if (n_signal == SIGINT ||
-      n_signal == SIGTERM ||
-      n_signal == SIGSEGV ||
-      n_signal == SIGABRT) {
-
-    sys::CListenMessage::Instance()->Stop();
-    LOG(L_WARNING) << "End of the sysyem server";
-    exit(EXIT_SUCCESS);
-  }
-  return 0;
+void SignalHandle(void *usr_arg) {
+  sys::CListenMessage::Instance()->Stop();
+  exit(EXIT_SUCCESS);
 }
 
 int main(int argc, char *argv[]) {
@@ -38,21 +16,16 @@ int main(int argc, char *argv[]) {
   ShowVzLoggingAlways();
 #endif
 
-  DpEvtService evt_service =
-    (DpEvtService)vzbase::Thread::Current()->socketserver()->GetEvtService();
-  
-  unsigned int is_exit = false;
-  ExitSignalHandle((vzconn::EventService*)evt_service, &is_exit);
+  vzconn::EventService *evt_service =
+    (vzconn::EventService *)vzbase::Thread::Current()->socketserver()->GetEvtService();
 
+  ExitSignalHandle(evt_service, "platform_app", SignalHandle, NULL);
+  
   DpClient_Init(DEF_DP_SRV_IP, DEF_DP_SRV_PORT);
   Kvdb_Start(DEF_KVDB_SRV_IP, DEF_KVDB_SRV_PORT);
 
   bool res = sys::CListenMessage::Instance()->Start();
-  if (false == res) {
-    LOG(L_ERROR) << "start failed.";
-    return -1;
-  }
-  while (1 == is_exit) {
+  while (res) {
     sys::CListenMessage::Instance()->RunLoop();
   }
 

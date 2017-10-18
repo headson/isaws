@@ -9,7 +9,7 @@
 
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
-#include "vzbase/base/mysystem.h"
+#include "vzbase/system/mysystem.h"
 
 #include "vzbase/base/helper.h"
 #include "vzbase/base/base64.h"

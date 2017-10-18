@@ -13,7 +13,7 @@
 #include "vzbase/base/helper.h"
 #include "vzbase/base/base64.h"
 
-#include "vzbase/base/mysystem.h"
+#include "vzbase/system/mysystem.h"
 
 #include "systemserver/network/net_cfg.h"
 #include "systemserver/module/cmodulecontrol.h"

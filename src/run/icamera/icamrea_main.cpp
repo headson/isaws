@@ -4,8 +4,7 @@
 #include <time.h>
 #include <winsock2.h>
 
-#include "systemv/shm/vzshm_c.h"
-#include "systemv/flvmux/cflvmux.h"
+#include "vzbase/system/vshm.h"
 
 #include "ch264code.h"
 #include "camera/icameracaptuer.h"
@@ -14,8 +13,8 @@
 
 #pragma comment(lib, "x264/libs/32bit/libx264.lib")
 
-#define VIDEO_WIDTH   SHM_VIDEO_2_W
-#define VIDEO_HEIGHT  SHM_VIDEO_2_H
+#define VIDEO_WIDTH   640
+#define VIDEO_HEIGHT  480
 
 #include "asc8.h"
 #include "yuv420.h"
@@ -62,22 +61,34 @@ int main() {
     perror("create h264 encoder failed.\n");
     return -1;
   }
-  
+
   bool ret = false;
-  
-  CShareBuffer shm_vdo;
+
+  TAG_SHM_ARG shm_vdo = g_shm_avdo[0];
+  vzbase::VShm shm_vdo_;
+  ret = shm_vdo_.Open(shm_vdo.dev_name, shm_vdo.shm_size);
+  if (false == ret) {
+    LOG_ERROR("share video failed.");
+    return -1;
+  }
+  TAG_SHM_VDO *shm_vdo_ptr_ = (TAG_SHM_VDO*)shm_vdo_.GetData();
+
+  shm_vdo_ptr_->width = VIDEO_WIDTH;
+  shm_vdo_ptr_->height = VIDEO_HEIGHT;
+
+  /*CShareBuffer shm_vdo;
   ret = shm_vdo.Create(SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
   if (ret == false) {
-    printf("create share video failed.");
-    return -1;
+  printf("create share video failed.");
+  return -1;
   }
 
   CShareBuffer shm_img;
   ret = shm_img.Create(SHM_IMAGE_0, SHM_IMAGE_0_SIZE);
   if (false == ret) {
-    LOG(L_ERROR) << "share image create failed.";
-    return -1;
-  }
+  LOG(L_ERROR) << "share image create failed.";
+  return -1;
+  }*/
 
   x264_picture_t pic_in;
   x264_picture_alloc(&pic_in, X264_CSP_I420, VIDEO_WIDTH, VIDEO_HEIGHT);
@@ -93,8 +104,7 @@ int main() {
   x264_picture_t pic_out;
   x264_picture_init(&pic_out);
 
-  shm_vdo.SetWidth(VIDEO_WIDTH);
-  shm_vdo.SetHeight(VIDEO_HEIGHT);
+  bool bsps = false, bpps = false;
 
   time_t nTmOld = 0;
   unsigned char nColor = 0;
@@ -111,10 +121,10 @@ int main() {
       int ret = 0;
 
       // 可以优化为m_pic中保存一个指针,直接执行szYUVFrame
-      memcpy(pic_in.img.plane[0], p_img, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
-      shm_img.Write((char*)p_img, 
-                    VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2,
-                    tv.tv_sec, tv.tv_usec);
+      /*memcpy(pic_in.img.plane[0], p_img, VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2);
+      shm_img.Write((char*)p_img,
+      VIDEO_WIDTH * VIDEO_HEIGHT * 3 / 2,
+      tv.tv_sec, tv.tv_usec);*/
 
 #if 1
       time_t nTmNow = time(NULL);
@@ -127,9 +137,9 @@ int main() {
               (char*)vzbase::SecToString(nTmNow).c_str(),
               1, asc8, 10, 10);
 
-      ret = snprintf(pc_num_osd, 63, 
-               "入:%d 出:%d", 
-               5, 8);
+      ret = sprintf(pc_num_osd,
+                     "入:%d 出:%d",
+                     5, 8);
       if (ret < 64) {
         pc_num_osd[ret] = '\0';
       }
@@ -149,15 +159,31 @@ int main() {
         x264_nal_t &nal = pNals[j];
 
         if (nal.i_type == NAL_SPS) {
-          shm_vdo.WriteSps((char*)nal.p_payload, nal.i_payload);
+          if (bsps == false) {
+            bsps = true;
+            shm_vdo_ptr_->nhead = nal.i_payload;
+            memcpy(shm_vdo_ptr_->shead, (char*)nal.p_payload, nal.i_payload);
+          }
+          // shm_vdo.WriteSps((char*)nal.p_payload, nal.i_payload);
           continue;
         } else if (nal.i_type == NAL_PPS) {
-          shm_vdo.WritePps((char*)nal.p_payload, nal.i_payload);
+          if (bpps == false) {
+            bpps = true;
+            shm_vdo_ptr_->nhead += nal.i_payload;
+            memcpy(shm_vdo_ptr_->shead+shm_vdo_ptr_->nhead,
+                   (char*)nal.p_payload, nal.i_payload);
+          }
+          // shm_vdo.WritePps((char*)nal.p_payload, nal.i_payload);
           continue;
         } else if (nal.i_type == NAL_SLICE_IDR
                    || nal.i_type == NAL_SLICE) {
-          shm_vdo.Write((char*)nal.p_payload, nal.i_payload, 
-                        tv.tv_sec, tv.tv_usec);
+          //shm_vdo.Write((char*)nal.p_payload, nal.i_payload,
+          //              tv.tv_sec, tv.tv_usec);
+          shm_vdo_ptr_->wsec = tv.tv_sec;
+          shm_vdo_ptr_->wusec = tv.tv_usec;
+
+          shm_vdo_ptr_->ndata = nal.i_payload;
+          memcpy(shm_vdo_ptr_->pdata, (char*)nal.p_payload, nal.i_payload);
           continue;
         }
       }

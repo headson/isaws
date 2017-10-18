@@ -9,8 +9,6 @@
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
 
-#include "vzbase/base/mysystem.h"
-
 #include "dispatcher/sync/dpclient_c.h"
 
 namespace sys {
@@ -98,7 +96,7 @@ bool CHwclock::SetDevTime(const Json::Value &jbody) {
                  "date -s \"%s\";clock -w",
                  str.c_str());
         LOG(L_INFO) << scmd;
-        vzbase::my_system(scmd);
+        system(scmd);
 #endif  // _WIN32
 
         DpClient_SendDpMessage(MSG_TIME_CHANGE, 0,

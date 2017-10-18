@@ -14,7 +14,7 @@
 
 #include <json/json.h>
 
-#include "vmessage.h"
+#include "vzbase/base/vmessage.h"
 #include "vzbase/helper/stdafx.h"
 
 #ifdef __cplusplus

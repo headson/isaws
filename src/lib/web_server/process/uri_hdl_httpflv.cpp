@@ -62,11 +62,11 @@ void uri_hdl_httpflv(struct mg_connection *nc, int ev, void *p) {
 
   bool bres = false;
   if (0 == strncmp(chn, "video0", 7)) {
-    bres = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_0, SHM_VIDEO_0_SIZE);
+    bres = pflv->Open(nc->sock, evt_loop, 0);
   } else if (0 == strncmp(chn, "video1", 7)) {
-    bres = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_1, SHM_VIDEO_1_SIZE);
+    bres = pflv->Open(nc->sock, evt_loop, 1);
   } else if (0 == strncmp(chn, "video2", 7)) {
-    bres = pflv->Open(nc->sock, evt_loop, SHM_VIDEO_2, SHM_VIDEO_2_SIZE);
+    bres = pflv->Open(nc->sock, evt_loop, 2);
   } else {
     bres = false;
   }

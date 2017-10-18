@@ -12,8 +12,7 @@
 #include "vzbase/base/timeutils.h"
 #include "vzbase/base/vmessage.h"
 
-#include "systemv/shm/vzshm_c.h"
-#include "systemv/flvmux/cflvmux.h"
+#include "cflvmux.h"
 #include "web_server/clistenmessage.h"
 
 CFlvOverHttp::CFlvOverHttp()
@@ -27,41 +26,46 @@ CFlvOverHttp::CFlvOverHttp()
   , shm_vdo_()
   , flv_shm_()
   , flv_data_(NULL)
-  , flv_data_size_(0)
-  , file(NULL) {
+  , flv_data_size_(0) {
   pts_ = vzbase::CurrentSystemTicket();
 }
 
 CFlvOverHttp::~CFlvOverHttp() {
+  printf("%s[%d].\n", __FUNCTION__, __LINE__);
   evt_timer_.Stop();
   evt_send_.Stop();
   if (evt_loop_) {
     evt_loop_ = NULL;
   }
-
   if (flv_data_) {
     delete[] flv_data_;
     flv_data_ = NULL;
   }
-
-  printf("%s[%d].\n", __FUNCTION__, __LINE__);
 }
 
-bool CFlvOverHttp::Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop,
-                        const char* shm_key, unsigned int shm_size) {
+bool CFlvOverHttp::Open(SOCKET sock, vzconn::EVT_LOOP *evt_loop, int dev_num) {
+  dev_num_ = dev_num;
+
   sock_ = sock;
   set_socket_nonblocking(sock);
+
+  TAG_SHM_ARG &shm_vdo = g_shm_avdo[dev_num_];
+  LOG_INFO("video %s, w %d, h %d, size %d.\n",
+           shm_vdo.dev_name,
+           shm_vdo.width, shm_vdo.height,
+           shm_vdo.shm_size);
+
+  bool ret = shm_vdo_.Open(shm_vdo.dev_name, shm_vdo.shm_size);
+  if (false == ret) {
+    LOG(L_ERROR) << "shm video failed.";
+    return false;
+  }
+  shm_vdo_ptr_ = (TAG_SHM_VDO *)shm_vdo_.GetData();
 
   evt_loop_ = evt_loop;
   thiz_ptr_.reset(this);
   evt_send_.Init(evt_loop_, EvtSend, &thiz_ptr_);
   evt_timer_.Init(evt_loop_, EvtTimer, &thiz_ptr_);
-
-  bool ret = shm_vdo_.Open(shm_key, shm_size);
-  if (false == ret) {
-    LOG(L_ERROR) << "shm video failed.";
-    return false;
-  }
   // file = fopen("./test2.flv", "wb+");
   return true;
 }
@@ -74,12 +78,10 @@ void CFlvOverHttp::Close() {
 int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead) {
   AsyncWrite(phead, nhead);
 
-  unsigned int width=0, height=0;
-  shm_vdo_.GetVdoSize(&width, &height);
-
+  TAG_SHM_ARG &shm_vdo = g_shm_avdo[dev_num_];
   if (NULL == flv_data_) {
-    flv_data_size_ = width * height + 1024;
-    flv_data_ = new char[width * height + 1024];
+    flv_data_size_ = shm_vdo.shm_size;
+    flv_data_ = new char[flv_data_size_];
   }
   if (NULL == flv_data_) {
     LOG(L_ERROR) << "create flv buffer failed.";
@@ -90,20 +92,13 @@ int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead) {
   char sdata[1024] = {0};
   char *p_dst = NULL;
   p_dst = flv_shm_.HeaderAndMetaDataTag(sdata,
-                                        width, height,
+                                        shm_vdo.width, shm_vdo.height,
                                         16000, 8000, 16, 1);
   ndata = p_dst - sdata;
   AsyncWrite(sdata, ndata);
-  if (file) {
-    fwrite(sdata, 1, ndata, file);
-  }
 
-  int n_sps = 0, n_pps = 0;
-  ndata = shm_vdo_.ReadHead(sdata, 2048, &n_sps, &n_pps);
-  LOG(L_INFO)<<"sps length "<<n_sps
-             <<" pps length "<<n_pps
-             <<" width " << width
-             <<" height "<< height;
+  int n_sps = 14, n_pps = 9;
+  memcpy(sdata, shm_vdo_ptr_->shead, shm_vdo_ptr_->nhead);
 
   ndata = flv_shm_.MakeAVCc(sdata, n_sps, n_pps);
   p_dst = flv_shm_.Packet(avcc_data_, NULL, 0,
@@ -111,9 +106,6 @@ int CFlvOverHttp::AsyncHeader(const void *phead, unsigned int nhead) {
                           0x09, 0);
   avcc_data_size_ = p_dst - avcc_data_;
   AsyncWrite(avcc_data_, avcc_data_size_);
-  if (file) {
-    fwrite(avcc_data_, 1, avcc_data_size_, file);
-  }
 
   int nret = evt_timer_.Start(5, 5);   //
   if (nret != 0) {
@@ -192,44 +184,48 @@ int32 CFlvOverHttp::OnTimer() {
   }
 
   if (flv_data_) {
-    int ndata = shm_vdo_.Read(flv_data_+flv_shm_.VdoHeadSize(),
-                              flv_data_size_,
-                              &w_sec_, &w_usec_);
-    if (ndata <= 0) {
+    if (shm_vdo_ptr_->wsec == w_sec_ &&
+        shm_vdo_ptr_->wusec == w_usec_) {
       if (vzconn::VSocket::IsSocketClosed(sock_)) {
         return -1;
       }
+      return 0;
     }
+    w_sec_ = shm_vdo_ptr_->wsec;
+    w_usec_ = shm_vdo_ptr_->wusec;
+    // LOG_INFO("sec %d, usec %d.", w_sec_, w_usec_);
+
+    int nflv_data = shm_vdo_ptr_->ndata;
+    memcpy(flv_data_+flv_shm_.VdoHeadSize(),
+           shm_vdo_ptr_->pdata, shm_vdo_ptr_->ndata);
 
     uint32 pts = vzbase::CurrentSystemTicket() - pts_;
     // LOG(L_INFO) << "pts "<< pts;
 
     int   nal_bng = 0, frm_type = 0;
-    char *p_nal = nal_parse(flv_data_+flv_shm_.VdoHeadSize(), ndata, &frm_type, &nal_bng);
+    char *p_nal = nal_parse(flv_data_+flv_shm_.VdoHeadSize(), nflv_data, &frm_type, &nal_bng);
 
     int n_flv = 0;
     if (frm_type == 5) {
       AsyncWrite(avcc_data_, avcc_data_size_);
       char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
-                                         p_nal + nal_bng, ndata - nal_bng,
+                                         p_nal + nal_bng, nflv_data - nal_bng,
                                          true, pts);
       n_flv = p_dst - (flv_data_ + nal_bng);
     } else if (frm_type == 1) {
       char *p_dst = flv_shm_.PacketVideo(flv_data_+nal_bng,
-                                         p_nal + nal_bng, ndata - nal_bng,
+                                         p_nal + nal_bng, nflv_data - nal_bng,
                                          false, pts);
       n_flv = p_dst - (flv_data_ + nal_bng);
     }
     AsyncWrite(flv_data_+nal_bng, n_flv);
-    if (file) {
-      fwrite(flv_data_+nal_bng, 1, n_flv, file);
-    }
     // printf("----------------- flv %d %d.\n", frm_type, n_flv);
   }
   return 0;
 }
 
-char *CFlvOverHttp::nal_parse(const char *ph264, int nh264, int *frm_type, int *nal_bng) {
+char *CFlvOverHttp::nal_parse(const char *ph264, int nh264,
+                              int *frm_type, int *nal_bng) {
   int   n_0_cnt = 0;    // 0x00 ¸öÊý
   char *p_nal = const_cast<char*>(ph264);
   while (true) {

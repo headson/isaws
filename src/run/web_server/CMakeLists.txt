@@ -51,7 +51,6 @@ if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		libwebserver
 		libmongoose
-		libsystemv
 		libdpclient
 		libvzbase
 		libvzconn
@@ -62,7 +61,6 @@ else()
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME}
 		webserver
 		mongoose
-		systemv
 		dpclient
 		vzbase
 		vzconn

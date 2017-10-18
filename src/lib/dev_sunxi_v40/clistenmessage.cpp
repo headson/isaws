@@ -38,7 +38,7 @@ CListenMessage *CListenMessage::Instance() {
 
 bool CListenMessage::Start() {
   // 初始化
-  video_catch_.Start();
+  video_catch_.Start(0);
 
   // 监听事件
   main_thread_ = vzbase::Thread::Current();

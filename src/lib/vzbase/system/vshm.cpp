@@ -4,6 +4,44 @@
 ************************************************************************/
 #include "vshm.h"
 #include <stdio.h>
+#include <string.h>
+
+#ifdef _WIN32
+#else  // _LINUX
+#include <unistd.h>
+#include <sys/shm.h>
+#include <sys/sem.h>
+#endif
+
+TAG_SHM_ARG g_shm_img[] = {
+  {
+    "/dev/shm/image_0",
+    1280, 720, (1280 * 720 * 3 / 2)
+  },
+  {
+    "/dev/shm/image_1",
+    1280, 720, (1280 * 720 * 3 / 2)
+  },
+};
+
+TAG_SHM_ARG g_shm_avdo[] = {
+  {
+    "/dev/shm/video_0",
+    1280, 720, (1280 * 720 + 1024)
+  },
+  {
+    "/dev/shm/video_1",
+    1280, 720, (1280 * 720 + 1024)
+  },
+  {
+    "/dev/shm/video_1",
+    1280, 720, (1280 * 720 + 1024)
+  },
+  {
+    "/dev/shm/audio_0",
+    0, 0, 1024
+  },
+};
 
 namespace vzbase {
 
@@ -56,7 +94,6 @@ void VShm::vzShmDt(void *ptr) {
 }
 
 #else
-
 int VShm::create_file(const char *filename) {
   if (access(filename, 0) == 0) {
     return 0;

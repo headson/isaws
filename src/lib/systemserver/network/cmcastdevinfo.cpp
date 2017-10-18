@@ -9,7 +9,6 @@
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
 
-#include "vzbase/base/mysystem.h"
 #include "systemserver/clistenmessage.h"
 
 namespace sys {

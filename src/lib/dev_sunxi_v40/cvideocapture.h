@@ -5,11 +5,12 @@
 #ifndef LIBDEVICE_CVIDEOCAPTURE_H
 #define LIBDEVICE_CVIDEOCAPTURE_H
 
+#include "vzbase/system/vshm.h"
+
 #include "ccamera.h"
 #include "cvideocodec.h"
 
 #include "vzbase/thread/thread.h"
-
 #include "vzbase/base/boost_settings.hpp"
 
 class CVideoCapture :
@@ -19,7 +20,7 @@ class CVideoCapture :
   CVideoCapture();
   virtual ~CVideoCapture();
 
-  int Start();
+  int Start(int dev_num);
   void Stop();
 
  protected:
@@ -48,6 +49,8 @@ class CVideoCapture :
   }
   int OnVideo(VencOutputBuffer *output_buffer);
 
+  int SetSpsPps(const char *sps_pps, int sps_pps_size);
+
  protected:
   void Run(vzbase::Thread* thread);
 
@@ -58,6 +61,13 @@ class CVideoCapture :
  private:
   CCamera        *camera_;
   CVideoCodec    *vdo_code_;
+
+ private:
+  vzbase::VShm    shm_vdo_;
+  TAG_SHM_VDO    *shm_vdo_ptr_;
+
+  vzbase::VShm    shm_img_;
+  TAG_SHM_IMG    *shm_img_ptr_;
 };
 
 #endif  // LIBDEVICE_CVIDEOCAPTURE_H

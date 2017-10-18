@@ -40,6 +40,8 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_httpflv.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/uri_hdl_dispatch.cpp
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/process/cflvmux.h
+	${CMAKE_CURRENT_SOURCE_DIR}/process/cflvmux.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/cflvoverhttp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/process/cflvoverhttp.cpp
 )
@@ -61,6 +63,8 @@ SOURCE_GROUP(process FILES
 )
 
 SOURCE_GROUP(flvoverhttp FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/process/cflvmux.h
+	${CMAKE_CURRENT_SOURCE_DIR}/process/cflvmux.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/process/cflvoverhttp.h
 	${CMAKE_CURRENT_SOURCE_DIR}/process/cflvoverhttp.cpp
 )

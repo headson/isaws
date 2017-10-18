@@ -63,6 +63,44 @@ class VShm {
   int     shm_size_;    //
 };
 
-}
+}  // namespace vzbase
+
+typedef struct TAG_SHM_ARG {
+  const char  *dev_name;    // 设备名
+  int          width;       // 宽
+  int          height;      // 高
+  int          shm_size;    // 共享大小
+} TAG_SHM_ARG;
+
+extern TAG_SHM_ARG g_shm_img[2];
+extern TAG_SHM_ARG g_shm_avdo[4];
+
+#define MAX_SPS_PPS       128
+typedef struct {
+  unsigned int  wsec;       // 写秒
+  unsigned int  wusec;      // 写微妙
+
+  unsigned int  width;
+  unsigned int  height;
+
+  unsigned int  nhead;
+  unsigned char shead[MAX_SPS_PPS]; // SPS_PPS
+
+  unsigned int  nsize;      // 数据buffer长度
+  unsigned int  ndata;      // 写长度
+  unsigned char pdata[0];   // 数据指针
+} TAG_SHM_VDO;
+
+typedef struct {
+  unsigned int  wsec;       // 写秒
+  unsigned int  wusec;      // 写微妙
+
+  unsigned int  width;
+  unsigned int  height;
+
+  unsigned int  nsize;      // 数据buffer长度
+  unsigned int  ndata;      // 写长度
+  unsigned char pdata[0];   // 数据指针
+} TAG_SHM_IMG;
 
 #endif  // _VSHM_H_

@@ -4,25 +4,25 @@
 #include "dispatcher/sync/dpclient_c.h"
 #include "http_sender/clistenmessage.h"
 
+void SignalHandle(void *usr_arg) {
+  hs::CListenMessage::Instance()->Stop();
+  exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[]) {
   InitVzLogging(argc, argv);
 #ifdef _WIN32
   ShowVzLoggingAlways();
 #endif  // _WIN32
 
-  vzconn::EventService *evt_srv =
+  vzconn::EventService *evt_service =
     (vzconn::EventService *)vzbase::Thread::Current()->socketserver()->GetEvtService();
 
-  unsigned int is_exit = 0;
-  ExitSignalHandle(evt_srv, &is_exit);
+  ExitSignalHandle(evt_service, "platform_app", SignalHandle, NULL);
 
   bool res = hs::CListenMessage::Instance()->Start();
-  if (false == res) {
-    LOG(L_ERROR) << "start failed.";
-    return -1;
-  }
 
-  while(0 == is_exit) {
+  while(res) {
     try {
       hs::CListenMessage::Instance()->RunLoop();
     } catch(std::exception &e) {

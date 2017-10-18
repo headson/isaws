@@ -7,7 +7,6 @@
 #include <string>
 
 #include "vzbase/helper/stdafx.h"
-#include "vzbase/base/mysystem.h"
 #include "vzbase/base/vmessage.h"
 
 typedef struct _file_writer_data {
@@ -58,20 +57,20 @@ void uri_hdl_upload(struct mg_connection *nc, int ev, void *p) {
       fclose(data->fp);
 
       // 处理接收完成
-      int nret = vzbase::update_file_uncompress(DEF_UPLOAD_FILENAME);
-      vzbase::file_remove(DEF_UPLOAD_FILENAME);
+      //int nret = vzbase::update_file_uncompress(DEF_UPLOAD_FILENAME);
+      //vzbase::file_remove(DEF_UPLOAD_FILENAME);
 
       const char *pret = "upload success.";
-      if (nret == 0) {
-        DpClient_SendDpMessage(MSG_REBOOT_DEVICE, 0, NULL, 0);
-      } else if (nret == -1) {
-        pret = "uncompress failed.";
-      } else if (nret == -2) {
-        pret = "hardware compare failed.";
-      } else if (nret == -3) {
-        pret = "have no command success.";
-      }
-      LOG(L_ERROR) << pret;
+      //if (nret == 0) {
+      //  DpClient_SendDpMessage(MSG_REBOOT_DEVICE, 0, NULL, 0);
+      //} else if (nret == -1) {
+      //  pret = "uncompress failed.";
+      //} else if (nret == -2) {
+      //  pret = "hardware compare failed.";
+      //} else if (nret == -3) {
+      //  pret = "have no command success.";
+      //}
+      //LOG(L_ERROR) << pret;
 
       mg_printf(nc,
                 "HTTP/1.1 200 OK\r\n"
