@@ -30,7 +30,7 @@ inline int my_system(const char * cmd) {
   LOG(L_ERROR) << cmd;
   return system(cmd);
 
-#ifdef _LIMUX
+#ifdef _LINUX
   FILE *fp;
   if ((fp = popen(cmd, "r")) != NULL) {
     int res;
@@ -64,7 +64,7 @@ inline int my_system(const char * cmd) {
   perror("popen");
   printf("popen error: %s error %s./n",
          cmd, strerror(errno));
-#endif  // _LIMUX
+#endif  // _LINUX
   return -1;
 }
 

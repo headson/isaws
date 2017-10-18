@@ -22,9 +22,9 @@ int main(int argc, char* argv[]) {
   DpClient_Init(DEF_DP_SRV_IP, DEF_DP_SRV_PORT);
   Kvdb_Start(DEF_KVDB_SRV_IP, DEF_KVDB_SRV_PORT);
 
-  platform::CListenMessage::Instance()->Start();
+  bool res = platform::CListenMessage::Instance()->Start();
 
-  while (true) {
+  while (res) {
     try {
       platform::CListenMessage::Instance()->RunLoop();
     }

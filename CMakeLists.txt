@@ -73,8 +73,8 @@ ADD_SUBDIRECTORY(cmake)
 
 ADD_SUBDIRECTORY(src/lib/curlclient)
 
-ADD_SUBDIRECTORY(src/run/icamera)
-ADD_SUBDIRECTORY(src/run/pc_manage)
+#ADD_SUBDIRECTORY(src/run/icamera)
+#ADD_SUBDIRECTORY(src/run/pc_manage)
 
 ADD_SUBDIRECTORY(src/web)
 

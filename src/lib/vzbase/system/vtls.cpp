@@ -5,7 +5,7 @@
 #include "vtls.h"
 #include "vzbase/helper/stdafx.h"
 
-namespace yhbase {
+namespace vzbase {
 
   VTls::VTls() 
     : tls_key_(TLS_NULL)

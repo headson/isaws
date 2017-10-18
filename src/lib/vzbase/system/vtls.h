@@ -17,7 +17,7 @@ typedef pthread_key_t       TlsKey;
 #define TLS_NULL            -1
 #endif
 
-namespace yhbase {
+namespace vzbase {
 
   class VTls {
   public:

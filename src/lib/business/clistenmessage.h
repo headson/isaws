@@ -16,7 +16,7 @@
 
 namespace bs {
 
-class CListenMessage : public boost::noncopyable,
+class CListenMessage : public vzbase::noncopyable,
   public vzbase::MessageHandler {
  protected:
   CListenMessage();

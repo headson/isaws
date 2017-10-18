@@ -62,24 +62,17 @@ SET(SRC_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
-	${WIN32_LOAD_FILE}
-	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vtls.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vtls.cpp
+	${WIN32_LOAD_FILE}
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/mysystem.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vmessage.h
+	
+	${CMAKE_CURRENT_SOURCE_DIR}/system/vtls.h
+	${CMAKE_CURRENT_SOURCE_DIR}/system/vtls.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/system/vshm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/system/vshm.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/system/mysystem.h
 
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stdafx.h
@@ -120,23 +113,10 @@ SOURCE_GROUP(base FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/base/noncoypable.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/timeutils.cpp
-	${WIN32_LOAD_FILE}
-	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/helper.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/md5.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/aes.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/sha1.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/base/base64.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/base/authmethods.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vtls.h
-	${CMAKE_CURRENT_SOURCE_DIR}/base/vtls.cpp
+	${WIN32_LOAD_FILE}
 	
-	${CMAKE_CURRENT_SOURCE_DIR}/base/mysystem.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/vmessage.h
 )
 
@@ -147,6 +127,14 @@ SOURCE_GROUP(helper FILES
 	#${CMAKE_CURRENT_SOURCE_DIR}/helper/getopt.h
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stringhelper.h
 	${CMAKE_CURRENT_SOURCE_DIR}/helper/stringhelper.cpp
+)
+
+SOURCE_GROUP(system FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/system/vtls.h
+	${CMAKE_CURRENT_SOURCE_DIR}/system/vtls.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/system/vshm.h
+	${CMAKE_CURRENT_SOURCE_DIR}/system/vshm.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/system/mysystem.h
 )
 
 SOURCE_GROUP(thread FILES

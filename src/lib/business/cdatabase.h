@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-class CDataBase : public boost::noncopyable {
+class CDataBase : public vzbase::noncopyable {
  public:
   CDataBase();
   virtual ~CDataBase();

@@ -15,7 +15,9 @@
 // KvdbClient_Init设置dispatcher_server kvdb地址
 #define DEF_KVDB_SRV_IP       "192.168.1.86"
 #define DEF_KVDB_SRV_PORT     5299
-#else
+
+#else  // _LINUX
+	
 // DpClient_Init设置dispatcher_server dp地址
 #define DEF_DP_SRV_IP         "127.0.0.1"
 #define DEF_DP_SRV_PORT       5291
