@@ -49,6 +49,8 @@ int CVideoCapture::Start(int dev_num) {
     return -1;
   }
   shm_img_ptr_ = (TAG_SHM_IMG*)shm_img_.GetData();
+  shm_img_ptr_->width = shm_img.width;
+  shm_img_ptr_->height = shm_img.height;
 
   res = shm_vdo_.Open(shm_vdo.dev_name, shm_vdo.shm_size);
   if (false == res) {
@@ -56,6 +58,8 @@ int CVideoCapture::Start(int dev_num) {
     return -1;
   }
   shm_vdo_ptr_ = (TAG_SHM_VDO*)shm_vdo_.GetData();
+  shm_vdo_ptr_->width = shm_vdo.width;
+  shm_vdo_ptr_->height = shm_vdo.height;
 
   //
   vdo_code_ = CVideoCodec::Create(VENC_CODEC_H264,

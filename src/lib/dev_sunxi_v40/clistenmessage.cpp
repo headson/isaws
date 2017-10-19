@@ -13,12 +13,10 @@ namespace platform {
 static const char  *METHOD_SET[] = {
   MSG_GET_I_FRAME,        //
   MSG_IRCUT_CTRLS,        //
-  MSG_GET_VDO_URL,        //
   MSG_GET_ENC_CFG,        //
   MSG_SET_ENC_CFG,        //
   MSG_GET_ENC_OSD,        //
-  MSG_SET_ENC_OSD,        //
-  MSG_GET_ALGINFO,        // 获取算法信息
+  MSG_SET_ENC_OSD         //
 };
 static const unsigned int METHOD_SET_SIZE = sizeof(METHOD_SET) / sizeof(char*);
 
@@ -132,30 +130,6 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
     //  CGpioEvent::IRCutClose();
     //}
     jresp[MSG_STATE] = RET_SUCCESS;
-  } else if (0 == strncmp(dmp->method, MSG_GET_VDO_URL, MAX_METHOD_SIZE)) {
-    reply = true;
-    jresp[MSG_STATE] = RET_FAILED;
-
-    std::string sresp = "";
-    DpClient_SendDpReqToString(MSG_GET_DEVINFO, 0,
-                               NULL, 0, &sresp, DEF_TIMEOUT_MSEC);
-    Json::Value  jresp;
-    Json::Reader jread;
-    if (jread.parse(sresp, jresp)) {
-      if (!jresp["net"]["ip_addr"].isNull() &&
-          !jresp["net"]["http_port"].isNull()) {
-        jresp[MSG_STATE] = RET_SUCCESS;
-
-        char surl[128] = {0};
-        snprintf(surl, 127, "http://%s:%d/httpflv?chn=video%d",
-                 jresp["net"]["ip_addr"].asString().c_str(),
-                 jresp["net"]["http_port"].asInt(),
-                 jreq["chn"].asInt());
-        jresp[MSG_BODY]["url"] = surl;
-      }
-    } else {
-      jresp[MSG_STATE] = RET_JSON_PARSE;
-    }
   } else if (0 == strncmp(dmp->method, MSG_GET_I_FRAME, MAX_METHOD_SIZE)) {
     // HI_MPI_VENC_RequestIDR(jreq[MSG_BODY]["venc_chn"].asInt(), HI_TRUE);
   } else if (0 == strncmp(dmp->method, MSG_GET_ENC_CFG, MAX_METHOD_SIZE)) {

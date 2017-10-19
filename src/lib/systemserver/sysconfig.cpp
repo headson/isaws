@@ -174,7 +174,8 @@ void CListenMessage::GetHwInfo() {
     LOG(L_ERROR) << "system json parse failed. create the default config";
 
     // 生成默认参数
-    jinfo["dev_name"] = "PC_001";
+    jinfo["dev_name"] = "BVS_001";
+    jinfo["dev_type"] = 1300;
     jinfo["ins_addr"] = "";
 
     jinfo["net"]["wifi_en"] = 0;
@@ -219,6 +220,7 @@ void CListenMessage::GetHwInfo() {
 bool CListenMessage::GetDevInfo(Json::Value &jbody) {
   jbody["dev_uuid"] = sys_info_.dev_uuid;
   jbody["dev_name"] = sys_info_.dev_name;
+  jbody["dev_type"] = sys_info_.dev_type;
 
   jbody["ins_addr"] = sys_info_.ins_addr;
 

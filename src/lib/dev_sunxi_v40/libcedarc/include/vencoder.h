@@ -16,7 +16,7 @@
  *this software is based in part on the work
  * of the Independent JPEG Group
  */
-#include <sc_interface.h>
+#include "sc_interface.h"
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */

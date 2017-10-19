@@ -38,6 +38,7 @@
 #define DB_PCOUNT_FILEPATH    "c:\\tools\\pcount.db"
 #define UPLINK_ADDR_CONFIG    "c:\\tools\\remote_address.json"
 #define DEF_ALG_CONFIG_FILE   "c:\\tools\\iva.json"
+#define DEF_AUX_CONFIG_FILE   "c:\\tools\\aux.json"
 #define DEF_UPLOAD_FILENAME   "c:\\tools\\upload.tar"
 #else
 #define DEF_WEB_SRV_PATH      "/tmp/app/web/"
@@ -47,7 +48,8 @@
 #define DEF_SOFTWARE_FILE     "/mnt/app/exec/software.ver"
 #define DB_PCOUNT_FILEPATH    "/mnt/usr/pcount.db"
 #define UPLINK_ADDR_CONFIG    "/mnt/usr/remote_address.json"
-#define DEF_ALG_CONFIG_FILE   "/mnt/use/iva.json"
+#define DEF_ALG_CONFIG_FILE   "/mnt/usr/iva.json"
+#define DEF_AUX_CONFIG_FILE   "/mnt/usr/aux.json"
 #define DEF_UPLOAD_FILENAME   "/tmp/upload.tar"
 #endif
 

@@ -5,10 +5,9 @@
 #ifndef LIBDEVICE_CVIDEOCODEC_H_
 #define LIBDEVICE_CVIDEOCODEC_H_
 
-#include "vencoder.h"
-#include "memoryAdapter.h"
-
 #include "vzbase/base/boost_settings.hpp"
+#include "dev_sunxi_v40/libcedarc/include/vencoder.h"
+#include "dev_sunxi_v40/libcedarc/include/memoryAdapter.h"
 
 typedef int (*VideoCallback)(VencOutputBuffer *output_buffer, void *usr_arg);
 

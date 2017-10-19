@@ -20,7 +20,7 @@ class CHttpRespose {
   virtual void RespCallvack(CHttpAsync *cfg, int errcode) = 0;
 };
 
-class CHttpAsync : boost::noncopyable {
+class CHttpAsync : vzbase::noncopyable {
  public:
   CHttpAsync(CHttpRespose *resp_callback);
   ~CHttpAsync();
