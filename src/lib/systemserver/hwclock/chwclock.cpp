@@ -68,6 +68,11 @@ void CHwclock::Stop() {
 }
 
 
+bool CHwclock::OnDpMessage(const DpMessage *dmp, 
+                           const Json::Value &jreq, Json::Value &jret) {
+  return false;
+}
+
 bool CHwclock::SetDevTime(const Json::Value &jbody) {
   int year, month, day, hour, min, sec;
   if (jbody["datetime"].isString()) {
@@ -99,7 +104,7 @@ bool CHwclock::SetDevTime(const Json::Value &jbody) {
         system(scmd);
 #endif  // _WIN32
 
-        DpClient_SendDpMessage(MSG_TIME_CHANGE, 0,
+        DpClient_SendDpMessage(DP_TIME_CHANGE, 0,
                                (const char*)&now, sizeof(time_t));
         return true;
       }
@@ -170,7 +175,7 @@ void CHwclock::OnMessage(vzbase::Message* msg) {
     LOG(L_INFO) << "diff_t=" << diff_t << ",diff_c=" << diff_c;
     if (diff_t != diff_c) {
       LOG(L_INFO) << "SendDpMessage,t_begin=" << t_begin;
-      DpClient_SendDpMessage(MSG_TIME_CHANGE, 0,
+      DpClient_SendDpMessage(DP_TIME_CHANGE, 0,
                              (const char*)&t_begin, sizeof(time_t));
     }
   }
