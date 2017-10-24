@@ -10,7 +10,7 @@
 #include "json/json.h"
 #include "vzbase/thread/thread.h"
 
-#include "network/cmcastdevinfo.h"
+#include "network/cnetwork.h"
 #include "hwclock/chwclock.h"
 
 #include "vzbase/base/noncoypable.h"
@@ -66,7 +66,7 @@ class CListenMessage : public vzbase::noncopyable {
 
  private:
   CHwclock       *hw_clock_;      // 时间设置
-  CMCastDevInfo  *mcast_dev_;     // 网络控制
+  CNetwork  *mcast_dev_;     // 网络控制
 };
 
 }  // namespace sys

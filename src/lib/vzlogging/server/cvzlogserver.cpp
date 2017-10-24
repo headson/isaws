@@ -425,8 +425,8 @@ time_t CVzLogFile::GetFileMTime(FILE* file) {
 }
 
 int CVzLogFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
-  int  n_log = 0;
-  char s_log[A_LOG_SIZE + 1] = {0};
+  int  nlog = 0;
+  char slog[A_LOG_SIZE + 1] = {0};
   FILE* fd_err = fopen(s_err_fname_, "wt+");
   if (fd_err) {
     int n_other_filename_idx = n_filename_idx_ ? 0 : 1;
@@ -435,17 +435,18 @@ int CVzLogFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       fseek(file, n_file_size_, SEEK_SET);
 
       // µÚÒ»°ü
-      n_log = fread(s_log, 1, A_LOG_SIZE, file);
-      char* p_log = strrchr(s_log, '\n');
-      if (n_log > 0 && strlen(p_log) < A_LOG_SIZE) {
-        fwrite(p_log + 1, 1, strlen(p_log) - 1, fd_err);
+      nlog = fread(slog, 1, A_LOG_SIZE, file);
+      char *plog = strrchr(slog, '\n');
+      if (plog && nlog > 0 && 
+          strlen(plog) < A_LOG_SIZE) {
+        fwrite(plog + 1, 1, strlen(plog) - 1, fd_err);
       }
       do {
-        n_log = fread(s_log, 1, A_LOG_SIZE, file);
-        if (n_log > 0) {
-          fwrite(s_log, 1, n_log, fd_err);
+        nlog = fread(slog, 1, A_LOG_SIZE, file);
+        if (nlog > 0) {
+          fwrite(slog, 1, nlog, fd_err);
         }
-      } while (!feof(file) && n_log > 0);
+      } while (!feof(file) && nlog > 0);
       fclose(file);
       file = NULL;
     }
@@ -457,11 +458,11 @@ int CVzLogFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       p_file_ = fopen(s_filename_[n_filename_idx_], "rt+");
       if (p_file_) {
         do {
-          n_log = fread(s_log, 1, A_LOG_SIZE, p_file_);
-          if (n_log > 0) {
-            fwrite(s_log, 1, n_log, fd_err);
+          nlog = fread(slog, 1, A_LOG_SIZE, p_file_);
+          if (nlog > 0) {
+            fwrite(slog, 1, nlog, fd_err);
           }
-        } while (!feof(p_file_) && n_log > 0);
+        } while (!feof(p_file_) && nlog > 0);
       }
     }
     // Ð´

@@ -369,10 +369,16 @@ int CVzLogManage::OnModuleLostHeartbeat(time_t n_now) {
 
   // 使能看门狗
   if (is_reboot_) {
+#ifndef _WIN32
+    if (0 == fork()) {
+      printf("son process reboot.\n");
+      system("sleep 10;reboot;sleep 1;reboot");
+    }
+#endif
     wdg_file_.Write(slog, nlog);
-
     // 日志文件转存
     log_file_.OnModuleLostHeartbeat(slog, nlog);
+
     // 重启设备
     system("reboot");
     exit(127);

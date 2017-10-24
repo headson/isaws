@@ -15,7 +15,6 @@
 #include "vzbase/base/base64.h"
 
 #include "systemserver/network/net_cfg.h"
-#include "systemserver/module/cmodulecontrol.h"
 
 namespace sys {
 
@@ -69,7 +68,7 @@ bool CListenMessage::Start() {
   }
 
   // net ctrl
-  mcast_dev_ = CMCastDevInfo::Create(thread_fast_);
+  mcast_dev_ = CNetwork::Create(thread_fast_);
   if (NULL == mcast_dev_) {
     LOG(L_ERROR) << "create net ctrl failed.";
     return false;
