@@ -23,13 +23,11 @@ int main(int argc, char* argv[]) {
   Kvdb_Start(DEF_KVDB_SRV_IP, DEF_KVDB_SRV_PORT);
 
   bool res = platform::CListenMessage::Instance()->Start();
-
   while (res) {
     try {
       platform::CListenMessage::Instance()->RunLoop();
     }
     catch (...) {
-
     }
   }
   

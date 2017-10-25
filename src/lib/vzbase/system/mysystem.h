@@ -124,60 +124,6 @@ inline void file_remove(const char *filename) {
   vzbase::my_system(scmd);
 }
 
-inline int update_file_uncompress(const char *filename) {
-  int nret = -3;
-
-  // uncompress
-  char scmd[256] = {0};
-  snprintf(scmd, 255,
-           "mkdir /tmp/bak;tar -xf %s -C /tmp/bak",
-           filename);
-  LOG(L_INFO) << scmd;
-  if (vzbase::my_system(scmd)) {
-    LOG(L_ERROR) << "uncompress failed.";
-    return -1;
-  }
-
-  //update.sh
-  FILE* file = fopen("/tmp/bak/update.sh", "r");
-  if (file) {
-    memset(scmd, 0, 255);
-    if (fgets(scmd, 255, file) != NULL) {
-      std::string shw, suid;
-      vzbase::get_hardware(shw, suid);
-      int bcmp = strncmp(shw.c_str(), scmd, shw.size());
-      LOG(L_INFO) << "shw " << shw
-                  << " scmd " << scmd << " cmp " << bcmp;
-      if (0 == bcmp) {
-        char *pcmd = NULL;
-        do {
-          memset(scmd, 0, 255);
-          char *pcmd = fgets(scmd, 255, file);
-          if (pcmd != NULL) {
-
-            if (!vzbase::my_system(scmd)) {
-              LOG(L_INFO) << "success " << scmd;
-              nret = 0;
-            } else {
-              LOG(L_ERROR) << "failed " << scmd;
-            }
-          } else {
-            break;
-          }
-        } while (true);
-      } else {
-        LOG(L_ERROR) << "check hareware failed.\n";
-        nret = -2;
-      }
-    }
-
-    fclose(file);
-  }
-
-  vzbase::my_system("sync");
-  return nret;
-}
-
 #ifdef __cplusplus
 }
 }  // namespace vzbase

@@ -15,14 +15,17 @@ namespace sys {
 class CHwclock : public vzbase::MessageHandler {
  protected:
   CHwclock(vzbase::Thread *thread_slow);
+ public:
+  ~CHwclock();
 
  public:
   static CHwclock *Create(vzbase::Thread *thread_slow);
 
-  ~CHwclock();
-
   bool Start();
   void Stop();
+
+  bool OnDpMessage(const DpMessage *dmp,
+                   const Json::Value &jreq, Json::Value &jret);
 
   // ntp
   bool SetDevTime(const Json::Value &jbody);
@@ -38,7 +41,7 @@ class CHwclock : public vzbase::MessageHandler {
   virtual void OnMessage(vzbase::Message* msg);
 
  protected:
-  vzbase::Thread *thread_slow_;   // 
+  vzbase::Thread *thread_slow_;   //
 
   int             timezone_;
 

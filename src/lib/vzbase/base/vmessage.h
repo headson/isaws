@@ -97,9 +97,21 @@ typedef enum _MSG_RET {
   RET_DP_REPLY_FAILED,
   RET_KVDB_READ_FAILED,
 } MSG_RET;
+
 //////////////////////////////////////////////////////////////////////////
-#define MSG_ADDR_CHANGE       "addr_change"       // 地址改变
-#define MSG_TIME_CHANGE       "time_change"       // 时间改变
+#define DP_CMD_DEV            "DP_CMD_DEV"        // dev get or set
+#define DP_CMD_NET            "DP_CMD_NET"        // net get or set
+#define DP_CMD_TIME           "DP_CMD_TIME"       // time get or set
+#define DP_CMD_ALG            "DP_CMD_ALG"        // alg get or set
+#define DP_CMD_ENC            "DP_CMD_ENC"        // image & video & audio encode get or set
+#define DP_CMD_REC            "DP_CMD_REC"        // record get or set
+#define DP_CMD_BUS            "DP_CMD_BUS"        // business get or set
+#define DP_CMD_EXT            "DP_CMD_EXT"        // extern device control
+
+#define DP_TIME_CHANGE        "DP_TIME_CHANGE"    // boardcast time is changed
+
+///DP_CMD_DEV/////////////////////////////////////////////////////////////
+#define MSG_SYS_REBOOT        "sys_reboot"        // 重启设备
 
 #define MSG_GET_DEVINFO       "get_devinfo"       // 获取设备信息
 #define MSG_SET_DEVINFO       "set_devinfo"       // 设置设备信息
@@ -108,31 +120,29 @@ typedef enum _MSG_RET {
 #define MSG_GET_TIMEINFO      "get_timeinfo"      // 获取时间信息
 #define MSG_SET_TIMEINFO      "set_timeinfo"      // 设置时间信息
 
+///DP_CMD_NET/////////////////////////////////////////////////////////////
+#define MSG_GET_NETWORK       "get_network"       // 获取网络信息
+#define MSG_SET_NETWORK       "set_network"       // 配置网络信息
+
+///DP_CMD_ENC/////////////////////////////////////////////////////////////
 #define MSG_GET_I_FRAME       "get_i_frame"       // 请求I帧
-#define MSG_GET_VDO_URL       "get_vdo_url"       // 获取视频URL
-#define MSG_GET_ENC_CFG       "get_enc_cfg"       // 获取编码配置
-#define MSG_SET_ENC_CFG       "set_enc_cfg"       // 设置编码配置
+#define MSG_GET_STR_URL       "get_str_url"       // 获取流URL
+#define MSG_GET_VDO_ENC       "get_vdo_enc"       // 获取视频编码
+#define MSG_SET_VDO_ENC       "set_vdo_enc"       // 设置视频编码
+#define MSG_GET_VDO_OSD       "get_vdo_osd"       // 设置视频OSD
+#define MSG_SET_VDO_OSD       "set_vdo_osd"       // 设置视频OSD
+#define MSG_VDO_ISP_CTRL      "vdo_isp_ctrl"      // 视频ISP控制
 
-#define MSG_GET_ENC_OSD       "get_enc_osd"       // 设置编码OSD
-#define MSG_SET_ENC_OSD       "set_enc_osd"       // 设置编码OSD
-
+///DP_CMD_EXT/////////////////////////////////////////////////////////////
 #define MSG_IRCUT_CTRLS       "ircut_ctrls"       // IRCUT控制
-
 #define MSG_REMOTE_5_IR       "remote_5_ir"       // 远端5组IR
 
-//////////////////////////////////////////////////////////////////////////
+///DP_CMD_ALG/////////////////////////////////////////////////////////////
 #define MSG_GET_ALGINFO       "get_alginfo"       // 获取算法信息
 #define MSG_SET_ALGINFO       "set_alginfo"       // 设置算法信息
 
 #define MSG_RESET_PCNUM       "reset_pcnum"       // 重置计数
-#define MSG_EVENT_RESULT      "event_result"      // 事件结果;business 发出
-
-#define MSG_CATCH_EVENT       "catch_event"       // 算法事件
-
-#define MSG_GET_PCOUNTS       "get_pcounts"       // 获取客流量
-#define MSG_CLEAR_PCOUNT      "clear_pcount"      // 清空pcount数据库
-
-#define MSG_REBOOT_DEVICE     "reboot_device"     // 重启设备
+#define MSG_EVENT_RESULT      "event_result"      // 事件结果
 
 //////////////////////////////////////////////////////////////////////////
 #define KVDB_HW_INFO          "hw_info"           // 硬件信息
