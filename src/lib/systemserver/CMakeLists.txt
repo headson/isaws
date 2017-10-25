@@ -33,7 +33,13 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.h
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.cpp
 	
+<<<<<<< HEAD
 	${CMAKE_CURRENT_SOURCE_DIR}/sysconfig.cpp
+=======
+	${CMAKE_CURRENT_SOURCE_DIR}/system/csystem.h
+	${CMAKE_CURRENT_SOURCE_DIR}/system/csystem.cpp
+	
+>>>>>>> 7bf3daa37cb02fa856739e7bd691a4a2bfd6f2cf
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
@@ -47,6 +53,14 @@ SOURCE_GROUP(hwclock FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/hwclock/chwclock.cpp
 )
 
+<<<<<<< HEAD
+=======
+SOURCE_GROUP(module FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/system/csystem.h
+	${CMAKE_CURRENT_SOURCE_DIR}/system/csystem.cpp
+)
+
+>>>>>>> 7bf3daa37cb02fa856739e7bd691a4a2bfd6f2cf
 SOURCE_GROUP(network FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.h
 	${CMAKE_CURRENT_SOURCE_DIR}/network/net_cfg.c
@@ -55,7 +69,6 @@ SOURCE_GROUP(network FILES
 )
 
 SOURCE_GROUP(message FILES
-	${CMAKE_CURRENT_SOURCE_DIR}/sysconfig.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.h
 	${CMAKE_CURRENT_SOURCE_DIR}/clistenmessage.cpp
 )
