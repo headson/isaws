@@ -53,7 +53,6 @@ if(WIN32)
 		libdpclient
 		libvzconn
 		libvzbase
-		libsystemv
 		libjsoncpp
 		${VZPROJECT_LINK_LIB}
 	)
