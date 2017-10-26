@@ -15,24 +15,23 @@
 
 namespace sys {
 
-class CMCastDevInfo : public vzbase::MessageHandler,
+class CNetwork : public vzbase::MessageHandler,
   public vzconn::CClientInterface {
  protected:
-  CMCastDevInfo(vzbase::Thread *thread_fast);
+  CNetwork(std::string suuid, vzbase::Thread *thread_fast);
+ public:
+  virtual ~CNetwork();
 
  public:
-  static CMCastDevInfo* Create(vzbase::Thread *thread_fast);
-
-  virtual ~CMCastDevInfo();
+  static CNetwork* Create(std::string suuid, vzbase::Thread *thread_fast);
 
   bool Start();
   void Stop();
 
-  bool AfterAdjustNetwork();
+  bool GetNet(Json::Value &jret);
+  bool SetNet(const Json::Value &jreq);
 
-  vzbase::Thread *GetThread() {
-    return thread_fast_;
-  }
+  void Boardcast(const char *pData, int nData);
 
  protected:
   virtual void OnMessage(vzbase::Message* msg);
@@ -47,12 +46,26 @@ class CMCastDevInfo : public vzbase::MessageHandler,
   virtual void  HandleClose(vzconn::VSocket *p_cli) {
   }
 
- public:
-  void BcastDevInfo();
+ private:
+  int SetIp(in_addr_t ip);
+  int SetNetmask(in_addr_t ip);
+  int SetGateway(in_addr_t ipaddr);
+  int SetDNS(in_addr_t ip);
+
+  void SetNetToSys();
+  void GetNetFromSys();
+
+ private:
+  std::string           suuid_;
 
  private:
   vzconn::CMCastSocket *mcast_sock_;
   vzbase::Thread       *thread_fast_;
+
+ private:
+  TAG_DEV_NET           network_;
+  std::string           nickname_;
+  unsigned int          ip_change_;
 };
 
 }  // namespace sys

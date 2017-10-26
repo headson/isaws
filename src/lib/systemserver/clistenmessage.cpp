@@ -15,7 +15,6 @@
 #include "vzbase/base/base64.h"
 
 #include "systemserver/network/net_cfg.h"
-#include "systemserver/module/cmodulecontrol.h"
 
 namespace sys {
 
@@ -28,15 +27,13 @@ static const char *K_METHOD_SET[] = {
   MSG_SET_TIMEINFO,
   MSG_REBOOT_DEVICE,
 };
+unsigned int K_METHOD_NUM = sizeof(K_METHOD_SET) / sizeof(char*);
 
 CListenMessage::CListenMessage()
   : dp_cli_(NULL)
-  , mcast_dev_(NULL)
-  , hw_clock_(NULL)
+  , network_(NULL)
+  , hwclock_(NULL)
   , thread_slow_(NULL) {
-
-  ip_change_ = 0;
-  nickname_ = PHY_ETH_NAME;
 }
 
 CListenMessage::~CListenMessage() {
@@ -49,7 +46,7 @@ CListenMessage *CListenMessage::Instance() {
 }
 
 bool CListenMessage::Start() {
-  bool b_ret = false;
+  bool bres = false;
 
   GetHwInfo();  // 获取系统信息
 
@@ -62,33 +59,33 @@ bool CListenMessage::Start() {
     LOG(L_ERROR) << "create thread failed.";
     return false;
   }
-  b_ret = thread_slow_->Start();
-  if (b_ret == false) {
+  bres = thread_slow_->Start();
+  if (bres == false) {
     LOG(L_ERROR) << "slow thread start failed.";
     return false;
   }
 
   // net ctrl
-  mcast_dev_ = CMCastDevInfo::Create(thread_fast_);
-  if (NULL == mcast_dev_) {
+  network_ = CNetwork::Create(
+               sys_info_.dev_uuid, thread_fast_);
+  if (NULL == network_) {
     LOG(L_ERROR) << "create net ctrl failed.";
     return false;
   }
-
-  b_ret = mcast_dev_->Start();
-  if (b_ret == false) {
+  bres = network_->Start();
+  if (bres == false) {
     LOG(L_ERROR) << "net ctrl start failed.";
     return false;
   }
 
   // hw clock
-  hw_clock_ = CHwclock::Create(thread_slow_);
-  if (NULL == hw_clock_) {
+  hwclock_ = CHwclock::Create(thread_slow_);
+  if (NULL == hwclock_) {
     LOG(L_ERROR) << "create hw clock failed.";
     return false;
   }
-  b_ret = hw_clock_->Start();
-  if (false == b_ret) {
+  bres = hwclock_->Start();
+  if (false == bres) {
     LOG(L_ERROR) << "hwclock start failed.";
     return false;
   }
@@ -106,9 +103,9 @@ bool CListenMessage::Start() {
     dp_cli_ = NULL;
     return false;
   }
+  DpClient_HdlAddListenMessage(dp_cli_, K_METHOD_SET, K_METHOD_NUM);
 
-  unsigned int n_method_set = sizeof(K_METHOD_SET) / sizeof(char*);
-  DpClient_HdlAddListenMessage(dp_cli_, K_METHOD_SET, n_method_set);
+  OnMessage(NULL);
   return true;
 }
 
@@ -118,9 +115,9 @@ void CListenMessage::Stop() {
     dp_cli_ = NULL;
   }
 
-  if (mcast_dev_) {
-    delete mcast_dev_;
-    mcast_dev_ = NULL;
+  if (network_) {
+    delete network_;
+    network_ = NULL;
   }
 
   if (thread_slow_) {
@@ -178,42 +175,48 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
   jresp[MSG_STATE] = RET_FAILED;
 
   bool breply = false; // 返回
-  if (0 == strncmp(dmp->method, MSG_SET_DEVINFO, dmp->method_size)) {
+  if (0 == strncmp(dmp->method, MSG_SET_DEVINFO, MAX_METHOD_SIZE)) {
     breply = true;
     if (SetDevInfo(jreq[MSG_BODY])) {
       jresp[MSG_STATE] = RET_SUCCESS;
     }
-  } else if (0 == strncmp(dmp->method, MSG_GET_DEVINFO, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_GET_DEVINFO, MAX_METHOD_SIZE)) {
     breply = true;
     Json::Value jbody;
     if (GetDevInfo(jbody)) {
       jresp[MSG_BODY] = jbody;
       jresp[MSG_STATE] = RET_SUCCESS;
     }
-  } else if (0 == strncmp(dmp->method, MSG_REBOOT_DEVICE, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_SET_DEV_NET, MAX_METHOD_SIZE)) {
+    breply = true;
+    if (network_ &&
+        network_->SetNet(jreq[MSG_BODY])) {
+      jresp[MSG_STATE] = RET_SUCCESS;
+    }
+  } else if (0 == strncmp(dmp->method, MSG_REBOOT_DEVICE, MAX_METHOD_SIZE)) {
     LOG(L_WARNING) << "reboot device.";
     if (!jreq[MSG_BODY]["resion"].isNull()) {
       LOG(L_ERROR) << jreq[MSG_BODY]["resion"].asString();
     }
     vzbase::my_system("sync; sleep 5; reboot &");  // 延迟5秒钟重启
-  } else if (0 == strncmp(dmp->method, MSG_GET_TIMEINFO, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_GET_TIMEINFO, MAX_METHOD_SIZE)) {
     breply = true;
-    if (hw_clock_) {
-      if (hw_clock_->GetTimeInfo(jresp[MSG_BODY])) {
+    if (hwclock_) {
+      if (hwclock_->GetTimeInfo(jresp[MSG_BODY])) {
         jresp[MSG_STATE] = RET_SUCCESS;
       }
     }
-  } else if (0 == strncmp(dmp->method, MSG_SET_TIMEINFO, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_SET_TIMEINFO, MAX_METHOD_SIZE)) {
     breply = true;
-    if (hw_clock_) {
-      if (hw_clock_->SetTimeInfo(jreq[MSG_BODY])) {
+    if (hwclock_) {
+      if (hwclock_->SetTimeInfo(jreq[MSG_BODY])) {
         jresp[MSG_STATE] = RET_SUCCESS;
       }
     }
-  } else if (0 == strncmp(dmp->method, MSG_SET_DEVTIME, dmp->method_size)) {
+  } else if (0 == strncmp(dmp->method, MSG_SET_DEVTIME, MAX_METHOD_SIZE)) {
     breply = true;
-    if (hw_clock_) {
-      if (hw_clock_->SetDevTime(jreq[MSG_BODY])) {
+    if (hwclock_) {
+      if (hwclock_->SetDevTime(jreq[MSG_BODY])) {
         jresp[MSG_STATE] = RET_SUCCESS;
       }
     }
@@ -241,10 +244,27 @@ void CListenMessage::OnDpState(DPPollHandle p_hdl, unsigned int n_state) {
   if (n_state == DP_CLIENT_DISCONNECT) {
     int32 n_ret = DpClient_HdlReConnect(p_hdl);
     if (n_ret == VZNETDP_SUCCEED) {
-      unsigned int n_method_set = sizeof(K_METHOD_SET) / sizeof(char*);
-      DpClient_HdlAddListenMessage(dp_cli_, K_METHOD_SET, n_method_set);
+      DpClient_HdlAddListenMessage(dp_cli_, K_METHOD_SET, K_METHOD_NUM);
     }
   }
+}
+
+void CListenMessage::OnMessage(vzbase::Message* msg) {
+  static int MCAST_TIMEOUT = 5;
+
+  if ((MCAST_TIMEOUT--) <= 0) {
+    Json::Value jbody;
+    GetDevInfo(jbody);
+    if (network_) {
+      Json::FastWriter jfw;
+      Json::Value jreq;
+      jreq[MSG_CMD] = MSG_GET_DEVINFO;
+      jreq[MSG_BODY] = jbody;
+      std::string ss = jfw.write(jreq);
+      network_->Boardcast(ss.c_str(), ss.size());
+    }
+  }
+  thread_fast_->PostDelayed(1*1000, this);
 }
 
 }  // namespace sys

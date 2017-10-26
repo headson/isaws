@@ -104,6 +104,8 @@ typedef enum _MSG_RET {
 #define MSG_GET_DEVINFO       "get_devinfo"       // 获取设备信息
 #define MSG_SET_DEVINFO       "set_devinfo"       // 设置设备信息
 
+#define MSG_SET_DEV_NET       "set_dev_net"       // 设置设备网络
+
 #define MSG_SET_DEVTIME       "set_devtime"       // 设置设备时间
 #define MSG_GET_TIMEINFO      "get_timeinfo"      // 获取时间信息
 #define MSG_SET_TIMEINFO      "set_timeinfo"      // 设置时间信息
