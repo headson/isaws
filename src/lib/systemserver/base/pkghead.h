@@ -35,6 +35,7 @@ typedef struct TAG_DEV_NET {
 
 typedef struct TAG_SYS_INFO {
   std::string   dev_name;       // 设备名称 utf-8转码后base64编码
+  unsigned int  dev_type;       // 设备类型
   std::string   dev_uuid;       // 设备串号
 
   std::string   ins_addr;       // 安装地址 utf-8转码后base64编码

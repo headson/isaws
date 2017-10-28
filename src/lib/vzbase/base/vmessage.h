@@ -34,7 +34,6 @@
 #define DEF_SYS_LOG_PATH      "c:\\tools\\html\\htmldata\\log"
 #define DEF_HARDWARE_FILE     "c:\\tools\\hardware.json"
 #define DEF_SOFTWARE_FILE     "c:\\tools\\software.ver"
-#define SYS_SYSTEM_CONFIG     "c:\\tools\\system.json"
 #define DB_PCOUNT_FILEPATH    "c:\\tools\\pcount.db"
 #define UPLINK_ADDR_CONFIG    "c:\\tools\\remote_address.json"
 #define DEF_ALG_CONFIG_FILE   "c:\\tools\\iva.json"
@@ -43,7 +42,6 @@
 #else
 #define DEF_WEB_SRV_PATH      "/tmp/app/web/"
 #define DEF_SYS_LOG_PATH      "/tmp/app/web/log"
-#define SYS_SYSTEM_CONFIG     "/mnt/usr/system.json"
 #define DEF_HARDWARE_FILE     "/etc/hardware.json"
 #define DEF_SOFTWARE_FILE     "/mnt/app/exec/software.ver"
 #define DB_PCOUNT_FILEPATH    "/mnt/usr/pcount.db"
@@ -142,5 +140,6 @@ typedef enum _MSG_RET {
 #define KVDB_ENC_OSD          "enc_osd"           // 编码OSD
 #define KVDB_TIME_INFO        "time_info"         // 时间信息
 #define KVDB_USER_LIST        "user_list"         // 登录用户;username\password
+#define KVDB_ACCESS_ADDRESS   "access_address"    // 接入服务器地址
 
 #endif  // VMESSAGE_H

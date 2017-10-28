@@ -68,9 +68,12 @@ inline int my_system(const char * cmd) {
   return -1;
 }
 
-inline void get_hardware(std::string &hw, std::string &uuid) {
-  static std::string shw = "";
-  static std::string suid = "";
+inline void get_hardware(std::string &hw, 
+                         unsigned int &type, 
+                         std::string &uuid) {
+  static std::string  shw = "";
+  static std::string  suid = "";
+  static unsigned int stype = 1100;
 
   if (shw.empty() || suid.empty()) {
     Json::Reader jr;
@@ -78,13 +81,16 @@ inline void get_hardware(std::string &hw, std::string &uuid) {
     std::ifstream ifs;
     ifs.open(DEF_HARDWARE_FILE);
     if (ifs.is_open() && jr.parse(ifs, jv)) {
-      shw = jv["hardware"].asString();
+      shw = jv["hw_vers"].asString();
+      stype = jv["dev_type"].asInt();
       suid = jv["dev_uuid"].asString();
     } else {
       shw = "1.0.0.1001707310";
+      stype = 1100;
       suid = "PC001170801220030";
 
-      jv["hardware"] = shw;
+      jv["hw_vers"] = shw;
+      jv["dev_type"] = stype;
       jv["dev_uuid"] = suid;
 
       FILE *file = fopen(DEF_HARDWARE_FILE, "wt+");
@@ -99,6 +105,7 @@ inline void get_hardware(std::string &hw, std::string &uuid) {
 
   hw   = shw;
   uuid = suid;
+  type = stype;
 }
 
 inline void get_software(std::string &sw) {

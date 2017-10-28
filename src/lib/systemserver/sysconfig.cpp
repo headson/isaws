@@ -42,22 +42,24 @@ void CListenMessage::GetAlgVer() {
 }
 
 void CListenMessage::GetHwInfo() {
+  std::string sjson;
+  Kvdb_GetKeyToString(KVDB_HW_INFO, strlen(KVDB_HW_INFO),
+                      &sjson);
+
+  Json::Value  jhw;
   Json::Reader jread;
-  Json::Value  jinfo;
-  std::ifstream ifs;
-  ifs.open(SYS_SYSTEM_CONFIG);
-  if (!ifs.is_open() ||
-      !jread.parse(ifs, jinfo)) {
+  if (sjson.empty() ||
+      !jread.parse(sjson, jhw)) {
     LOG(L_ERROR) << "system json parse failed. create the default config";
 
     // 生成默认参数
-    jinfo["dev_name"] = "BVS_001";
-    jinfo["ins_addr"] = "";
-    SetDevInfo(jinfo);
+    jhw["dev_name"] = "BVS_001";
+    jhw["ins_addr"] = "";
+    SetDevInfo(jhw);
   }
 
-  sys_info_.dev_name = jinfo["dev_name"].asString();
-  sys_info_.ins_addr = jinfo["ins_addr"].asString();
+  sys_info_.dev_name = jhw["dev_name"].asString();
+  sys_info_.ins_addr = jhw["ins_addr"].asString();
 
   // version
   // GetAlgVer();
@@ -67,11 +69,13 @@ void CListenMessage::GetHwInfo() {
 
   // hardware/uuid
   vzbase::get_hardware(sys_info_.hw_version,
+                       sys_info_.dev_type,
                        sys_info_.dev_uuid);
 }
 
 bool CListenMessage::GetDevInfo(Json::Value &jret) {
   jret["dev_uuid"] = sys_info_.dev_uuid;
+  jret["dev_type"] = sys_info_.dev_type;
   jret["dev_name"] = sys_info_.dev_name;
   jret["ins_addr"] = sys_info_.ins_addr;
 
