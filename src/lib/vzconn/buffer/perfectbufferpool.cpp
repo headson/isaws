@@ -4,9 +4,6 @@
 ************************************************************************/
 #include "vzconn/buffer/perfectbufferpool.h"
 
-#include "vzconn/base/basedefines.h"
-#include "vzconn/buffer/byteorder.h"
-
 #include "vzbase/helper/stdafx.h"
 
 namespace vzconn {
@@ -16,12 +13,7 @@ PerfectBufferPool *PerfectBufferPool::Instance() {
   return &pbp;
 }
 
-void PerfectBufferPool::SetOwnHeadSize(size_t nhead) {
-  head_size_ = nhead;
-}
-
 PerfectBufferPool::PerfectBufferPool() {
-  head_size_ = sizeof(NetHead);
 }
 
 PerfectBufferPool::~PerfectBufferPool() {
@@ -33,8 +25,7 @@ ByteBuffer::Ptr PerfectBufferPool::TakeBuffer(std::size_t mini_size) {
 
   if(0 == buffers_.size()) {
     LOG(L_INFO) << "Create ByteBuffer " << buffers_.size() + 1;
-    return ByteBuffer::Ptr(new ByteBuffer(head_size_),
-                           PerfectBufferPool::RecyleBuffer);
+    return ByteBuffer::Ptr(new ByteBuffer(), PerfectBufferPool::RecyleBuffer);
   }
 
   return TaskPerfectBuffer(mini_size);
@@ -42,9 +33,7 @@ ByteBuffer::Ptr PerfectBufferPool::TakeBuffer(std::size_t mini_size) {
 
 void PerfectBufferPool::InsertBuffer(ByteBuffer *buffer) {
   vzbase::CritScope buffer_mutex(&pool_mutex_);
-  buffer->Resize(0);  // equal buffer->Clear();
-  LOG(L_INFO) << "this buffer " << buffer->Capacity()
-              << " buffer count " << buffers_.size();
+  buffer->Resize(0);
 
   Buffers::iterator iter = buffers_.begin();
   for ( ; iter != buffers_.end(); ++iter) {

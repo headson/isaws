@@ -53,7 +53,7 @@ class CachedService : public vzbase::noncopyable,
   void WattingNextTransactionAsyncEvent();
  private:
   // void OnCachedThread();
-  void OnAsyncSaveFile(CachedStanza::Ptr stanza);
+  bool OnAsyncSaveFile(CachedStanza::Ptr stanza);
   void OnAsyncRemoveFile(std::string path);
   void ReplaceCachedFile(CachedStanza::Ptr stanza);
 

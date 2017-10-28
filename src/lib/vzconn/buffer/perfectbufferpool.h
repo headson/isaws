@@ -6,24 +6,20 @@
 #include <list>
 #include <vector>
 
-#include "vzbase/base/criticalsection.h"
-#include "vzbase/base/boost_settings.hpp"
+#include "boost/shared_ptr.hpp"
+#include "boost/noncopyable.hpp"
 
 #include "vzconn/buffer/bytebuffer.h"
+#include "vzbase/base/criticalsection.h"
 
 namespace vzconn {
-typedef unsigned int (*NetHeadSizeCB)();
-typedef unsigned int (*NetHeadPacketCB)(char *phead, int nhead,
-                                        unsigned int nbody, unsigned short eflag);
-typedef int          (*NetHeadParseCB)(const char *phead, int nhead, unsigned short *eflag);
 
-class PerfectBufferPool : public vzbase::noncopyable {
+class PerfectBufferPool : public boost::noncopyable {
  protected:
   PerfectBufferPool();
   virtual ~PerfectBufferPool();
 
  public:
-  void SetOwnHeadSize(size_t nhead);
   static PerfectBufferPool *Instance();
 
   // Thread safed
@@ -40,12 +36,7 @@ class PerfectBufferPool : public vzbase::noncopyable {
   typedef std::list<ByteBuffer *> Buffers;
   Buffers                         buffers_;
   vzbase::CriticalSection         pool_mutex_;
-
- private:
-  size_t  head_size_;
 };
-
-#define VzConnBufferPool() PerfectBufferPool::Instance()
 
 }
 

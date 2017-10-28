@@ -105,6 +105,12 @@ CDpClient* GetDpCli(bool b_can_reconn =true) {
   if (p_tcp == NULL) {
     p_tcp = CDpClient::Create(g_dp_addr, g_dp_port);
     if (p_tcp) {
+      for (int32 i = 0; i < MAX_CLIS_PER_PROC; i++) {
+        if (g_dp_client[i] == NULL) {
+          g_dp_client[i] = p_tcp;
+          break;
+        }
+      } 
       g_dp_tls.SetValue(p_tcp);
     }
   }
@@ -132,6 +138,8 @@ EXPORT_DLL int DpClient_Start(int new_thread) {
 }
 
 EXPORT_DLL void DpClient_Stop() {
+  g_dp_tls.KeyFree();
+
   for (int32 i = 0; i < MAX_CLIS_PER_PROC; i++) {
     if (g_dp_client[i] != NULL) {
       delete g_dp_client[i];

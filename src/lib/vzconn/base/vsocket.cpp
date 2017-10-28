@@ -491,4 +491,9 @@ int32 CClientInterface::NetHeadPacket(uint8 *p_data,
   return NetHeadSize();
 }
 
+int32 CClientInterface::HandleConnected(VSocket *cli) {
+  LOG(L_ERROR) << "please over write this function";
+  return -1;
+}
+
 }  // namespace vzconn

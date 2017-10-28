@@ -14,6 +14,7 @@ CEvtTcpClient::CEvtTcpClient(const EVT_LOOP *p_loop, CClientInterface *cli_hdl)
   , p_evt_loop_(p_loop)
   , c_evt_recv_()
   , c_recv_data_()
+  , n_wait_size_(0)
   , c_evt_send_()
   , c_send_data_() {
   //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
@@ -123,8 +124,7 @@ bool CEvtTcpClient::Connect(const CInetAddr *p_remote_addr,
     LOG(L_INFO) << "Open the socket " << p_remote_addr->ToString();
     return Open(s, b_block);
   } else {
-    if (error_no() == XEINPROGRESS) {
-#if 1
+    if (XEAGAIN == error_no() || XEINPROGRESS == error_no()) {
       fd_set fdw, fdr, efds;
       FD_ZERO(&fdw);
       FD_SET(s, &fdw);
@@ -148,15 +148,6 @@ bool CEvtTcpClient::Connect(const CInetAddr *p_remote_addr,
         }
 #endif  // WIN32
       }
-#else  // 异步链接服务器,暂时不成功,待研究
-      c_evt_send_.Init(p_evt_loop_, EvtConnect, this);
-      ret = c_evt_send_.Start(s, EVT_WRITE, n_timeout);
-      if (0 != ret) {
-        LOG(L_ERROR) << "set connect event failed." << error_no();
-        return false;
-      }
-      return true;
-#endif
     }
   }
 
@@ -255,46 +246,54 @@ int32 CEvtTcpClient::EvtRecv(SOCKET      fd,
 }
 
 int32 CEvtTcpClient::OnRecv() {
-  int32 n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
-                                 c_recv_data_.FreeSize());
-  if (n_recv > 0) {
-    c_recv_data_.MoveWritePtr(n_recv);
+  if (NULL == cli_hdl_ptr_) {
+    LOG(L_ERROR) << "cli_hdl_ptr is null";
+    return -1;
+  }
+  if (0 == n_wait_size_) {
+    n_wait_size_ = cli_hdl_ptr_->NetHeadSize();
+  }
 
-    uint16 n_flag = 0;
-    uint32 n_pkg_size = 0;
-    do {
-      n_pkg_size = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),
-                                              c_recv_data_.UsedSize(),
-                                              &n_flag);
-      if (n_pkg_size > 0 && c_recv_data_.UsedSize() >= n_pkg_size) {
-        cli_hdl_ptr_->HandleRecvPacket(
-          this,
-          c_recv_data_.GetReadPtr() + cli_hdl_ptr_->NetHeadSize(),
-          n_pkg_size - cli_hdl_ptr_->NetHeadSize(),
-          n_flag);
-        c_recv_data_.MoveReadPtr(n_pkg_size);
-        c_recv_data_.Recycle(); // 保证包头在buffer起始位置
-      }
-    } while (n_pkg_size > 0 && c_recv_data_.UsedSize() >= n_pkg_size);
-
-    // 空间不足,开新空间
-    if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
-      c_recv_data_.Recycle(); // 每次移动趋近于移动单位为0
-
-      if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
-        c_recv_data_.ReallocBuffer((n_pkg_size - c_recv_data_.UsedSize()));
-      }
+  if (n_wait_size_ > c_recv_data_.FreeSize()) {
+    c_recv_data_.ReallocBuffer(n_wait_size_);
+    if (n_wait_size_ > c_recv_data_.FreeSize()) {
+      LOG(L_ERROR) << "ReallocBuffer failed." << n_wait_size_;
+      return -2;
     }
-    if ((n_pkg_size - c_recv_data_.UsedSize()) > c_recv_data_.FreeSize()) {
-      LOG(L_ERROR) << "the packet is large than " << SOCK_MAX_BUFFER_SIZE;
-      return -1;
+  }
+
+  int32 n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
+                               n_wait_size_);
+  if (0 < n_recv) {
+    c_recv_data_.MoveWritePtr(n_recv);
+    n_wait_size_ -= n_recv;
+
+    if (0 == n_wait_size_) {
+      uint16 eflag = 0;
+      uint32 pkg_size = 0;
+      pkg_size = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),
+                                            c_recv_data_.UsedSize(),
+                                            &eflag);
+      if (pkg_size > 0) {
+        if (pkg_size == c_recv_data_.UsedSize()) {
+          // 接收到完整包
+          cli_hdl_ptr_->HandleRecvPacket(this,
+                                         c_recv_data_.GetReadPtr() + cli_hdl_ptr_->NetHeadSize(),
+                                         pkg_size - cli_hdl_ptr_->NetHeadSize(),
+                                         eflag);
+          c_recv_data_.Clear();
+        } else {
+          n_wait_size_ = pkg_size - cli_hdl_ptr_->NetHeadSize();
+        }
+      } else {
+        LOG(L_ERROR) << "parse packet is failed.";
+        n_recv = -1;
+      }
     }
   }
 
   if (n_recv < 0) {
-    if (cli_hdl_ptr_) {
-      cli_hdl_ptr_->HandleClose(this);
-    }
+    cli_hdl_ptr_->HandleClose(this);
   }
   return n_recv;
 }
@@ -338,40 +337,4 @@ int32 CEvtTcpClient::OnSend() {
   }
   return 0;
 }
-
-int32 CEvtTcpClient::EvtConnect(SOCKET       fd,
-                                short        events,
-                                const void  *p_usr_arg) {
-  int32 n_ret = -1;
-  if (p_usr_arg) {
-    n_ret = ((CEvtTcpClient*)p_usr_arg)->OnConnect(fd);
-    if (n_ret < 0) {
-      delete ((CEvtTcpClient*)p_usr_arg);
-    }
-  }
-  return n_ret;
-}
-
-int32 CEvtTcpClient::OnConnect(SOCKET fd) {
-  int32 n_ret = 0;
-
-  int nError = 0;
-  socklen_t nLen = sizeof(nError);
-  getsockopt(fd, SOL_SOCKET, SO_ERROR, (char*)&nError, &nLen);
-  if (nError == 0) {
-    Open(fd, false);
-    LOG(L_ERROR) << "connect return ev_write, check ok";
-  } else {
-    n_ret = -1;
-    LOG(L_ERROR) << "connect return ev_write, but check failed";
-  }
-
-  if (n_ret < 0) {
-    if (cli_hdl_ptr_) {
-      cli_hdl_ptr_->HandleClose(this);
-    }
-  }
-  return n_ret;
-}
-
 }  // namespace vzconn

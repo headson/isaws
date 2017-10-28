@@ -23,6 +23,8 @@ int main(int argc, char *argv[]) {
   vzconn::EventService event_service;
   event_service.Start();
 
+  DpClient_Init("127.0.0.1", 5291);
+
   cached::CachedServer cached_server(event_service);
   cached_server.StartCachedServer("0.0.0.0", 5320);
 

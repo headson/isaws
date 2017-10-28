@@ -368,13 +368,24 @@ int CVzLogManage::OnModuleLostHeartbeat(time_t n_now) {
   // wdg_file_.WriteSome("watchdog stop");
 
   // 使能看门狗
+  printf("%s[%d] %d\n", __FUNCTION__, __LINE__, is_reboot_);
   if (is_reboot_) {
-    wdg_file_.Write(slog, nlog);
+#ifndef _WIN32
+    if (fork() == 0) {
+      printf("son process reboot.\n");
+      system("sleep 10; reboot; sleep 1; reboot");
+    }
+#endif
+    try {
+      wdg_file_.Write(slog, nlog);
+      wdg_file_.Sync();
 
-    // 日志文件转存
-    log_file_.OnModuleLostHeartbeat(slog, nlog);
+      log_file_.OnModuleLostHeartbeat(slog, nlog);    // 日志文件转存
+    } catch (...) {
+    }
+
     // 重启设备
-    system("reboot");
+    system("reboot;sleep 1;reboot");
     exit(127);
   }
   return 0;

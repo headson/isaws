@@ -58,6 +58,8 @@ SET(SRC_LIST
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpasyncclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpasyncclient.cpp
 	
 	${CMAKE_CURRENT_SOURCE_DIR}/multicast/cmcastsocket.h
 	${CMAKE_CURRENT_SOURCE_DIR}/multicast/cmcastsocket.cpp
@@ -99,6 +101,8 @@ SOURCE_GROUP(async FILES
 SOURCE_GROUP(sync FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.h
 	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpclient.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpasyncclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/sync/ctcpasyncclient.cpp
 )
 
 SOURCE_GROUP(multicast FILES
@@ -124,6 +128,7 @@ if(WIN32)
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 	)
 else()
+	ADD_LIBRARY(${BUILD_PROJECT_NAME}_static STATIC ${SRC_LIST})
 	ADD_LIBRARY(${BUILD_PROJECT_NAME} SHARED ${SRC_LIST})
 	TARGET_LINK_LIBRARIES(${BUILD_PROJECT_NAME} 
 		vzbase

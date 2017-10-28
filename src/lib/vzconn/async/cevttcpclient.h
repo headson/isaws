@@ -81,12 +81,6 @@ class CEvtTcpClient : public VSocket,
                         const void   *usr_arg);
   virtual int32 OnSend();
 
-  // 异步链接服务器,暂时不成功,待研究
-  static int32  EvtConnect(SOCKET      fd,
-                           short       events,
-                           const void *usr_arg);
-  virtual int32 OnConnect(SOCKET fd);
-
  public:
   EVT_IO& GetEvtRecv() {
     return c_evt_recv_;
@@ -107,6 +101,7 @@ class CEvtTcpClient : public VSocket,
  protected:
   EVT_IO            c_evt_recv_;    // 接收事件
   CBlockBuffer      c_recv_data_;   // 接收buffer
+  unsigned int      n_wait_size_;   // 待接收大小
 
   EVT_IO            c_evt_send_;    // 发送事件
   CBlockBuffer      c_send_data_;   // 发送buffer

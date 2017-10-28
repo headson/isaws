@@ -437,7 +437,8 @@ int CVzLogFile::OnModuleLostHeartbeat(const char *s_info, int n_info) {
       // µÚÒ»°ü
       n_log = fread(s_log, 1, A_LOG_SIZE, file);
       char* p_log = strrchr(s_log, '\n');
-      if (n_log > 0 && strlen(p_log) < A_LOG_SIZE) {
+      if (p_log && n_log > 0 &&
+          strlen(p_log) < A_LOG_SIZE) {
         fwrite(p_log + 1, 1, strlen(p_log) - 1, fd_err);
       }
       do {

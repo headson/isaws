@@ -1,74 +1,61 @@
 /************************************************************************
 *Author      : Sober.Peng 17-08-22
-*Description :
+*Description : 
 ************************************************************************/
 #include "vzconn/buffer/bytebuffer.h"
 
 #include <algorithm>
-#include <cassert>
-#include <cstring>
+#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "vzbase/helper/stdafx.h"
 #include "vzconn/buffer/byteorder.h"
 
 namespace vzconn {
 
-static const int DEF_BYTE_BUFFER_SIZE = 1024;
-#ifndef min
-#define min(a,b) (((a)<(b))?(a):(b))
-#endif
-#ifndef max
-#define max(a,b) (((a)>(b))?(a):(b))
-#endif
+static const int DEFAULT_SIZE = 4096;
 
-ByteBuffer::ByteBuffer(size_t nhead) {
-  Construct(nhead, NULL, DEF_BYTE_BUFFER_SIZE, ORDER_NETWORK);
+ByteBuffer::ByteBuffer() {
+  Construct(NULL, DEFAULT_SIZE, ORDER_NETWORK);
 }
 
-ByteBuffer::ByteBuffer(size_t nhead, ByteOrder byte_order) {
-  Construct(nhead, NULL, DEF_BYTE_BUFFER_SIZE, byte_order);
+ByteBuffer::ByteBuffer(ByteOrder byte_order) {
+  Construct(NULL, DEFAULT_SIZE, byte_order);
 }
 
-ByteBuffer::ByteBuffer(size_t nhead, const char *bytes, size_t len) {
-  Construct(nhead, bytes, len, ORDER_NETWORK);
+ByteBuffer::ByteBuffer(const char *bytes, size_t len) {
+  Construct(bytes, len, ORDER_NETWORK);
 }
 
-ByteBuffer::ByteBuffer(size_t nhead, const char* bytes, size_t len, ByteOrder byte_order) {
-  Construct(nhead, bytes, len, byte_order);
+ByteBuffer::ByteBuffer(const char* bytes, size_t len, ByteOrder byte_order) {
+  Construct(bytes, len, byte_order);
 }
 
-ByteBuffer::ByteBuffer(size_t nhead, const char* bytes) {
-  Construct(nhead, bytes, strlen(bytes), ORDER_NETWORK);
+ByteBuffer::ByteBuffer(const char* bytes) {
+  Construct(bytes, strlen(bytes), ORDER_NETWORK);
 }
 
-void ByteBuffer::Construct(size_t nhead,
-                           const char *bytes, size_t len,
-                           ByteOrder byte_order) {
-  LOG(L_INFO) << "Construct Buffer";
-  head_size_  = nhead;
-
+void ByteBuffer::Construct(const char *bytes, 
+                           size_t      len,
+                           ByteOrder   byte_order) {
   version_    = 0;
   start_      = 0;
   size_       = len;
   byte_order_ = byte_order;
-  head_data_  = new char[head_size_ + size_];
-  body_       = head_data_ + head_size_;
-  // body_       = new char[size_];
+  bytes_      = new char[size_];
 
   if (bytes) {
     end_ = len;
-    memcpy(body_, bytes, end_);
+    memcpy(bytes_, bytes, end_);
   } else {
     end_ = 0;
   }
 }
 
 ByteBuffer::~ByteBuffer() {
-  LOG(L_INFO) << "Release Buffer";
-  if (head_data_) {
-    delete[] head_data_;
-    head_data_ = NULL;
-  }
+  LOG(L_INFO) << "Delete Buffer";
+  delete[] bytes_;
 }
 
 bool ByteBuffer::ReadUInt8(uint8* val) {
@@ -136,7 +123,7 @@ bool ByteBuffer::ReadString(std::string* val, size_t len) {
   if (len > Length()) {
     return false;
   } else {
-    val->append(body_ + start_, len);
+    val->append(bytes_ + start_, len);
     start_ += len;
     return true;
   }
@@ -146,7 +133,7 @@ bool ByteBuffer::ReadBytes(char* val, size_t len) {
   if (len > Length()) {
     return false;
   } else {
-    memcpy(val, body_ + start_, len);
+    memcpy(val, bytes_ + start_, len);
     start_ += len;
     return true;
   }
@@ -207,7 +194,7 @@ char* ByteBuffer::ReserveWriteBuffer(size_t len) {
     Resize(Length() + len);
   }
 
-  char* start = body_ + end_;
+  char* start = bytes_ + end_;
   end_ += len;
   return start;
 }
@@ -220,19 +207,10 @@ void ByteBuffer::Resize(size_t size) {
   } else {
     // Reallocate a larger buffer.
     size_ = max(size, 3 * size_ / 2);
-#if 0
     char* new_bytes = new char[size_];
-    memcpy(new_bytes, body_ + start_, len);
-    delete[] body_;
-    body_ = new_bytes;
-#else
-    char* new_bytes = new char[head_size_+size_];
-    memcpy(new_bytes + head_size_, 
-           body_ + head_size_ + start_, len);
-    delete[] head_data_;
-    head_data_ = new_bytes;
-    body_ = head_data_ + head_size_;
-#endif
+    memcpy(new_bytes, bytes_ + start_, len);
+    delete [] bytes_;
+    bytes_ = new_bytes;
   }
   start_ = 0;
   end_ = len;
@@ -247,20 +225,32 @@ void ByteBuffer::ResetSize(size_t size) {
   } else {
     // Reallocate a larger buffer.
     size_ = max(size, 3 * size_ / 2);
-#if 0
     char* new_bytes = new char[size_];
-    delete[] body_;
-    body_ = new_bytes;
-#else
-    char* new_bytes = new char[head_size_ + size_];
-    delete[] head_data_;
-    head_data_ = new_bytes;
-    body_ = head_data_ + head_size_;
-#endif
+    delete [] bytes_;
+    bytes_ = new_bytes;
   }
   start_ = 0;
   end_ = size;
   ++version_;
+}
+
+bool ByteBuffer::Consume(size_t size) {
+  if (size > Length())
+    return false;
+  start_ += size;
+  return true;
+}
+
+ByteBuffer::ReadPosition ByteBuffer::GetReadPosition() const {
+  return ReadPosition(start_, version_);
+}
+
+bool ByteBuffer::SetReadPosition(const ReadPosition &position) {
+  if (position.version_ != version_) {
+    return false;
+  }
+  start_ = position.start_;
+  return true;
 }
 
 void ByteBuffer::Clear() {

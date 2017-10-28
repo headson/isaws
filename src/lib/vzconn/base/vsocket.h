@@ -206,6 +206,7 @@ class CClientInterface {
                               uint32  n_body,
                               uint16  n_flag);
  public:
+  virtual int32 HandleConnected(VSocket *cli);
   virtual int32 HandleRecvPacket(VSocket       *p_cli,
                                  const uint8   *p_data,
                                  uint32         n_data,
