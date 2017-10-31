@@ -54,6 +54,7 @@ if(WIN32)
 		libvzconn
 		libvzbase
 		libvzlogging
+		libjsoncpp
 		libsqlite3
 		${VZPROJECT_LINK_LIB}
 	)
@@ -66,6 +67,7 @@ else()
 		#iconv
 		vzlogging
 		sqlite3
+		jsoncpp
 		libevent_core.so
 		libevent_pthreads.so
 		pthread

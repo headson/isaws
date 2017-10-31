@@ -39,9 +39,9 @@ class CClientAccess : vzbase::noncopyable,
   vzbase::Thread           *thread_;
 
  private:
-  std::string               access_host_;
-  unsigned int              access_port_;
-  vzconn::CTcpAsyncClient  *access_connect_;
+  std::string               server_host_;
+  unsigned int              server_port_;
+  vzconn::CTcpAsyncClient  *server_connect_;
 };
 
 #endif  // LIBCLIENT_HS_CCLIENTACCESS_H

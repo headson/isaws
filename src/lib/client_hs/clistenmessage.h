@@ -9,8 +9,9 @@
 #include "vzbase/base/noncoypable.h"
 
 #include "vzbase/thread/thread.h"
-
 #include "dispatcher/sync/dpclient_c.h"
+
+#include "client_hs/client/cclientaccess.h"
 
 namespace cli {
 
@@ -32,10 +33,12 @@ class CListenMessage : public vzbase::noncopyable,
   DPPollHandle     GetDpPollHdl();
 
  protected:
+  //
   static void dpcli_poll_msg_cb(DPPollHandle p_hdl,
                                 const DpMessage *dmp, void* p_usr_arg);
   void OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp);
 
+  //
   static void dpcli_poll_state_cb(DPPollHandle p_hdl,
                                   unsigned int n_state, void* p_usr_arg);
   void OnDpState(DPPollHandle p_hdl, unsigned int n_state);
@@ -43,9 +46,15 @@ class CListenMessage : public vzbase::noncopyable,
   // 线程消息Post,处理函数
   void OnMessage(vzbase::Message* msg);
 
+ protected:
+   bool CreateAccessConnector(vzbase::Thread *thread);
+
  private:
-  DPPollHandle      dp_cli_;
-  vzbase::Thread   *main_thread_;
+  DPPollHandle        dp_cli_;
+  vzbase::Thread     *main_thread_;
+
+ private:
+  CClientAccess::Ptr  client_access_;
 };
 
 }  // namespace cli

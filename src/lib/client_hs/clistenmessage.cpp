@@ -32,9 +32,13 @@ CListenMessage *CListenMessage::Instance() {
 }
 
 bool CListenMessage::Start() {
+  main_thread_ = vzbase::Thread::Current();
+
+  if (!CreateAccessConnector(main_thread_)) {
+    return false;
+  }
 
   //////////////////////////////////////////////////////////////////////////
-  main_thread_ = vzbase::Thread::Current();
   if (dp_cli_ == NULL) {
     vzconn::EventService *p_evt_srv =
       main_thread_->socketserver()->GetEvtService();
@@ -91,7 +95,7 @@ vzbase::Thread *CListenMessage::MainThread() {
   return main_thread_;
 }
 
-void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl, 
+void CListenMessage::dpcli_poll_msg_cb(DPPollHandle p_hdl,
                                        const DpMessage *dmp, void* p_usr_arg) {
   if (p_usr_arg) {
     ((CListenMessage*)p_usr_arg)->OnDpMessage(p_hdl, dmp);
@@ -104,8 +108,8 @@ void CListenMessage::OnDpMessage(DPPollHandle p_hdl, const DpMessage *dmp) {
 
 }
 
-void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl, 
-                                         unsigned int n_state, void* p_usr_arg) {
+void CListenMessage::dpcli_poll_state_cb(DPPollHandle p_hdl,
+    unsigned int n_state, void* p_usr_arg) {
   if (p_usr_arg) {
     ((CListenMessage*)p_usr_arg)->OnDpState(p_hdl, n_state);
   }
@@ -129,4 +133,37 @@ void CListenMessage::OnMessage(vzbase::Message* p_msg) {
   //vzbase::Thread::Current()->PostDelayed(2*1000, this, THREAD_MSG_SET_DEV_ADDR);
   //}
 }
+
+bool CListenMessage::CreateAccessConnector(vzbase::Thread *thread) {
+  client_access_.reset(new CClientAccess(thread));
+
+  std::string sAddr;
+  int res = Kvdb_GetKeyToString(KVDB_ACCESS_ADDRESS,
+                                strlen(KVDB_ACCESS_ADDRESS),
+                                &sAddr);
+  Json::Value jaddr;
+  Json::Reader jread;
+  if (res <= 0 || !jread.parse(sAddr, jaddr)) {
+    jaddr.clear();
+    jaddr["host"] = "www.baiweixun.com.cn";
+    jaddr["port"] = 6001;
+
+    Json::FastWriter jfw;
+    sAddr = jfw.write(jaddr);
+    Kvdb_SetKey(KVDB_ACCESS_ADDRESS,
+                strlen(KVDB_ACCESS_ADDRESS),
+                sAddr.c_str(), sAddr.size());
+  }
+
+  int nPort;
+  std::string sHost;
+  try {
+    nPort = jaddr["port"].asInt();
+    sHost = jaddr["host"].asString();
+  }
+  catch (...) {
+  }
+  return client_access_->Start(sHost, nPort);
+}
+
 }  // namespace cli
