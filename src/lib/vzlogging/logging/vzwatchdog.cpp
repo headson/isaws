@@ -14,15 +14,24 @@
 #include "vzlogging/base/vzcommon.h"
 #include "vzlogging/logging/vzlogging.h"
 
-// 看门狗结构
-typedef struct {
-  unsigned int n_mark;                                  // 校验字
-  unsigned int n_max_timeout;                           // 最大超时时长
-  char         s_descrebe[LEN_DESCREBE+4];              // 用户描述
-  unsigned int n_descrebe_size;                         // 用户描述大小
-} TAG_WATCHDOG;
-TAG_WATCHDOG   k_watchdog[MAX_WATCHDOG_A_PROCESS] = { 0 };  // 看门狗结构
+namespace vzlogging {
 
+// 看门狗结构
+typedef struct TAG_WATCHDOG {
+  unsigned int n_mark;                                    // 校验字
+  unsigned int n_max_timeout;                             // 最大超时时长
+  char         s_descrebe[LEN_DESCREBE+4];                // 用户描述
+  unsigned int n_descrebe_size;                           // 用户描述大小
+  TAG_WATCHDOG() {
+    n_mark = 0;
+    n_max_timeout = 0;
+    memset(s_descrebe, 0, LEN_DESCREBE+4);
+    n_descrebe_size = 0;
+  }
+} TAG_WATCHDOG;
+TAG_WATCHDOG   k_watchdog[MAX_WATCHDOG_A_PROCESS];  // 看门狗结构
+
+}  // vzlogging
 /************************************************************************
 *Description : 注册一个喂狗KEY, 并传入观察进程名, 进程描述
 *Parameters  : key 进程名 + KEY形成唯一主键,
@@ -32,30 +41,30 @@ TAG_WATCHDOG   k_watchdog[MAX_WATCHDOG_A_PROCESS] = { 0 };  // 看门狗结构
 *              descrebe_size  用户描述大小
 *Return      : != NULL 注册成功, == NULL 注册失败
 ************************************************************************/
-void *RegisterWatchDogKey(const char  *s_descrebe,
+void *RegisterWatchDogKey(const char   *s_descrebe,
                           unsigned int n_descrebe_size,
                           unsigned int n_max_timeout) {
   int n_empty = 0;
 
   // 判断注册两次
   for (n_empty = 0 ; n_empty < MAX_WATCHDOG_A_PROCESS; n_empty++) {
-    if (k_watchdog[n_empty].n_mark == DEF_TAG_MARK &&
-        strncmp(k_watchdog[n_empty].s_descrebe, s_descrebe, 8) == 0) {
-      return &k_watchdog[n_empty];
+    if (vzlogging::k_watchdog[n_empty].n_mark == DEF_TAG_MARK &&
+        strncmp(vzlogging::k_watchdog[n_empty].s_descrebe, s_descrebe, 8) == 0) {
+      return &vzlogging::k_watchdog[n_empty];
     }
   }
 
   // 加入新的
   for (n_empty = 0 ; n_empty < MAX_WATCHDOG_A_PROCESS; n_empty++) {
-    if (k_watchdog[n_empty].n_mark == 0) {
-      k_watchdog[n_empty].n_mark = DEF_TAG_MARK;
-      k_watchdog[n_empty].n_max_timeout = n_max_timeout;
-      k_watchdog[n_empty].n_descrebe_size =
+    if (vzlogging::k_watchdog[n_empty].n_mark == 0) {
+      vzlogging::k_watchdog[n_empty].n_mark = DEF_TAG_MARK;
+      vzlogging::k_watchdog[n_empty].n_max_timeout = n_max_timeout;
+      vzlogging::k_watchdog[n_empty].n_descrebe_size =
         (n_descrebe_size > LEN_DESCREBE) ? \
         LEN_DESCREBE : n_descrebe_size;
-      memcpy(k_watchdog[n_empty].s_descrebe, s_descrebe,
-             k_watchdog[n_empty].n_descrebe_size);
-      return &k_watchdog[n_empty];
+      memcpy(vzlogging::k_watchdog[n_empty].s_descrebe, s_descrebe,
+             vzlogging::k_watchdog[n_empty].n_descrebe_size);
+      return &vzlogging::k_watchdog[n_empty];
     }
   }
   return NULL;
@@ -134,7 +143,7 @@ int IsModuleRuning(const char *name, const char *desc) {
 *Return      : >0 喂狗成功, -1 喂狗失败
 ************************************************************************/
 int FeedDog(const void *p_arg) {
-  TAG_WATCHDOG* p_wdg = (TAG_WATCHDOG*)p_arg;
+  vzlogging::TAG_WATCHDOG* p_wdg = (vzlogging::TAG_WATCHDOG*)p_arg;
   if (p_wdg && p_wdg->n_mark == DEF_TAG_MARK) {
     int res = ::VzLog(L_HEARTBEAT, 0, __FILE__, __LINE__,
                         "%s %d %s",

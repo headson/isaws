@@ -55,7 +55,7 @@ typedef struct _TAG_WATCHDOG {
 } TAG_MODULE_STATE;
 
 typedef struct {
-  unsigned int        snd_level;    // 日志打印级别
+  int                 snd_level;    // 日志打印级别
   struct sockaddr_in  sock_addr;    //
 
   unsigned int        checksum;     // 校验;校验共享内存为被串改

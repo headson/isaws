@@ -68,7 +68,7 @@ void ShowVzLoggingAlways() {
 }
 
 int Write(vzlogging::CVzLogSock *ptls,
-          int local_print, unsigned int level,
+          bool local_print, int level,
           const char *slog, int nlog) {
   if (k_arg &&
       (local_print == 0) &&
@@ -87,12 +87,9 @@ int Write(vzlogging::CVzLogSock *ptls,
 *              ...   不定长参数
 *Return      : 0 success,-1 failed
 ************************************************************************/
-int VzLog(unsigned int  nlevel,
-          int           local_print,
-          const char   *pfile,
-          int           nline,
-          const char   *pfmt,
-          ...) {
+int VzLog(unsigned int nlevel, int local_print,
+          const char *pfile, int nline,
+          const char *pfmt, ...) {
   vzlogging::CVzLogSock* ptls = GetVzLogSock();
   if (!k_log_print) {
     if (local_print == 1) {  // DLOG时,如果是调试模式不打印
@@ -139,17 +136,9 @@ int VzLog(unsigned int  nlevel,
   return -1;
 }
 
-int VzLogBin(unsigned int nlevel,
-             int          local_print,
-             const char  *pfile,
-             int          nline,
-             const char  *pdata,
-             int          nsize) {
-  static const char HEX_INDEX[] = {
-    '0', '1', '2', '3', '4', '5',
-    '6', '7', '8', '9', 'A', 'B',
-    'C', 'D', 'E', 'F'
-  };
+int VzLogBin(unsigned int nlevel, int local_print,
+             const char *pfile, int nline,
+             const char *pdata, int nsize) {
   vzlogging::CVzLogSock* ptls = GetVzLogSock();
   if (!k_log_print) {
     if (local_print == 1) {  // DLOG时,如果是调试模式不打印
@@ -167,17 +156,34 @@ int VzLogBin(unsigned int nlevel,
                                 slog, ptls->max_nlog);
 
     // BODY
+#if 0
+    static const char HEX_INDEX[] = {
+      '0', '1', '2', '3', '4', '5',
+      '6', '7', '8', '9', 'A', 'B',
+      'C', 'D', 'E', 'F'
+    };
     int data_index = 0;
     int buffer_index = 0;
     while (buffer_index < (ptls->max_nlog - nlog)
            && data_index < nsize) {
       unsigned char c = pdata[data_index];
-      slog[nlog + buffer_index++] = HEX_INDEX[c & 0X0F];
       slog[nlog + buffer_index++] = HEX_INDEX[c >> 4];
+      slog[nlog + buffer_index++] = HEX_INDEX[c & 0X0F];
       slog[nlog + buffer_index++] = ' ';
       data_index++;
     }
     nlog += buffer_index;
+#else
+    for (int i = 0; i < nsize; i++) {
+      int ret = snprintf(&slog[nlog],
+                         ptls->max_nlog-nlog,
+                         "%02X ", (unsigned char)(pdata[i]));
+      nlog += ret;
+      if ((nlog+3) > ptls->max_nlog) {
+        break;
+      }
+    }
+#endif
     if (nlog <= ptls->max_nlog) {      // 分配日志buffer多了4字节,可存'\n\0'
       slog[nlog++] = '\n';
     }

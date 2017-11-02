@@ -14,8 +14,7 @@
 
 namespace vzconn {
 
-class CEvtTcpClient : public VSocket,
-  public boost::enable_shared_from_this<CEvtTcpClient> {
+class CEvtTcpClient : public VSocket {
 
  public:
   typedef boost::shared_ptr<CEvtTcpClient> Ptr;

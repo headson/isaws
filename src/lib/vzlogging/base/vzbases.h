@@ -25,8 +25,13 @@
 
 #define A_LOG_SIZE                1024            // 单条日志字符最大尺寸
 
+#ifdef HISI_R
+#define MAX_LOG_FILE_SIZE         256 * 1024  // 默认日志文件最大存储空间
+#define MAX_WDG_FILE_SIZE         128 * 1024        // 默认看门狗文件最大存储空间
+#else
 #define MAX_LOG_FILE_SIZE         2 * 1024 * 1024  // 默认日志文件最大存储空间
 #define MAX_WDG_FILE_SIZE         64 * 1024        // 默认看门狗文件最大存储空间
+#endif // HISI_R
 
 #ifdef WIN32
 #ifndef snprintf

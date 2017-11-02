@@ -72,9 +72,12 @@ void CachedService::OnMessage(vzbase::Message *msg) {
       static_cast<StanzaMessageData *>(msg->pdata.get());
     if (stanza_msg) {
       uint64 nBng = vzbase::TimeMsec();
-      bool res = OnAsyncSaveFile(stanza_msg->stanza);
+      int res = OnAsyncSaveFile(stanza_msg->stanza);
+      if (res < 0) {  // 存储失败删除文件
+        remove(stanza_msg->stanza->path().c_str());
+      }
 
-      static int nBadTime = 0;
+      static int nWriteSlowTimes = 0;
       // 计算每32K写入速度
       uint64 nUseTime = vzbase::TimeMsec() - nBng;
       const size_t PAG_SIZE = 32 * 1024;
@@ -82,16 +85,17 @@ void CachedService::OnMessage(vzbase::Message *msg) {
       int nPag = nFileSize / PAG_SIZE +
                  (((nFileSize % PAG_SIZE) > 0) ? 1 : 0);
       int nPerPagUseTime = nUseTime / nPag;
-      LOG_INFO("use time %lld, pag number %d, per pag use time %d; bad time %d.",
-               nUseTime, nPag, nPerPagUseTime, nBadTime);
-      if (!res || nPerPagUseTime > 200) {  // 32K数据需要200ms,大于此时间为慢速卡
-        nBadTime++;
-        if (4 == nBadTime) {  // 两次 大图+小图存储失败或速度慢就umount存储分区
+      LOG_INFO("use time %lld, pag number %d, per pag use time %d; write slow times %d.",
+               nUseTime, nPag, nPerPagUseTime, nWriteSlowTimes);
+      if ((-1 == res) &&              // 打开文件失败(只读)
+          (nPerPagUseTime > 200)) {   // 32K数据需要200ms,大于此时间为慢速卡
+        nWriteSlowTimes++;
+        if (4 == nWriteSlowTimes) {   // 两次 大图+小图存储失败或速度慢就umount存储分区
           const char scmd[] = "{\"type\" : \"set_disk_umount\"}";
           DpClient_SendDpMessage("SYS_DISK_DPJSON_REQ", 0, scmd, strlen(scmd));
         }
       } else {
-        nBadTime = 0;
+        nWriteSlowTimes = 0;
       }
     }
   }
@@ -325,7 +329,7 @@ void CachedService::iMakeDirRecursive(const char *pPath) {
 #define vzsleep(x) Sleep(x)
 #endif
 
-bool CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
+int CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
   BOOST_ASSERT(stanza && (!stanza->IsSaved()));
   static const std::size_t CHAUNK_SIZE = 32 * 1024;
   static const uint32 RECURSION_TIME = 128;
@@ -335,7 +339,7 @@ bool CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
   //LOG(INFO) << "save cached file " << stanza->path();
   //return;
 
-  bool bSaveFucc = false;
+  int res = -1;
 
 #ifndef WIN32
   iMakeDirRecursive(stanza->path().c_str());
@@ -344,7 +348,7 @@ bool CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
   if(fp == NULL) {
     LOG(L_ERROR) << "Failure to open file " << stanza->path();
     stanza->SaveConfimation();
-    return bSaveFucc;
+    return res;
   }
   uint32 recursion_time = RECURSION_TIME;
   const char *pdata = stanza->DataString();
@@ -390,15 +394,15 @@ bool CachedService::OnAsyncSaveFile(CachedStanza::Ptr stanza) {
     LOG(L_ERROR) << "Write file error: size != stanza->data.size() "
                  << ferror(fp);
     perror("Failure to write file");
-    bSaveFucc = false;
+    res = -2;
   } else {
     LOG(L_INFO) << "save cached file " << stanza->path()
                 << " stanze use count " << stanza.use_count();
-    bSaveFucc = true;
+    res = write_size;
   }
   stanza->SaveConfimation();
   fclose(fp);
-  return bSaveFucc;
+  return res;
 }
 
 bool CachedService::ReadFile(const std::string path,

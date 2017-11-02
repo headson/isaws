@@ -14,20 +14,21 @@
 #include "vzlogging/base/vzbases.h"
 #include "vzlogging/base/vzcommon.h"
 
+//#define DBG_PRINT printf
+
 extern int Write(vzlogging::CVzLogSock *ptls,
-                 int local_print,
-                 unsigned int level,
+                 bool local_print, int level,
                  const char *slog, int nlog);
 
 namespace vzlogging {
 
 /**日志流格式化**********************************************************/
-CVzLogStream::CVzLogStream(int          n_level,
-                           const char*  p_file,
-                           int          n_line,
-                           unsigned int b_print) {
-  local_print_ = b_print;
-  nlevel_      = n_level;
+CVzLogStream::CVzLogStream(int          nlevel,
+                           const char*  pfile,
+                           int          nline,
+                           unsigned int bprint) {
+  local_print_ = bprint;
+  nlevel_      = nlevel;
 
   ptls_        = GetVzLogSock();
   if (!k_log_print) {
@@ -40,7 +41,7 @@ CVzLogStream::CVzLogStream(int          n_level,
 
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
-    psock->nlog = VzLogHead(n_level, p_file, n_line,
+    psock->nlog = VzLogHead(nlevel, pfile, nline,
                             psock->slog, psock->max_nlog);
   }
 }
@@ -73,7 +74,7 @@ vzlogging::CVzLogStream::~CVzLogStream() {
 
 vzlogging::CVzLogStream&
 vzlogging::CVzLogStream::operator<<(char val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (char val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -90,7 +91,7 @@ vzlogging::CVzLogStream::operator<<(char val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(unsigned char val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (unsigned char val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -106,7 +107,7 @@ CVzLogStream::operator<<(unsigned char val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(bool val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (bool val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -122,7 +123,7 @@ CVzLogStream::operator<<(bool val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(short val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (short val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -138,7 +139,7 @@ CVzLogStream::operator<<(short val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(unsigned short val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (unsigned short val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -154,7 +155,7 @@ CVzLogStream::operator<<(unsigned short val) {
 
 vzlogging::CVzLogStream&
 vzlogging::CVzLogStream::operator<<(int t) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (int t)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -170,7 +171,7 @@ vzlogging::CVzLogStream::operator<<(int t) {
 
 vzlogging::CVzLogStream&
 vzlogging::CVzLogStream::operator<<(unsigned int t) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (unsigned int t)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -186,7 +187,7 @@ vzlogging::CVzLogStream::operator<<(unsigned int t) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(long val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (long val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -202,7 +203,7 @@ CVzLogStream::operator<<(long val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(unsigned long val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (unsigned long val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -218,7 +219,7 @@ CVzLogStream::operator<<(unsigned long val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(long long val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (long long val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -234,7 +235,7 @@ CVzLogStream::operator<<(long long val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(unsigned long long val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (unsigned long long val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -250,7 +251,7 @@ CVzLogStream::operator<<(unsigned long long val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(float val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (float val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -266,7 +267,7 @@ CVzLogStream::operator<<(float val) {
 
 vzlogging::CVzLogStream&
 vzlogging::CVzLogStream::operator<<(double val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (double val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -283,7 +284,7 @@ vzlogging::CVzLogStream::operator<<(double val) {
 
 vzlogging::CVzLogStream&
 CVzLogStream::operator<<(long double val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (long double val)\n", __FUNCTION__, __LINE__);
   if (ptls_) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -299,7 +300,7 @@ CVzLogStream::operator<<(long double val) {
 
 vzlogging::CVzLogStream&
 vzlogging::CVzLogStream::operator<<(const char* val) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (const char* val)\n", __FUNCTION__, __LINE__);
   if (ptls_ && val) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -309,16 +310,25 @@ vzlogging::CVzLogStream::operator<<(const char* val) {
     //  return *this;
     //}
 
+#ifndef _WIN32
     psock->nlog += snprintf(psock->slog + psock->nlog,
                             psock->max_nlog - psock->nlog,
                             "%s", val);
+#else
+    int left_size = psock->max_nlog - psock->nlog;
+    if (strlen(val) < left_size) {
+      left_size = strlen(val);
+    }
+    memcpy(psock->slog + psock->nlog, val, left_size);
+    psock->nlog += left_size;
+#endif
   }
   return *this;
 }
 
 vzlogging::CVzLogStream&
 vzlogging::CVzLogStream::operator<<(std::string str) {
-//printf("%s[%d]\n", __FUNCTION__, __LINE__);
+  //DBG_PRINT("%s[%d] (std::string str)\n", __FUNCTION__, __LINE__);
   if (ptls_ && str.size()>0) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
@@ -327,17 +337,25 @@ vzlogging::CVzLogStream::operator<<(std::string str) {
     //if (str.size() >(psock->max_nlog - psock->nlog)) {
     //  return *this;
     //}
-
+#ifndef _WIN32
     psock->nlog += snprintf(psock->slog + psock->nlog,
                             psock->max_nlog - psock->nlog,
                             "%s", str.c_str());
+#else
+    int left_size = psock->max_nlog - psock->nlog;
+    if (str.size() < left_size) {
+      left_size = str.size();
+    }
+    memcpy(psock->slog + psock->nlog, str.c_str(), left_size);
+    psock->nlog += left_size;
+#endif
   }
   return *this;
 }
 
 //vzlogging::CVzLogStream&
 //vzlogging::CVzLogStream::operator<<(const time_t tt) {
-//  //printf("%s[%d]\n", __FUNCTION__, __LINE__);
+//  //DBG_PRINT("%s[%d]\n", __FUNCTION__, __LINE__);
 //  if (p_tls_) {
 //    CTlsLog* psock = (CTlsLog*)p_tls_;
 //    if (psock->nlog_ < 0) {
@@ -352,17 +370,17 @@ vzlogging::CVzLogStream::operator<<(std::string str) {
 //}
 
 vzlogging::CVzLogStream&
-vzlogging::CVzLogStream::write(const char* s_msg, int n_msg) {
-  if (ptls_ && s_msg && n_msg > 0) {
+vzlogging::CVzLogStream::write(const char* smsg, int nmsg) {
+  if (ptls_ && smsg && nmsg > 0) {
     CVzLogSock* psock = (CVzLogSock*)ptls_;
     if (psock->nlog < 0) {
       return *this;
     }
 
-    int n_left = psock->max_nlog - psock->nlog; // 剩余空间
-    int n_less = (n_left > n_msg) ? n_msg : n_left;     // 消息与剩余字符串那个小
+    int n_left = psock->max_nlog - psock->nlog;       // 剩余空间
+    int n_less = (n_left > nmsg) ? nmsg : n_left;     // 消息与剩余字符串那个小
 
-    memcpy(psock->slog + psock->nlog, s_msg, n_less);
+    memcpy(psock->slog + psock->nlog, smsg, n_less);
     psock->nlog += n_less;
   }
   return *this;
