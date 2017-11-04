@@ -27,6 +27,8 @@ SET(PROJECT_SOURCE_LIST
 	${CMAKE_CURRENT_SOURCE_DIR}/base/cmarkup.h
 	${CMAKE_CURRENT_SOURCE_DIR}/base/cmarkup.cpp 
 	
+	${CMAKE_CURRENT_SOURCE_DIR}/client/ctcpasyncclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/client/ctcpasyncclient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cclientaccess.h
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cclientaccess.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cclientdispatch.h
@@ -45,6 +47,8 @@ SOURCE_GROUP(base FILES
 )
 
 SOURCE_GROUP(client FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/client/ctcpasyncclient.h
+	${CMAKE_CURRENT_SOURCE_DIR}/client/ctcpasyncclient.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cclientaccess.h
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cclientaccess.cpp 
 	${CMAKE_CURRENT_SOURCE_DIR}/client/cclientdispatch.h

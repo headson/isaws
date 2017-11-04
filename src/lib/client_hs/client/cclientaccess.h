@@ -25,6 +25,12 @@ class CClientAccess : vzbase::noncopyable,
 
   bool Start(const std::string &sAesHost, unsigned int nAesPort);
 
+ public:
+  virtual uint32 NetHeadSize();
+  virtual int32 NetHeadParse(const uint8 *pdata, uint32 ndata, uint16 *nflag);
+  virtual int32 NetHeadPacket(uint8 *pdata, uint32 ndata, uint32 nbody,
+                              uint16  nflag);
+
  protected:
   virtual int32 HandleConnected(vzconn::VSocket *cli);
   virtual int32 HandleRecvPacket(vzconn::VSocket *cli,

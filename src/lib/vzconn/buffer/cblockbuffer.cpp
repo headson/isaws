@@ -36,22 +36,14 @@ CBlockBuffer::~CBlockBuffer() {
 bool CBlockBuffer::ReallocBuffer(uint32 size) {
   // 剩余空间够用
   Recycle();
+  uint32 nused = UsedSize();
   if (size < FreeSize() ||
-      size > SOCK_MAX_BUFFER_SIZE ||
-      buffer_size_ > SOCK_MAX_BUFFER_SIZE) {
+      (buffer_size_ + size) > SOCK_MAX_BUFFER_SIZE) {
     return false;
   }
 
-  // 分配一个1.5倍的BUFFER
-  uint32 nused = UsedSize();
-  uint32 new_size = 0;
-  do {  // 计算新的剩余空间是否够用
-    new_size = 3 * new_size / 2;
-    if (new_size > SOCK_MAX_BUFFER_SIZE) {  // 超过了最大空间
-      return false;
-    }
-    LOG_INFO("--------------- %d. %d. %d.", new_size, (new_size - nused), size);
-  }while ((new_size - nused) < size);
+  uint32 new_size = buffer_size_ + size;
+  LOG(L_INFO) << "need new buffer size " << new_size;
 
   uint8 *new_buffer = new uint8[new_size];
   if (new_buffer) {

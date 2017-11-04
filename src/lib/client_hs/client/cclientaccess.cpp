@@ -47,6 +47,38 @@ bool CClientAccess::Start(const std::string &sAesHost,
   return true;
 }
 
+uint32 CClientAccess::NetHeadSize() {
+  return sizeof(TAG_PkgHead);
+}
+
+int32 CClientAccess::NetHeadParse(const uint8 *pdata, uint32 ndata, uint16 *nflag) {
+  if (ndata < sizeof(TAG_PkgHead)) {
+    return 0;
+  }
+
+  int32 pkg_size = 0;
+  TAG_PkgHead *pHead = (TAG_PkgHead*)pdata;
+  if (pHead->nMark != HEAD_MARK) {
+    LOG(L_ERROR) << "packet head is error.";
+    return -1;
+  }
+
+  if (PKG_ENC_STREAM == pHead->eCmdMain ||
+      PKG_TALK_STREAM == pHead->eCmdMain) {
+    pkg_size = pHead->nPkgLen + HEAD_LEN_STR;
+  } else if (0 == (pHead->eCmdMain % 2)) {
+    pkg_size = pHead->nPkgLen + HEAD_LEN_REQ;
+  } else {
+    pkg_size = pHead->nPkgLen + HEAD_LEN_RET;
+  }
+  return pkg_size;
+}
+
+int32 CClientAccess::NetHeadPacket(uint8 *pdata, uint32 ndata,
+                                   uint32 nbody, uint16 nflag) {
+  return 0;
+}
+
 int32 CClientAccess::HandleConnected(vzconn::VSocket *cli) {
   LOG(L_INFO) << "connected.";
 
@@ -100,7 +132,7 @@ void CClientAccess::OnMessage(vzbase::Message *msg) {
     vzconn::CInetAddr addr(
       server_host_.c_str(), server_port_);
     if (!addr.IsNull()) {
-      vzconn::EventService *evt_srv = 
+      vzconn::EventService *evt_srv =
         thread_->socketserver()->GetEvtService();
       server_connect_ = vzconn::CTcpAsyncClient::Create(evt_srv, this);
       if (server_connect_) {
