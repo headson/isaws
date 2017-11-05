@@ -10,27 +10,23 @@
 
 namespace cli {
 
-class CTcpAsyncClient : public vzbase::noncopyable,
-  public vzconn::CEvtTcpClient,
-  public boost::enable_shared_from_this<CTcpAsyncClient> {
- public:
-  typedef boost::shared_ptr<CTcpAsyncClient> Ptr;
-
+class CTcpAsyncClient : public vzconn::CEvtTcpClient {
  protected:
-  CTcpAsyncClient(const vzconn::EVT_LOOP *p_loop);
-  void Remove();
-
- public:
-  static CTcpAsyncClient *Create(const vzconn::EVT_LOOP *p_loop);
+  CTcpAsyncClient(const vzconn::EVT_LOOP *p_loop,
+                  vzconn::CClientInterface *cli_hdl);
   virtual ~CTcpAsyncClient();
 
-  virtual int32 AsyncWrite(int32 eCmd, int32 nMinor,
-                           const char* pData, uint32 nData,
-                           const char* pSrc = NULL, const char* pDst = NULL);
+ public:
+  static CTcpAsyncClient *Create(const vzconn::EVT_LOOP *p_loop,
+                                 vzconn::CClientInterface *cli_hdl);
 
-  virtual int32 AsyncWrite(int8* pPacket, int32 eCmd,
-                           const char* pData, uint32 nData,
-                           int32 nRet, int32 eMinor);
+  virtual int32 AsyncWriteReq(int32 eCmd, int32 nMinor,
+                              const char* pData, uint32 nData,
+                              const char* pSrc = NULL, const char* pDst = NULL);
+
+  virtual int32 AsyncWriteRet(int32 eCmd,
+                              const char* pData, uint32 nData,
+                              int32 nRet, int32 eMinor);
 
  public:
   // 链接到服务端;无需调用Open

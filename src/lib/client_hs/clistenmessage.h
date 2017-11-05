@@ -46,8 +46,11 @@ class CListenMessage : public vzbase::noncopyable,
   // 线程消息Post,处理函数
   void OnMessage(vzbase::Message* msg);
 
- protected:
-   bool CreateAccessConnector(vzbase::Thread *thread);
+ public:
+  bool CreateAccessConnector(vzbase::Thread *thread);
+  bool CreateDispatchConnector(std::string sHost, int nPort,
+                               std::string video_channel);
+  bool CreateStorageConnector(std::string sHost, int nPort);
 
  private:
   DPPollHandle        dp_cli_;

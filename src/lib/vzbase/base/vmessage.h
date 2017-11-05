@@ -9,11 +9,11 @@
 #define HW_VERSION_ "V100.00.00 "
 #ifdef _WIN32
 // DpClient_Init设置dispatcher_server dp地址
-#define DEF_DP_SRV_IP         "192.168.1.101"
+#define DEF_DP_SRV_IP         "127.0.0.1"
 #define DEF_DP_SRV_PORT       5291
 
 // KvdbClient_Init设置dispatcher_server kvdb地址
-#define DEF_KVDB_SRV_IP       "192.168.1.101"
+#define DEF_KVDB_SRV_IP       "127.0.0.1"
 #define DEF_KVDB_SRV_PORT     5299
 
 #else  // _LINUX

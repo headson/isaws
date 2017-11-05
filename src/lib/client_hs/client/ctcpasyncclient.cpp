@@ -10,9 +10,10 @@
 
 namespace cli {
 
-CTcpAsyncClient::CTcpAsyncClient(const vzconn::EVT_LOOP *ploop)
-  : CEvtTcpClient(ploop, NULL) {
-  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+CTcpAsyncClient::CTcpAsyncClient(const vzconn::EVT_LOOP *ploop,
+                                 vzconn::CClientInterface *cli_hdl)
+  : CEvtTcpClient(ploop, cli_hdl) {
+  LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
 CTcpAsyncClient::~CTcpAsyncClient() {
@@ -20,12 +21,12 @@ CTcpAsyncClient::~CTcpAsyncClient() {
   c_evt_send_.Stop();
 
   Close();
-  //LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
+  LOG_INFO("%s[%d].0x%x.", __FUNCTION__, __LINE__, (uint32)this);
 }
 
-int32 CTcpAsyncClient::AsyncWrite(int32 eCmd, int32 nMinor,
-                                  const char* pData, uint32 nData,
-                                  const char* pSrc, const char* pDst) {
+int32 CTcpAsyncClient::AsyncWriteReq(int32 eCmd, int32 nMinor,
+                                     const char* pData, uint32 nData,
+                                     const char* pSrc, const char* pDst) {
   int32 pkg_size = nData + HEAD_LEN_REQ;
   if (pkg_size > c_send_data_.FreeSize()) {
     c_send_data_.ReallocBuffer(pkg_size);
@@ -46,9 +47,9 @@ int32 CTcpAsyncClient::AsyncWrite(int32 eCmd, int32 nMinor,
   return res;
 }
 
-int32 CTcpAsyncClient::AsyncWrite(int8* pPacket, int32 eCmd,
-                                  const char* pData, uint32 nData,
-                                  int32 nRet, int32 eMinor) {
+int32 CTcpAsyncClient::AsyncWriteRet(int32 eCmd,
+                                     const char* pData, uint32 nData,
+                                     int32 nRet, int32 eMinor) {
   int32 pkg_size = nData + HEAD_LEN_RET;
   if (pkg_size > c_send_data_.FreeSize()) {
     c_send_data_.ReallocBuffer(pkg_size);
@@ -69,12 +70,8 @@ int32 CTcpAsyncClient::AsyncWrite(int8* pPacket, int32 eCmd,
   return res;
 }
 
-void CTcpAsyncClient::Remove() {
-  c_evt_recv_.Stop();
-  c_evt_send_.Stop();
-}
-
-CTcpAsyncClient* CTcpAsyncClient::Create(const vzconn::EVT_LOOP *ploop) {
+CTcpAsyncClient* CTcpAsyncClient::Create(const vzconn::EVT_LOOP *ploop,
+    vzconn::CClientInterface *cli_hdl) {
   //EVT_LOOP *p_evt_loop = const_cast<EVT_LOOP*>(p_loop);
   //if (NULL == p_evt_loop) {
   //  p_evt_loop = new EVT_LOOP();
@@ -82,12 +79,12 @@ CTcpAsyncClient* CTcpAsyncClient::Create(const vzconn::EVT_LOOP *ploop) {
   //    p_evt_loop->Start();
   //  }
   //}
-  if (NULL == ploop) {
+  if (NULL == ploop || NULL == cli_hdl) {
     LOG(L_ERROR) << "param is failed.";
     return NULL;
   }
 
-  return (new CTcpAsyncClient(ploop));
+  return (new CTcpAsyncClient(ploop, cli_hdl));
 }
 
 bool CTcpAsyncClient::Connect(const vzconn::CInetAddr *p_remote_addr,
@@ -141,15 +138,15 @@ bool CTcpAsyncClient::Connect(const vzconn::CInetAddr *p_remote_addr,
   return false;
 }
 
-int32 CTcpAsyncClient::EvtConnect(SOCKET fd, short events, const void *p_usr_arg) {
-  int32 n_ret = -1;
-  if (p_usr_arg) {
-    n_ret = ((CTcpAsyncClient*)p_usr_arg)->OnConnect(fd);
-    if (n_ret < 0) {
-      delete ((CTcpAsyncClient*)p_usr_arg);
+int32 CTcpAsyncClient::EvtConnect(SOCKET fd, short events, const void *usr_arg) {
+  int32 nret = -1;
+  if (usr_arg) {
+    nret = ((CTcpAsyncClient*)usr_arg)->OnConnect(fd);
+    if (nret < 0) {
+      delete ((CTcpAsyncClient*)usr_arg);
     }
   }
-  return n_ret;
+  return nret;
 }
 
 int32 CTcpAsyncClient::OnConnect(SOCKET fd) {
@@ -194,39 +191,40 @@ int32 CTcpAsyncClient::OnRecv() {
     }
   }
 
-  int32 n_recv = VSocket::Recv(c_recv_data_.GetWritePtr(),
+  int32 nrecv = VSocket::Recv(c_recv_data_.GetWritePtr(),
                                n_wait_size_);
-  if (0 < n_recv) {
-    c_recv_data_.MoveWritePtr(n_recv);
-    n_wait_size_ -= n_recv;
+  // LOG(L_INFO) << "socket recv length " << nrecv;
+  if (0 < nrecv) {
+    c_recv_data_.MoveWritePtr(nrecv);
+    n_wait_size_ -= nrecv;
 
     if (0 == n_wait_size_) {
-      uint16 eflag = 0;
       uint32 pkg_size = 0;
+      uint16 head_size = 0;
       pkg_size = cli_hdl_ptr_->NetHeadParse(c_recv_data_.GetReadPtr(),
                                             c_recv_data_.UsedSize(),
-                                            &eflag);
+                                            &head_size);
       if (pkg_size > 0) {
         if (pkg_size == c_recv_data_.UsedSize()) {
           // 接收到完整包
           cli_hdl_ptr_->HandleRecvPacket(this,
                                          c_recv_data_.GetReadPtr(), pkg_size,
-                                         eflag);
+                                         head_size);
           c_recv_data_.Clear();
         } else {
           n_wait_size_ = pkg_size - cli_hdl_ptr_->NetHeadSize();
         }
       } else {
         LOG(L_ERROR) << "parse packet is failed.";
-        n_recv = -1;
+        nrecv = -1;
       }
     }
   }
 
-  if (n_recv < 0) {
+  if (nrecv < 0) {
     cli_hdl_ptr_->HandleClose(this);
   }
-  return n_recv;
+  return nrecv;
 }
 
 }  // namespace vzconn

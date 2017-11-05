@@ -160,10 +160,20 @@ bool CListenMessage::CreateAccessConnector(vzbase::Thread *thread) {
   try {
     nPort = jaddr["port"].asInt();
     sHost = jaddr["host"].asString();
+  } catch (...) {
   }
-  catch (...) {
-  }
+  sHost = "127.0.0.1";
+  nPort = 6001;
   return client_access_->Start(sHost, nPort);
+}
+
+bool CListenMessage::CreateDispatchConnector(std::string sHost, int nPort,
+    std::string video_channel) {
+  return false;
+}
+
+bool CListenMessage::CreateStorageConnector(std::string sHost, int nPort) {
+  return false;
 }
 
 }  // namespace cli
