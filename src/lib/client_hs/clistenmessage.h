@@ -12,11 +12,15 @@
 #include "dispatcher/sync/dpclient_c.h"
 
 #include "client_hs/client/cclientaccess.h"
+#include "client_hs/client/cclientdispatch.h"
 
 namespace cli {
 
 class CListenMessage : public vzbase::noncopyable,
   public vzbase::MessageHandler {
+ public:
+  typedef std::map<std::string, CClientDispatch::Ptr> MAP_DISP;
+
  protected:
   CListenMessage();
   virtual ~CListenMessage();
@@ -48,8 +52,7 @@ class CListenMessage : public vzbase::noncopyable,
 
  public:
   bool CreateAccessConnector(vzbase::Thread *thread);
-  bool CreateDispatchConnector(std::string sHost, int nPort,
-                               std::string video_channel);
+  bool CreateDispatchConnector(int nMain, int nMinor, const std::string &sXml);
   bool CreateStorageConnector(std::string sHost, int nPort);
 
  private:
@@ -58,6 +61,7 @@ class CListenMessage : public vzbase::noncopyable,
 
  private:
   CClientAccess::Ptr  client_access_;
+  MAP_DISP            client_dispatch_;
 };
 
 }  // namespace cli

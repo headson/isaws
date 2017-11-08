@@ -7,6 +7,7 @@
 #include "vzbase/helper/stdafx.h"
 
 #include "client_hs/base/cmarkup.h"
+#include "client_hs/clistenmessage.h"
 #include "client_hs/base/basedefine.h"
 
 CClientAccess::CClientAccess(vzbase::Thread *pthread)
@@ -146,11 +147,11 @@ int32 CClientAccess::HandleRecvPacket(vzconn::VSocket *cli,
     break;
 
   case CMD_STR_TICKET:            // 建立视频通道
-    OnCreateChannel(sXml);
+    OnCreateChannel(pHead->eCmdMain, pHead->eCmdMinor, sXml);
     break;
 
   case CMD_STR_TRANS:             // 传输视频请求
-    OnTransStream(sXml);
+    OnTransStream(pHead->eCmdMain, pHead->eCmdMinor, sXml);
     break;
 
   default:
@@ -296,12 +297,29 @@ bool CClientAccess::OnHeartbeated(const std::string &sXml) {
   return true;
 }
 
-bool CClientAccess::OnCreateChannel(const std::string &sXml) {
+bool CClientAccess::OnCreateChannel(int nMain, int nMinor, const std::string &sXmlReq) {
+  bool res = false;
+  res = cli::CListenMessage::Instance()->CreateDispatchConnector(nMain, nMinor, sXmlReq);
+  if (false == res) {
+    CMarkupSTL cXmlRet;
+    cXmlRet.SetDoc(XML_HEAD);
+    cXmlRet.AddElem(XML_ROOT);
+    cXmlRet.IntoElem();
 
-  return false;
+    cXmlRet.AddElem("Result", -1);  // 创建转发连接错误
+
+    if (server_connect_) {
+      std::string sXmlRet = cXmlRet.GetDoc();
+      server_connect_->AsyncWriteRet(nMain+1, 
+                                     sXmlRet.c_str(), sXmlRet.size(), 
+                                     0, nMinor);
+    }
+    return false;
+  }
+  return true;
 }
 
-bool CClientAccess::OnTransStream(const std::string &sXml) {
+bool CClientAccess::OnTransStream(int nMain, int nMinor, const std::string &sXmlReq) {
   return false;
 }
 

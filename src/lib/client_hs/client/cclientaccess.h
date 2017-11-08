@@ -32,6 +32,10 @@ class CClientAccess : public vzbase::noncopyable,
 
   bool Start(const std::string &sAesHost, unsigned int nAesPort);
 
+  cli::CTcpAsyncClient *GetCli() {
+    return server_connect_;
+  }
+
  protected:
   virtual uint32 NetHeadSize();
   virtual int32 NetHeadParse(const uint8 *pdata, uint32 ndata, uint16 *head_size);
@@ -56,8 +60,8 @@ class CClientAccess : public vzbase::noncopyable,
   virtual bool OnHeartbeat();                           // 发送心跳
   virtual bool OnHeartbeated(const std::string &sXml);  // 心跳处理
 
-  virtual bool OnCreateChannel(const std::string &sXml);    // 建立通道
-  virtual bool OnTransStream(const std::string &sXml);      // 传输流
+  virtual bool OnCreateChannel(int nMain, int nMinor, const std::string &sXml);    // 建立通道
+  virtual bool OnTransStream(int nMain, int nMinor, const std::string &sXml);      // 传输流
 
  private:
   vzbase::Thread           *thread_;

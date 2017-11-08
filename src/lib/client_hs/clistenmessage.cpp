@@ -5,6 +5,7 @@
 #include "clistenmessage.h"
 #include "vzbase/helper/stdafx.h"
 #include "vzbase/base/vmessage.h"
+#include "client_hs/base/cmarkup.h"
 
 #include "json/json.h"
 
@@ -167,8 +168,35 @@ bool CListenMessage::CreateAccessConnector(vzbase::Thread *thread) {
   return client_access_->Start(sHost, nPort);
 }
 
-bool CListenMessage::CreateDispatchConnector(std::string sHost, int nPort,
-    std::string video_channel) {
+bool CListenMessage::CreateDispatchConnector(int nMain, int nMinor, const std::string &sXml) {
+  std::string chn = "";
+  CMarkupSTL cXml;
+  cXml.SetDoc(sXml.c_str());
+  if (!cXml.IsWellFormed()) {
+    return false;
+  }
+  cXml.ResetMainPos();
+  if (cXml.FindChildElem("StreamType"))
+    chn = cXml.GetChildData();
+  else
+    return false;
+
+  MAP_DISP::iterator it = client_dispatch_.find(chn);
+  if (it != client_dispatch_.end()) {
+    it->second->OnRespCreateChannel(nMinor);
+    return true;
+  } else {
+    CClientDispatch::Ptr cli(new CClientDispatch(client_access_, main_thread_));
+    if (cli.get()) {
+      bool res = cli->Start(nMain, nMinor, sXml);
+      if (res) {
+        client_dispatch_[cli->GetChannel()] = cli;
+        return true;
+      }
+    }
+  }
+  
+  LOG(L_ERROR) << "create dispatch failed. " << sXml;
   return false;
 }
 
